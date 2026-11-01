@@ -1,37 +1,84 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON rule",
+  "$id": "https://apxoh.dev/schemas/rule/1.0.0",
+  "title": "Apxoh Rule",
+  "description": "A single engineering rule in the Apxoh governance system.",
   "type": "object",
+  "required": ["id", "metadata", "scope", "requirement", "verification", "acceptance"],
   "additionalProperties": false,
   "properties": {
     "id": {
       "type": "string",
-      "minLength": 1
-    },
-    "version": {
-      "type": "string"
-    },
-    "status": {
-      "enum": [
-        "PASS",
-        "FAIL",
-        "BLOCKED",
-        "NOT_APPLICABLE",
-        "ACCEPTED_RISK"
-      ]
-    },
-    "description": {
-      "type": "string"
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
+      "pattern": "^SE-[A-Z]+(-[A-Z]+)?-\\d{3,}$",
+      "description": "Stable, unique rule identifier."
     },
     "metadata": {
-      "type": "object"
+      "type": "object",
+      "required": ["title", "domain", "version", "status", "severity", "enforcement"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": "string", "minLength": 3, "maxLength": 120},
+        "domain": {"type": "string", "enum": ["requirements", "architecture", "code-quality", "software-security", "testing", "performance", "reliability", "database", "api-integration", "devops", "observability", "privacy-compliance", "scalability", "infrastructure", "maintenance", "release"]},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "status": {"type": "string", "enum": ["proposed", "active", "deprecated", "archived"]},
+        "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]},
+        "enforcement": {"type": "string", "enum": ["advisory", "required", "blocking", "critical"]},
+        "description": {"type": "string", "maxLength": 2000}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_types": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "lifecycle_stages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "languages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "required": ["statement"],
+      "additionalProperties": false,
+      "properties": {"statement": {"type": "string", "minLength": 10}}
+    },
+    "verification": {
+      "type": "object",
+      "required": ["mode", "methods"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"type": "string", "enum": ["deterministic", "assisted", "human", "delegated", "hybrid"]},
+        "methods": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "delegate_to": {"type": "string"}
+      }
+    },
+    "acceptance": {"type": "object", "minProperties": 1},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "object", "required": ["type"], "additionalProperties": false,
+               "properties": {"type": {"type": "string"}, "schema": {"type": "string"}, "source": {"type": "string"}}}
+            ]
+          }
+        }
+      }
+    },
+    "failure": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}
+    },
+    "human_review": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"required": {"type": "boolean"}, "approver_role": {"type": "string"}}
+    },
+    "tests": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"positive": {"type": "string"}, "negative": {"type": "string"}, "regression": {"type": "string"}}
     }
-  },
-  "required": [
-    "id"
-  ]
+  }
 }
