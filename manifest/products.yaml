@@ -1,4 +1,46 @@
+# Apxoh Product Registry
+
 products:
   - id: arkhon-core
-    status: active-development
-    description: Deterministic software engineering governance and assurance engine
+    name: "Apxoh Core"
+    role: "Local governance and verification engine"
+    runtime: "local-cli"
+    language: "python"
+    status: "in-development"
+    milestone: 2
+    components:
+      - "src/arkhon/rules/"
+      - "src/arkhon/governance/"
+      - "src/arkhon/verification/"
+      - "src/arkhon/evidence/"
+      - "src/arkhon/assessment/"
+      - "src/arkhon/orchestrator/"
+      - "src/arkhon/reporting/"
+
+  - id: arkhon-agent-governance
+    name: "Apxoh Agent Governance"
+    role: "Instructions, skills, and reference files for AI coding agents"
+    runtime: "agent-consumed"
+    language: "markdown-yaml"
+    status: "in-development"
+    milestone: 4
+    components:
+      - "AGENTS.md"
+      - "SECURITY_AGENTS.md"
+      - "skills/"
+      - "agents/"
+      - "integrations/"
+
+  - id: arkhon-assurance
+    name: "Apxoh Assurance"
+    role: "Independent verification, evidence, and release gating"
+    runtime: "local-and-ci"
+    language: "python"
+    status: "in-development"
+    milestone: 3
+    components:
+      - "src/arkhon/verification/"
+      - "src/arkhon/evidence/"
+      - "src/arkhon/assessment/"
+      - "tools/signing/"
+      - "reports/"
