@@ -1,0 +1,4 @@
+products:
+  - id: arkhon-core
+    status: active-development
+    description: Deterministic software engineering governance and assurance engine

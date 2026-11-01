@@ -1,0 +1,10 @@
+manifest_version: 1
+name: Apxoh
+product_id: arkhon
+entries:
+  system: system.yaml
+  products: products.yaml
+  integrations: integrations.yaml
+  languages: languages.yaml
+  standards: standards.yaml
+  compatibility: compatibility.yaml

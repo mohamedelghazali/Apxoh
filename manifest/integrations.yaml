@@ -1,0 +1,8 @@
+integrations:
+  tsar:
+    optional: true
+    independent_repository: true
+    verification_status: contract-defined-not-verified
+  model_providers:
+    optional: true
+    authority: advisory-only

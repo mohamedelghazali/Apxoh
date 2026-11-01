@@ -1,0 +1,3 @@
+standards_catalog:
+  index: ../standards/index.yaml
+  note: References describe mappings and do not imply certification or conformance.

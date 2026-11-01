@@ -1,0 +1,5 @@
+compatibility:
+  python: ">=3.11,<3.14"
+  execution: local-first
+  ai_provider: optional
+  tsar: optional
