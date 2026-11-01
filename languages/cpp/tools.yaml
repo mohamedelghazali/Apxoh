@@ -1,3 +1,15 @@
 language: cpp
 required: false
-tools: []
+tools:
+  - id: clang-tidy
+    required: false
+    purpose: "static analysis"
+    detection: executable_lookup
+  - id: ctest
+    required: false
+    purpose: "test orchestration"
+    detection: executable_lookup
+  - id: googletest
+    required: false
+    purpose: "unit testing"
+    detection: executable_lookup
