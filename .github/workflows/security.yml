@@ -1,17 +1,172 @@
-name: security
+name: Security
+
 on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
-permissions: {contents: read}
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
+  secrets:
+    name: Secret scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: SAST (Bandit and Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]" semgrep
+      - name: Bandit
+        run: bandit -r src/ -c pyproject.toml -f sarif -o bandit.sarif
+      - name: Semgrep
+        run: semgrep scan --config auto --sarif --output semgrep.sarif src/
+      - name: Upload Bandit SARIF
+        if: always() && hashFiles('bandit.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit.sarif
+      - name: Upload Semgrep SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  dependencies:
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]" pip-licenses
+      - name: pip-audit
+        run: pip-audit --strict --desc
+      - name: License inventory
+        run: pip-licenses --format=csv --with-urls > licenses.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-license-inventory
+          path: licenses.csv
+          if-no-files-found: error
+
+  filesystem:
+    name: Filesystem scan (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+      - name: Upload Trivy SARIF
+        if: always() && hashFiles('trivy.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+
+  workflows:
+    name: Workflow security (zizmor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install zizmor
+      - run: zizmor --format sarif .github/workflows/ > zizmor.sarif
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zizmor-results
+          path: zizmor.sarif
+          if-no-files-found: ignore
+
+  tamper-tests:
+    name: Tampering and bypass tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+      - run: pytest tests/security/ -v --tb=short
+
+  adapter-safety:
+    name: Adapter safety tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - run: pytest tests/security/adapter-safety/ -v
+
+  aggregate:
+    name: Security gate
+    if: always()
+    needs: [secrets, sast, dependencies, filesystem, workflows, tamper-tests, adapter-safety]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every security job to pass
+        env:
+          SECRETS: ${{ needs.secrets.result }}
+          SAST: ${{ needs.sast.result }}
+          DEPENDENCIES: ${{ needs.dependencies.result }}
+          FILESYSTEM: ${{ needs.filesystem.result }}
+          WORKFLOWS: ${{ needs.workflows.result }}
+          TAMPER_TESTS: ${{ needs.tamper-tests.result }}
+          ADAPTER_SAFETY: ${{ needs.adapter-safety.result }}
+        run: |
+          for result in "$SECRETS" "$SAST" "$DEPENDENCIES" "$FILESYSTEM" "$WORKFLOWS" "$TAMPER_TESTS" "$ADAPTER_SAFETY"; do
+            if [ "$result" != "success" ]; then
+              echo "Security gate FAILED: $result"
+              exit 1
+            fi
+          done
+          echo "Security gate PASSED"
