@@ -1,17 +1,46 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON evidence",
+  "$id": "https://apxoh.dev/schemas/evidence/1.0.0",
+  "title": "Apxoh Evidence",
+  "description": "A single piece of verifiable evidence produced by Apxoh or a delegated authority.",
   "type": "object",
+  "required": [
+    "evidence_id",
+    "source",
+    "source_version",
+    "commit_sha",
+    "executed_at",
+    "status",
+    "artifacts"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": {
+    "evidence_id": {
+      "type": "string",
+      "pattern": "^EVID-[A-Z0-9-]+$"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "arkhon",
+        "tsar",
+        "external-tool"
+      ]
+    },
+    "source_version": {
       "type": "string",
       "minLength": 1
     },
-    "version": {
-      "type": "string"
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "executed_at": {
+      "type": "string",
+      "format": "date-time"
     },
     "status": {
+      "type": "string",
       "enum": [
         "PASS",
         "FAIL",
@@ -20,18 +49,139 @@
         "ACCEPTED_RISK"
       ]
     },
-    "description": {
-      "type": "string"
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "critical": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     },
-    "created_at": {
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "rule_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^SE-[A-Z]+(-[A-Z]+)?-\\d{3,}$"
+      },
+      "uniqueItems": true
+    },
+    "tsar_metadata": {
+      "type": "object",
+      "required": [
+        "tsar_version",
+        "rule_ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tsar_version": {
+          "type": "string"
+        },
+        "rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "asvs_level": {
+          "type": "string",
+          "enum": [
+            "1",
+            "2",
+            "3"
+          ]
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundle_path": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        }
+      }
+    },
+    "notes": {
       "type": "string",
-      "format": "date-time"
-    },
-    "metadata": {
-      "type": "object"
+      "maxLength": 4000
     }
   },
-  "required": [
-    "id"
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "const": "tsar"
+          }
+        },
+        "required": [
+          "source"
+        ]
+      },
+      "then": {
+        "required": [
+          "tsar_metadata"
+        ]
+      }
+    }
   ]
 }
