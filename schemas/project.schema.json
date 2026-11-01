@@ -1,37 +1,81 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON project",
+  "$id": "https://apxoh.dev/schemas/project/1.0.0",
+  "title": "Apxoh Project Declaration",
+  "description": "The .arkhon/project.yaml declaration for a governed project.",
   "type": "object",
+  "required": ["project", "languages", "lifecycle", "gates"],
   "additionalProperties": false,
   "properties": {
-    "id": {
-      "type": "string",
-      "minLength": 1
+    "project": {
+      "type": "object",
+      "required": ["name", "identifier", "type", "profile", "risk_level"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "identifier": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,62}$"},
+        "type": {"type": "string", "enum": ["library", "library-and-cli", "application", "service", "platform", "tool"]},
+        "profile": {"type": "string", "enum": ["universal", "web-application", "api-service", "mobile-application", "desktop-application", "enterprise", "distributed-system", "safety-critical"]},
+        "risk_level": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+        "description": {"type": "string"}
+      }
     },
-    "version": {
-      "type": "string"
+    "languages": {
+      "type": "object", "required": ["primary"], "additionalProperties": false,
+      "properties": {"primary": {"type": "string"}, "secondary": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "notes": {"type": "string"}}
     },
-    "status": {
-      "enum": [
-        "PASS",
-        "FAIL",
-        "BLOCKED",
-        "NOT_APPLICABLE",
-        "ACCEPTED_RISK"
-      ]
+    "lifecycle": {
+      "type": "object", "required": ["current_stage"], "additionalProperties": false,
+      "properties": {
+        "current_stage": {"type": "string", "enum": ["development", "controlled-release", "production", "maintenance"]},
+        "current_milestone": {"type": "integer", "minimum": 0},
+        "release_channel": {"type": "string", "enum": ["pre-release", "stable", "lts"]}
+      }
     },
-    "description": {
-      "type": "string"
+    "stakeholders": {"type": "object", "additionalProperties": {"type": ["string", "null"]}},
+    "policy_profile": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "strictness": {"type": "string", "enum": ["minimum", "standard", "strict", "maximum"]},
+        "allow_exceptions": {"type": "boolean"},
+        "require_signed_evidence": {"type": "boolean"},
+        "require_human_review_for_critical": {"type": "boolean"}
+      }
     },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
+    "gates": {
+      "type": "object", "required": ["release_gate"], "additionalProperties": false,
+      "properties": {
+        "requirements_gate": {"$ref": "#/$defs/gate"},
+        "architecture_gate": {"$ref": "#/$defs/gate"},
+        "implementation_gate": {"$ref": "#/$defs/gate"},
+        "testing_gate": {"$ref": "#/$defs/gate"},
+        "security_gate": {"$ref": "#/$defs/gate"},
+        "performance_gate": {"$ref": "#/$defs/gate"},
+        "reliability_gate": {"$ref": "#/$defs/gate"},
+        "release_gate": {"$ref": "#/$defs/gate"}
+      }
+    },
+    "governance_files": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "read_only": {"type": "array", "items": {"type": "string"}},
+        "write_once": {"type": "array", "items": {"type": "string"}},
+        "append_only": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "security": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "authority": {"type": "string"},
+        "require_fresh_evidence_hours": {"type": "integer", "minimum": 1},
+        "require_commit_binding": {"type": "boolean"},
+        "require_signature": {"type": "boolean"}
+      }
     },
     "metadata": {
-      "type": "object"
+      "type": "object", "additionalProperties": false,
+      "properties": {"created": {"type": "string", "format": "date"}, "last_reviewed": {"type": "string", "format": "date"}}
     }
   },
-  "required": [
-    "id"
-  ]
+  "$defs": {"gate": {"type": "string", "enum": ["required", "optional", "disabled"]}}
 }
