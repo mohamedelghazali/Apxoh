@@ -1,4 +1,5 @@
 id: cpp
 status: planned
+extensions: [".cc",".cpp",".cxx",".h",".hpp"]
 entrypoints: []
 minimum_tooling: []
