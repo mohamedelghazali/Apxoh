@@ -1,3 +1,15 @@
 language: java
 required: false
-tools: []
+tools:
+  - id: checkstyle
+    required: false
+    purpose: "style checks"
+    detection: executable_lookup
+  - id: spotbugs
+    required: false
+    purpose: "bytecode static analysis"
+    detection: executable_lookup
+  - id: junit
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
