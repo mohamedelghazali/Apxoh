@@ -1,3 +1,15 @@
 language: rust
 required: false
-tools: []
+tools:
+  - id: clippy
+    required: false
+    purpose: "linting"
+    detection: executable_lookup
+  - id: rustfmt
+    required: false
+    purpose: "formatting"
+    detection: executable_lookup
+  - id: cargo-test
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
