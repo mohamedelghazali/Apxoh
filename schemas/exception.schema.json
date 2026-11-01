@@ -1,37 +1,131 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON exception",
+  "$id": "https://apxoh.dev/schemas/exception/1.0.0",
+  "title": "Apxoh Exception",
+  "description": "A formally approved exception to a rule or gate.",
   "type": "object",
+  "required": [
+    "exception_id",
+    "rule_id",
+    "scope",
+    "rationale",
+    "owner",
+    "approver",
+    "approved_at",
+    "expires_at",
+    "compensating_control"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": {
+    "exception_id": {
+      "type": "string",
+      "pattern": "^EXC-[0-9]{4,}$"
+    },
+    "rule_id": {
+      "type": "string",
+      "pattern": "^SE-[A-Z]+(-[A-Z]+)?-\\d{3,}$"
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "project",
+        "files"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "start",
+              "end"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 4000
+    },
+    "owner": {
       "type": "string",
       "minLength": 1
     },
-    "version": {
-      "type": "string"
+    "approver": {
+      "type": "string",
+      "minLength": 1
     },
-    "status": {
-      "enum": [
-        "PASS",
-        "FAIL",
-        "BLOCKED",
-        "NOT_APPLICABLE",
-        "ACCEPTED_RISK"
-      ]
-    },
-    "description": {
-      "type": "string"
-    },
-    "created_at": {
+    "approved_at": {
       "type": "string",
       "format": "date-time"
     },
-    "metadata": {
-      "type": "object"
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "compensating_control": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 2000
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "revoked"
+      ]
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revocation_reason": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
     }
-  },
-  "required": [
-    "id"
-  ]
+  }
 }
