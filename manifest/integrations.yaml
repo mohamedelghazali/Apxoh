@@ -1,8 +1,138 @@
+# Apxoh Integration Registry
+# Categories: models, platforms, security, generic
+
 integrations:
-  tsar:
-    optional: true
-    independent_repository: true
-    verification_status: contract-defined-not-verified
-  model_providers:
-    optional: true
-    authority: advisory-only
+  models:
+    - id: claude
+      name: "Claude"
+      provider: anthropic
+      integration_path: "integrations/models/claude/"
+      status: supported
+      tier: 1
+      milestone: 4
+      capabilities: [code-generation, code-review, long-context, instruction-following]
+      governance_injection: system-prompt
+
+    - id: openai-o
+      name: "OpenAI o"
+      provider: openai
+      integration_path: "integrations/models/openai-o/"
+      status: supported
+      tier: 1
+      milestone: 4
+      capabilities: [reasoning, architecture-planning, code-generation]
+      governance_injection: system-prompt
+
+    - id: deepseek-coder
+      name: "DeepSeek-Coder"
+      provider: deepseek
+      integration_path: "integrations/models/deepseek-coder/"
+      status: supported
+      tier: 2
+      milestone: 4
+      capabilities: [code-generation]
+      governance_injection: system-prompt
+
+    - id: gpt
+      name: "GPT"
+      provider: openai
+      integration_path: "integrations/models/gpt/"
+      status: supported
+      tier: 1
+      milestone: 4
+      capabilities: [code-generation, code-review]
+      governance_injection: system-prompt
+
+    - id: gemini
+      name: "Gemini"
+      provider: google
+      integration_path: "integrations/models/gemini/"
+      status: supported
+      tier: 1
+      milestone: 4
+      capabilities: [code-generation, long-context, multimodal]
+      governance_injection: system-prompt
+
+    - id: code-llama
+      name: "Code Llama"
+      provider: meta
+      integration_path: "integrations/models/code-llama/"
+      status: supported
+      tier: 2
+      milestone: 4
+      capabilities: [code-generation, local-execution]
+      governance_injection: plain-text-delimited
+
+    - id: qwen-coder
+      name: "Qwen-Coder"
+      provider: alibaba
+      integration_path: "integrations/models/qwen-coder/"
+      status: supported
+      tier: 2
+      milestone: 4
+      capabilities: [code-generation, multilingual]
+      governance_injection: plain-text-delimited
+
+    - id: kimi
+      name: "Kimi"
+      provider: moonshot
+      integration_path: "integrations/models/kimi/"
+      status: supported
+      tier: 1
+      milestone: 4
+      capabilities: [code-generation, long-context]
+      governance_injection: system-prompt
+
+  platforms:
+    - id: github-copilot
+      name: "GitHub Copilot"
+      provider: github-microsoft
+      integration_path: "integrations/platforms/github-copilot/"
+      status: supported
+      milestone: 4
+      underlying_models: [gpt, openai-o, claude]
+      max_verification_level: configured
+      governance_injection: copilot-instructions-file
+
+  security:
+    - id: tsar
+      name: "TSAR"
+      role: security-authority
+      relation: delegated
+      integration_path: "integrations/tsar/"
+      contract_path: "integrations/tsar/contract.yaml"
+      minimum_version: "1.1.0"
+      required_for:
+        - security-gate
+        - crypto-audit
+        - secrets-exposure-check
+        - vulnerability-scan
+        - asvs-compliance-evidence
+      fallback_behavior: BLOCKED
+
+  generic:
+    - id: generic-agents
+      name: "Generic Agents"
+      role: fallback
+      integration_path: "integrations/generic-agents/"
+      status: supported
+      milestone: 4
+
+verification_levels:
+  - id: installed
+    description: "Files present on disk"
+  - id: discoverable
+    description: "Agent can locate the skill files"
+  - id: activated
+    description: "Instructions loaded into agent context"
+  - id: configured
+    description: "Agent settings bind to Apxoh"
+  - id: verified
+    description: "Behavioral verification passed"
+
+totals:
+  models: 8
+  platforms: 1
+  security: 1
+  generic: 1
+  total: 11
