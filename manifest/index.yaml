@@ -1,10 +1,36 @@
-manifest_version: 1
-name: Apxoh
-product_id: arkhon
-entries:
-  system: system.yaml
-  products: products.yaml
-  integrations: integrations.yaml
-  languages: languages.yaml
-  standards: standards.yaml
-  compatibility: compatibility.yaml
+# Apxoh Manifest — Index
+# This file is the single entry point for all manifest data.
+# It links to the other manifest files in this directory.
+# Do not add data here — only references.
+
+manifest_version: "1.0.0"
+system_name: "Apxoh"
+system_identifier: "arkhon"
+generated_at: "2026-11-01T00:00:00Z"
+
+files:
+  system: "system.yaml"
+  products: "products.yaml"
+  integrations: "integrations.yaml"
+  languages: "languages.yaml"
+  standards: "standards.yaml"
+  compatibility: "compatibility.yaml"
+
+authoritative_for:
+  - system_identity
+  - product_list
+  - integration_list
+  - language_list
+  - standards_references
+  - compatibility_matrix
+
+consumers:
+  - "src/arkhon/config.py"
+  - "src/arkhon/core/constants.py"
+  - "src/arkhon/cli.py"
+  - "tests/test_manifest.py"
+
+notes: |
+  This index replaces the legacy single-file manifest.yaml.
+  All readers must start here and follow the references.
+  Do not read the individual files directly — always go through this index.
