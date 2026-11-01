@@ -1,0 +1,5 @@
+id: go
+status: planned
+extensions: [".go"]
+entrypoints: []
+minimum_tooling: []

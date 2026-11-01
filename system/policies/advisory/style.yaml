@@ -1,0 +1,4 @@
+id: style
+severity: low
+condition: style_deviation
+action: ADVISE

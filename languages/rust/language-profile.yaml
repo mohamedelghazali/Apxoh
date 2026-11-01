@@ -1,0 +1,5 @@
+id: rust
+status: planned
+extensions: [".rs"]
+entrypoints: []
+minimum_tooling: []

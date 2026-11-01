@@ -1,0 +1,4 @@
+id: missing-tests
+severity: high
+condition: required_test_suite_not_executed
+action: BLOCK

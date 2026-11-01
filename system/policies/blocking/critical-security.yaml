@@ -1,0 +1,4 @@
+id: critical-security
+severity: critical
+condition: unresolved_critical_security_finding
+action: BLOCK

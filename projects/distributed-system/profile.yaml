@@ -1,0 +1,5 @@
+id: distributed-system
+version: 1
+status: draft
+scope: distributed-system
+inherit: universal
