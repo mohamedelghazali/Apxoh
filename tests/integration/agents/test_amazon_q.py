@@ -1,3 +1,7 @@
-"""tests/integration/agents/test_amazon_q.py contract test."""
-def test_scaffold_is_not_claimed_verified():
-    assert True
+"""Contract test for the amazon-q integration scaffold."""
+from pathlib import Path
+import yaml
+
+def test_adapter_is_explicitly_scaffolded_not_verified():
+    config=yaml.safe_load(Path("integrations/amazon-q/config.yaml").read_text(encoding="utf-8"))
+    assert config["status"] == "scaffolded"
