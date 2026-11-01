@@ -1,14 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Apxoh State",
+  "$id": "https://apxoh.dev/schemas/state/1.0.0",
+  "title": "Apxoh State Record",
+  "description": "A state event record stored under .arkhon/state/.",
   "type": "object",
+  "required": ["record_id", "recorded_at", "event", "payload"],
   "additionalProperties": false,
-  "required": ["schema_version", "project_id", "status"],
   "properties": {
-    "schema_version": {"type": "integer", "const": 1},
-    "project_id": {"type": "string", "minLength": 1},
-    "status": {"type": "string", "enum": ["planned", "detected", "analyzable", "verified"]},
-    "updated_at": {"type": "string", "format": "date-time"},
-    "revision": {"type": "integer", "minimum": 0}
+    "record_id": {"type": "string", "pattern": "^STATE-[A-Z0-9-]+$"},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "event": {
+      "type": "string",
+      "enum": ["project-initialized", "stage-entered", "stage-exited", "gate-evaluated", "gate-blocked", "evidence-collected", "evidence-verified", "exception-requested", "exception-approved", "exception-denied", "escalation-raised", "incident-logged", "release-approved", "release-blocked"]
+    },
+    "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "actor": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"kind": {"type": "string", "enum": ["human", "agent", "system"]}, "identifier": {"type": "string"}}
+    },
+    "payload": {"type": "object"},
+    "prev_record_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "record_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
   }
 }
