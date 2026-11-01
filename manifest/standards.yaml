@@ -1,3 +1,87 @@
-standards_catalog:
-  index: ../standards/index.yaml
-  note: References describe mappings and do not imply certification or conformance.
+# Apxoh Standards References
+# Copyrighted standards are referenced by ID only — never reproduced.
+
+index_path: "standards/index.yaml"
+
+standards:
+  - id: iso-25010
+    name: "ISO/IEC 25010 SQuaRE"
+    version: "2023"
+    url: "https://www.iso.org/standard/78176.html"
+    applicable_to: [quality-assessment]
+    file: "standards/iso/iso-25010.yaml"
+
+  - id: iso-25040
+    name: "ISO/IEC 25040 Evaluation Process"
+    version: "2011"
+    url: "https://www.iso.org/standard/55492.html"
+    applicable_to: [quality-assessment-process]
+    file: "standards/iso/iso-25040.yaml"
+
+  - id: iso-27001
+    name: "ISO/IEC 27001 ISMS"
+    version: "2022"
+    url: "https://www.iso.org/standard/27001"
+    applicable_to: [governance, risk]
+    file: "standards/iso/iso-27001.yaml"
+
+  - id: owasp-asvs
+    name: "OWASP Application Security Verification Standard"
+    version: "5.0.0"
+    url: "https://owasp.org/www-project-application-security-verification-standard/"
+    applicable_to: [security-verification]
+    file: "standards/owasp/asvs-5.0.0.yaml"
+    delegated_to: tsar
+
+  - id: owasp-samm
+    name: "OWASP Software Assurance Maturity Model"
+    version: "2.0"
+    url: "https://owasp.org/www-project-samm/"
+    applicable_to: [governance-maturity]
+    file: "standards/owasp/samm-2.0.yaml"
+
+  - id: owasp-top10
+    name: "OWASP Top 10"
+    version: "2021"
+    url: "https://owasp.org/Top10/"
+    applicable_to: [security-awareness]
+    file: "standards/owasp/top10.yaml"
+
+  - id: sre-google
+    name: "Google SRE"
+    url: "https://sre.google/"
+    applicable_to: [reliability]
+    file: "standards/sre/slo-guidelines.yaml"
+
+  - id: slsa
+    name: "SLSA Supply-chain Levels for Software Artifacts"
+    version: "1.0"
+    url: "https://slsa.dev/"
+    applicable_to: [supply-chain]
+    file: "standards/supply-chain/slsa.yaml"
+
+  - id: cyclonedx
+    name: "CycloneDX SBOM"
+    version: "1.5"
+    url: "https://cyclonedx.org/"
+    applicable_to: [supply-chain]
+    file: "standards/supply-chain/sbom.yaml"
+
+  - id: nist-ssdf
+    name: "NIST SP 800-218 SSDF"
+    version: "1.1"
+    url: "https://csrc.nist.gov/publications/detail/sp/800-218/final"
+    applicable_to: [supply-chain, development]
+    file: "standards/references.yaml"
+
+  - id: cvss
+    name: "CVSS v4.0"
+    version: "4.0"
+    url: "https://www.first.org/cvss/v4-0/"
+    applicable_to: [vulnerability-severity]
+    file: "standards/references.yaml"
+
+copyright_policy: |
+  Apxoh references standards by ID, version, and URL.
+  Never reproduce copyrighted text from ISO, OWASP, NIST, or other bodies.
+  Summaries and check criteria are Apxoh's original work.
