@@ -1,0 +1,6 @@
+{
+  "name": "Apxoh Development",
+  "build": { "dockerfile": "Dockerfile" },
+  "postCreateCommand": "python -m pip install -e '.[dev]'",
+  "remoteUser": "vscode"
+}

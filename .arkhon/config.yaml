@@ -1,0 +1,9 @@
+schema_version: 1
+execution:
+  local_first: true
+  deterministic_engine_authoritative: true
+  ai_provider_required: false
+evidence:
+  directory: .arkhon/evidence
+reports:
+  directory: .arkhon/reports
