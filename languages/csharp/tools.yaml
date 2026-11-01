@@ -1,3 +1,11 @@
 language: csharp
 required: false
-tools: []
+tools:
+  - id: roslyn-analyzers
+    required: false
+    purpose: "compiler diagnostics and analyzers"
+    detection: executable_lookup
+  - id: dotnet-test
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
