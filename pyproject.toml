@@ -9,7 +9,7 @@ description = "Software Engineering Governance & Assurance System"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Apxoh maintainers" }]
+authors = [{ name = "Mohamed Elghazali" }]
 keywords = ["governance", "software-engineering", "verification", "ai-agents", "quality-assurance"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -21,10 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Quality Assurance",
 ]
-dependencies = [
-    "PyYAML==6.0.2",
-    "jsonschema==4.23.0",
-]
+dependencies = ["pyyaml==6.0.2", "jsonschema==4.23.0"]
 
 [project.optional-dependencies]
 dev = [
@@ -32,11 +29,11 @@ dev = [
     "pytest-cov==5.0.0",
     "ruff==0.7.4",
     "mypy==1.13.0",
-    "types-PyYAML==6.0.12.20240917",
     "bandit==1.7.10",
     "pip-audit==2.7.3",
     "sigstore==3.5.1",
     "check-jsonschema==0.29.4",
+    "types-PyYAML==6.0.12.20240917",
 ]
 
 [project.scripts]
@@ -49,10 +46,13 @@ Issues = "https://github.com/mohamedelghazali/Apxoh/issues"
 Security = "https://github.com/mohamedelghazali/Apxoh/security/policy"
 
 [tool.setuptools]
-package-dir = { "" = "src" }
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+arkhon = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
@@ -63,6 +63,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "S"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
+"scripts/**" = ["S101", "T201"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -70,6 +71,15 @@ strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 warn_unused_configs = true
+files = ["src", "tests", "scripts"]
+
+[[tool.mypy.overrides]]
+module = ["jsonschema", "jsonschema.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["scripts.*"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -77,4 +87,4 @@ testpaths = ["tests"]
 addopts = "-ra -q"
 
 [tool.bandit]
-exclude_dirs = ["tests"]
+exclude_dirs = ["tests", ".venv"]
