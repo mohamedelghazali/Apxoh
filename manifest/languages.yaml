@@ -1,1 +1,69 @@
-languages: [python, javascript, typescript, java, csharp, cpp, go, rust, ruby]
+# Apxoh Language Registry
+
+engine_language: python
+registry_path: "languages/registry.yaml"
+registry_version: "1.0.0"
+
+supported:
+  - id: python
+    family: dynamic-typed
+    primary_use: [core-engine, automation, data-and-ai]
+    milestone: 2
+
+  - id: javascript
+    family: dynamic-typed
+    primary_use: [web-applications, runtime]
+    milestone: 2
+
+  - id: typescript
+    family: static-typed
+    primary_use: [type-safe-web, backend-applications]
+    milestone: 2
+
+  - id: java
+    family: static-typed-jvm
+    primary_use: [enterprise-applications, jvm-systems]
+    milestone: 2
+
+  - id: csharp
+    family: static-typed-dotnet
+    primary_use: [dotnet, enterprise-engineering]
+    milestone: 2
+
+  - id: cpp
+    family: static-typed-native
+    primary_use: [systems, high-performance-software]
+    milestone: 2
+
+  - id: go
+    family: static-typed-native
+    primary_use: [cloud-native, distributed-systems]
+    milestone: 2
+
+  - id: rust
+    family: static-typed-native
+    primary_use: [memory-safe-systems-engineering]
+    milestone: 2
+
+  - id: ruby
+    family: dynamic-typed
+    primary_use: [web-applications, backend-systems]
+    milestone: 2
+
+categories:
+  global:
+    - requirements
+    - risk-management
+    - data-integrity
+    - testing-strategy
+    - documentation
+    - code-review
+  language_specific:
+    description: "Declared per language under languages/<lang>/rules/"
+  framework_specific:
+    description: "Added incrementally after M2"
+
+tool_availability_policy:
+  missing_tool_status: BLOCKED
+  version_unknown_status: PARTIALLY_VERIFIED
+  detection_required_before_claim: true
