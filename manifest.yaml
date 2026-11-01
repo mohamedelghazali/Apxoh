@@ -1,13 +1,14 @@
-manifest_version: 1
-name: Apxoh
-package_name: arkhon
-product_name: Apxoh
-cyrillic_name: АРХОН
-version: 0.1.0-dev.1
-description: Software Engineering Governance & Assurance System
-runtime: {language: python, minimum_version: "3.11"}
-architecture: {execution_model: hybrid, local_first: true, ai_provider_required_for_core: false, deterministic_engine_is_authoritative: true}
-languages: [python, javascript, typescript, java, csharp, cpp, go, rust, ruby]
-maturity_states: [planned, detected, analyzable, verified]
-status_values: [PASS, FAIL, BLOCKED, NOT_APPLICABLE, ACCEPTED_RISK]
-tsar: {optional: true, independent_repository: true, status: contract_defined_not_verified}
+# Apxoh — Legacy Manifest Redirect
+#
+# This file previously contained all manifest data in a single file.
+# As of v0.1.0-dev.1, the manifest has been split into manifest/*.yaml.
+#
+# Do not add data here. Use manifest/index.yaml as the entry point.
+
+redirect:
+  to: "manifest/index.yaml"
+  deprecated: true
+  removal_target: "1.0.0"
+  reason: "Single-file manifest became unmaintainable at scale"
+
+status: "redirect-only"
