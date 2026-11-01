@@ -1,3 +1,15 @@
 language: javascript
 required: false
-tools: []
+tools:
+  - id: eslint
+    required: false
+    purpose: "linting"
+    detection: executable_lookup
+  - id: prettier
+    required: false
+    purpose: "formatting"
+    detection: executable_lookup
+  - id: vitest
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
