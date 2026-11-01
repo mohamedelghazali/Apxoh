@@ -1,3 +1,15 @@
 language: ruby
 required: false
-tools: []
+tools:
+  - id: rubocop
+    required: false
+    purpose: "linting"
+    detection: executable_lookup
+  - id: rspec
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
+  - id: brakeman
+    required: false
+    purpose: "Rails security analysis"
+    detection: executable_lookup
