@@ -1,11 +1,49 @@
-name: Apxoh
-product_id: arkhon
-description: Software Engineering Governance & Assurance System
-runtime:
-  language: python
-  minimum_version: "3.11"
-architecture:
-  execution_model: hybrid
-  local_first: true
-  deterministic_engine_authoritative: true
+# Apxoh System Identity and Versions
+
+system:
+  name: "Apxoh"
+  display_name: "Apxoh"
+  identifier: "arkhon"
+  cyrillic_reference: "АРХОН"
+  latin_reference: "ARKHON"
+  description: "Software Engineering Governance & Assurance System"
+  version: "0.1.0-dev.1"
+  status: "pre-release"
+  milestone: 0
+
+identity:
+  repository: "https://github.com/mohamedelghazali/Apxoh"
+  license: "Apache-2.0"
+  license_url: "https://www.apache.org/licenses/LICENSE-2.0"
+  maintainer: "mohamedelghazali"
+  created: "2026-11-01"
+  last_updated: "2026-11-01"
+
+founding_decisions:
+  relation_to_tsar: "separate"
+  scope: "universal"
+  engine: "hybrid"
+  operation: "local-first-with-ai-agent-adoption"
+  repository_language: "english-only"
   ai_provider_required_for_core: false
+  security_authority: "tsar"
+
+runtime:
+  python_minimum: "3.11"
+  python_maximum_exclusive: "3.14"
+  python_tested: ["3.11", "3.12", "3.13"]
+  platforms: ["linux", "macos", "windows"]
+
+core_principle: |
+  Evidence Before Approval.
+  Verification Before Release.
+  No trust without testing.
+  No claim without proof.
+
+motto_short: "No approval without evidence."
+
+versioning_policy:
+  scheme: "semantic"
+  current_stage: "0.x"
+  pre_release_suffix: "dev"
+  doc: "docs/VERSIONING.md"
