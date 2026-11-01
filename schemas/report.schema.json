@@ -1,37 +1,175 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON report",
+  "$id": "https://apxoh.dev/schemas/report/1.0.0",
+  "title": "Apxoh Report",
+  "description": "A complete engineering-quality report for a specific commit.",
   "type": "object",
+  "required": [
+    "report_id",
+    "project",
+    "commit_sha",
+    "generated_at",
+    "sections"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": {
+    "report_id": {
+      "type": "string",
+      "pattern": "^REP-[A-Z0-9-]+$"
+    },
+    "project": {
       "type": "string",
       "minLength": 1
     },
-    "version": {
-      "type": "string"
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
     },
-    "status": {
-      "enum": [
-        "PASS",
-        "FAIL",
-        "BLOCKED",
-        "NOT_APPLICABLE",
-        "ACCEPTED_RISK"
-      ]
-    },
-    "description": {
-      "type": "string"
-    },
-    "created_at": {
+    "generated_at": {
       "type": "string",
       "format": "date-time"
     },
-    "metadata": {
-      "type": "object"
+    "apxoh_version": {
+      "type": "string"
+    },
+    "assessment_id": {
+      "type": "string",
+      "pattern": "^ASSESS-[A-Z0-9-]+$"
+    },
+    "sections": {
+      "type": "object",
+      "required": [
+        "charter",
+        "requirements",
+        "architecture",
+        "code_quality",
+        "testing",
+        "security",
+        "performance",
+        "reliability",
+        "scalability",
+        "dependencies",
+        "deployment",
+        "disaster_recovery",
+        "prr",
+        "compliance",
+        "risk_register",
+        "final_acceptance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "charter": {
+          "$ref": "#/$defs/section"
+        },
+        "requirements": {
+          "$ref": "#/$defs/section"
+        },
+        "architecture": {
+          "$ref": "#/$defs/section"
+        },
+        "code_quality": {
+          "$ref": "#/$defs/section"
+        },
+        "testing": {
+          "$ref": "#/$defs/section"
+        },
+        "security": {
+          "$ref": "#/$defs/section"
+        },
+        "performance": {
+          "$ref": "#/$defs/section"
+        },
+        "reliability": {
+          "$ref": "#/$defs/section"
+        },
+        "scalability": {
+          "$ref": "#/$defs/section"
+        },
+        "dependencies": {
+          "$ref": "#/$defs/section"
+        },
+        "deployment": {
+          "$ref": "#/$defs/section"
+        },
+        "disaster_recovery": {
+          "$ref": "#/$defs/section"
+        },
+        "prr": {
+          "$ref": "#/$defs/section"
+        },
+        "compliance": {
+          "$ref": "#/$defs/section"
+        },
+        "risk_register": {
+          "$ref": "#/$defs/section"
+        },
+        "final_acceptance": {
+          "$ref": "#/$defs/section"
+        }
+      }
+    },
+    "final_decision": {
+      "type": "string",
+      "enum": [
+        "APPROVED",
+        "APPROVED_WITH_CONDITIONS",
+        "REJECTED",
+        "PENDING_EVIDENCE"
+      ]
+    },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "role",
+          "name",
+          "signed_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "signed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
     }
   },
-  "required": [
-    "id"
-  ]
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": [
+        "status",
+        "content"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "content": {
+          "type": "string"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
 }
