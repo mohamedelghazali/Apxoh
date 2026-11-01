@@ -1,5 +1,74 @@
-compatibility:
-  python: ">=3.11,<3.14"
-  execution: local-first
-  ai_provider: optional
-  tsar: optional
+# Apxoh Compatibility Matrix
+
+runtime:
+  python:
+    minimum: "3.11"
+    maximum_exclusive: "3.14"
+    tested: ["3.11", "3.12", "3.13"]
+  platforms:
+    - linux
+    - macos
+    - windows
+
+schemas:
+  - id: rule
+    version: "1.0.0"
+    path: "schemas/rule.schema.json"
+    backwards_compatible_with: []
+    migrations: []
+
+  - id: evidence
+    version: "1.0.0"
+    path: "schemas/evidence.schema.json"
+
+  - id: finding
+    version: "1.0.0"
+    path: "schemas/finding.schema.json"
+
+  - id: assessment
+    version: "1.0.0"
+    path: "schemas/assessment.schema.json"
+
+  - id: exception
+    version: "1.0.0"
+    path: "schemas/exception.schema.json"
+
+  - id: report
+    version: "1.0.0"
+    path: "schemas/report.schema.json"
+
+  - id: project
+    version: "1.0.0"
+    path: "schemas/project.schema.json"
+
+  - id: state
+    version: "1.0.0"
+    path: "schemas/state.schema.json"
+
+  - id: integration-contract
+    version: "1.0.0"
+    path: "schemas/integration-contract.schema.json"
+
+integrations:
+  - id: tsar
+    minimum_version: "1.1.0"
+    maximum_version: "1.x.x"
+    evidence_format: "1.0.0"
+    contract_schema: "integration-contract/1.0.0"
+
+formats:
+  rule: yaml
+  evidence: json
+  report: [json, markdown, html]
+  sbom: [cyclonedx-json, cyclonedx-xml]
+
+frozen_apis:
+  - "src/arkhon/cli.py::main"
+  - "src/arkhon.config::load_manifest"
+  - "src/arkhon.evidence.store::read_evidence"
+  - "src/arkhon.assessment.gates::evaluate"
+
+policy: |
+  Backward compatibility is promised within a major version.
+  Breaking changes require a major version bump and a migration path.
+  Deprecations are announced at least one minor version ahead.
