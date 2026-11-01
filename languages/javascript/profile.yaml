@@ -1,4 +1,5 @@
 id: javascript
 status: planned
+extensions: [".js",".mjs",".cjs"]
 entrypoints: []
 minimum_tooling: []
