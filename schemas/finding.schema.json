@@ -1,17 +1,39 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON finding",
+  "$id": "https://apxoh.dev/schemas/finding/1.0.0",
+  "title": "Apxoh Finding",
+  "description": "A single finding produced by evaluating a rule against a target.",
   "type": "object",
+  "required": [
+    "finding_id",
+    "rule_id",
+    "severity",
+    "status",
+    "target",
+    "verification",
+    "description"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": {
+    "finding_id": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^FIND-[0-9]{6,}$"
     },
-    "version": {
-      "type": "string"
+    "rule_id": {
+      "type": "string",
+      "pattern": "^SE-[A-Z]+(-[A-Z]+)?-\\d{3,}$"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
     },
     "status": {
+      "type": "string",
       "enum": [
         "PASS",
         "FAIL",
@@ -20,18 +42,79 @@
         "ACCEPTED_RISK"
       ]
     },
+    "target": {
+      "type": "object",
+      "required": [
+        "commit_sha"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "tool",
+        "version",
+        "executed_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "description": {
-      "type": "string"
-    },
-    "created_at": {
       "type": "string",
-      "format": "date-time"
+      "minLength": 5,
+      "maxLength": 4000
     },
-    "metadata": {
-      "type": "object"
+    "remediation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "recommendation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
     }
-  },
-  "required": [
-    "id"
-  ]
+  }
 }
