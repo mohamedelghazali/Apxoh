@@ -1,9 +1,77 @@
-schema_version: 1
-execution:
-  local_first: true
-  deterministic_engine_authoritative: true
-  ai_provider_required: false
+# Apxoh runtime configuration for governing itself.
+
+engine:
+  version_pin: "0.1.0.dev1"
+  strict_mode: true
+  fail_closed: true
+  log_level: "info"
+  log_format: "json"
+
+paths:
+  evidence: ".arkhon/evidence/"
+  reports: ".arkhon/reports/"
+  state: ".arkhon/state/"
+  archive: ".arkhon/evidence/_archive/"
+
 evidence:
-  directory: .arkhon/evidence
-reports:
-  directory: .arkhon/reports
+  retention_days_active: 30
+  retention_days_archived: 90
+  require_sigstore: true
+  require_sha256: true
+  freshness_window_hours: 168
+
+verification:
+  independent_runs_required: 1
+  rerun_on_failure: true
+  stop_on_first_critical: true
+  parallel_jobs: 4
+
+reporting:
+  formats: [json, markdown, html]
+  include_raw_evidence: false
+  include_rule_versions: true
+  include_commit_sha: true
+
+security:
+  authority: tsar
+  tsar_contract: "integrations/tsar/contract.yaml"
+  tsar_minimum_version: "1.1.0"
+  on_tsar_unavailable: BLOCKED
+  on_evidence_stale: BLOCKED
+  on_evidence_mismatch: BLOCKED
+  on_critical_finding: FAIL
+
+escalation:
+  automatic:
+    - trigger: "governance-file-modified"
+      to: maintainer
+    - trigger: "evidence-tampering"
+      to: security-lead
+    - trigger: "repeated-verification-failure"
+      threshold: 3
+      to: engineering-lead
+  max_unresolved_hours: 24
+
+exceptions:
+  enabled: true
+  require:
+    - documented_rationale
+    - risk_owner
+    - approval
+    - expiry_date
+    - compensating_control
+  max_duration_days: 90
+  forbidden_for:
+    - critical-security
+    - data-loss
+    - governance-bypass
+
+self_audit:
+  enabled: true
+  frequency: "every-push"
+  include:
+    - schema-validation
+    - rule-validation
+    - security-scan
+    - dependency-audit
+    - evidence-integrity
