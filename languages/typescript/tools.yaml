@@ -1,3 +1,15 @@
 language: typescript
 required: false
-tools: []
+tools:
+  - id: tsc
+    required: false
+    purpose: "type checking"
+    detection: executable_lookup
+  - id: eslint
+    required: false
+    purpose: "linting"
+    detection: executable_lookup
+  - id: vitest
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
