@@ -1,5 +1,0 @@
-id: typescript
-status: planned
-extensions: [".ts",".tsx"]
-entrypoints: []
-minimum_tooling: []
