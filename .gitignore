@@ -11,3 +11,9 @@ __pycache__/
 dist/
 build/
 .coverage
+
+# Runtime-generated project-local artifacts
+.arkhon/evidence/*
+!.arkhon/evidence/.gitkeep
+.arkhon/reports/*
+!.arkhon/reports/.gitkeep
