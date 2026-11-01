@@ -1,3 +1,15 @@
 language: go
 required: false
-tools: []
+tools:
+  - id: go-vet
+    required: false
+    purpose: "static checks"
+    detection: executable_lookup
+  - id: golangci-lint
+    required: false
+    purpose: "aggregated linting"
+    detection: executable_lookup
+  - id: go-test
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
