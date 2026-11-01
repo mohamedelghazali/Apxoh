@@ -1,4 +1,5 @@
 id: python
 status: planned
+extensions: [".py"]
 entrypoints: []
 minimum_tooling: []
