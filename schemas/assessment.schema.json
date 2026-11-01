@@ -1,37 +1,212 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ARKHON assessment",
+  "$id": "https://apxoh.dev/schemas/assessment/1.0.0",
+  "title": "Apxoh Assessment",
+  "description": "The result of evaluating all gates and computing a weighted engineering score.",
   "type": "object",
+  "required": [
+    "assessment_id",
+    "project",
+    "commit_sha",
+    "assessed_at",
+    "score",
+    "level",
+    "gates",
+    "decision"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": {
+    "assessment_id": {
+      "type": "string",
+      "pattern": "^ASSESS-[A-Z0-9-]+$"
+    },
+    "project": {
       "type": "string",
       "minLength": 1
     },
-    "version": {
-      "type": "string"
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
     },
-    "status": {
-      "enum": [
-        "PASS",
-        "FAIL",
-        "BLOCKED",
-        "NOT_APPLICABLE",
-        "ACCEPTED_RISK"
-      ]
-    },
-    "description": {
-      "type": "string"
-    },
-    "created_at": {
+    "assessed_at": {
       "type": "string",
       "format": "date-time"
     },
-    "metadata": {
-      "type": "object"
+    "score": {
+      "type": "object",
+      "required": [
+        "total",
+        "max",
+        "breakdown"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "minimum": 1
+        },
+        "breakdown": {
+          "type": "object",
+          "required": [
+            "requirements",
+            "architecture_and_code_quality",
+            "testing",
+            "security",
+            "performance",
+            "reliability",
+            "scalability",
+            "documentation_deployment_maintenance"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "requirements": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 15
+            },
+            "architecture_and_code_quality": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "testing": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 15
+            },
+            "security": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "performance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "reliability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "scalability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "documentation_deployment_maintenance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            }
+          }
+        }
+      }
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "development",
+        "controlled-release",
+        "production-ready",
+        "enterprise-grade",
+        "hyperscale-validated"
+      ]
+    },
+    "gates": {
+      "type": "object",
+      "required": [
+        "release_gate"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requirements_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "architecture_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "implementation_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "testing_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "security_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "performance_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "reliability_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        },
+        "release_gate": {
+          "$ref": "#/$defs/gateVerdict"
+        }
+      }
+    },
+    "critical_failures": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "APPROVED",
+        "APPROVED_WITH_CONDITIONS",
+        "REJECTED",
+        "PENDING_EVIDENCE"
+      ]
+    },
+    "decision_reason": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "exception_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     }
   },
-  "required": [
-    "id"
-  ]
+  "$defs": {
+    "gateVerdict": {
+      "type": "object",
+      "required": [
+        "gate",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gate": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "blocking_failures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "critical_failures": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
 }
