@@ -1,0 +1,1 @@
+{"assessment_id":"{{ assessment.id | default('unassigned') }}","status":"{{ assessment.status | default('BLOCKED') }}","evidence_count":{{ evidence | default([]) | length }},"findings_count":{{ findings | default([]) | length }}}

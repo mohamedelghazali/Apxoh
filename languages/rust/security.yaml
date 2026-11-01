@@ -1,0 +1,3 @@
+language: rust
+checks: [dependency_review, secret_detection, static_analysis]
+status: planned

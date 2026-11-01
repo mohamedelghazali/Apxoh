@@ -1,0 +1,8 @@
+id: EXC-REPLACE
+risk_id: RISK-REPLACE
+owner: required
+approver: required
+justification: required
+compensating_controls: []
+expires_at: required
+status: pending

@@ -1,0 +1,3 @@
+language: rust
+frameworks: []
+missing_required_runner: BLOCKED

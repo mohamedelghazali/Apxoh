@@ -1,0 +1,3 @@
+integration: generic-agents
+status: manual
+required_context: [AGENTS.md, skills/arkhon-governance/SKILL.md]

@@ -1,0 +1,4 @@
+id: data-loss
+severity: critical
+condition: data_loss_or_restore_failure
+action: BLOCK

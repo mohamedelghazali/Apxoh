@@ -1,0 +1,38 @@
+schema_version: 1
+languages:
+  - id: python
+    maturity: planned
+    profile: python/profile.yaml
+    tools: python/tools.yaml
+  - id: javascript
+    maturity: planned
+    profile: javascript/profile.yaml
+    tools: javascript/tools.yaml
+  - id: typescript
+    maturity: planned
+    profile: typescript/profile.yaml
+    tools: typescript/tools.yaml
+  - id: java
+    maturity: planned
+    profile: java/profile.yaml
+    tools: java/tools.yaml
+  - id: csharp
+    maturity: planned
+    profile: csharp/profile.yaml
+    tools: csharp/tools.yaml
+  - id: cpp
+    maturity: planned
+    profile: cpp/profile.yaml
+    tools: cpp/tools.yaml
+  - id: go
+    maturity: planned
+    profile: go/profile.yaml
+    tools: go/tools.yaml
+  - id: rust
+    maturity: planned
+    profile: rust/profile.yaml
+    tools: rust/tools.yaml
+  - id: ruby
+    maturity: planned
+    profile: ruby/profile.yaml
+    tools: ruby/tools.yaml
