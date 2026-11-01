@@ -1,3 +1,19 @@
 language: python
 required: false
-tools: []
+tools:
+  - id: ruff
+    required: false
+    purpose: "lint and formatting"
+    detection: executable_lookup
+  - id: mypy
+    required: false
+    purpose: "static typing"
+    detection: executable_lookup
+  - id: pytest
+    required: false
+    purpose: "test execution"
+    detection: executable_lookup
+  - id: bandit
+    required: false
+    purpose: "Python security linting"
+    detection: executable_lookup
