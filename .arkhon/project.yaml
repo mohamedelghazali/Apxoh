@@ -1,5 +1,66 @@
-schema_version: 1
-name: Apxoh
-project_type: universal
-language: python
-status: planned
+# Apxoh governs itself.
+# This file declares Apxoh-as-a-project to its own engine.
+
+project:
+  name: "Apxoh"
+  identifier: "arkhon"
+  type: "library-and-cli"
+  profile: "enterprise"
+  risk_level: "high"
+  description: "Self-governance declaration for the Apxoh repository"
+
+languages:
+  primary: python
+  secondary: []
+  notes: "Apxoh itself is Python-only. Multi-language support exists in the governed projects, not in Apxoh."
+
+lifecycle:
+  current_stage: "development"
+  current_milestone: 0
+  release_channel: "pre-release"
+
+stakeholders:
+  maintainer: "mohamedelghazali"
+  security_lead: TBD
+  engineering_lead: TBD
+
+policy_profile:
+  strictness: "maximum"
+  allow_exceptions: true
+  require_signed_evidence: true
+  require_human_review_for_critical: true
+
+gates:
+  requirements_gate: required
+  architecture_gate: required
+  implementation_gate: required
+  testing_gate: required
+  security_gate: required
+  performance_gate: required
+  reliability_gate: required
+  release_gate: required
+
+governance_files:
+  read_only:
+    - "system/"
+    - "schemas/"
+    - "policies/blocking/"
+    - "manifest/"
+    - "AGENTS.md"
+    - "SECURITY_AGENTS.md"
+    - "SECURITY.md"
+    - ".github/workflows/"
+  write_once:
+    - ".arkhon/evidence/"
+  append_only:
+    - ".arkhon/state/"
+
+security:
+  authority: tsar
+  require_fresh_evidence_hours: 168
+  require_commit_binding: true
+  require_signature: true
+
+metadata:
+  created: "2026-11-01"
+  last_reviewed: "2026-11-01"
