@@ -1,17 +1,39 @@
-name: validate-rules
+name: Validate Rules
+
 on:
   push:
     branches: [main]
+    paths:
+      - "rules/**"
+      - "languages/**/rules/**"
+      - "schemas/rule.schema.json"
+      - "src/arkhon/rules/**"
   pull_request:
-  workflow_dispatch:
-permissions: {contents: read}
+    branches: [main]
+    paths:
+      - "rules/**"
+      - "languages/**/rules/**"
+      - "schemas/rule.schema.json"
+      - "src/arkhon/rules/**"
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
+  validate:
+    name: Validate rules (schema + semantics)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+
+      - name: Run rule validator
+        run: python scripts/validation/validate_all.py
+
+      - name: Rule tests (positive + negative)
+        run: pytest tests/rules/ -v --tb=short
+
+      - name: Rule-specific tests (in languages/*)
+        run: pytest tests/unit/rules/ -v --tb=short
