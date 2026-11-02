@@ -1,3 +1,39 @@
-language: ruby
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: ruby
+delegates_to: tsar
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+  dependency_scanning:
+    tool: bundle-audit
+    required: true
+    invocation: "bundle exec bundle-audit check --update --format json"
+  dangerous_patterns:
+    - pattern: "eval("
+      severity: high
+      reason: "eval of untrusted input is code injection"
+    - pattern: "system("
+      severity: high
+      reason: "system with unescaped arguments enables command injection"
+    - pattern: "`"
+      severity: medium
+      reason: "Backtick execution is command injection; use Open3 with array args"
+    - pattern: "Marshal.load("
+      severity: critical
+      reason: "Marshal.load of untrusted data is remote code execution"
+    - pattern: "YAML.load("
+      severity: high
+      reason: "Use YAML.safe_load, not YAML.load"
+    - pattern: "params.permit!"
+      severity: medium
+      reason: "permit! allows all parameters; use explicit permits"
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
