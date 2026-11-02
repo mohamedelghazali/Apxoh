@@ -1,3 +1,39 @@
-language: csharp
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: csharp
+delegates_to: tsar
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+  dependency_scanning:
+    tool: dotnet
+    required: true
+    invocation: "dotnet list package --vulnerable --include-transitive"
+  dangerous_patterns:
+    - pattern: "BinaryFormatter"
+      severity: critical
+      reason: "BinaryFormatter deserialization is remote code execution"
+    - pattern: "Process.Start("
+      severity: high
+      reason: "Process.Start with unescaped arguments enables command injection"
+    - pattern: "MD5.Create("
+      severity: high
+      reason: "MD5 is cryptographically broken"
+    - pattern: "SHA1.Create("
+      severity: high
+      reason: "SHA-1 is cryptographically broken for security uses"
+    - pattern: "new Random("
+      severity: medium
+      reason: "Use RandomNumberGenerator for security-sensitive randomness"
+    - pattern: "catch { }"
+      severity: medium
+      reason: "Empty catch block swallows exceptions silently"
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
