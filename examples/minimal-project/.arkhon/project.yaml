@@ -1,2 +1,28 @@
-project: {id: minimal-project, profile: universal, language: python}
-missing_tool_status: BLOCKED
+# Apxoh project declaration.
+project:
+  name: "minimal-project"
+  identifier: minimal-project
+  type: library
+  profile: universal
+  risk_level: low
+  description: "Small Python project used to demonstrate Apxoh workflows."
+
+languages:
+  primary: python
+  secondary: []
+
+lifecycle:
+  current_stage: development
+  current_milestone: 2
+  release_channel: pre-release
+
+gates:
+  requirements_gate: required
+  testing_gate: required
+  security_gate: required
+  release_gate: required
+
+security:
+  authority: tsar
+  require_fresh_evidence_hours: 168
+  require_commit_binding: true
