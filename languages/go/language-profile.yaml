@@ -1,5 +1,50 @@
 id: go
-status: planned
-extensions: [".go"]
-entrypoints: []
-minimum_tooling: []
+name: Go
+family: static-typed-native
+version: 1.0.0
+status: active
+
+runtime:
+  minimum: "1.21"
+  recommended: "1.22"
+  maximum: "1.23"
+  tested: ["1.21", "1.22", "1.23"]
+
+build_system:
+  preferred: go-modules
+  commands:
+    install: "go mod download"
+    build: "go build ./..."
+    test: "go test ./..."
+
+dependency_manager:
+  preferred: go-modules
+  lock_file: go.sum
+  manifest: go.mod
+
+testing:
+  framework: go-test
+  alternatives: [testify, ginkgo]
+  discovery: "*_test.go"
+
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - database
+  - api-integration
+  - devops
+  - observability
+  - scalability
+  - infrastructure
+  - maintenance
+  - release
+
+notes: |
+  Go's built-in tooling (go vet, go test, gofmt) is required. Additional
+  linters (golangci-lint) are recommended but optional. Error handling
+  must be explicit — no ignored errors.
