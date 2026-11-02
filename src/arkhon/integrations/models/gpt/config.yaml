@@ -1,10 +1,8 @@
-# GPT model integration configuration.
 id: gpt
-name: "GPT"
+name: "OpenAI GPT"
 provider: openai
 kind: model
 version: 1.0.0
-
 model:
   provider: openai
   endpoint: "https://api.openai.com/v1/chat/completions"
@@ -14,28 +12,23 @@ model:
     - "gpt-4.1-mini"
     - "gpt-4.1-nano"
   max_tokens: 8192
-  temperature: 0
-
+  temperature: 0.0
 auth:
   method: header
+  header_name: "Authorization"
   env_var: "OPENAI_API_KEY"
   required: true
-
 capabilities:
   - code-generation
   - code-review
-
+  - instruction-following
 governance:
   injection: system-prompt
   system_prompt_file: "prompts/system.md"
   injection_file: "prompts/governance-injection.md"
-  instruction_hierarchy_support: standard
-
+  instruction_hierarchy_support: configured
 verification:
   max_reachable_level: configured
-  notes: |
-    Adapter configuration and transport are available. Behavioral compliance
-    and model quality are not certified by this integration.
-
+  notes: "Transport implemented; behavioral verification is required before claiming verified."
 rate_limits:
-  default_rpm: 60
+  timeout_seconds: 120

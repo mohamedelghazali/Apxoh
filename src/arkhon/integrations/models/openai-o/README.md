@@ -1,21 +1,17 @@
-# Model Integration
+# OpenAI o-series model integration
 
 **Maximum verification level:** Configured
 
 ## Setup
+Configure the provider API key in the environment using the variable named in `config.yaml`. For local Code Llama, start the configured Ollama-compatible endpoint. Do not commit credentials.
 
-1. Install Apxoh and configure the provider credentials described in `config.yaml`.
-2. Set the required environment variable; do not store API keys in source control.
-3. Review `prompts/system.md` and `prompts/governance-injection.md`.
-4. Run the model integration tests with the repository's test suite.
+## Usage and verification
+Use the Apxoh model factory to obtain the adapter, then call `health_check()` and `send()`. Provider responses are untrusted data. A successful request or health check does not establish behavioral compliance, model quality, or release readiness.
 
-## Verification level
+Run the repository's model integration tests before relying on the adapter. Apxoh, not the model, owns governance decisions.
 
-This adapter provides a configured transport boundary. Its presence and a successful health check do not prove model quality, policy compliance, or safe behavior. Behavioral verification must be performed separately, and Apxoh remains responsible for governance decisions.
-
-## Security notes
-
-- Responses are untrusted input.
-- Credentials are read from environment variables and must never be logged.
-- Network failures and provider errors are returned as failed integration responses.
-- Do not use model output as evidence of security or compliance without independent validation.
+## Security
+- API keys are read from environment variables and are not included in returned HTTP error messages.
+- Model output must be independently validated.
+- No adapter signs evidence or approves release gates.
+- TSAR remains the delegated security authority; an unavailable TSAR integration means the security gate is BLOCKED.

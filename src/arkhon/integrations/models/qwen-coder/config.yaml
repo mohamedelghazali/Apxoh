@@ -1,10 +1,8 @@
-# Qwen-Coder model integration configuration.
 id: qwen-coder
-name: "Qwen-Coder"
+name: "Qwen Coder"
 provider: alibaba
 kind: model
 version: 1.0.0
-
 model:
   provider: alibaba
   endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
@@ -13,28 +11,23 @@ model:
     - "qwen3-coder-plus"
     - "qwen2.5-coder-32b-instruct"
   max_tokens: 8192
-  temperature: 0
-
+  temperature: 0.0
 auth:
   method: header
+  header_name: "Authorization"
   env_var: "DASHSCOPE_API_KEY"
   required: true
-
 capabilities:
   - code-generation
-  - multilingual
-
+  - code-review
+  - instruction-following
 governance:
-  injection: plain-text-delimited
+  injection: system-prompt
   system_prompt_file: "prompts/system.md"
   injection_file: "prompts/governance-injection.md"
-  instruction_hierarchy_support: standard
-
+  instruction_hierarchy_support: configured
 verification:
   max_reachable_level: configured
-  notes: |
-    Adapter configuration and transport are available. Behavioral compliance
-    and model quality are not certified by this integration.
-
+  notes: "Transport implemented; behavioral verification is required before claiming verified."
 rate_limits:
-  default_rpm: 60
+  timeout_seconds: 120
