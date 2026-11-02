@@ -1,0 +1,41 @@
+# OpenAI o-series model integration configuration.
+id: openai-o
+name: "OpenAI o-series"
+provider: openai
+kind: model
+version: 1.0.0
+
+model:
+  provider: openai
+  endpoint: "https://api.openai.com/v1/chat/completions"
+  default_model: "o3"
+  available_models:
+    - "o3"
+    - "o4-mini"
+  max_tokens: 8192
+  temperature: null
+
+auth:
+  method: header
+  env_var: "OPENAI_API_KEY"
+  required: true
+
+capabilities:
+  - reasoning
+  - architecture-planning
+  - code-generation
+
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: standard
+
+verification:
+  max_reachable_level: configured
+  notes: |
+    Adapter configuration and transport are available. Behavioral compliance
+    and model quality are not certified by this integration.
+
+rate_limits:
+  default_rpm: 60

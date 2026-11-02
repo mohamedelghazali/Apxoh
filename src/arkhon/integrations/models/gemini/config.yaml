@@ -1,0 +1,41 @@
+# Gemini model integration configuration.
+id: gemini
+name: "Gemini"
+provider: google
+kind: model
+version: 1.0.0
+
+model:
+  provider: google
+  endpoint: "https://generativelanguage.googleapis.com/v1beta/models"
+  default_model: "gemini-2.5-flash"
+  available_models:
+    - "gemini-2.5-flash"
+    - "gemini-2.5-pro"
+  max_tokens: 8192
+  temperature: 0
+
+auth:
+  method: query
+  env_var: "GOOGLE_API_KEY"
+  required: true
+
+capabilities:
+  - code-generation
+  - long-context
+  - multimodal
+
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: standard
+
+verification:
+  max_reachable_level: configured
+  notes: |
+    Adapter configuration and transport are available. Behavioral compliance
+    and model quality are not certified by this integration.
+
+rate_limits:
+  default_rpm: 60

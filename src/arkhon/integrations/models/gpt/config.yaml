@@ -1,0 +1,41 @@
+# GPT model integration configuration.
+id: gpt
+name: "GPT"
+provider: openai
+kind: model
+version: 1.0.0
+
+model:
+  provider: openai
+  endpoint: "https://api.openai.com/v1/chat/completions"
+  default_model: "gpt-4.1"
+  available_models:
+    - "gpt-4.1"
+    - "gpt-4.1-mini"
+    - "gpt-4.1-nano"
+  max_tokens: 8192
+  temperature: 0
+
+auth:
+  method: header
+  env_var: "OPENAI_API_KEY"
+  required: true
+
+capabilities:
+  - code-generation
+  - code-review
+
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: standard
+
+verification:
+  max_reachable_level: configured
+  notes: |
+    Adapter configuration and transport are available. Behavioral compliance
+    and model quality are not certified by this integration.
+
+rate_limits:
+  default_rpm: 60

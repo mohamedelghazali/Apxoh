@@ -1,0 +1,8 @@
+platform: github-copilot
+verification_level:
+  max_reachable: configured
+underlying_models:
+  - id: gpt
+    provider: openai
+  - id: claude
+    provider: anthropic
