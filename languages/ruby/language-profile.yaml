@@ -3,12 +3,14 @@ name: Ruby
 family: dynamic-typed
 version: 1.0.0
 status: active
+
 runtime:
   minimum: "3.2"
   recommended: "3.3"
   maximum: "3.x"
   tested: ["3.2", "3.3"]
   interpreter: ruby
+
 build_system:
   preferred: bundler
   alternatives: [rake]
@@ -16,14 +18,17 @@ build_system:
     install: "bundle install --deployment"
     build: "bundle exec rake build"
     test: "bundle exec rspec"
+
 dependency_manager:
   preferred: bundler
   lock_file: Gemfile.lock
   manifest: Gemfile
+
 testing:
   framework: rspec
   alternatives: [minitest]
   discovery: "spec/**/*_spec.rb"
+
 rule_domains_supported:
   - requirements
   - architecture
@@ -37,7 +42,8 @@ rule_domains_supported:
   - observability
   - maintenance
   - release
+
 notes: |
   Ruby projects must use a Gemfile.lock. Apxoh checks that the lock file is
-  committed, and that `bundle install --deployment` succeeds (i.e., the
+  committed, and that bundle install --deployment succeeds (i.e., the
   lock file matches the Gemfile).
