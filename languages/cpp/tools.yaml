@@ -1,15 +1,45 @@
-language: cpp
-required: false
+id: cpp
 tools:
-  - id: clang-tidy
-    required: false
-    purpose: "static analysis"
-    detection: executable_lookup
-  - id: ctest
-    required: false
-    purpose: "test orchestration"
-    detection: executable_lookup
-  - id: googletest
-    required: false
-    purpose: "unit testing"
-    detection: executable_lookup
+  static_analysis:
+    - name: cmake
+      role: build-tool
+      required: true
+      invocation: "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release"
+      version_arg: "--version"
+    - name: clang-tidy
+      role: analyzer
+      required: true
+      invocation: "clang-tidy -p build src/**/*.cpp"
+      output_format: text
+      version_arg: "--version"
+    - name: cppcheck
+      role: analyzer
+      required: false
+      invocation: "cppcheck --enable=all --error-exitcode=1 src/"
+      output_format: xml
+      version_arg: "--version"
+    - name: clang-format
+      role: formatter
+      required: true
+      invocation: "clang-format --dry-run --Werror src/**/*.cpp src/**/*.h"
+      version_arg: "--version"
+  testing:
+    - name: ctest
+      role: test-runner
+      required: true
+      invocation: "ctest --test-dir build --output-on-failure --output-junit results.xml"
+      output_format: junit-xml
+      version_arg: "--version"
+  build:
+    - name: cmake
+      role: builder
+      required: true
+      invocation: "cmake --build build --parallel"
+      version_arg: "--version"
+  supply_chain:
+    - name: vcpkg
+      role: dependency-auditor
+      required: true
+      invocation: "vcpkg export --dry-run"
+      version_arg: "--version"
+missing_tool_policy: BLOCKED
