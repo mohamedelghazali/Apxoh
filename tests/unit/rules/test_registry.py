@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import RuleNotFoundError
+from arkhon.core.errors import RuleError, RuleNotFoundError
 from arkhon.rules.loader import Rule
 from arkhon.rules.registry import RuleRegistry, build_registry
 
@@ -83,7 +83,7 @@ def test_domains(registry: RuleRegistry) -> None:
 
 
 def test_duplicate_raises() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(RuleError, match="duplicate rule id"):
         RuleRegistry([_rule("SE-REQ-001"), _rule("SE-REQ-001")])
 
 
