@@ -84,6 +84,7 @@ ignore_errors = true
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
+norecursedirs = ["tests/languages/fixtures/*"]
 addopts = "-ra -q"
 
 [tool.bandit]
