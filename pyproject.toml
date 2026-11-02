@@ -31,7 +31,7 @@ dev = [
     "mypy==1.13.0",
     "bandit==1.7.10",
     "pip-audit==2.10.1",
-    "sigstore==4.2.0",
+    "sigstore==4.5.1",
     "check-jsonschema==0.30.0",
     "types-PyYAML==6.0.12.20240917",
     "cryptography==50.0.0",
