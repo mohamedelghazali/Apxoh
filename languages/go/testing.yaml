@@ -1,3 +1,38 @@
-language: go
-frameworks: []
-missing_required_runner: BLOCKED
+id: go
+framework: go-test
+minimum_version: "1.21"
+
+coverage:
+  tool: go-test
+  required: true
+  minimum_line_coverage: 70
+  fail_under: 70
+  report_formats: [text, html]
+  command: "go test -coverprofile=coverage.out ./..."
+
+test_discovery:
+  patterns: ["*_test.go"]
+  directories: ["./"]
+
+test_categories:
+  unit:
+    required: true
+    command: "go test -short ./..."
+    timeout_seconds: 300
+  integration:
+    required: true
+    command: "go test -tags=integration ./..."
+    timeout_seconds: 600
+  race:
+    required: true
+    command: "go test -race ./..."
+    timeout_seconds: 600
+    note: "Race detector is mandatory for concurrent code"
+  benchmark:
+    required: false
+    command: "go test -bench=. -benchmem ./..."
+
+required_flags:
+  - "-race"
+  - "-count=1"
+  - "-timeout=10m"
