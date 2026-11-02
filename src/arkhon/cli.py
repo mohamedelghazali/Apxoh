@@ -19,10 +19,10 @@ def _repo_root() -> Path:
 
 def cmd_version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
-        payload = {"name": "ARKHON", "identifier": "arkhon", "version": __version__}
+        payload = {"name": "Apxoh", "identifier": "arkhon", "version": __version__}
         print(json.dumps(payload, indent=2))
     else:
-        print(f"ARKHON (Apxoh) {__version__}")
+        print(f"Apxoh {__version__} (ARKHON)")
     return 0
 
 
@@ -53,13 +53,13 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     except Exception as exc:
         warnings.append(f"optional TSAR integration check failed: {exc}")
     if failures:
-        print("ARKHON (Apxoh) doctor — FAILED")
+        print("Apxoh doctor — FAILED")
         for failure in failures:
             print(f"  [FAIL] {failure}")
         for warning in warnings:
             print(f"  [WARN] {warning}")
         return 1
-    print("ARKHON (Apxoh) doctor — OK")
+    print("Apxoh doctor — OK")
     print(f"  Python:  {sys.version.split()[0]}")
     print(f"  Version: {__version__}")
     print(f"  Root:    {root}")
@@ -303,7 +303,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="arkhon",
-        description="ARKHON (Apxoh) — Software Engineering Governance & Assurance System",
+        description="Apxoh (ARKHON) — Software Engineering Governance & Assurance System",
     )
     sub = parser.add_subparsers(dest="command")
     version = sub.add_parser("version", help="Print ARKHON version")
