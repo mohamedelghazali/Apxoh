@@ -24,6 +24,9 @@ REQUIRED_RULE_IDS = (
 FRESHNESS_HOURS = 168
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+_SEMVER_RE = re.compile(
+    r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?"
+)
 
 
 @dataclass(frozen=True)
@@ -83,14 +86,39 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
 
 
 def _version_tuple(value: str) -> tuple[int, int, int]:
-    match = re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?", value)
+    match = _SEMVER_RE.fullmatch(value)
     if not match:
-        raise SecurityError(f"invalid TSAR semantic version: {value!r}")
+        raise SecurityError(f"invalid version: {value!r}")
     return tuple(int(part) for part in match.groups())  # type: ignore[return-value]
 
 
+def _maximum_version_tuple(value: str) -> tuple[int, int, int]:
+    """Resolve an exclusive upper bound, accepting trailing x wildcards."""
+    parts = value.split(".")
+    if len(parts) != 3:
+        raise SecurityError(f"invalid version bound: {value!r}")
+    wildcard_indexes = [index for index, part in enumerate(parts) if part.lower() == "x"]
+    if not wildcard_indexes:
+        return _version_tuple(value)
+    first_wildcard = wildcard_indexes[0]
+    if first_wildcard == 0 or any(
+        part.lower() != "x" for part in parts[first_wildcard:]
+    ):
+        raise SecurityError(f"invalid version bound: {value!r}")
+    if any(part.lower() == "x" for part in parts[:first_wildcard]):
+        raise SecurityError(f"invalid version bound: {value!r}")
+    numeric = [int(part) for part in parts[:first_wildcard]]
+    if any(str(number) != part for number, part in zip(numeric, parts)):
+        raise SecurityError(f"invalid version bound: {value!r}")
+    numeric[-1] += 1
+    numeric.extend([0] * (3 - len(numeric)))
+    return tuple(numeric)  # type: ignore[return-value]
+
+
 def _check_version(version: str, minimum: str, maximum: str) -> None:
-    current, lower, upper = _version_tuple(version), _version_tuple(minimum), _version_tuple(maximum)
+    current = _version_tuple(version)
+    lower = _version_tuple(minimum)
+    upper = _maximum_version_tuple(maximum)
     if current < lower or current >= upper:
         raise SecurityError(f"TSAR version {version} out of range [{minimum}, {maximum})")
 
