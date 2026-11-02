@@ -1,14 +1,17 @@
 id: csharp
 delegates_to: tsar
+
 local_checks:
   secret_scanning:
     tool: gitleaks
     required: true
     invocation: "gitleaks detect --source . --no-git --report-format json"
+
   dependency_scanning:
     tool: dotnet
     required: true
     invocation: "dotnet list package --vulnerable --include-transitive"
+
   dangerous_patterns:
     - pattern: "BinaryFormatter"
       severity: critical
@@ -28,6 +31,7 @@ local_checks:
     - pattern: "catch { }"
       severity: medium
       reason: "Empty catch block swallows exceptions silently"
+
 tsar_delegation:
   required_rules:
     - TSAR-SEC-SECRET-001
