@@ -1,15 +1,55 @@
-language: go
-required: false
+id: go
 tools:
-  - id: go-vet
-    required: false
-    purpose: "static checks"
-    detection: executable_lookup
-  - id: golangci-lint
-    required: false
-    purpose: "aggregated linting"
-    detection: executable_lookup
-  - id: go-test
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
+  static_analysis:
+    - name: go
+      role: vet
+      required: true
+      invocation: "go vet ./..."
+      output_format: text
+      version_arg: "version"
+
+    - name: golangci-lint
+      role: linter
+      required: true
+      invocation: "golangci-lint run --out-format json"
+      output_format: json
+      version_arg: "--version"
+
+    - name: staticcheck
+      role: analyzer
+      required: false
+      invocation: "staticcheck ./..."
+      output_format: text
+      version_arg: "--version"
+
+  testing:
+    - name: go
+      role: test-runner
+      required: true
+      invocation: "go test -json ./..."
+      output_format: json
+      version_arg: "version"
+
+  build:
+    - name: go
+      role: compiler
+      required: true
+      invocation: "go build ./..."
+      version_arg: "version"
+
+  supply_chain:
+    - name: govulncheck
+      role: dependency-auditor
+      required: true
+      invocation: "govulncheck -json ./..."
+      output_format: json
+      version_arg: "-version"
+
+    - name: gosec
+      role: security-analyzer
+      required: false
+      invocation: "gosec -fmt=json ./..."
+      output_format: json
+      version_arg: "-version"
+
+missing_tool_policy: BLOCKED
