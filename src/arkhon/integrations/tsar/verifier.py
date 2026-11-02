@@ -18,8 +18,10 @@ from arkhon.evidence.integrity import sha256_of
 logger = get_logger("integrations.tsar.verifier")
 
 REQUIRED_RULE_IDS = (
-    "TSAR-SEC-SECRET-001", "TSAR-SEC-CRYPTO-001",
-    "TSAR-SEC-DEP-001", "TSAR-SEC-ASVS-V2",
+    "TSAR-SEC-SECRET-001",
+    "TSAR-SEC-CRYPTO-001",
+    "TSAR-SEC-DEP-001",
+    "TSAR-SEC-ASVS-V2",
 )
 FRESHNESS_HOURS = 168
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -45,14 +47,25 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
     if not isinstance(payload, dict):
         raise SecurityError("TSAR payload must be an object")
     required = (
-        "evidence_id", "tsar_version", "commit_sha", "executed_at",
-        "status", "rule_ids", "summary", "artifacts",
+        "evidence_id",
+        "tsar_version",
+        "commit_sha",
+        "executed_at",
+        "status",
+        "rule_ids",
+        "summary",
+        "artifacts",
     )
     missing = [key for key in required if key not in payload]
     if missing:
         raise SecurityError(f"TSAR payload missing fields: {missing}")
-    if not all(isinstance(payload[key], str) and payload[key] for key in
-               ("evidence_id", "tsar_version", "commit_sha", "executed_at", "status")):
+    identity_fields = (
+        "evidence_id", "tsar_version", "commit_sha", "executed_at", "status",
+    )
+    if not all(
+        isinstance(payload[key], str) and payload[key]
+        for key in identity_fields
+    ):
         raise SecurityError("TSAR evidence identity and status fields must be non-empty strings")
     if not isinstance(payload["rule_ids"], list) or not all(
         isinstance(item, str) and item for item in payload["rule_ids"]
@@ -63,7 +76,12 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
         raise SecurityError("TSAR summary must be an object")
     summary: dict[str, int] = {}
     for key, value in summary_raw.items():
-        if not isinstance(key, str) or isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        if (
+            not isinstance(key, str)
+            or isinstance(value, bool)
+            or not isinstance(value, int)
+            or value < 0
+        ):
             raise SecurityError("TSAR summary counts must be non-negative integers")
         summary[key] = value
     artifacts_raw = payload["artifacts"]
@@ -74,7 +92,12 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
         if not isinstance(item, dict):
             raise SecurityError("malformed TSAR artifact entry")
         path, digest = item.get("path"), item.get("sha256")
-        if not isinstance(path, str) or not path or not isinstance(digest, str) or not _SHA256_RE.fullmatch(digest):
+        if (
+            not isinstance(path, str)
+            or not path
+            or not isinstance(digest, str)
+            or not _SHA256_RE.fullmatch(digest)
+        ):
             raise SecurityError("TSAR artifact requires a relative path and lowercase SHA-256")
         artifacts.append((path, digest))
     return TsarEvidence(
@@ -146,7 +169,7 @@ def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
 def _check_required_rules(rule_ids: tuple[str, ...]) -> None:
     """Ensure every required TSAR rule ID is present in the evidence."""
     present = set(rule_ids)
-    missing = [r for r in REQUIRED_RULE_IDS if r not in present]
+    missing = [rule_id for rule_id in REQUIRED_RULE_IDS if rule_id not in present]
     if missing:
         raise SecurityError(f"TSAR evidence missing required rule_ids: {missing}")
 
@@ -160,7 +183,9 @@ def _check_artifacts(
         try:
             candidate.relative_to(root)
         except ValueError as exc:
-            raise EvidenceTamperedError(f"TSAR artifact path escapes evidence root: {relative}") from exc
+            raise EvidenceTamperedError(
+                f"TSAR artifact path escapes evidence root: {relative}"
+            ) from exc
         if not candidate.is_file():
             raise EvidenceTamperedError(f"TSAR artifact missing: {candidate}")
         actual = sha256_of(candidate)
