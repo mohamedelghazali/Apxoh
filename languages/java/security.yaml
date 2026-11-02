@@ -1,3 +1,43 @@
-language: java
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: java
+delegates_to: tsar
+
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+
+  dependency_scanning:
+    tool: mvn
+    required: true
+    invocation: "mvn -B org.owasp:dependency-check-maven:check"
+
+  dangerous_patterns:
+    - pattern: "ObjectInputStream"
+      severity: high
+      reason: "Java deserialization of untrusted data is remote code execution"
+    - pattern: "Runtime.getRuntime().exec("
+      severity: high
+      reason: "exec with unescaped arguments enables command injection"
+    - pattern: "MessageDigest.getInstance(\"MD5\""
+      severity: high
+      reason: "MD5 is cryptographically broken"
+    - pattern: "MessageDigest.getInstance(\"SHA-1\""
+      severity: high
+      reason: "SHA-1 is cryptographically broken for security uses"
+    - pattern: "new Random("
+      severity: medium
+      reason: "Use SecureRandom for security-sensitive randomness"
+    - pattern: "printStackTrace("
+      severity: low
+      reason: "printStackTrace leaks information; use a logger"
+
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
