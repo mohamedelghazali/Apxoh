@@ -3,12 +3,14 @@ name: C#
 family: static-typed-dotnet
 version: 1.0.0
 status: active
+
 runtime:
   minimum: "8.0"
   recommended: "8.0"
   maximum: "9.x"
   tested: ["8.0", "9.0"]
   interpreter: dotnet
+
 build_system:
   preferred: dotnet-cli
   alternatives: [msbuild, cake]
@@ -16,14 +18,17 @@ build_system:
     install: "dotnet restore"
     build: "dotnet build --configuration Release --nologo"
     test: "dotnet test --nologo"
+
 dependency_manager:
   preferred: nuget
   lock_file: packages.lock.json
   manifest: "*.csproj"
+
 testing:
   framework: xunit
   alternatives: [nunit, mstest]
   discovery: "**/*Tests.cs"
+
 rule_domains_supported:
   - requirements
   - architecture
@@ -41,6 +46,7 @@ rule_domains_supported:
   - infrastructure
   - maintenance
   - release
+
 notes: |
   Apxoh checks that packages.lock.json exists and is committed. NuGet
   without a lock file is not reproducible.
