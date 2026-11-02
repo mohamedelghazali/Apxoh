@@ -1,3 +1,46 @@
-language: typescript
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: typescript
+delegates_to: tsar
+
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+
+  dependency_scanning:
+    tool: npm
+    required: true
+    invocation: "npm audit --json --audit-level=moderate"
+
+  type_safety:
+    tool: tsc
+    required: true
+    invocation: "tsc --noEmit --strict"
+    reason: "Type errors in security-critical code are treated as security issues"
+
+  dangerous_patterns:
+    - pattern: ": any"
+      severity: medium
+      reason: "Any type disables TypeScript's safety guarantees"
+    - pattern: "as any"
+      severity: medium
+      reason: "Type assertion to any is a safety escape hatch"
+    - pattern: "@ts-ignore"
+      severity: medium
+      reason: "@ts-ignore suppresses a real type error"
+    - pattern: "eval("
+      severity: high
+      reason: "eval() executes untrusted code"
+    - pattern: "innerHTML"
+      severity: medium
+      reason: "Use textContent or a safe sanitizer"
+
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
