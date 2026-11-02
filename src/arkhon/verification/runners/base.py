@@ -1,14 +1,33 @@
-"""ARKHON package module."""
+"""Runner interface for independent verification tools."""
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from arkhon.core.constants import Status
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+
+
+class RunnerOutcome(str, Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    BLOCKED = "BLOCKED"
+
+
 @dataclass(frozen=True)
 class RunnerResult:
-    status: Status
-    tool: str
-    message: str
-    exit_code: int | None = None
-class VerificationRunner(ABC):
+    runner: str
+    outcome: RunnerOutcome
+    reason: str = ""
+    artifacts: list[Path] = field(default_factory=list)
+
+
+class Runner(ABC):
+    """A deterministic runner that reports results and generated artifacts."""
+    @property
     @abstractmethod
-    def run(self,target: str) -> RunnerResult: """Run a bounded verification."""
+    def name(self) -> str:
+        """Stable runner identifier used in evidence."""
+
+    @abstractmethod
+    def run(self, project_root: Path) -> RunnerResult:
+        """Execute verification; expected failures should be returned, not raised."""
