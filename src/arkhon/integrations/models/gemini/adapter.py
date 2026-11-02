@@ -48,7 +48,7 @@ class GeminiAdapter(Integration):
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             return IntegrationResponse(ok=False, reason="GOOGLE_API_KEY not set")
-        url = f"{self.config.endpoint}/{self.config.model}:generateContent?key={api_key}"
+        url = f"{self.config.endpoint}/{self.config.model}:generateContent"
         system = self.system_prompt()
         body: dict[str, Any] = {
             "contents": [{"role": "user", "parts": [{"text": user_message}]}],
@@ -61,7 +61,7 @@ class GeminiAdapter(Integration):
             body["systemInstruction"] = {"parts": [{"text": system}]}
         request = urllib.request.Request(
             url, data=json.dumps(body).encode("utf-8"),
-            headers={"content-type": "application/json"}, method="POST",
+            headers={"content-type": "application/json", "x-goog-api-key": api_key}, method="POST",
         )
         try:
             with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
