@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -18,7 +19,8 @@ def _repo_root() -> Path:
 
 def cmd_version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
-        print(json.dumps({"name": "ARKHON", "identifier": "arkhon", "version": __version__}, indent=2))
+        payload = {"name": "ARKHON", "identifier": "arkhon", "version": __version__}
+        print(json.dumps(payload, indent=2))
     else:
         print(f"ARKHON (Apxoh) {__version__}")
     return 0
@@ -133,9 +135,13 @@ def cmd_inspect(args: argparse.Namespace) -> int:
 
 
 def _commit_sha(project: Path) -> str | None:
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        print("[FAIL] git executable not found on PATH", file=sys.stderr)
+        return None
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
+            [git_executable, "rev-parse", "HEAD"],  # noqa: S603 - fixed executable, no shell
             cwd=project,
             capture_output=True,
             text=True,
@@ -143,7 +149,7 @@ def _commit_sha(project: Path) -> str | None:
             timeout=10,
         )
         return result.stdout.strip()
-    except Exception as exc:
+    except (OSError, subprocess.SubprocessError) as exc:
         print(f"[FAIL] cannot resolve commit SHA: {exc}", file=sys.stderr)
         return None
 
