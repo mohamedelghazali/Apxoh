@@ -1,10 +1,10 @@
 """Google Gemini generateContent adapter."""
 from __future__ import annotations
 
+import http.client
 import json
 import os
-import urllib.error
-import urllib.request
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -61,10 +61,18 @@ class GeminiAdapter(Integration):
             )
 
         parsed_endpoint = urlsplit(self.config.endpoint)
-        if parsed_endpoint.scheme != "https" or not parsed_endpoint.hostname:
+        if (
+            parsed_endpoint.scheme != "https"
+            or not parsed_endpoint.hostname
+            or parsed_endpoint.username
+            or parsed_endpoint.password
+            or parsed_endpoint.query
+            or parsed_endpoint.fragment
+            or not re.fullmatch(r"[A-Za-z0-9._-]+", self.config.model)
+        ):
             return IntegrationResponse(
                 ok=False,
-                reason="Gemini endpoint must use HTTPS",
+                reason="Gemini endpoint must be valid HTTPS and model must be a safe identifier",
             )
 
         payload: dict[str, Any] = {
@@ -80,37 +88,35 @@ class GeminiAdapter(Integration):
         if system:
             payload["systemInstruction"] = {"parts": [{"text": system}]}
 
-        request = urllib.request.Request(
-            f"{self.config.endpoint}/{self.config.model}:generateContent",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "content-type": "application/json",
-                "x-goog-api-key": api_key,
-            },
-            method="POST",
+        connection = http.client.HTTPSConnection(
+            parsed_endpoint.hostname,
+            parsed_endpoint.port or 443,
+            timeout=self.config.timeout_seconds,
         )
         try:
-            # Gemini endpoint is required to use HTTPS above.
-            with urllib.request.urlopen(  # noqa: S310
-                request,
-                timeout=self.config.timeout_seconds,
-            ) as response:
-                raw = response.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
+            connection.request(
+                "POST",
+                f"{parsed_endpoint.path.rstrip('/')}/{self.config.model}:generateContent",
+                body=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "content-type": "application/json",
+                    "x-goog-api-key": api_key,
+                },
+            )
+            response = connection.getresponse()
+            raw = response.read().decode("utf-8")
+            if response.status >= 400:
+                return IntegrationResponse(
+                    ok=False,
+                    reason=f"HTTP {response.status}: {response.reason}",
+                )
+        except (OSError, http.client.HTTPException, TimeoutError) as exc:
             return IntegrationResponse(
                 ok=False,
-                reason=f"HTTP {exc.code}: {exc.reason}",
+                reason=f"network error: {exc}",
             )
-        except TimeoutError:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"timeout after {self.config.timeout_seconds}s",
-            )
-        except urllib.error.URLError as exc:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"network error: {exc.reason}",
-            )
+        finally:
+            connection.close()
 
         try:
             parsed = json.loads(raw)
