@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import os
-import socket
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -100,10 +99,10 @@ class OpenAICompatibleAdapter(Integration):
                 body = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             return IntegrationResponse(ok=False, reason=f"HTTP {exc.code}: {exc.reason}")
-        except (urllib.error.URLError, socket.timeout) as exc:
-            return IntegrationResponse(ok=False, reason=f"network error: {exc}")
         except TimeoutError:
             return IntegrationResponse(ok=False, reason=f"timeout after {self.config.timeout_seconds}s")
+        except urllib.error.URLError as exc:
+            return IntegrationResponse(ok=False, reason=f"network error: {exc}")
 
         try:
             parsed = json.loads(body)
