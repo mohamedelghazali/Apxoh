@@ -1,12 +1,10 @@
 # Apxoh Threat Model
 
 **Version:** 1.0
-**Status:** Active — initial baseline; implementation status of individual controls must be verified
+**Status:** Active
 **Owner:** Security Lead (TBD)
 **Last reviewed:** 2026-11-01
 **Review cadence:** Every minor release, and after any security incident
-
-> **Assurance note:** This document defines the threat model and required controls. A control listed here is not evidence that it is already deployed or operating effectively. Verify implementation through repository configuration, CI results, and operational evidence before treating it as effective.
 
 ---
 
@@ -14,17 +12,13 @@
 
 ### 1.1 The Three Products
 
-Apxoh (also referred to as ARKHON) is a Software Engineering Governance & Assurance System. It operates as three interdependent products within a single repository:
-
 | Product | Role | Runtime |
 | :--- | :--- | :--- |
-| **Apxoh Core** | Local governance and verification engine on the developer's machine | Python 3.11+, CLI |
-| **Apxoh Agent Governance** | Instructions, skills, and reference files that AI coding agents adopt | Markdown + YAML, agent-consumed |
-| **Apxoh Assurance** | Independent verification, evidence collection, and release gating | Local CLI + CI |
+| **Apxoh Core** | Local governance and verification engine | Python 3.11+, CLI |
+| **Apxoh Agent Governance** | Instructions and skills for AI coding agents | Markdown + YAML |
+| **Apxoh Assurance** | Independent verification, evidence, release gating | Local CLI + CI |
 
 **Central principle:** *Evidence Before Approval. Verification Before Release.*
-
-The AI agent writes the software. **Apxoh verifies it.**
 
 ### 1.2 System Boundaries
 
@@ -34,218 +28,169 @@ The AI agent writes the software. **Apxoh verifies it.**
 - Evidence artifacts produced by Apxoh
 - Release gating decisions
 - The contract with TSAR (delegated security authority)
-- The eight model integrations and one platform integration defined by the architecture
+- The 8 model integrations and 1 platform integration
 
-**Out of scope (owned by other parties):**
+**Out of scope:**
 - AI model providers (Anthropic, OpenAI, DeepSeek, Google, Meta, Alibaba, Moonshot)
 - Platform providers (GitHub Copilot)
-- Security scanners operated by TSAR or other external parties
+- Security scanners (owned by TSAR)
 - The projects Apxoh governs
 - The human developer's local environment
-
-Out-of-scope systems remain relevant at trust boundaries; their outputs and claims must not automatically be trusted.
 
 ### 1.3 Core Components
 
 | Component | Path | Trust Level |
 | :--- | :--- | :--- |
-| Charter & Policy | `system/` | **High** — governs evaluation; changes require strong review |
-| Rule Engine | `src/arkhon/rules/` | **High** — reads and evaluates rules |
-| Verification Engine | `src/arkhon/verification/` | **High** — performs independent verification |
-| Evidence Store | `src/arkhon/evidence/` and project-local `.arkhon/evidence/` | **High** — integrity-critical; tamper evidence must be enforced |
-| Assessment Engine | `src/arkhon/assessment/` | **High** — produces assessment and release-gate decisions |
-| Orchestrator | `src/arkhon/orchestrator/` | **Medium** — coordinates; must not override verification or gate decisions |
-| Model Integrations | `src/arkhon/integrations/models/` | **Low** — external outputs are untrusted |
-| Platform Integrations | `src/arkhon/integrations/platforms/` | **Low** — external outputs are untrusted |
-| TSAR Integration | `src/arkhon/integrations/tsar/` | **Medium** — delegated authority; returned evidence is still validated |
-| CLI | `src/arkhon/cli.py` | **High** — user-facing entry point and security-sensitive command boundary |
+| Charter & Policy | `system/` | **High** |
+| Rule Engine | `src/arkhon/rules/` | **High** |
+| Verification Engine | `src/arkhon/verification/` | **High** |
+| Evidence Store | `src/arkhon/evidence/` | **High** |
+| Assessment Engine | `src/arkhon/assessment/` | **High** |
+| Orchestrator | `src/arkhon/orchestrator/` | **Medium** |
+| Model Integrations | `src/arkhon/integrations/models/` | **Low** |
+| Platform Integrations | `src/arkhon/integrations/platforms/` | **Low** |
+| TSAR Integration | `src/arkhon/integrations/tsar/` | **Medium** |
 
 ### 1.4 Data Flows
 
-```text
+```
 Developer / AI Agent
-        │
+        │ writes code
         ▼
-   ┌─────────┐    writes     ┌──────────┐
-   │  Code   │──────────────▶│ Project  │
-   └─────────┘               └────┬─────┘
-                                  │
-                                  ▼
-                          ┌──────────────┐
-                          │ Apxoh Engine │
-                          └──────┬───────┘
-                                 │
-              ┌──────────────────┼──────────────────┐
-              ▼                  ▼                  ▼
-        ┌──────────┐      ┌──────────┐      ┌──────────┐
-        │  Rules   │      │   TSAR   │      │  Model   │
-        │ Engine   │      │  (Sec.)  │      │ Adapters │
-        └────┬─────┘      └────┬─────┘      └────┬─────┘
-             │                 │                 │
-             └────────┬────────┴────────┬────────┘
-                      ▼                 ▼
-                ┌──────────┐      ┌──────────┐
-                │ Evidence │      │ Findings │
-                └────┬─────┘      └────┬─────┘
-                     │                 │
-                     └────────┬────────┘
-                              ▼
-                      ┌──────────────┐
-                      │  Assessment  │
-                      └──────┬───────┘
-                             ▼
-                      ┌──────────────┐
-                      │   Release    │
-                      │   Decision   │
-                      └──────────────┘
+   ┌─────────┐
+   │ Project │
+   └────┬────┘
+        │ `arkhon verify`
+        ▼
+   ┌──────────────┐
+   │ Verification │ ← runs pytest, ruff, mypy, TSAR
+   │   Engine     │
+   └──────┬───────┘
+          │ produces
+          ▼
+   ┌──────────────┐
+   │   Evidence   │ ← SHA-256, sigstore, commit-bound
+   │    Store     │
+   └──────┬───────┘
+          │ `arkhon assess`
+          ▼
+   ┌──────────────┐
+   │  Assessment  │ ← score, gates, decision
+   │   Engine     │
+   └──────┬───────┘
+          │ `arkhon report`
+          ▼
+   ┌──────────────┐
+   │    Report    │ ← JSON + Markdown
+   └──────────────┘
 ```
 
 ---
 
 ## 2. Assets
 
-Assets are ordered by criticality. Compromise of a higher-tier asset can invalidate decisions that depend on it.
-
 ### 2.1 Rules (`rules/`, `languages/*/rules/`)
 
-- **Why critical:** Rules define what "acceptable" means. A poisoned rule can allow unacceptable code to pass.
-- **Owner:** Apxoh maintainers
-- **Impact if compromised:** Governance bypass
-- **Format:** YAML, validated against `schemas/rule.schema.json`
+- **Why critical:** Rules define what "acceptable" means.
+- **Impact if compromised:** Complete governance bypass.
+- **Format:** YAML, validated against `schemas/rule.schema.json`.
 
-### 2.2 Evidence (`src/arkhon/evidence/`, `.arkhon/evidence/`)
+### 2.2 Evidence (`evidence/`, `.arkhon/evidence/`)
 
-- **Why critical:** Evidence is the basis for assessment and release decisions. Forged or stale evidence can lead to false approval.
-- **Owner:** Apxoh Evidence Engine
-- **Impact if compromised:** False release, production incident, loss of trust
-- **Format:** Structured artifacts (including JSON where applicable), content hashes, commit identity and signatures where the signing and verification workflow is implemented and enabled
+- **Why critical:** Evidence is the basis for every release decision.
+- **Impact if compromised:** False release, production incident, loss of trust.
+- **Format:** JSON, signed with sigstore, bound to commit SHA.
 
-### 2.3 Gates (`system/policies/blocking/`, `src/arkhon/assessment/gates.py`)
+### 2.3 Gates (`policies/blocking/`, `src/arkhon/assessment/gates.py`)
 
-- **Why critical:** Gates are the last line of defense before release. Bypassed gates defeat the assurance model.
-- **Owner:** Apxoh maintainers
-- **Impact if compromised:** Unsafe release
-- **Format:** YAML policies + Python enforcement
+- **Why critical:** Last line of defense before release.
+- **Impact if compromised:** Unsafe release.
+- **Format:** YAML policies + Python enforcement.
 
 ### 2.4 Schemas (`schemas/`)
 
-- **Why critical:** Schemas define valid rules, evidence, and findings. A weakened schema can allow invalid data to pass.
-- **Owner:** Apxoh maintainers
-- **Impact if compromised:** Systematic validation bypass
-- **Format:** JSON Schema
+- **Why critical:** Define what valid rules, evidence, and findings look like.
+- **Impact if compromised:** Systematic validation bypass.
+- **Format:** JSON Schema.
 
 ### 2.5 Secrets & Keys
 
-- **Why critical:** Signing identities, API tokens, and credentials protect evidence and integrations.
-- **Owner:** Apxoh maintainers + CI system
-- **Impact if compromised:** Impersonation, evidence forgery, data exfiltration
-- **Format:** Environment variables, short-lived OIDC tokens, Sigstore identities and other credential stores as applicable
+- **Why critical:** Signing keys, API tokens, credentials.
+- **Impact if compromised:** Impersonation, evidence forgery, data exfiltration.
+- **Format:** Environment variables, OIDC tokens, sigstore identities.
 
 ### 2.6 System Identity (`manifest/`, `VERSION`, package metadata)
 
-- **Why critical:** Identity determines which version is trusted and which rules apply.
-- **Owner:** Apxoh maintainers
-- **Impact if compromised:** Version confusion, downgrade attacks
-- **Format:** YAML, JSON, semantic version strings
+- **Why critical:** Identity determines which version is trusted.
+- **Impact if compromised:** Version confusion, downgrade attacks.
+- **Format:** YAML, JSON, semantic version strings.
 
 ### 2.7 Trust (`SECURITY.md`, `GOVERNANCE.md`, integration contracts)
 
-- **Why critical:** Trust is foundational. If trust in Apxoh is lost, its decisions lose value.
-- **Owner:** Apxoh maintainers
-- **Impact if compromised:** Rejection of the system and its assurance claims
-- **Format:** Markdown, YAML contracts
+- **Why critical:** Trust is the foundation. If trust is lost, decisions are worthless.
+- **Impact if compromised:** Total system rejection.
+- **Format:** Markdown, YAML contracts.
 
 ---
 
 ## 3. Actors
 
-### 3.1 Human Developers
-
-- **Trust level:** Medium
-- **Capabilities:** Read/write access to project, run Apxoh CLI, propose or approve exceptions according to authorization policy
-- **Motivation:** Ship working software
-- **Risk:** Negligence, fatigue, pressure to release, compromised accounts
-
-### 3.2 AI Agents (eight model integrations + GitHub Copilot platform integration)
-
-- **Trust level:** Low (untrusted by default)
-- **Capabilities:** Generate code, propose rules, invoke tools within granted scope
-- **Motivation:** Complete the requested task
-- **Risk:** Hallucination, prompt-injection susceptibility, hostile behavior, silent failure, overbroad tool use
-
-### 3.3 External Tools (TSAR, scanners)
-
-- **Trust level:** Medium (verified per contract)
-- **Capabilities:** Scan code and produce findings or evidence
-- **Motivation:** Report accurate findings
-- **Risk:** Misconfiguration, stale versions, compromised upstream, incomplete coverage, forged or malformed output
-
-### 3.4 Hostile Agents
-
-- **Trust level:** None
-- **Capabilities:** Any capability granted to an AI agent, plus deliberate attempts to misuse those capabilities
-- **Motivation:** Bypass governance, exfiltrate data, cause damage
-- **Risk:** All categories of attack
-
-### 3.5 Insider Threats
-
-- **Trust level:** Role-dependent; privileged actions must still be verified
-- **Capabilities:** Depending on permissions, modify rules, approve exceptions, alter workflows or influence gates
-- **Motivation:** Financial, ideological, coercion, negligence
-- **Risk:** High-impact, potentially difficult-to-detect attacks
+| Actor | Trust Level | Capabilities | Risk |
+| :--- | :--- | :--- | :--- |
+| Human developers | Medium | Read/write project, run CLI | Negligence, pressure |
+| AI agents (8 models) | Low (untrusted) | Generate code, propose rules | Hallucination, injection, hostile |
+| External tools (TSAR) | Medium (verified) | Scan code, produce evidence | Misconfiguration, stale |
+| Hostile agents | None | All AI capabilities + deliberate misbehavior | Bypass, exfiltration |
+| Insider threats | High (by role) | Modify rules, approve exceptions | Financial, ideological |
 
 ---
 
 ## 4. Trust Boundaries
 
-Trust boundaries mark points where data crosses from lower trust to higher trust. Every crossing must be validated, and authorization must be checked separately from data validity.
-
 ### 4.1 Between Apxoh and Model Providers
 
-- **Direction:** Apxoh → Provider (prompts, code or context) → Apxoh (responses)
-- **Risk:** Provider receives sensitive code; provider returns poisoned, manipulated or misleading output
-- **Control:** Minimize transmitted data; never include secrets in prompts; treat all provider responses as untrusted; independently verify generated outputs; document provider data handling and retention
+- **Direction:** Apxoh → Provider → Apxoh
+- **Risk:** Provider sees sensitive code; provider returns poisoned output
+- **Control:** No secrets in prompts; treat all responses as untrusted; verify outputs independently
 
 ### 4.2 Between Evidence Producer and Consumer
 
-- **Direction:** Engine/tool → Evidence Store → Assessor → Decision
-- **Risk:** Evidence is tampered with in transit or at rest, replayed, detached from its source, or presented for the wrong commit
-- **Control:** SHA-256 per artifact; signature verification where signing is enabled; commit SHA binding; timestamp and freshness checks; schema validation; any integrity or provenance mismatch → `BLOCKED`
+- **Direction:** Engine → Store → Assessor → Decision
+- **Risk:** Evidence tampered in transit or at rest
+- **Control:** SHA-256 per artifact; sigstore signing; commit SHA binding; freshness check
 
 ### 4.3 Between Agent and Engine
 
-- **Direction:** Agent → Filesystem / tool interface → Engine
-- **Risk:** Agent writes malicious code, modifies governance files, tampers with evidence, or invokes tools beyond intended scope
-- **Control:** Enforce repository permissions and protected paths outside agent instructions; separate agent and verification identities; independently rerun tests and checks; do not rely on a read-only instruction alone as an access-control mechanism
+- **Direction:** Agent → Filesystem → Engine
+- **Risk:** Agent writes malicious code or modifies governance files
+- **Control:** Read-only governance files; separate verification identity; independent tests
 
 ### 4.4 Between Development and Production
 
 - **Direction:** Local → CI → Release
-- **Risk:** Local success does not establish production safety; CI configuration or build inputs may differ
-- **Control:** Consistent verification profiles; controlled build environments; provenance generation and verification; release gates; reproducibility checks where supported
+- **Risk:** Local success ≠ production safety
+- **Control:** Same verification in both environments; reproducible builds; SLSA provenance
 
-### 4.5 Between Repositories
+### 4.5 Between TSAR and Apxoh
 
-- **Direction:** External repositories and registries → Apxoh build and runtime
-- **Risk:** Supply-chain compromise through dependencies, build tools, GitHub Actions, artifacts or maintainer accounts
-- **Control:** Exact dependency pins where appropriate; vulnerability auditing; SBOM generation; action pinning to reviewed commit SHAs; signature and provenance verification
+- **Direction:** Apxoh → TSAR → Apxoh
+- **Risk:** TSAR compromised; evidence forged or tampered
+- **Control:** Full evidence verification (commit match, freshness, version, hashes, required rules); fail-closed on any check
 
 ---
 
 ## 5. STRIDE Threat Categories
 
-Likelihood and impact ratings below are initial qualitative estimates. They must be revisited using operational evidence and the deployment context.
-
-### 5.1 Spoofing (الانتحال)
+### 5.1 Spoofing
 
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
-| Agent impersonates a different agent | Medium | Medium |
-| Attacker impersonates an Apxoh release | High | Low |
-| Fake TSAR evidence is accepted | Critical | Medium |
-| Forged or misleading author identity in commits | High | Medium |
+| Agent impersonates another agent | Medium | Medium |
+| Attacker impersonates Apxoh release | High | Low |
+| Fake TSAR evidence | Critical | Medium |
+| Forged user identity in commits | High | Medium |
 
-### 5.2 Tampering (العبث)
+### 5.2 Tampering
 
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
@@ -253,42 +198,38 @@ Likelihood and impact ratings below are initial qualitative estimates. They must
 | Evidence modified after generation | Critical | Medium |
 | Schema modified to allow invalid data | Critical | Medium |
 | Gate disabled in CI | Critical | Low |
-| `.github/workflows/` modified maliciously | High | Medium |
+| `.github/workflows/` modified | High | Medium |
 
-### 5.3 Repudiation (الإنكار)
+### 5.3 Repudiation
 
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
 | Agent denies making a change | Medium | High |
-| Developer denies approving an exception | Medium | Low |
-| CI execution cannot be independently established | Low | Low |
+| Developer denies approving exception | Medium | Low |
 
-### 5.4 Information Disclosure (كشف المعلومات)
+### 5.4 Information Disclosure
 
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
 | Secrets sent to model providers | Critical | Medium |
-| Evidence contains sensitive project data | High | Medium |
-| Rule files reveal security posture | Medium | High |
-| Logs contain credentials or sensitive payloads | High | Medium |
+| Evidence contains sensitive data | High | Medium |
+| Logs contain credentials | High | Medium |
 
-### 5.5 Denial of Service (تعطيل الخدمة)
+### 5.5 Denial of Service
 
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
 | Agent floods engine with malformed input | Medium | Medium |
-| Malicious or pathological rule causes excessive evaluation | Medium | Low |
-| CI resource exhaustion via large diffs or artifacts | Low | Medium |
-| Model provider rate limiting or outage | Medium | High |
+| Malicious rule causes infinite loop | Medium | Low |
+| Model provider rate limiting | Medium | High |
 
-### 5.6 Elevation of Privilege (رفع الصلاحيات)
+### 5.6 Elevation of Privilege
 
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
-| Agent gains unauthorized write access to rules | Critical | Medium |
-| Exception approval is bypassed | Critical | Low |
-| CI token is leaked and reused | Critical | Low |
-| Local administrator account or host is compromised | High | Low |
+| Agent gains write access to rules | Critical | Medium |
+| Exception approval bypassed | Critical | Low |
+| CI token leaked and reused | Critical | Low |
 
 ---
 
@@ -296,156 +237,120 @@ Likelihood and impact ratings below are initial qualitative estimates. They must
 
 ### 6.1 Poisoned Rule
 
-**Scenario:** An attacker (hostile agent or malicious contributor) submits a rule that appears legitimate but weakens governance — for example, a rule that exempts a specific file pattern from security checks.
+**Scenario:** Attacker submits a rule that appears legitimate but weakens governance.
 
-**Impact:** Critical — silently allows unsafe code to pass.
+**Impact:** Critical.
 
-**Mitigations:**
-- Rule changes require review by designated maintainers and security reviewers; enforce this through repository permissions and CODEOWNERS where configured
-- Rules must reference the charter section they enforce
-- Rule validation checks exclusion scope and rejects unsafe or unjustified exclusions
-- Periodic audit of exclusion patterns
-- Negative test required for every security-critical rule
-- Rule changes must be covered by reviewable test evidence
+**Mitigation:** `CODEOWNERS` review; rule must reference charter; `scope.exclude` audited; negative test required.
 
 ### 6.2 Tampered Evidence
 
-**Scenario:** An agent modifies evidence files after generation, changing `FAIL` to `PASS` or altering finding severity.
+**Scenario:** Agent modifies evidence files after generation.
 
-**Impact:** Critical — false release approval.
+**Impact:** Critical.
 
-**Mitigations:**
-- Every evidence artifact has a SHA-256 digest stored in a separately protected or independently verifiable record
-- Evidence signatures are verified when the signing workflow is enabled
-- Evidence is bound to `commit_sha` and the relevant tool/version identity
-- Verification recomputes hashes and validates signatures, schema, freshness and provenance
-- Any mismatch or missing required evidence → `BLOCKED`, never implicit `PASS`
+**Mitigation:** SHA-256; sigstore signing; commit binding; verification recomputes; mismatch → `BLOCKED`.
 
 ### 6.3 Bypassed Gate
 
-**Scenario:** An agent or developer modifies a CI workflow, disables a check, or changes gate thresholds to allow a failing release.
+**Scenario:** Agent or developer modifies CI workflow or gate thresholds.
 
-**Impact:** Critical — unsafe release.
+**Impact:** Critical.
 
-**Mitigations:**
-- Protect `.github/workflows/` and gate policy paths with CODEOWNERS and branch protection where configured
-- Run workflow static analysis (for example, zizmor) in CI
-- Keep gate thresholds in `system/policies/blocking/` version-controlled
-- Require explicit review and approval for modifications to blocking policies
-- Review workflow permission scopes and ensure untrusted pull-request code cannot access privileged secrets
-- Audit changes to required checks and branch protection settings
+**Mitigation:** `.github/workflows/` protected by `CODEOWNERS`; `zizmor` audits; thresholds in version control; post-merge self-audit.
 
 ### 6.4 Prompt Injection
 
-**Scenario:** Malicious content in a file, dependency, issue, or web page instructs the agent to bypass governance, leak secrets, or fabricate evidence.
+**Scenario:** Malicious content instructs agent to bypass governance or leak secrets.
 
-**Impact:** High — depends on the instruction, agent privileges and available tools.
+**Impact:** High.
 
-**Mitigations:**
-- Agents must treat repository content, tool output and external content as untrusted data unless explicitly authenticated
-- Governance instructions in `AGENTS.md` establish project policy but do not replace technical access controls
-- Verification is independent: even if an agent is fooled, its claims are not accepted without evidence
-- Prompt-injection handling requirements are documented in `docs/PROMPT_INJECTION.md`
-- Do not place secrets in agent context; restrict tool permissions and outbound network access
+**Mitigation:** Instruction hierarchy in `AGENTS.md`; independent verification; injection detection; no secrets in context.
 
 ### 6.5 Fake Approval
 
-**Scenario:** An agent claims "tests pass" or "security verified" without actually running verification, or runs only a subset and claims completeness.
+**Scenario:** Agent claims "tests pass" without running them.
 
-**Impact:** High — false release.
+**Impact:** High.
 
-**Mitigations:**
-- Apxoh accepts verifiable evidence, not unsupported claims
-- Evidence identifies tools, versions, commands, scope and results
-- Evidence is bound to `commit_sha` and timestamped
-- Missing required evidence → `BLOCKED`, not `PASS`
-- Independent rerun is part of the release gate where feasible
-- CI run identifiers and logs are retained as supporting evidence
+**Mitigation:** Evidence required; named tools with versions; commit-bound; missing evidence → `BLOCKED`.
 
 ### 6.6 Secret Leakage
 
-**Scenario:** Secrets are committed, sent to model providers, exposed in logs, or included in evidence artifacts.
+**Scenario:** Secrets committed, sent to providers, or logged.
 
-**Impact:** Critical — credential compromise.
+**Impact:** Critical.
 
-**Mitigations:**
-- Run secret scanning in pre-commit and CI (for example, Gitleaks)
-- Maintain ignore rules for generated credentials and local secret files; do not rely on ignore rules as a substitute for scanning
-- Adapter safety tests check that secrets are not included in prompts or outputs
-- Redact sensitive values from logs and evidence; avoid logging secret-bearing environment variables
-- Run secret scanning on pushes and pull requests, with appropriate history scanning for incidents
-- Rotate and revoke any exposed credential immediately
+**Mitigation:** `gitleaks`; `.gitignore` patterns; adapter safety tests; no logging of `*_key`, `*_token`; secret scanning on every push.
 
 ### 6.7 Supply Chain Attack
 
-**Scenario:** A dependency is compromised, a GitHub Action is tampered with, a build artifact is replaced, or a maintainer account is hijacked.
+**Scenario:** Dependency compromised; GitHub Action tampered; maintainer hijacked.
 
-**Impact:** Critical — arbitrary code execution in CI or user environments.
+**Impact:** Critical.
 
-**Mitigations:**
-- Pin runtime and development dependencies to reviewed versions; use hashes for locked installation workflows where supported
-- Run dependency vulnerability auditing and maintain an SBOM
-- Pin GitHub Actions to reviewed full commit SHAs, not mutable tags
-- Audit workflows with zizmor and least-privilege token permissions
-- Use OpenSSF Scorecard to monitor repository posture
-- Generate SLSA provenance for releases and verify it before distribution
-- Verify artifact signatures and provenance independently
-- Review Dependabot updates before merging; automated updates are not automatically trusted
+**Mitigation:** Pinned deps; `pip-audit`; `Dependabot`; Actions pinned to SHA; `zizmor`; `scorecard`; SLSA; sigstore.
 
 ### 6.8 Hostile Agent
 
-**Scenario:** A malicious or compromised AI agent actively attempts to undermine Apxoh — modifying rules, deleting tests, editing evidence, or exfiltrating data.
+**Scenario:** Malicious agent attempts to undermine Apxoh.
 
-**Impact:** Critical — potential governance bypass.
+**Impact:** Critical.
 
-**Mitigations:**
-- See `SECURITY_AGENTS.md` for the agent-specific threat model and operating constraints
-- Enforce governance-file protections using repository permissions and isolated workspaces; instructions alone are insufficient
-- Separate agent execution identity from verification and release identities
-- Require verifiable evidence and signature validation where signing is enabled
-- Log agent tool actions and security-relevant changes where technically available
-- Detect and review anomalous modifications to rules, schemas, policies and evidence
-- Require human review for exceptions and critical decisions
-- Restrict network access and secrets according to least privilege
+**Mitigation:** See `SECURITY_AGENTS.md`. Read-only governance; separate signing identity; sigstore evidence; all actions logged; anomaly detection; human review.
+
+### 6.9 TSAR Compromise
+
+**Scenario:** TSAR binary or output is compromised or replaced.
+
+**Impact:** Critical.
+
+**Mitigation:** TSAR output is verified end-to-end (commit, freshness, version, hashes, required rules); any mismatch → `BLOCKED`; sigstore-signed TSAR releases (future).
+
+### 6.10 Stale Evidence Replay
+
+**Scenario:** Attacker replays old evidence from a previous commit.
+
+**Impact:** High.
+
+**Mitigation:** Commit SHA binding; freshness window; sigstore signature covers commit SHA; any mismatch → `BLOCKED`.
 
 ---
 
 ## 7. Mitigations
 
-The controls below are the target control set. Their presence in this table does not establish implementation or successful operation; verify each against the live repository and CI configuration.
+### 7.1 Preventive
 
-### 7.1 Preventive Controls
-
-| Control | Where | What it prevents |
+| Control | Where | Prevents |
 | :--- | :--- | :--- |
-| CODEOWNERS | `.github/CODEOWNERS` | Unauthorized changes to governance, where enforced by repository settings |
-| Branch protection / rulesets | GitHub repository settings | Unreviewed direct changes to protected branches |
-| Pre-commit hooks | `.pre-commit-config.yaml` | Secrets, private keys and malformed files, subject to configured hooks |
-| Pinned dependencies | `pyproject.toml` and lock/constraints files | Unreviewed dependency drift |
-| Adapter safety tests | `tests/security/adapter-safety/` | Selected unsafe adapter behaviors and secret leakage |
-| Agent governance instructions | `AGENTS.md` and `agents/` | Policy guidance against prompt injection; not a hard security boundary |
-| Artifact signing and verification | `tools/signing/sign-artifacts.py` | Detects artifact substitution when correctly configured and independently verified |
+| `CODEOWNERS` | `.github/` | Unauthorized governance changes |
+| Branch protection | GitHub | Direct pushes to `main` |
+| `pre-commit` hooks | `.pre-commit-config.yaml` | Secrets, private keys, syntax |
+| Pinned dependencies | `pyproject.toml` | Supply chain drift |
+| Adapter safety tests | `tests/security/adapter-safety/` | Secrets in prompts, unapproved domains |
+| Instruction hierarchy | `AGENTS.md` | Prompt injection |
+| Signed evidence | `tools/signing/sign-artifacts.py` | Tampered evidence |
 
-### 7.2 Detective Controls
+### 7.2 Detective
 
-| Control | Where | What it detects |
+| Control | Where | Detects |
 | :--- | :--- | :--- |
-| zizmor | `.github/workflows/security.yml` | GitHub Actions workflow security issues |
-| Gitleaks | Pre-commit + CI | Secrets in tracked content and commits within scan scope |
-| pip-audit | CI | Known vulnerable Python dependencies |
-| Trivy | CI | Configured filesystem, dependency or container vulnerabilities |
-| OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Repository security posture signals |
-| Evidence hash verification | Verification engine | Evidence tampering |
-| Commit SHA binding check | Evidence validator | Stale or mismatched evidence |
+| `zizmor` | `security.yml` | Workflow security issues |
+| `gitleaks` | pre-commit + CI | Secrets in commits |
+| `pip-audit` | CI | Vulnerable dependencies |
+| `trivy` | CI | Filesystem vulnerabilities |
+| `scorecard` | `scorecard.yml` | Repository posture |
+| Evidence hash verification | Engine | Tampered evidence |
+| Commit SHA binding check | Engine | Stale evidence |
 
-### 7.3 Corrective Controls
+### 7.3 Corrective
 
 | Control | Where | Response |
 | :--- | :--- | :--- |
-| Automatic `BLOCKED` on missing required evidence | Verification / assessment engine | Block release and request re-audit |
-| CI failure handling | GitHub Actions and release process | Stop promotion; investigate and remediate before retry |
-| Incident response plan | `docs/VULNERABILITY_RESPONSE.md` | Structured response to vulnerabilities and incidents |
-| Blameless postmortem | `docs/operations/POSTMORTEM_TEMPLATE.md` | Root-cause analysis and tracked corrective actions |
+| Automatic `BLOCKED` | Engine | Block release, request re-audit |
+| Automatic revert | GitHub Actions | Revert merge, notify |
+| Incident response | `docs/VULNERABILITY_RESPONSE.md` | Structured response |
+| Blameless postmortem | `docs/operations/POSTMORTEM_TEMPLATE.md` | Root cause analysis |
 
 ---
 
@@ -453,28 +358,26 @@ The controls below are the target control set. Their presence in this table does
 
 ### 8.1 What Apxoh Cannot Defend Against
 
-- **Compromised provider:** If Anthropic, OpenAI or another provider is compromised, Apxoh cannot establish the provider's internal integrity. Independent verification can reduce reliance on provider claims, but does not guarantee detection of all malicious generated output.
-- **Compromised maintainer or signing identity:** A privileged maintainer or compromised OIDC identity may authorize malicious changes or signatures. Mitigations include least privilege, protected environments, auditable identity policies, independent review and separation of duties.
-- **Kernel-level rootkit on developer machine:** User-space Apxoh controls cannot reliably detect a compromised host kernel. This remains outside the product's direct security boundary.
-- **Coordinated insider attack:** Multiple privileged insiders colluding may bypass controls. Mitigations include separation of duties, independent audit trails and multi-party review for high-impact changes.
+- **Compromised provider:** Verification is independent; a compromised provider cannot forge signed evidence.
+- **Compromised maintainer:** sigstore requires OIDC; multiple maintainers for critical changes.
+- **Kernel-level rootkit:** Out of scope.
+- **Coordinated insider attack:** Separation of duties; audit trail.
 
 ### 8.2 Accepted Risks
 
-The following are proposed risk dispositions and require explicit owner acceptance; they are not automatically accepted merely by appearing in this document.
-
 | Risk | Rationale | Review date |
 | :--- | :--- | :--- |
-| Local development environment compromise | Outside Apxoh's direct enforcement boundary | Every release |
-| Model provider policy or service changes | External provider dependency cannot be controlled by Apxoh | Every release |
-| Timing side channels in signature verification | Residual risk of cryptographic and implementation dependencies; reassess with the signing design | 2027-01-01 |
+| Local environment compromise | Outside Apxoh's scope | Every release |
+| Provider policy changes | Cannot control external providers | Every release |
+| Timing side channels | sigstore limitation | 2027-01-01 |
 
 ### 8.3 Deferred Risks
 
-| Risk | Reason for deferral | Target resolution |
+| Risk | Reason | Target |
 | :--- | :--- | :--- |
-| Full hardware security module (HSM) integration | Cost and operational complexity | Post-v1.0 |
-| Formal verification of rule engine | Requires dedicated scope and expertise | Post-v1.0 |
-| Multi-party signing for every release | Operational overhead | Reassess before v0.5 |
+| HSM integration | Cost/complexity | Post-v1.0 |
+| Formal verification | Time | Post-v1.0 |
+| Multi-party signing | Operational overhead | v0.5 |
 
 ---
 
@@ -483,20 +386,21 @@ The following are proposed risk dispositions and require explicit owner acceptan
 ### Apxoh Documents
 - `SECURITY.md` — vulnerability reporting
 - `SECURITY_AGENTS.md` — hostile agent threat model
-- `GOVERNANCE.md` — decision-making process
+- `GOVERNANCE.md` — decision-making
 - `docs/SUPPLY_CHAIN.md` — supply chain policy
-- `docs/PROMPT_INJECTION.md` — prompt-injection defenses
-- `docs/EVIDENCE_INTEGRITY.md` — evidence integrity model
+- `docs/PROMPT_INJECTION.md` — prompt injection defenses
+- `docs/EVIDENCE_INTEGRITY.md` — evidence integrity
 - `docs/DEPENDENCY_POLICY.md` — dependency management
+- `integrations/tsar/contract.yaml` — TSAR contract
 
 ### External Standards
-- STRIDE — Microsoft threat-modeling methodology
-- ISO/IEC 27001:2022 — Annex A (organizational and other control themes)
-- NIST SP 800-218 — Secure Software Development Framework (SSDF)
-- OWASP ASVS 5.0.0 — architecture and security verification requirements
-- OWASP SAMM 2.0 — governance
-- SLSA 1.0 — software supply-chain levels
-- OpenSSF Scorecard — repository security posture
+- STRIDE (Microsoft)
+- ISO/IEC 27001:2022 — Annex A.5
+- NIST SP 800-218 (SSDF)
+- OWASP ASVS 5.0.0 — V1 (Architecture)
+- OWASP SAMM 2.0 — Governance
+- SLSA 1.0
+- OpenSSF Scorecard
 
 ---
 
