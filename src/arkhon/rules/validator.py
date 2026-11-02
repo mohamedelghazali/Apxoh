@@ -5,7 +5,10 @@ import json
 from pathlib import Path
 
 from arkhon.core.constants import (
-    ALL_ENFORCEMENT, ALL_RULE_DOMAINS, ALL_RULE_STATUSES, ALL_SEVERITIES,
+    ALL_ENFORCEMENT,
+    ALL_RULE_DOMAINS,
+    ALL_RULE_STATUSES,
+    ALL_SEVERITIES,
     DOMAIN_RULE_PREFIX,
 )
 from arkhon.core.errors import RuleValidationError
