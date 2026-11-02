@@ -74,12 +74,15 @@ def evaluate_gate(gate: str, outcomes: list[RuleOutcome]) -> GateVerdict:
             continue
         if outcome.status not in {STATUS_FAIL, STATUS_BLOCKED}:
             raise GateError(f"{outcome.rule_id}: unsupported outcome status {outcome.status!r}")
-        if outcome.enforcement == ENFORCEMENT_CRITICAL:
+        if outcome.status == STATUS_BLOCKED:
+            blocking += 1
+            reasons.append(f"{outcome.rule_id}: blocked")
+        elif outcome.enforcement == ENFORCEMENT_CRITICAL:
             critical += 1
-            reasons.append(f"{outcome.rule_id}: critical {outcome.status.lower()}")
+            reasons.append(f"{outcome.rule_id}: critical fail")
         elif outcome.enforcement in {ENFORCEMENT_BLOCKING, ENFORCEMENT_REQUIRED}:
             blocking += 1
-            reasons.append(f"{outcome.rule_id}: {outcome.status.lower()}")
+            reasons.append(f"{outcome.rule_id}: fail")
     status = STATUS_FAIL if critical else STATUS_BLOCKED if blocking else STATUS_PASS
     return GateVerdict(
         gate=gate, status=status, outcomes=list(outcomes),
