@@ -1,15 +1,54 @@
-language: rust
-required: false
+id: rust
 tools:
-  - id: clippy
-    required: false
-    purpose: "linting"
-    detection: executable_lookup
-  - id: rustfmt
-    required: false
-    purpose: "formatting"
-    detection: executable_lookup
-  - id: cargo-test
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
+  static_analysis:
+    - name: cargo
+      role: build-and-check
+      required: true
+      invocation: "cargo check --locked"
+      version_arg: "--version"
+
+    - name: clippy-driver
+      role: linter
+      required: true
+      invocation: "cargo clippy --locked --all-targets -- -D warnings"
+      output_format: text
+      version_arg: "--version"
+
+    - name: rustfmt
+      role: formatter
+      required: true
+      invocation: "cargo fmt --check"
+      output_format: text
+      version_arg: "--version"
+
+  testing:
+    - name: cargo
+      role: test-runner
+      required: true
+      invocation: "cargo test --locked -- -Z unstable-options --format json"
+      output_format: json
+      version_arg: "--version"
+
+  build:
+    - name: cargo
+      role: compiler
+      required: true
+      invocation: "cargo build --locked --release"
+      version_arg: "--version"
+
+  supply_chain:
+    - name: cargo-audit
+      role: dependency-auditor
+      required: true
+      invocation: "cargo audit --json"
+      output_format: json
+      version_arg: "--version"
+
+    - name: cargo-deny
+      role: policy-enforcer
+      required: false
+      invocation: "cargo deny check"
+      output_format: text
+      version_arg: "--version"
+
+missing_tool_policy: BLOCKED
