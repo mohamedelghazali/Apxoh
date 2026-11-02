@@ -115,8 +115,10 @@ def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
         )
 
 
-def _check_required_rules(rule_ids: tuple[str, ...], required: tuple[str, ...]) -> None:
-    missing = sorted(set(required) - set(rule_ids))
+def _check_required_rules(rule_ids: tuple[str, ...]) -> None:
+    """Ensure every required TSAR rule ID is present in the evidence."""
+    present = set(rule_ids)
+    missing = [r for r in REQUIRED_RULE_IDS if r not in present]
     if missing:
         raise SecurityError(f"TSAR evidence missing required rule_ids: {missing}")
 
@@ -159,7 +161,7 @@ def verify_tsar_evidence(
         )
     _check_version(evidence.tsar_version, minimum_version, maximum_version)
     _check_freshness(evidence.executed_at, now=now)
-    _check_required_rules(evidence.rule_ids, required_rule_ids)
+    _check_required_rules(evidence.rule_ids)
     _check_artifacts(evidence.artifacts, evidence_root)
 
     if evidence.status not in {"PASS", "FAIL", "BLOCKED"}:

@@ -1,10 +1,14 @@
 """Apxoh command-line interface."""
+
 from __future__ import annotations
+
 import argparse
 import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
+
 from arkhon import __version__
 
 def _repo_root()->Path:
@@ -67,31 +71,53 @@ def cmd_validate(_args: argparse.Namespace) -> int:
     return int(validate_main())
 
 
-def cmd_inspect(args:argparse.Namespace)->int:
+def cmd_inspect(args: argparse.Namespace) -> int:
     from arkhon.config import get_manifest
     from arkhon.language_support.detector import detect_languages
     from arkhon.projects.matcher import match_profile
-    project=Path(args.project).resolve()
+
+    project = Path(args.project).resolve()
     if not project.is_dir():
-        print(f"[FAIL] not a directory: {project}",file=sys.stderr)
+        print(f"[FAIL] not a directory: {project}", file=sys.stderr)
         return 1
-    manifest=get_manifest()
-    languages=detect_languages(project)
-    profile=match_profile(project)
-    report={"project":str(project),
-      "profile":{"name":profile.profile,"reason":profile.reason,"explicit":profile.explicit},
-      "languages":{"detected":[lang.id for lang in languages.detected],"unknown":languages.unknown},
-      "system":{"name":manifest.name,"version":manifest.version}}
-    if args.json: print(json.dumps(report,indent=2))
+
+    manifest = get_manifest()
+    languages = detect_languages(project)
+    profile = match_profile(project)
+
+    detected_ids = [lang.definition.id for lang in languages.detected]
+
+    report: dict[str, Any] = {
+        "project": str(project),
+        "profile": {
+            "name": profile.profile,
+            "reason": profile.reason,
+            "explicit": profile.explicit,
+        },
+        "languages": {
+            "detected": detected_ids,
+            "unknown": languages.unknown,
+        },
+        "system": {
+            "name": manifest.name,
+            "version": manifest.version,
+        },
+    }
+
+    if args.json:
+        print(json.dumps(report, indent=2))
     else:
         print(f"Project: {project}")
         print(f"Profile: {profile.profile} ({profile.reason})")
         print("Languages detected:")
-        for language_id in report["languages"]["detected"]: print(f"  - {language_id}")
-        if report["languages"]["unknown"]:
+        for lang_id in detected_ids:
+            print(f"  - {lang_id}")
+        if languages.unknown:
             print("Unknown language files:")
-            for extension in report["languages"]["unknown"]: print(f"  - {extension}")
+            for ext in languages.unknown:
+                print(f"  - {ext}")
     return 0
+
 
 def _commit_sha(project:Path)->str|None:
     try:
@@ -139,7 +165,7 @@ def cmd_audit(args:argparse.Namespace)->int:
     return 0 if run.status=="PASS" else 1
 
 def cmd_assess(args:argparse.Namespace)->int:
-    from arkhon.assessment.gates import evaluate_all_gates
+    from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
     from arkhon.assessment.scorer import WEIGHTS,score_from_ratios
     from arkhon.evidence.store import EvidenceStore
     project=Path(args.project).resolve()
@@ -148,7 +174,7 @@ def cmd_assess(args:argparse.Namespace)->int:
         return 1
     store=EvidenceStore(project)
     ratios={key:0.0 for key in WEIGHTS}
-    outcomes_per_domain={}
+    outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
     for record in store.iter_records():
         domain=record.path.parent.name
         if domain in ratios and record.status=="PASS":
@@ -179,6 +205,7 @@ def cmd_report(args:argparse.Namespace)->int:
     return 0
 
 def cmd_verify(args:argparse.Namespace)->int:
+    from arkhon.verification.runners.base import Runner
     from arkhon.verification.engine import VerificationEngine
     from arkhon.verification.runners.pytest_runner import PytestRunner
     from arkhon.verification.runners.ruff_runner import RuffRunner
@@ -191,10 +218,13 @@ def cmd_verify(args:argparse.Namespace)->int:
         print(f"[FAIL] not a directory: {project}",file=sys.stderr)
         return 1
     domain=args.domain or "all"
-    runners_map={"testing":[PytestRunner()],"code-quality":[RuffRunner(),MypyRunner()],
-                 "software-security":[TsarRunner()],
-                 "all":[PytestRunner(),RuffRunner(),MypyRunner()]}
-    runners=runners_map.get(domain)
+    runners_map: dict[str, tuple[Runner, ...]] = {
+        "testing": (PytestRunner(),),
+        "code-quality": (RuffRunner(), MypyRunner()),
+        "software-security": (TsarRunner(),),
+        "all": (PytestRunner(), RuffRunner(), MypyRunner()),
+    }
+    runners = runners_map.get(domain)
     if not runners:
         print(f"[FAIL] unknown domain: {domain}",file=sys.stderr)
         return 1
