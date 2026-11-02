@@ -1,0 +1,40 @@
+id: SE-TST-003
+metadata:
+  title: No Skipped Tests in Production Branches
+  domain: testing
+  version: 1.0.0
+  status: active
+  severity: medium
+  enforcement: blocking
+  description: >
+    Tests may not be skipped, xfailed, or commented out in the main branch.
+    A skipped test is a failing test you cannot see.
+scope:
+  project_types: [all]
+  lifecycle_stages: [verification, release]
+requirement:
+  statement: >
+    Test suites must not contain skipped tests (pytest.mark.skip,
+    @Ignore, it.skip, t.Skip, etc.) unless the skip is documented with a
+    reason and an owner, and tracked in the project's known-issues list.
+verification:
+  mode: deterministic
+  methods:
+    - test-collector-analysis
+    - skip-marker-detection
+acceptance:
+  undocumented_skipped_tests: 0
+evidence:
+  required:
+    - test-collector-output
+    - skip-audit-report
+failure:
+  actions:
+    - create-finding
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
