@@ -6,24 +6,28 @@ tools:
       required: true
       invocation: "mvn -B -q compile"
       version_arg: "--version"
+
     - name: checkstyle
       role: linter
       required: true
       invocation: "mvn -B checkstyle:check"
       output_format: xml
       version_arg: "--version"
+
     - name: spotbugs
       role: analyzer
       required: true
       invocation: "mvn -B spotbugs:check"
       output_format: xml
       version_arg: "-version"
+
     - name: pmd
       role: analyzer
       required: false
       invocation: "mvn -B pmd:check"
       output_format: xml
       version_arg: "-version"
+
   testing:
     - name: mvn
       role: test-runner
@@ -31,12 +35,14 @@ tools:
       invocation: "mvn -B test -Dmaven.test.failure.ignore=false"
       output_format: junit-xml
       version_arg: "--version"
+
   build:
     - name: mvn
       role: builder
       required: true
       invocation: "mvn -B -DskipTests package"
       version_arg: "--version"
+
   supply_chain:
     - name: mvn
       role: dependency-auditor
@@ -44,4 +50,5 @@ tools:
       invocation: "mvn -B org.owasp:dependency-check-maven:check"
       output_format: xml
       version_arg: "--version"
+
 missing_tool_policy: BLOCKED
