@@ -1,4 +1,18 @@
 id: missing-tests
-severity: high
-condition: required_test_suite_not_executed
-action: BLOCK
+title: "Missing tests for a change block the release"
+category: blocking
+enabled: true
+description: |
+  If a source file was modified without a corresponding test change, and
+  the project profile requires tests, the release is blocked until a test
+  is added.
+trigger_rules:
+  - SE-TST-001
+  - SE-TST-003
+trigger_paths: []
+reason: "Source changed without a corresponding test — release blocked"
+override:
+  allowed: true
+  requires:
+    - documented_justification
+    - engineering_lead_approval
