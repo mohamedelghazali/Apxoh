@@ -1,49 +1,44 @@
 """Apxoh command-line interface."""
 from __future__ import annotations
-
 import argparse
 import json
-import runpy
+import subprocess
 import sys
-
+from pathlib import Path
 from arkhon import __version__
-from arkhon.config import find_repo_root
 
+def _repo_root()->Path:
+    return Path(__file__).resolve().parents[2]
 
-def cmd_version(args: argparse.Namespace) -> int:
-    if getattr(args, "json", False):
-        print(json.dumps(
-            {"name": "Apxoh", "identifier": "arkhon", "version": __version__}, indent=2
-        ))
+def cmd_version(args:argparse.Namespace)->int:
+    if getattr(args,"json",False):
+        print(json.dumps({"name":"Apxoh","identifier":"arkhon","version":__version__},indent=2))
     else:
         print(f"Apxoh {__version__}")
     return 0
 
-
-def cmd_doctor(_args: argparse.Namespace) -> int:
-    failures: list[str] = []
-    try:
-        root = find_repo_root()
-    except Exception as exc:
-        print(f"Apxoh doctor — FAILED\n  [FAIL] {exc}")
-        return 1
-
-    if sys.version_info < (3, 11):
-        failures.append(
-            f"Python 3.11+ required, found {sys.version_info.major}.{sys.version_info.minor}"
-        )
-    for required in ("VERSION", "manifest/index.yaml", "README.md", "AGENTS.md"):
-        if not (root / required).exists():
+def cmd_doctor(_args:argparse.Namespace)->int:
+    failures=[]
+    root=_repo_root()
+    if sys.version_info<(3,11):
+        failures.append(f"Python 3.11+ required, found {sys.version_info.major}.{sys.version_info.minor}")
+    for required in ("VERSION","manifest/index.yaml","README.md","AGENTS.md"):
+        if not (root/required).exists():
             failures.append(f"missing required file: {required}")
     try:
         from arkhon.config import load_manifest
-        _ = load_manifest(root).version
+        _=load_manifest(root).version
     except Exception as exc:
         failures.append(f"manifest load failed: {exc}")
+    try:
+        from arkhon.integrations.tsar.adapter import TsarAdapter
+        if not TsarAdapter().health_check():
+            failures.append("TSAR not available (security gate will be BLOCKED)")
+    except Exception as exc:
+        failures.append(f"TSAR check failed: {exc}")
     if failures:
         print("Apxoh doctor — FAILED")
-        for failure in failures:
-            print(f"  [FAIL] {failure}")
+        for failure in failures: print(f"  [FAIL] {failure}")
         return 1
     print("Apxoh doctor — OK")
     print(f"  Python:  {sys.version.split()[0]}")
@@ -51,48 +46,188 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     print(f"  Root:    {root}")
     return 0
 
+def cmd_validate(_args:argparse.Namespace)->int:
+    from scripts.validation.validate_all import main as validate_main
+    return int(validate_main())
 
-def cmd_validate(_args: argparse.Namespace) -> int:
-    """Run repository validation; this command requires a source checkout."""
+def cmd_inspect(args:argparse.Namespace)->int:
+    from arkhon.config import get_manifest
+    from arkhon.language_support.detector import detect_languages
+    from arkhon.projects.matcher import match_profile
+    project=Path(args.project).resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}",file=sys.stderr)
+        return 1
+    manifest=get_manifest()
+    languages=detect_languages(project)
+    profile=match_profile(project)
+    report={"project":str(project),
+      "profile":{"name":profile.profile,"reason":profile.reason,"explicit":profile.explicit},
+      "languages":{"detected":[lang.id for lang in languages.detected],"unknown":languages.unknown},
+      "system":{"name":manifest.name,"version":manifest.version}}
+    if args.json: print(json.dumps(report,indent=2))
+    else:
+        print(f"Project: {project}")
+        print(f"Profile: {profile.profile} ({profile.reason})")
+        print("Languages detected:")
+        for language_id in report["languages"]["detected"]: print(f"  - {language_id}")
+        if report["languages"]["unknown"]:
+            print("Unknown language files:")
+            for extension in report["languages"]["unknown"]: print(f"  - {extension}")
+    return 0
+
+def _commit_sha(project:Path)->str|None:
     try:
-        root = find_repo_root()
+        result=subprocess.run(["git","rev-parse","HEAD"],cwd=project,capture_output=True,
+                              text=True,check=True,timeout=10)
+        return result.stdout.strip()
     except Exception as exc:
-        print(f"arkhon validate requires a repository checkout: {exc}", file=sys.stderr)
-        return 2
-    script = root / "scripts" / "validation" / "validate_all.py"
-    if not script.is_file():
-        print(f"validation script missing: {script}", file=sys.stderr)
-        return 2
-    namespace = runpy.run_path(str(script), run_name="arkhon_validation")
-    return int(namespace["main"]())
+        print(f"[FAIL] cannot resolve commit SHA: {exc}",file=sys.stderr)
+        return None
 
+def cmd_audit(args:argparse.Namespace)->int:
+    from arkhon.assessment.decision import decide
+    from arkhon.assessment.gates import evaluate_all_gates
+    from arkhon.assessment.scorer import score_from_outcomes
+    from arkhon.config import get_manifest
+    from arkhon.evidence.collector import EvidenceCollector
+    from arkhon.evidence.store import EvidenceStore
+    from arkhon.rules.loader import load_rules_dir
+    from arkhon.rules.registry import RuleRegistry
+    from arkhon.verification.engine import VerificationEngine
+    from arkhon.verification.runners.pytest_runner import PytestRunner
+    project=Path(args.project).resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}",file=sys.stderr)
+        return 1
+    domain=args.domain or "testing"
+    rules_result=load_rules_dir(_repo_root()/"rules")
+    if not rules_result.ok:
+        print(f"[FAIL] rule load errors: {len(rules_result.errors)}",file=sys.stderr)
+        for error in rules_result.errors: print(f"  - {error}",file=sys.stderr)
+        return 1
+    registry=RuleRegistry(rules_result.rules)
+    _=get_manifest()
+    commit_sha=_commit_sha(project)
+    if commit_sha is None: return 1
+    engine=VerificationEngine(store=EvidenceStore(project),collector=EvidenceCollector(root=project))
+    run=engine.run(domain=domain,commit_sha=commit_sha,runners=[PytestRunner()],project_root=project)
+    print(f"Run ID:   {run.run_id}")
+    print(f"Domain:   {run.domain}")
+    print(f"Commit:   {run.commit_sha[:12]}")
+    print(f"Status:   {run.status}")
+    print(f"Evidence: {run.evidence_id}")
+    for result in run.results: print(f"  [{result.runner}] {result.outcome.value} {result.reason}")
+    _=(decide,evaluate_all_gates,score_from_outcomes,registry)
+    return 0 if run.status=="PASS" else 1
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="arkhon",
-        description="Apxoh — Software Engineering Governance & Assurance System",
-    )
-    subparsers = parser.add_subparsers(dest="command")
-    version_parser = subparsers.add_parser("version", help="Print Apxoh version")
-    version_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    version_parser.set_defaults(func=cmd_version)
-    subparsers.add_parser("doctor", help="Check installation and environment").set_defaults(
-        func=cmd_doctor
-    )
-    subparsers.add_parser("validate", help="Validate manifest, schemas, and rules").set_defaults(
-        func=cmd_validate
-    )
+def cmd_assess(args:argparse.Namespace)->int:
+    from arkhon.assessment.gates import evaluate_all_gates
+    from arkhon.assessment.scorer import WEIGHTS,score_from_ratios
+    from arkhon.evidence.store import EvidenceStore
+    project=Path(args.project).resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}",file=sys.stderr)
+        return 1
+    store=EvidenceStore(project)
+    ratios={key:0.0 for key in WEIGHTS}
+    outcomes_per_domain={}
+    for record in store.iter_records():
+        domain=record.path.parent.name
+        if domain in ratios and record.status=="PASS":
+            ratios[domain]=min(1.0,ratios[domain]+0.25)
+    score=score_from_ratios(ratios)
+    verdicts=evaluate_all_gates(outcomes_per_domain)
+    print(f"Score: {score.total:.1f} / {score.maximum}")
+    print(f"Level: {score.level}")
+    print("Gates:")
+    for gate,verdict in verdicts.items(): print(f"  {gate}: {verdict.status}")
+    return 0
+
+def cmd_report(args:argparse.Namespace)->int:
+    from arkhon.reporting.json_reporter import JsonReporter
+    from arkhon.reporting.markdown_reporter import MarkdownReporter
+    project=Path(args.project).resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}",file=sys.stderr)
+        return 1
+    fmt=args.format or "json"
+    output=Path(args.output) if args.output else project/".arkhon"/"reports"
+    reporter=JsonReporter() if fmt=="json" else MarkdownReporter() if fmt=="markdown" else None
+    if reporter is None:
+        print(f"[FAIL] unknown format: {fmt}",file=sys.stderr)
+        return 1
+    path=reporter.write(project,output)
+    print(f"[OK] report written to {path}")
+    return 0
+
+def cmd_verify(args:argparse.Namespace)->int:
+    from arkhon.verification.engine import VerificationEngine
+    from arkhon.verification.runners.pytest_runner import PytestRunner
+    from arkhon.verification.runners.ruff_runner import RuffRunner
+    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from arkhon.verification.runners.tsar_runner import TsarRunner
+    from arkhon.evidence.collector import EvidenceCollector
+    from arkhon.evidence.store import EvidenceStore
+    project=Path(args.project).resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}",file=sys.stderr)
+        return 1
+    domain=args.domain or "all"
+    runners_map={"testing":[PytestRunner()],"code-quality":[RuffRunner(),MypyRunner()],
+                 "software-security":[TsarRunner()],
+                 "all":[PytestRunner(),RuffRunner(),MypyRunner()]}
+    runners=runners_map.get(domain)
+    if not runners:
+        print(f"[FAIL] unknown domain: {domain}",file=sys.stderr)
+        return 1
+    commit_sha=_commit_sha(project)
+    if commit_sha is None: return 1
+    engine=VerificationEngine(store=EvidenceStore(project),collector=EvidenceCollector(root=project))
+    run=engine.run(domain=domain,commit_sha=commit_sha,runners=runners,project_root=project)
+    print(f"Run:    {run.run_id}")
+    print(f"Status: {run.status}")
+    print(f"Evidence: {run.evidence_id}")
+    for result in run.results: print(f"  [{result.runner}] {result.outcome.value}")
+    return 0 if run.status=="PASS" else 1
+
+def build_parser()->argparse.ArgumentParser:
+    parser=argparse.ArgumentParser(prog="arkhon",description="Apxoh — Software Engineering Governance & Assurance System")
+    sub=parser.add_subparsers(dest="command")
+    version=sub.add_parser("version",help="Print Apxoh version")
+    version.add_argument("--json",action="store_true",help="Output as JSON")
+    version.set_defaults(func=cmd_version)
+    sub.add_parser("doctor",help="Check installation and environment").set_defaults(func=cmd_doctor)
+    sub.add_parser("validate",help="Validate manifest, schemas, and rules").set_defaults(func=cmd_validate)
+    inspect=sub.add_parser("inspect",help="Inspect a project (languages, profile)")
+    inspect.add_argument("project",nargs="?",default=".")
+    inspect.add_argument("--json",action="store_true")
+    inspect.set_defaults(func=cmd_inspect)
+    audit=sub.add_parser("audit",help="Run verification for a specific domain")
+    audit.add_argument("project",nargs="?",default=".")
+    audit.add_argument("--domain",default="testing")
+    audit.set_defaults(func=cmd_audit)
+    assess=sub.add_parser("assess",help="Compute engineering score and gate status")
+    assess.add_argument("project",nargs="?",default=".")
+    assess.set_defaults(func=cmd_assess)
+    report=sub.add_parser("report",help="Generate an engineering-quality report")
+    report.add_argument("project",nargs="?",default=".")
+    report.add_argument("--format",choices=["json","markdown"],default="json")
+    report.add_argument("--output")
+    report.set_defaults(func=cmd_report)
+    verify=sub.add_parser("verify",help="Run verification runners on a project")
+    verify.add_argument("project",nargs="?",default=".")
+    verify.add_argument("--domain",default="all")
+    verify.set_defaults(func=cmd_verify)
     return parser
 
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    if not hasattr(args, "func"):
+def main(argv:list[str]|None=None)->int:
+    parser=build_parser()
+    args=parser.parse_args(argv)
+    if not hasattr(args,"func"):
         parser.print_help()
         return 1
     return int(args.func(args))
 
-
-if __name__ == "__main__":
+if __name__=="__main__":
     raise SystemExit(main())
