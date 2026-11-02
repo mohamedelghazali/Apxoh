@@ -1,3 +1,57 @@
-language: python
-frameworks: []
-missing_required_runner: BLOCKED
+# Testing requirements for Python projects.
+id: python
+
+framework: pytest
+minimum_version: "8.0"
+
+coverage:
+  tool: pytest-cov
+  required: true
+  minimum_line_coverage: 80
+  minimum_branch_coverage: 70
+  fail_under: 80
+  report_formats: [term-missing, xml, html]
+
+test_discovery:
+  patterns:
+    - "test_*.py"
+    - "*_test.py"
+  directories:
+    - tests/
+    - test/
+
+test_categories:
+  unit:
+    required: true
+    command: "pytest tests/unit"
+    timeout_seconds: 300
+
+  integration:
+    required: true
+    command: "pytest tests/integration"
+    timeout_seconds: 600
+
+  contract:
+    required: false
+    command: "pytest tests/contract"
+
+  regression:
+    required: true
+    command: "pytest tests/regression"
+    timeout_seconds: 300
+
+  e2e:
+    required: false
+    command: "pytest tests/e2e"
+    timeout_seconds: 1800
+
+markers:
+  slow: "tests that take > 5s"
+  network: "tests that require network access"
+  integration: "integration tests"
+  e2e: "end-to-end tests"
+
+required_plugins:
+  - pytest-cov
+  - pytest-timeout
+  - pytest-mock
