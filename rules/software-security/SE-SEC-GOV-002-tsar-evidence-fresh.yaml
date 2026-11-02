@@ -1,0 +1,52 @@
+id: SE-SEC-GOV-002
+metadata:
+  title: TSAR Evidence Must Be Fresh
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    TSAR evidence must be no older than the configured freshness window
+    (default: 168 hours = 7 days).
+
+scope:
+  project_types: [all]
+  lifecycle_stages: [release]
+
+requirement:
+  statement: >
+    TSAR evidence used to close a security gate must have been produced
+    within the configured freshness window. Evidence older than the
+    window must be regenerated.
+
+verification:
+  mode: delegated
+  delegate_to: tsar
+  methods:
+    - timestamp-verification
+
+acceptance:
+  evidence_age_hours_max: 168
+  executed_at_present: true
+  executed_at_parseable: true
+
+evidence:
+  required:
+    - type: tsar_evidence_bundle
+      schema: schemas/evidence.schema.json
+      source: tsar
+
+failure:
+  actions:
+    - block-release-gate
+    - create-finding
+    - require-tsar-rerun
+
+human_review:
+  required: false
+
+tests:
+  positive: required
+  negative: required
+  regression: required
