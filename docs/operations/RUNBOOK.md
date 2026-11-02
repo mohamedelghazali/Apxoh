@@ -1,7 +1,7 @@
 # Apxoh Operations Runbook
 
 **Version:** 1.0
-**Status:** Active
+**Status:** Operational guidance — confirm command availability and controls against the installed release.
 **Last updated:** 2026-11-01
 
 ---
@@ -10,14 +10,17 @@
 
 ### 1.1 Check Installation Health
 
+Where supported by the installed CLI:
+
 ```bash
 arkhon doctor
 ```
 
-Expected: `Apxoh doctor — OK`.
+Review the actual command output. Do not assume that a successful
+installation check proves that optional tools or integrations work.
 
-If TSAR is missing, `doctor` will warn but not fail. Security gate will
-be `BLOCKED` until TSAR is installed.
+If TSAR is required by the active security policy but unavailable, the
+security verification result must be `BLOCKED`, not `PASS`.
 
 ### 1.2 Validate Rules
 
@@ -25,15 +28,19 @@ be `BLOCKED` until TSAR is installed.
 arkhon validate
 ```
 
-Expected: `All validations passed.`
+Review all reported validation errors and warnings. A successful
+validation confirms only the checks actually performed by that command.
 
-### 1.3 Check Available Tools
+### 1.3 Inspect a Project
+
+Where supported by the installed CLI:
 
 ```bash
 arkhon inspect /path/to/project
 ```
 
-Expected: languages detected, profile resolved, tools listed.
+Review detected languages, selected profiles, and resolved tools. A
+detected language does not prove that its toolchain is installed.
 
 ---
 
@@ -41,11 +48,15 @@ Expected: languages detected, profile resolved, tools listed.
 
 ### 2.1 Run a Single Domain
 
+Where supported by the installed CLI:
+
 ```bash
 arkhon verify --domain testing --project /path/to/project
 ```
 
 ### 2.2 Run All Domains
+
+Where supported by the installed CLI:
 
 ```bash
 arkhon verify --domain all --project /path/to/project
@@ -55,12 +66,12 @@ arkhon verify --domain all --project /path/to/project
 
 | Status | Meaning |
 | :--- | :--- |
-| `PASS` | All runners passed |
-| `FAIL` | At least one runner failed |
-| `BLOCKED` | At least one runner could not run (missing tool, error) |
+| `PASS` | All required checks in the evaluated scope passed with valid evidence |
+| `FAIL` | At least one evaluated check failed |
+| `BLOCKED` | A required tool, input, evidence item, or verification step was unavailable |
 
-A `BLOCKED` result is **not** a failure of the project — it is a failure
-of the environment. Fix the environment first.
+A `BLOCKED` result is not a passing result and must not be treated as
+approval. Resolve the missing prerequisite and rerun verification.
 
 ---
 
@@ -68,30 +79,39 @@ of the environment. Fix the environment first.
 
 ### 3.1 Compute Score
 
+Where supported by the installed CLI:
+
 ```bash
 arkhon assess /path/to/project
 ```
 
-Output includes:
-- Total score /100
-- Level (development → hyperscale-validated)
-- Gate statuses
+Review the score, configured level, gate statuses, missing evidence,
+and accepted risks. A score is meaningful only in the context of the
+active profile and its configured weights.
 
 ### 3.2 Interpret Score
 
-| Score | Level | Action |
+The following ranges are illustrative policy examples, not a statement
+that these exact levels or thresholds are currently enforced:
+
+| Score | Illustrative level | Action |
 | :--- | :--- | :--- |
-| 95–100 | Hyperscale Validated | Release |
-| 90–94 | Enterprise Grade | Release |
-| 80–89 | Production Ready | Release |
-| 70–79 | Controlled Release | Release with monitoring |
+| 95–100 | Hyperscale Validated | Eligible for release review |
+| 90–94 | Enterprise Grade | Eligible for release review |
+| 80–89 | Production Ready | Eligible for release review |
+| 70–79 | Controlled Release | Additional review and monitoring |
 | < 70 | Development | Do not release |
 
-Even with score ≥ 80, a critical gate failure rejects the release.
+A score must never override a failed critical gate or missing required
+evidence. Release approval remains subject to the active policy and
+authorized human approval.
 
 ---
 
 ## 4. Reporting
+
+Use the report command and formats supported by the installed CLI.
+Example invocations, if available:
 
 ### 4.1 JSON Report
 
@@ -99,63 +119,67 @@ Even with score ≥ 80, a critical gate failure rejects the release.
 arkhon report /path/to/project --format json
 ```
 
-Produces `.arkhon/reports/report.json`.
-
 ### 4.2 Markdown Report
 
 ```bash
 arkhon report /path/to/project --format markdown
 ```
 
-Produces `.arkhon/reports/report.md`.
+Confirm the output path from the command result. Do not assume a report
+was generated merely because the command was invoked.
 
 ---
 
 ## 5. Incident Response
 
-### 5.1 Evidence Tampering Detected
+### 5.1 Evidence Tampering Suspected
 
-**Symptom:** Gate `BLOCKED` with reason "evidence-tampered".
+**Symptom:** An evidence integrity or authenticity check fails, or a
+gate is reported as `BLOCKED` for an evidence-integrity reason.
 
 **Steps:**
-1. Do not bypass the gate.
-2. Check `.arkhon/state/incidents.log` for details.
-3. Identify which artifact was tampered.
-4. Determine who modified it (git log, file timestamps).
-5. Re-run the audit from a clean state.
-6. If tampering was malicious, escalate to Security Lead.
-7. Do not re-enable the gate until the root cause is understood.
+1. Do not bypass the gate or overwrite the suspect evidence.
+2. Preserve the affected evidence and relevant logs.
+3. Identify the artifact and the expected versus observed digest.
+4. Review repository history and available audit records.
+5. Re-run verification from a trusted, clean state when authorized.
+6. Escalate suspected malicious activity to the configured security contact.
+7. Do not reuse suspect evidence until the cause is understood and reviewed.
 
 ### 5.2 TSAR Unavailable
 
-**Symptom:** Security gate `BLOCKED` with reason "tsar-unavailable".
+**Symptom:** The required security delegation cannot be completed.
 
 **Steps:**
-1. Check `tsar --version` on the machine.
-2. If missing: `arkhon doctor` will tell you what's wrong.
-3. Install TSAR per its documentation.
-4. Re-run `arkhon verify --domain software-security`.
-5. If TSAR is installed but still failing: check the contract
-   (`integrations/tsar/contract.yaml`) for version requirements.
+1. Check whether `tsar --version` is available.
+2. Review the Apxoh doctor output, if that command exists.
+3. Install or repair TSAR using its official project documentation.
+4. Re-run the security verification scope.
+5. If TSAR is installed but integration still fails, inspect the
+   configured contract under `integrations/tsar/`.
+6. Keep the security gate `BLOCKED` until required evidence is verified.
 
 ### 5.3 Stale Evidence
 
-**Symptom:** Gate `BLOCKED` with reason "evidence-stale".
+**Symptom:** Evidence is outside the freshness window or bound to a
+different commit.
 
 **Steps:**
-1. Check the evidence timestamp in `.arkhon/evidence/<domain>/`.
-2. Re-run `arkhon verify --domain <domain>` to produce fresh evidence.
-3. The old evidence remains on disk (append-only); the new one supersedes it.
+1. Inspect the evidence timestamp and target commit.
+2. Re-run the relevant verification domain against the current commit.
+3. Preserve older evidence according to the retention and incident policy.
+4. Confirm that the new evidence passes schema, integrity, and freshness checks.
 
 ### 5.4 Rule Validation Failure
 
-**Symptom:** `arkhon validate` fails with rule errors.
+**Symptom:** Rule validation reports errors.
 
 **Steps:**
-1. Read the error carefully — it names the file and field.
-2. Check `schemas/rule.schema.json` for the required structure.
-3. Fix the rule.
-4. Re-run `arkhon validate`.
+1. Read the error; identify the file and field.
+2. Check `schemas/rule.schema.json` and the rule-authoring guidance.
+3. Correct the rule and add or update positive and negative tests.
+4. Re-run validation.
+5. Do not weaken a rule merely to make validation pass without an approved change.
 
 ---
 
@@ -163,50 +187,45 @@ Produces `.arkhon/reports/report.md`.
 
 ### 6.1 Updating Dependencies
 
-```bash
-# Dependabot opens PRs automatically.
-# To update manually:
-pip install --upgrade <package>
-# Then update pyproject.toml with the exact new version.
-```
-
-After updating, run:
+Use the repository's declared dependency-management workflow. For a
+Python development environment, a manual upgrade may be performed only
+as part of a reviewed dependency update:
 
 ```bash
-make ci
+python -m pip install --upgrade <package>
 ```
 
-### 6.2 Rotating Signing Keys
+Update the declared dependency constraints and lock data, where used,
+then run the repository's configured CI checks. Do not assume that
+`make ci` exists unless the Makefile defines it.
 
-sigstore is keyless. There is no long-term signing key to rotate.
+### 6.2 Rotating Signing Identity
 
-Identity is bound to OIDC (GitHub Actions or developer identity). To
-rotate, change the OIDC provider or the identity.
+Sigstore keyless signing does not use a long-lived private signing key
+in the same way as traditional key management. However, trust policy,
+OIDC issuer, workflow identity, and allowed repository/ref constraints
+still require review and maintenance.
 
 ### 6.3 Archiving Old Evidence
 
-Apxoh does this automatically (moves to `_archive/` after 30 days,
-prunes after 90 days unless attached to a release).
-
-To manually archive:
-
-```bash
-mkdir -p .arkhon/evidence/_archive
-find .arkhon/evidence -type f -mtime +30 -name "*.json" \
-  -not -path "*/_archive/*" \
-  -exec mv {} .arkhon/evidence/_archive/ ;
-```
+Retention and archival must follow the configured policy and preserve
+evidence required for releases, audits, legal obligations, or incidents.
+Do not run a destructive pruning command until retention behavior and
+backup/recovery requirements have been verified.
 
 ---
 
 ## 7. Escalation
 
-| Situation | Escalate to | Time |
+Use the contacts and response times approved for the deployment. The
+following roles are suggested escalation targets:
+
+| Situation | Escalate to | Priority |
 | :--- | :--- | :--- |
 | Evidence tampering | Security Lead | Immediate |
-| Critical gate failure | Engineering Lead | 24 hours |
-| TSAR unavailable > 1 hour | Engineering Lead | 1 hour |
-| Repeated verification failures (3+) | Engineering Lead | 24 hours |
+| Critical gate failure | Engineering Lead | High |
+| Required TSAR integration unavailable | Engineering Lead / Security Lead | High |
+| Repeated verification failures | Engineering Lead | High |
 | Suspected hostile agent | Security Lead | Immediate |
 
 ---
@@ -215,9 +234,9 @@ find .arkhon/evidence -type f -mtime +30 -name "*.json" \
 
 - `docs/operations/POSTMORTEM_TEMPLATE.md` — postmortem format
 - `SECURITY.md` — vulnerability reporting
-- `SECURITY_AGENTS.md` — hostile agent threat model
+- `SECURITY_AGENTS.md` — hostile-agent threat model
 - `docs/threat-model/ARKHON_THREAT_MODEL.md` — system threat model
-- `docs/VULNERABILITY_RESPONSE.md` — incident response policy
+- `docs/VULNERABILITY_RESPONSE.md` — vulnerability response policy
 
 ---
 
