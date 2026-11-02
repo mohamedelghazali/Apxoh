@@ -1,10 +1,10 @@
 # Apxoh — Makefile
-# Unified commands for local development and CI.
+# Local development and CI helpers. Targets invoke existing project tools only.
 
 .DEFAULT_GOAL := help
-.PHONY: help install install-dev clean test test-unit test-integration test-security \
-        test-rules test-fixtures lint format typecheck audit validate self-audit ci \
-        release-check docs install-models verify-all verify-fixtures examples
+.PHONY: help install install-dev install-models clean test test-unit test-integration \
+        test-security test-rules test-fixtures lint format typecheck audit validate \
+        self-audit ci release-check docs examples verify-all verify-fixtures
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -19,13 +19,12 @@ ARKHON := $(BIN)/arkhon
 
 help:
 	@echo "Apxoh — available targets:"
-	@echo ""
-	@echo "  Setup: install, install-dev, install-models"
-	@echo "  Development: test, test-unit, test-integration, test-security,"
-	@echo "               test-rules, test-fixtures, lint, format, typecheck, audit"
-	@echo "  Verification: validate, verify-all, verify-fixtures, self-audit"
-	@echo "  Release: ci, release-check"
-	@echo "  Utilities: clean, docs, examples"
+	@echo "  Setup:        install install-dev install-models"
+	@echo "  Tests:        test test-unit test-integration test-security test-rules test-fixtures"
+	@echo "  Quality:      lint format typecheck audit"
+	@echo "  Verification: validate verify-all verify-fixtures self-audit"
+	@echo "  CI/release:   ci release-check"
+	@echo "  Utilities:    clean docs examples"
 
 $(VENV):
 	$(PYTHON) -m venv $(VENV)
@@ -40,15 +39,15 @@ install-dev: $(VENV)
 	@if [ -x "$(BIN)/pre-commit" ]; then $(BIN)/pre-commit install; fi
 
 install-models:
-	@$(PYTHON) -c "from pathlib import Path; p=Path('src/arkhon/integrations/models'); print('Model integration directories:'); [print('  -', x.name) for x in sorted(p.iterdir()) if x.is_dir()]"
+	@$(PYTHON) -c "from pathlib import Path; p=Path('src/arkhon/integrations/models'); print('Model integration directories:'); [print('  -', x.name) for x in sorted(p.iterdir()) if x.is_dir()] if p.is_dir() else print('No model integration directory found.')"
 
 clean:
 	rm -rf build dist *.egg-info
 	rm -rf .pytest_cache .ruff_cache .mypy_cache htmlcov .coverage coverage.xml
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 
-test:
+test: 
 	$(PYTEST) -ra
 
 test-unit:
@@ -92,8 +91,8 @@ verify-fixtures:
 	@set -e; for fixture in tests/languages/fixtures/*-project; do \
 		if [ -d "$$fixture" ]; then \
 			echo "=== Inspecting $$fixture ==="; \
-			$(ARKHON) inspect "$fixture" --json; \
-			$(ARKHON) verify "$fixture" --domain testing; \
+			$(ARKHON) inspect "$$fixture" --json; \
+			$(ARKHON) verify "$$fixture" --domain testing; \
 		fi; \
 	done
 
@@ -105,11 +104,11 @@ release-check:
 	@echo "Checking release readiness..."
 	@test -f VERSION || (echo "missing VERSION" && exit 1)
 	@test -f CHANGELOG.md || (echo "missing CHANGELOG.md" && exit 1)
-	@$(PYTHON) -c "import tomllib,pathlib; v=pathlib.Path('VERSION').read_text().strip(); p=tomllib.loads(pathlib.Path('pyproject.toml').read_text()); assert v == p['project']['version'], f'VERSION={v} vs pyproject={p[\"project\"][\"version\"]}'; print('versions match:', v)"
+	@$(PYTHON) -c "import pathlib,tomllib; v=pathlib.Path('VERSION').read_text().strip(); p=tomllib.loads(pathlib.Path('pyproject.toml').read_text()); assert v == p['project']['version'], f'VERSION={v} vs pyproject={p[\"project\"][\"version\"]}'; print('versions match:', v)"
 	@$(MAKE) ci
 
 docs:
-	@echo "Documentation rendering is not implemented yet."
+	@echo "No documentation build target is configured; review Markdown changes in the pull request."
 
 examples:
 	@echo "Available example projects:"
