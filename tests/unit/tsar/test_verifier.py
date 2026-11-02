@@ -67,13 +67,15 @@ def test_check_freshness_stale() -> None:
 
 
 def test_check_freshness_boundary() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime, timedelta, timezone
 
     executed = "2026-11-01T00:00:00Z"
-    just_at_limit = datetime(2026, 11, 1, FRESHNESS_HOURS, 0, 0, tzinfo=timezone.utc)
+    executed_dt = datetime(2026, 11, 1, tzinfo=timezone.utc)
+
+    just_at_limit = executed_dt + timedelta(hours=FRESHNESS_HOURS)
     _check_freshness(executed, now=just_at_limit)
 
-    just_past = datetime(2026, 11, 1, FRESHNESS_HOURS + 1, 0, 0, tzinfo=timezone.utc)
+    just_past = executed_dt + timedelta(hours=FRESHNESS_HOURS + 1)
     with pytest.raises(EvidenceStaleError):
         _check_freshness(executed, now=just_past)
 
