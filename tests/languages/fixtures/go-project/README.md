@@ -1,3 +1,7 @@
-# go fixture
+# Go Fixture Project
 
-Minimal language fixture for detector and profile tests. Extend with a representative project manifest.
+Minimal Go module for Apxoh's language detection tests.
+
+- `calc.go` — calculator
+- `calc_test.go` — go test
+- Run: `go test -race ./...`

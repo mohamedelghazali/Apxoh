@@ -1,3 +1,6 @@
-# rust fixture
+# Rust Fixture Project
 
-Minimal language fixture for detector and profile tests. Extend with a representative project manifest.
+Minimal Rust crate for Apxoh's language detection tests.
+
+- `src/lib.rs` — calculator + inline tests
+- Run: `cargo test`

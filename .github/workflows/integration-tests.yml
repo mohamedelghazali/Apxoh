@@ -1,17 +1,64 @@
-name: integration-tests
+name: Integration Tests
+
 on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
-permissions: {contents: read}
+    branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
+  fixtures:
+    name: Language fixtures (${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [python, javascript, typescript, java, csharp, cpp, go, rust, ruby]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+
+      - name: Detect fixture language
+        run: |
+          arkhon inspect tests/languages/fixtures/${{ matrix.lang }}-project --json
+
+      - name: Fixture has correct structure
+        run: |
+          test -f tests/languages/fixtures/${{ matrix.lang }}-project/.arkhon/project.yaml
+          test -f tests/languages/fixtures/${{ matrix.lang }}-project/README.md
+
+      - name: Run fixture pytest
+        run: pytest tests/languages -v -k "${{ matrix.lang }}"
+
+  examples:
+    name: Examples (inspect only)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+      - name: Inspect each example
+        run: |
+          for d in examples/*/; do
+            if [ -f "$d/.arkhon/project.yaml" ]; then
+              echo "=== $d ==="
+              arkhon inspect "$d" --json
+            fi
+          done
+
+  tsar-contract:
+    name: TSAR contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+      - name: Contract tests (no TSAR binary needed)
+        run: pytest tests/integration/tsar/test_tsar_contract.py -v

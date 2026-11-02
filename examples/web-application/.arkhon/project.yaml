@@ -1,2 +1,22 @@
-project: {id: web-application, profile: web-application, language: python}
-missing_tool_status: BLOCKED
+project:
+  name: "web-application"
+  identifier: web-application-example
+  type: application
+  profile: web-application
+  risk_level: medium
+  description: "Minimal React web application."
+
+languages:
+  primary: typescript
+  secondary: [javascript]
+
+lifecycle:
+  current_stage: development
+  current_milestone: 5
+  release_channel: pre-release
+
+gates:
+  requirements_gate: required
+  testing_gate: required
+  security_gate: required
+  release_gate: required

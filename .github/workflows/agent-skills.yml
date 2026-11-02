@@ -1,17 +1,120 @@
-name: agent-skills
+name: Agent Skills
+
 on:
   push:
     branches: [main]
+    paths:
+      - "skills/**"
+      - "agents/**"
+      - "src/arkhon/integrations/models/**/prompts/**"
   pull_request:
-  workflow_dispatch:
-permissions: {contents: read}
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "agents/**"
+      - "src/arkhon/integrations/models/**/prompts/**"
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
+  validate-skills:
+    name: Validate skills, roles, and model prompts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]" pyyaml
+
+      - name: Validate frontmatter
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          import yaml
+
+          errors = []
+          skill_files = list(Path("skills").rglob("SKILL.md"))
+          for path in skill_files:
+              text = path.read_text(encoding="utf-8")
+              if not text.startswith("---"):
+                  errors.append(f"{path}: missing frontmatter")
+                  continue
+              try:
+                  _, fm, _ = text.split("---", 2)
+              except ValueError:
+                  errors.append(f"{path}: malformed frontmatter")
+                  continue
+              try:
+                  data = yaml.safe_load(fm)
+              except yaml.YAMLError as e:
+                  errors.append(f"{path}: invalid YAML: {e}")
+                  continue
+              if not isinstance(data, dict):
+                  errors.append(f"{path}: frontmatter must be a YAML mapping")
+                  continue
+              for required in ("name", "description"):
+                  if required not in data:
+                      errors.append(f"{path}: missing '{required}'")
+          if errors:
+              for e in errors:
+                  print(f"FAIL {e}")
+              sys.exit(1)
+          print(f"OK {len(skill_files)} skills validated")
+          PY
+
+      - name: Validate agent roles
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          import yaml
+
+          path = Path("agents/_roles.yaml")
+          if not path.is_file():
+              print("FAIL agents/_roles.yaml missing")
+              sys.exit(1)
+
+          data = yaml.safe_load(path.read_text(encoding="utf-8"))
+          if not isinstance(data, dict):
+              print("FAIL agents/_roles.yaml must contain a mapping")
+              sys.exit(1)
+          roles = data.get("roles", [])
+          if not roles:
+              print("FAIL no roles defined")
+              sys.exit(1)
+
+          for role in roles:
+              for field in ("id", "display_name", "skills", "rule_domains"):
+                  if field not in role:
+                      print(f"FAIL role {role.get('id', '?')}: missing {field}")
+                      sys.exit(1)
+
+          print(f"OK {len(roles)} roles validated")
+          PY
+
+      - name: Validate integration prompts
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          missing = []
+          for base in Path("src/arkhon/integrations/models").iterdir():
+              if not base.is_dir() or base.name.startswith("_"):
+                  continue
+              prompts = base / "prompts"
+              if not prompts.is_dir():
+                  missing.append(f"{base}: missing prompts/")
+                  continue
+              for filename in ("system.md", "governance-injection.md"):
+                  if not (prompts / filename).is_file():
+                      missing.append(f"{prompts}: missing {filename}")
+
+          if missing:
+              for item in missing:
+                  print(f"FAIL {item}")
+              sys.exit(1)
+          print("OK all model prompts present")
+          PY

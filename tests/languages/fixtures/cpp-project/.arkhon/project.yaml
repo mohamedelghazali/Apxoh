@@ -1,0 +1,21 @@
+project:
+  name: "cpp-fixture"
+  identifier: cpp-fixture
+  type: library
+  profile: universal
+  risk_level: low
+
+languages:
+  primary: cpp
+  secondary: []
+
+lifecycle:
+  current_stage: development
+  current_milestone: 2
+  release_channel: pre-release
+
+gates:
+  requirements_gate: required
+  testing_gate: required
+  security_gate: required
+  release_gate: required

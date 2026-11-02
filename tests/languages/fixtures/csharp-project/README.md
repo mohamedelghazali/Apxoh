@@ -1,3 +1,7 @@
-# csharp fixture
+# C# Fixture Project
 
-Minimal language fixture for detector and profile tests. Extend with a representative project manifest.
+Minimal .NET 8 project with xunit for Apxoh's language detection tests.
+
+- `src/Calc.cs` — calculator
+- `tests/CalcTests.cs` — xunit tests
+- Run: `dotnet test`

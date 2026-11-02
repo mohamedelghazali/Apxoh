@@ -1,2 +1,21 @@
-project: {id: api-service, profile: api-service, language: python}
-missing_tool_status: BLOCKED
+project:
+  name: "api-service"
+  identifier: api-service-example
+  type: service
+  profile: api-service
+  risk_level: medium
+
+languages:
+  primary: go
+  secondary: []
+
+lifecycle:
+  current_stage: development
+  current_milestone: 5
+  release_channel: pre-release
+
+gates:
+  requirements_gate: required
+  testing_gate: required
+  security_gate: required
+  release_gate: required

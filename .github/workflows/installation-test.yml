@@ -1,17 +1,74 @@
-name: installation-test
+name: Installation Test
+
 on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
-permissions: {contents: read}
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1"  # Weekly Monday 05:00 UTC
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
+  clean-install:
+    name: Clean install (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install in fresh venv
+        shell: bash
+        run: |
+          python -m venv .venv-ci
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            source .venv-ci/Scripts/activate
+          else
+            source .venv-ci/bin/activate
+          fi
+          pip install --upgrade pip
+          pip install -e .
+          arkhon version
+          arkhon doctor || true
+          arkhon validate
+        continue-on-error: false
+
+  wheel-install:
+    name: Wheel install + smoke test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+        with: { python-version: "3.11" }
+      - run: pip install build
+      - run: python -m build
+      - name: Install from wheel
+        run: |
+          python -m venv .venv-wheel
+          source .venv-wheel/bin/activate
+          pip install dist/*.whl
+          arkhon version
+          arkhon doctor || true
+
+  offline-check:
+    name: Offline check (no network after install)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e .
+      - name: Verify core commands work without network
+        run: |
+          arkhon version
+          arkhon doctor || true
+          arkhon validate

@@ -1,2 +1,25 @@
-project: {id: enterprise-system, profile: enterprise-system, language: python}
-missing_tool_status: BLOCKED
+project:
+  name: "enterprise-system"
+  identifier: enterprise-system-example
+  type: service
+  profile: enterprise
+  risk_level: high
+
+languages:
+  primary: java
+  secondary: []
+
+lifecycle:
+  current_stage: development
+  current_milestone: 5
+  release_channel: pre-release
+
+gates:
+  requirements_gate: required
+  testing_gate: required
+  security_gate: required
+  release_gate: required
+
+security:
+  authority: tsar
+  require_fresh_evidence_hours: 168
