@@ -114,8 +114,6 @@ verify-fixtures:
 
 audit-all-rules: validate
 
-verify-fixtures: test-fixtures
-
 self-audit: verify-all
 
 ci: lint typecheck test validate
