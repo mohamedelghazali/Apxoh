@@ -1,4 +1,15 @@
 id: critical-security
-severity: critical
-condition: unresolved_critical_security_finding
-action: BLOCK
+title: "Critical security findings block release"
+category: blocking
+enabled: true
+description: |
+  Any unresolved critical or high security finding from TSAR blocks the
+  release. No exception is allowed without CISO approval.
+trigger_rules:
+  - SE-SEC-GOV-001
+  - SE-SEC-GOV-003
+  - SE-SEC-GOV-005
+trigger_paths: []
+reason: "Unresolved critical/high security finding — release blocked"
+override:
+  allowed: false
