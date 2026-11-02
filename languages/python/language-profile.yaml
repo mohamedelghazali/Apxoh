@@ -1,5 +1,56 @@
+# Python language profile for Apxoh.
 id: python
-status: planned
-extensions: [".py"]
-entrypoints: []
-minimum_tooling: []
+name: Python
+family: dynamic-typed
+version: 1.0.0
+status: active
+
+runtime:
+  minimum: "3.11"
+  maximum_exclusive: "3.14"
+  tested: ["3.11", "3.12", "3.13"]
+  interpreter: python3
+
+build_system:
+  preferred: pyproject-toml
+  alternatives: [poetry, hatchling, flit, setuptools]
+  commands:
+    install: "pip install -e ."
+    build: "python -m build"
+
+dependency_manager:
+  preferred: pip
+  lock_file: requirements.lock
+  alternatives: [poetry, pipenv, uv]
+
+entry_points:
+  main_module: "__main__.py"
+  cli_script: "pyproject.toml::[project.scripts]"
+
+testing:
+  framework: pytest
+  discovery: "test_*.py or *_test.py"
+  config_file: "pyproject.toml::[tool.pytest.ini_options]"
+
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - database
+  - api-integration
+  - devops
+  - observability
+  - privacy-compliance
+  - scalability
+  - infrastructure
+  - maintenance
+  - release
+
+notes: |
+  Python is the reference language for Apxoh itself. Its profile is the
+  most complete. Other languages follow the same structure but with
+  language-appropriate tools.
