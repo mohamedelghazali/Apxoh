@@ -5,9 +5,8 @@ import re
 import subprocess
 from pathlib import Path
 
-from arkhon.core.errors import SecurityError
 from arkhon.core.logging import get_logger
-from arkhon.integrations.tsar.adapter import TsarAdapter
+from arkhon.integrations.tsar.adapter import TsarAdapter, TsarConfig
 from arkhon.integrations.tsar.verifier import verify_tsar_evidence
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
@@ -16,8 +15,9 @@ logger = get_logger("verification.runners.tsar")
 
 class TsarRunner(Runner):
     def __init__(self, timeout_seconds: int = 1800) -> None:
-        self._adapter = TsarAdapter()
-        self._timeout = timeout_seconds
+        if timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        self._adapter = TsarAdapter(TsarConfig(timeout_seconds=timeout_seconds))
 
     @property
     def name(self) -> str:
@@ -51,7 +51,7 @@ class TsarRunner(Runner):
                 response.payload, expected_commit_sha=commit_sha,
                 evidence_root=project_root,
             )
-        except (SecurityError, Exception) as exc:
+        except Exception as exc:
             logger.warning("TSAR evidence verification failed: %s", exc)
             return RunnerResult(
                 runner=self.name, outcome=RunnerOutcome.BLOCKED,
