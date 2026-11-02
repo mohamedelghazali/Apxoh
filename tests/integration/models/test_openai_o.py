@@ -90,6 +90,10 @@ def test_payload_omits_temperature(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert "temperature" not in captured["body"]
 
+    assert "max_completion_tokens" in captured["body"]
+
+    assert "max_tokens" not in captured["body"]
+
 def test_send_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-...")
