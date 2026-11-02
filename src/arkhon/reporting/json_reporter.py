@@ -54,8 +54,10 @@ class JsonReporter:
             status = record.data.get("status", "NOT_APPLICABLE")
             section = sections[section_name]
             section["evidence_ids"] = [*section["evidence_ids"], record.evidence_id]
-            if status in {"FAIL", "BLOCKED"}:
-                section["status"] = status
+            if status == "FAIL":
+                section["status"] = "FAIL"
+            elif status == "BLOCKED" and section["status"] != "FAIL":
+                section["status"] = "BLOCKED"
             elif status == "PASS" and section["status"] == "NOT_APPLICABLE":
                 section["status"] = "PASS"
 
