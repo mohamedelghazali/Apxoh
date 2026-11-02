@@ -1,5 +1,53 @@
 id: java
-status: planned
-extensions: [".java"]
-entrypoints: []
-minimum_tooling: []
+name: Java
+family: static-typed-jvm
+version: 1.0.0
+status: active
+
+runtime:
+  minimum: "17"
+  recommended: "21"
+  maximum: "23"
+  tested: ["17", "21", "22", "23"]
+  interpreter: java
+
+build_system:
+  preferred: maven
+  alternatives: [gradle, bazel]
+  commands:
+    install: "mvn -B dependency:resolve"
+    build: "mvn -B package"
+    test: "mvn -B test"
+
+dependency_manager:
+  preferred: maven
+  lock_file: "none (use versions in pom.xml)"
+  manifest: pom.xml
+
+testing:
+  framework: junit
+  alternatives: [testng, spock]
+  discovery: "src/test/java/**/*Test.java"
+
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - database
+  - api-integration
+  - devops
+  - observability
+  - privacy-compliance
+  - scalability
+  - infrastructure
+  - maintenance
+  - release
+
+notes: |
+  Java projects depend on the JVM. Apxoh verifies the targeted JDK version
+  via the pom.xml/gradle file, and checks that the build runs against that
+  JDK. Bytecode level must match the target.
