@@ -1,0 +1,33 @@
+id: kimi
+name: "Kimi"
+provider: moonshot
+kind: model
+version: 1.0.0
+model:
+  provider: moonshot
+  endpoint: "https://api.moonshot.ai/v1/chat/completions"
+  default_model: "kimi-k2"
+  available_models:
+    - "kimi-k2"
+    - "moonshot-v1-128k"
+  max_tokens: 8192
+  temperature: 0.0
+auth:
+  method: header
+  header_name: "Authorization"
+  env_var: "MOONSHOT_API_KEY"
+  required: true
+capabilities:
+  - code-generation
+  - code-review
+  - instruction-following
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: configured
+verification:
+  max_reachable_level: configured
+  notes: "Transport implemented; behavioral verification is required before claiming verified."
+rate_limits:
+  timeout_seconds: 180

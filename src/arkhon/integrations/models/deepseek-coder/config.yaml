@@ -1,0 +1,33 @@
+id: deepseek-coder
+name: "DeepSeek Coder"
+provider: deepseek
+kind: model
+version: 1.0.0
+model:
+  provider: deepseek
+  endpoint: "https://api.deepseek.com/chat/completions"
+  default_model: "deepseek-chat"
+  available_models:
+    - "deepseek-chat"
+    - "deepseek-reasoner"
+  max_tokens: 8192
+  temperature: 0.0
+auth:
+  method: header
+  header_name: "Authorization"
+  env_var: "DEEPSEEK_API_KEY"
+  required: true
+capabilities:
+  - code-generation
+  - code-review
+  - instruction-following
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: configured
+verification:
+  max_reachable_level: configured
+  notes: "Transport implemented; behavioral verification is required before claiming verified."
+rate_limits:
+  timeout_seconds: 120
