@@ -1,3 +1,38 @@
-language: typescript
-frameworks: []
-missing_required_runner: BLOCKED
+id: typescript
+framework: vitest
+minimum_version: "1.0"
+
+coverage:
+  tool: vitest-coverage-v8
+  required: true
+  minimum_line_coverage: 80
+  minimum_branch_coverage: 70
+  fail_under: 80
+  report_formats: [text, json, html]
+
+test_discovery:
+  patterns:
+    - "**/*.test.ts"
+    - "**/*.spec.ts"
+    - "**/*.test.tsx"
+    - "**/*.test.mts"
+  directories: [tests/, __tests__/, src/]
+
+test_categories:
+  unit:
+    required: true
+    command: "vitest run --dir tests/unit"
+    timeout_seconds: 300
+  integration:
+    required: true
+    command: "vitest run --dir tests/integration"
+    timeout_seconds: 600
+  type-tests:
+    required: true
+    command: "tsd || vitest --typecheck"
+    timeout_seconds: 300
+    note: "Type-level tests prove the type system is actually used"
+
+required_plugins:
+  - "@vitest/coverage-v8"
+  - "@vitest/typecheck"
