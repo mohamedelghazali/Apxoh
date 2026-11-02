@@ -1,3 +1,46 @@
-language: python
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+# Security requirements for Python projects.
+# Apxoh delegates actual security scanning to TSAR. This file declares
+# the fast local checks that complement TSAR.
+
+id: python
+delegates_to: tsar
+
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+    version_arg: "--version"
+
+  dependency_scanning:
+    tool: pip-audit
+    required: true
+    invocation: "pip-audit --strict --desc"
+    version_arg: "--version"
+
+  dangerous_patterns:
+    - pattern: "eval("
+      severity: high
+      reason: "eval() of untrusted input is code injection"
+    - pattern: "exec("
+      severity: high
+      reason: "exec() of untrusted input is code injection"
+    - pattern: "subprocess.call(..., shell=True)"
+      severity: high
+      reason: "shell=True enables command injection"
+    - pattern: "pickle.loads("
+      severity: high
+      reason: "unpickling untrusted data is code execution"
+    - pattern: "yaml.load("
+      severity: high
+      reason: "use yaml.safe_load() instead"
+
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
