@@ -1,3 +1,40 @@
-language: go
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: go
+delegates_to: tsar
+
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+
+  dependency_scanning:
+    tool: govulncheck
+    required: true
+    invocation: "govulncheck -json ./..."
+
+  dangerous_patterns:
+    - pattern: "exec.Command(\"sh\", \"-c\""
+      severity: high
+      reason: "Shell injection through unescaped arguments"
+    - pattern: "unsafe.Pointer"
+      severity: medium
+      reason: "unsafe bypasses Go's memory safety"
+    - pattern: "crypto/md5"
+      severity: high
+      reason: "MD5 is cryptographically broken"
+    - pattern: "crypto/des"
+      severity: high
+      reason: "DES is cryptographically broken"
+    - pattern: "rand.Read("
+      severity: medium
+      reason: "Use crypto/rand, not math/rand, for security-sensitive randomness"
+
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
