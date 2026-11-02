@@ -106,7 +106,10 @@ The package exposes the arkhon command through pyproject.toml. Apxoh is the prod
 
 - skills/ contains eight skill directories covering governance, requirements, architecture, secure engineering, testing, performance, reliability, and release readiness.
 - agents/ contains nine role directories, plus the role registry.
-- integrations/ contains agent/editor integration packages such as Aider, Amazon Q, Claude Code, Cline, Codex, Continue, Cursor, Devin, Gemini, Gemini CLI, Generic Agents, GPT, JetBrains AI, Replit Agent, Sourcegraph Cody, Tabnine, Windsurf, TSAR, and the GitHub Copilot platform integration under integrations/platforms/.
+- integrations/models/ contains model-provider integration packages, including Gemini and GPT; the eight-model implementation registry is maintained separately in src/arkhon/integrations/models/.
+- integrations/platforms/ contains platform integrations such as GitHub Copilot.
+- integrations/generic-agents/ contains generic-agent guidance and the provider/tool adapters grouped by agent: Aider, Amazon Q, Claude Code, Cline, Codex OpenAI, Continue, Cursor, Devin, Gemini CLI, JetBrains AI, Replit Agent, Sourcegraph Cody, Tabnine, and Windsurf.
+- integrations/tsar/ contains the separately versioned TSAR security-authority contract, adapter, verifier, and integration tests.
 
 These directories document and implement integration surfaces at different levels. Their presence is not proof that every provider account, external service, or behavioral integration test is operational.
 
