@@ -1,7 +1,6 @@
 """Model adapter registry and factory."""
 from __future__ import annotations
 
-import importlib
 import sys
 from importlib.machinery import ModuleSpec
 from pathlib import Path
@@ -66,9 +65,41 @@ def get_model_adapter(model_id: str) -> Integration:
         raise KeyError(
             f"unknown model {model_id!r}; available models: {available}"
         )
-    module = importlib.import_module(_MODEL_MODULES[model_id])
-    adapter_class = getattr(module, _ADAPTER_CLASSES[model_id])
-    return cast(Integration, adapter_class())
+    # Keep imports static: model identifiers are external input and must never
+    # be interpreted as arbitrary Python module paths.
+    if model_id == "claude":
+        from arkhon.integrations.models.claude.adapter import ClaudeAdapter
+
+        adapter = ClaudeAdapter()
+    elif model_id == "openai-o":
+        from arkhon.integrations.models.openai_o.adapter import OpenAIOAdapter
+
+        adapter = OpenAIOAdapter()
+    elif model_id == "deepseek-coder":
+        from arkhon.integrations.models.deepseek_coder.adapter import DeepSeekCoderAdapter
+
+        adapter = DeepSeekCoderAdapter()
+    elif model_id == "gpt":
+        from arkhon.integrations.models.gpt.adapter import GptAdapter
+
+        adapter = GptAdapter()
+    elif model_id == "gemini":
+        from arkhon.integrations.models.gemini.adapter import GeminiAdapter
+
+        adapter = GeminiAdapter()
+    elif model_id == "code-llama":
+        from arkhon.integrations.models.code_llama.adapter import CodeLlamaAdapter
+
+        adapter = CodeLlamaAdapter()
+    elif model_id == "qwen-coder":
+        from arkhon.integrations.models.qwen_coder.adapter import QwenCoderAdapter
+
+        adapter = QwenCoderAdapter()
+    else:
+        from arkhon.integrations.models.kimi.adapter import KimiAdapter
+
+        adapter = KimiAdapter()
+    return cast(Integration, adapter)
 
 
 __all__ = ["get_model_adapter", "list_models"]
