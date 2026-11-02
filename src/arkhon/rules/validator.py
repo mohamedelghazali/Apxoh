@@ -55,12 +55,17 @@ def validate_semantics(rule: Rule) -> list[RuleValidationError]:
     if status not in ALL_RULE_STATUSES:
         errors.append(RuleValidationError(f"{rule.id}: invalid status '{status}'"))
 
-    if isinstance(domain, str) and domain in DOMAIN_RULE_PREFIX:
-        expected = DOMAIN_RULE_PREFIX[domain]
-        if not rule.id.startswith(expected + "-"):
-            errors.append(RuleValidationError(
-                f"{rule.id}: rule id must start with '{expected}-' for domain '{domain}'"
-            ))
+    expected = DOMAIN_RULE_PREFIX.get(domain) if isinstance(domain, str) else None
+    raw_id = rule.raw.get("id")
+    identifier = raw_id if isinstance(raw_id, str) else rule.id
+    if expected is not None and not identifier.startswith(f"{expected}-"):
+        errors.append(RuleValidationError(
+            f"{identifier}: rule id must start with '{expected}'- for domain '{domain}'"
+        ))
+    if identifier != rule.id:
+        errors.append(RuleValidationError(
+            f"{rule.id}: Rule.id does not match the document id '{identifier}'"
+        ))
 
     verification = rule.raw.get("verification")
     if not isinstance(verification, dict):
