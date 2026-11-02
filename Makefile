@@ -92,7 +92,8 @@ verify-fixtures:
 	@set -e; for fixture in tests/languages/fixtures/*-project; do \
 		if [ -d "$$fixture" ]; then \
 			echo "=== Inspecting $$fixture ==="; \
-			$(ARKHON) inspect "$$fixture" --json; \
+			$(ARKHON) inspect "$fixture" --json; \
+			$(ARKHON) verify "$fixture" --domain testing; \
 		fi; \
 	done
 
