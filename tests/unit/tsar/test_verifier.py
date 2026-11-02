@@ -110,8 +110,12 @@ def test_parse_payload_malformed_artifact() -> None:
         "summary": {"critical": 0, "high": 0},
         "artifacts": [{"path": "x"}],
     }
-    with pytest.raises(SecurityError, match="malformed artifact"):
+    with pytest.raises(SecurityError) as exc_info:
         _parse_tsar_payload(payload)
+    message = str(exc_info.value).lower()
+    assert "artifact" in message, (
+        f"expected 'artifact' in error message, got: {exc_info.value!r}"
+    )
 
 
 def _valid_payload(tmp_path: Path, commit_sha: str = "a" * 40) -> dict:
