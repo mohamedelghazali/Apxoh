@@ -1,5 +1,48 @@
 id: rust
-status: planned
-extensions: [".rs"]
-entrypoints: []
-minimum_tooling: []
+name: Rust
+family: static-typed-native
+version: 1.0.0
+status: active
+
+runtime:
+  minimum: "1.75"
+  recommended: "1.82"
+  maximum: "1.83"
+  tested: ["1.75", "1.82", "1.83"]
+
+build_system:
+  preferred: cargo
+  commands:
+    install: "cargo fetch"
+    build: "cargo build --locked"
+    test: "cargo test --locked"
+
+dependency_manager:
+  preferred: cargo
+  lock_file: Cargo.lock
+
+testing:
+  framework: cargo-test
+  alternatives: [nextest]
+  discovery: "tests/, src/**/#[cfg(test)]"
+
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - api-integration
+  - devops
+  - observability
+  - scalability
+  - infrastructure
+  - maintenance
+  - release
+
+notes: |
+  Rust's safety guarantees come from the compiler. Apxoh enforces that
+  unsafe blocks are minimized and documented. Clippy warnings are
+  treated as errors for the release profile.
