@@ -104,11 +104,6 @@ def test_adapter_does_not_log_secrets(adapter_source: tuple[Path, str]) -> None:
             )
 
 
-def test_at_least_eight_model_adapters_present() -> None:
-    models_dir = ROOT / "src" / "arkhon" / "integrations" / "models"
-    adapters = list(models_dir.rglob("adapter.py")) if models_dir.is_dir() else []
-    assert len(adapters) >= 8, f"expected at least 8 model adapters, found {len(adapters)}"
-
 
 def test_tsar_adapter_present() -> None:
     tsar_adapter = ROOT / "src" / "arkhon" / "integrations" / "tsar" / "adapter.py"

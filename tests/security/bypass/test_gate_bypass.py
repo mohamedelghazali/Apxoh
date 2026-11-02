@@ -24,7 +24,7 @@ def test_critical_fail_cannot_be_softened() -> None:
 
 def test_blocked_cannot_become_pass() -> None:
     verdict = evaluate_gate("security_gate", [_outcome("BLOCKED")])
-    assert verdict.status in {"FAIL", "BLOCKED"}
+    assert verdict.status == "BLOCKED"
     assert not verdict.closes
 
 
@@ -44,7 +44,7 @@ def test_not_applicable_is_neutral_only_when_explicitly_evaluated() -> None:
 
 def test_missing_evidence_blocks_when_other_checks_pass() -> None:
     verdict = evaluate_gate("security_gate", [_outcome("PASS"), _outcome("BLOCKED")])
-    assert verdict.status in {"FAIL", "BLOCKED"}
+    assert verdict.status == "BLOCKED"
     assert not verdict.closes
 
 
