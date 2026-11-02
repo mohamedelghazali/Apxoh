@@ -131,7 +131,7 @@ def _maximum_version_tuple(value: str) -> tuple[int, int, int]:
     if any(part.lower() == "x" for part in parts[:first_wildcard]):
         raise SecurityError(f"invalid version bound: {value!r}")
     numeric = [int(part) for part in parts[:first_wildcard]]
-    if any(str(number) != part for number, part in zip(numeric, parts)):
+    if any(str(number) != part for number, part in zip(numeric, parts, strict=False)):
         raise SecurityError(f"invalid version bound: {value!r}")
     numeric[-1] += 1
     numeric.extend([0] * (3 - len(numeric)))
