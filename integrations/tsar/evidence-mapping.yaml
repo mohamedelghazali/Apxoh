@@ -1,4 +1,46 @@
-version: 1
-mappings: []
-missing_mapping: BLOCKED
-preserve_source_evidence: true
+# TSAR rule IDs mapped to Apxoh governance rules.
+# Mapping does not replace or rewrite the source TSAR finding.
+version: "1.0.0"
+status: proposed
+
+mappings:
+  - tsar_rule: TSAR-SEC-SECRET-001
+    apxoh_rule: SE-SEC-GOV-001
+    title: "No hardcoded secrets"
+    severity_map: {critical: critical, high: high, medium: medium, low: low}
+  - tsar_rule: TSAR-SEC-SECRET-002
+    apxoh_rule: SE-SEC-GOV-001
+    title: "No secrets in build artifacts"
+  - tsar_rule: TSAR-SEC-CRYPTO-001
+    apxoh_rule: SE-SEC-GOV-006
+    title: "Approved cryptographic algorithms only"
+  - tsar_rule: TSAR-SEC-CRYPTO-002
+    apxoh_rule: SE-SEC-GOV-006
+    title: "No deprecated hash functions"
+  - tsar_rule: TSAR-SEC-AUTH-001
+    apxoh_rule: SE-SEC-GOV-002
+    title: "Multi-factor authentication required"
+  - tsar_rule: TSAR-SEC-DEP-001
+    apxoh_rule: SE-SEC-GOV-003
+    title: "No known-vulnerable dependencies"
+  - tsar_rule: TSAR-SEC-DEP-002
+    apxoh_rule: SE-SEC-GOV-003
+    title: "Dependency licenses compatible"
+  - tsar_rule: TSAR-SEC-ASVS-V2
+    apxoh_rule: SE-SEC-GOV-002
+    title: "ASVS V2: Authentication"
+  - tsar_rule: TSAR-SEC-ASVS-V4
+    apxoh_rule: SE-SEC-GOV-004
+    title: "ASVS V4: Access Control"
+  - tsar_rule: TSAR-SEC-ASVS-V5
+    apxoh_rule: SE-SEC-GOV-005
+    title: "ASVS V5: Validation, Sanitization, Encoding"
+
+required_tsar_rules:
+  - TSAR-SEC-SECRET-001
+  - TSAR-SEC-CRYPTO-001
+  - TSAR-SEC-DEP-001
+  - TSAR-SEC-ASVS-V2
+
+unmapped_finding_behavior: BLOCKED
+preserve_source_finding: true
