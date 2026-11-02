@@ -1,0 +1,44 @@
+id: SE-MNT-001
+metadata:
+  title: CHANGELOG Updated for Every Release
+  domain: maintenance
+  version: 1.0.0
+  status: active
+  severity: medium
+  enforcement: required
+  description: >
+    Every release must update CHANGELOG.md following Keep a Changelog
+    format.
+scope:
+  project_types: [all]
+  lifecycle_stages: [release]
+requirement:
+  statement: >
+    Before a release, CHANGELOG.md must be updated with the new version,
+    date, and categorized entries (Added, Changed, Deprecated, Removed,
+    Fixed, Security). The entry must match the version in VERSION and
+    pyproject.toml.
+verification:
+  mode: deterministic
+  methods:
+    - changelog-format-validation
+    - version-consistency-check
+acceptance:
+  changelog_updated: true
+  version_consistent: true
+  entries_categorized: true
+evidence:
+  required:
+    - changelog-diff
+    - version-consistency-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
