@@ -1,6 +1,87 @@
-contract_version: 1
-provider: TSAR
-optional: true
-coupling: adapter_only
-required_fields: [source_version, target_version, rule_id, status, evidence_reference]
-status: contract_defined_not_verified
+# Apxoh <-> TSAR integration contract.
+# This is a desired contract; operational enforcement must be verified separately.
+version: "1.0.0"
+status: proposed
+relation: consumer-provider
+
+provider:
+  name: TSAR
+  repository: "https://github.com/mohamedelghazali/TSAR"
+  minimum_version: "1.1.0"
+  maximum_version_exclusive: "2.0.0"
+  role: "Delegated security scanning authority"
+  required_for:
+    - security_gate
+    - crypto_audit
+    - secrets_exposure_check
+    - vulnerability_scan
+    - asvs_compliance_evidence
+
+consumer:
+  name: Apxoh
+  identifier: arkhon
+  role: "Governance and release decision authority"
+  owns:
+    - security_policy
+    - gate_placement
+    - evidence_acceptance
+    - release_decision
+
+handshake:
+  method: cli-invocation
+  command_pattern: "tsar audit --project {project} --output json --commit {commit}"
+  output_format: json
+  timeout_seconds: 1800
+  output_transport: stdout
+
+evidence_contract:
+  required_fields:
+    - evidence_id
+    - tsar_version
+    - rule_ids
+    - findings
+    - commit_sha
+    - executed_at
+    - artifacts
+    - summary
+    - status
+  freshness_window_hours: 168
+  integrity_check:
+    - sha256_on_each_artifact
+    - commit_sha_matches_expected
+    - tsar_version_in_range
+    - no_missing_rule_ids_from_required_set
+    - reject_future_timestamps
+  required_rule_ids:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+
+failure_handling:
+  tsar_unavailable:
+    gate_status: BLOCKED
+    reason: "Security authority unavailable"
+    action: install_or_configure_tsar
+  tsar_version_out_of_range:
+    gate_status: BLOCKED
+    reason: "TSAR version not in compatibility window"
+    action: upgrade_or_downgrade_tsar
+  evidence_stale:
+    gate_status: BLOCKED
+    reason: "Evidence older than freshness window"
+    action: rerun_tsar_audit
+  evidence_commit_mismatch:
+    gate_status: BLOCKED
+    reason: "Evidence tied to a different commit"
+    action: rerun_tsar_audit_on_current_commit
+  evidence_tampered:
+    gate_status: BLOCKED
+    reason: "Artifact SHA-256 mismatch"
+    action: reject_and_escalate
+  critical_findings_open:
+    gate_status: FAIL
+    reason: "Unresolved critical or high severity findings"
+    action: remediate_and_reaudit
+
+no_trust_without_verification: true
