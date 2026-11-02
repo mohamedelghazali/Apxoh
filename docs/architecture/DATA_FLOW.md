@@ -1,7 +1,7 @@
 # Apxoh Data Flow
 
 **Version:** 1.0
-**Status:** Active
+**Status:** Active — architectural specification; implementation status must be verified.
 **Last updated:** 2026-11-01
 
 ---
@@ -20,52 +20,54 @@ Developer / AI Agent
         │  `arkhon verify`
         ▼
    ┌──────────────┐
-   │ Verification │ ← runs pytest, ruff, mypy, TSAR
+   │ Verification │
    │   Engine     │
    └──────┬───────┘
           │
           │  produces
           ▼
    ┌──────────────┐
-   │   Evidence   │ ← SHA-256, sigstore, commit-binding
+   │   Evidence   │
    │    Store     │
    └──────┬───────┘
           │
           │  `arkhon assess`
           ▼
    ┌──────────────┐
-   │  Assessment  │ ← score, gates, decision
+   │  Assessment  │
    │   Engine     │
    └──────┬───────┘
           │
           │  `arkhon report`
           ▼
    ┌──────────────┐
-   │    Report    │ ← JSON + Markdown
+   │    Report    │
    └──────────────┘
 ```
+
+This diagram describes the intended flow. It does not assert that every
+runner, signer, verifier, CLI command, or storage control is implemented.
 
 ---
 
 ## 2. Verification Flow (Detailed)
 
 ```
-1. CLI invoked: `arkhon verify --domain testing`
+1. CLI invoked: arkhon verify --domain testing
         │
         ▼
 2. Load manifest + rules + profile
         │
         ▼
 3. Resolve runners for domain
-   (testing → PytestRunner)
         │
         ▼
-4. For each runner:
+4. Execute available runners
         │
-        ├─→ Execute tool (pytest)
+        ├─→ Execute tool
         │       │
         │       ▼
-        │   Produce artifacts (JUnit XML)
+        │   Produce artifacts
         │
         ├─→ Compute SHA-256 of artifacts
         │
@@ -75,86 +77,84 @@ Developer / AI Agent
 5. Aggregate outcomes → overall status
         │
         ▼
-6. Build evidence bundle:
-   {
-     evidence_id,
-     source: "arkhon",
-     commit_sha,
-     executed_at,
-     status,
-     artifacts: [{path, sha256}]
-   }
+6. Build evidence bundle using the evidence schema
         │
         ▼
-7. Sign evidence (sigstore)
+7. Apply signing only when a configured signer is available
         │
         ▼
-8. Write to .arkhon/evidence/testing/
+8. Store evidence under .arkhon/evidence/<domain>/
         │
         ▼
-9. Return VerificationRun with evidence_id
+9. Return verification result
 ```
+
+The signing and storage steps above are design intent unless their
+implementation and runtime configuration have been independently verified.
+A missing required tool or evidence artifact must result in BLOCKED, not PASS.
 
 ---
 
 ## 3. Evidence Flow
 
 ```
-Produce  →  Hash  →  Sign  →  Store  →  Verify  →  Use
-   │          │       │        │          │         │
-   │          │       │        │          │         └─ Gate closes
-   │          │       │        │          └─ Hash + signature + commit + freshness
-   │          │       │        └─ .arkhon/evidence/<domain>/
-   │          │       └─ sigstore OIDC
-   │          └─ SHA-256
+Produce  →  Hash  →  Sign (if configured)  →  Store  →  Verify  →  Use
+   │          │              │                 │          │         │
+   │          │              │                 │          │         └─ Gate evaluation
+   │          │              │                 │          └─ Hash, signature, commit, freshness
+   │          │              │                 └─ Evidence storage
+   │          │              └─ Optional configured signing workflow
+   │          └─ SHA-256 integrity digest
    └─ Runner output
 ```
+
+A digest detects content changes relative to a recorded digest; it does
+not establish who produced an artifact or whether its contents are correct.
 
 ---
 
 ## 4. Assessment Flow
 
 ```
-1. `arkhon assess` invoked
+1. Assessment command invoked
         │
         ▼
-2. Load all evidence under .arkhon/evidence/
+2. Load available evidence
         │
         ▼
-3. For each domain, compute ratio (pass/total)
+3. Validate evidence contracts and freshness
         │
         ▼
-4. Apply weights:
-   requirements             15%
-   architecture & code      10%
-   testing                  15%
-   security                 20%
-   performance              10%
-   reliability              10%
-   scalability              10%
-   docs & deployment        10%
+4. Compute configured domain ratios and weights
         │
         ▼
-5. Compute score = Σ(ratio × weight)
+5. Evaluate required gates
         │
         ▼
-6. Evaluate gates:
-   - Group outcomes by gate
-   - Critical failures → FAIL
-   - Blocking failures → BLOCKED
-   - Otherwise → PASS
+6. Make a decision from score, gates, and accepted risks
         │
         ▼
-7. Make decision:
-   - Critical gate FAIL → REJECTED
-   - Blocking gate BLOCKED → PENDING_EVIDENCE
-   - Score < 80 → REJECTED
-   - Accepted risks → APPROVED_WITH_CONDITIONS
-   - Otherwise → APPROVED
-        │
-        ▼
-8. Return Assessment
+7. Return assessment result
 ```
+
+Weights, score thresholds, required gates, and accepted-risk behavior
+must come from the active project/profile policy. The following is an
+illustrative policy model, not a claim that these exact weights are
+currently enforced:
+
+| Domain | Illustrative weight |
+| :--- | ---: |
+| Requirements | 15% |
+| Architecture & code | 10% |
+| Testing | 15% |
+| Security | 20% |
+| Performance | 10% |
+| Reliability | 10% |
+| Scalability | 10% |
+| Documentation & deployment | 10% |
+
+A high numeric score must never override a failed critical gate. Missing
+required evidence or a required verification tool must remain BLOCKED.
 
 ---
 
@@ -163,29 +163,29 @@ Produce  →  Hash  →  Sign  →  Store  →  Verify  →  Use
 ```
 Apxoh                           TSAR
   │                              │
-  │  `tsar audit --project . ...`│
+  │  invoke configured contract  │
   ├─────────────────────────────▶│
   │                              │
-  │                              │  runs SAST, DAST, SCA, secrets
-  │                              │
-  │  JSON payload + artifacts    │
+  │                              │  security analysis
+  │  structured result + evidence
   │◀─────────────────────────────┤
   │                              │
-  │  verify_tsar_evidence()      │
+  │  verify TSAR evidence        │
   │   - required fields?         │
   │   - commit_sha match?        │
   │   - version in range?        │
-  │   - freshness ≤ 168h?        │
-  │   - rule_ids complete?       │
+  │   - freshness within policy? │
+  │   - required rule IDs?       │
   │   - artifact hashes match?   │
-  │   - no critical/high?        │
   │                              │
-  │  PASS → gate closes          │
-  │  BLOCKED → gate blocked      │
-  │  FAIL → gate fails           │
+  │  PASS / BLOCKED / FAIL       │
   │                              │
   ▼                              ▼
 ```
+
+The actual command, payload, version range, rule IDs, and evidence
+contract must match the separately maintained TSAR integration contract.
+Do not infer successful delegation merely from a profile declaration.
 
 ---
 
@@ -193,57 +193,58 @@ Apxoh                           TSAR
 
 ```
 project-init
-    │ exit: .arkhon/project.yaml valid
+    │
     ▼
 requirements
-    │ exit: all requirements have acceptance criteria
+    │
     ▼
 architecture
-    │ exit: architecture reviewed, threat model documented
+    │
     ▼
 implementation-planning
-    │ exit: all tasks have rule bindings
+    │
     ▼
 development
-    │ exit: code compiles, no critical local findings
+    │
     ▼
 verification
-    │ exit: all runners pass
+    │
     ▼
 remediation (loop back to development if needed)
-    │ exit: all failures resolved or accepted
+    │
     ▼
 release-review
-    │ exit: PRR checklist complete
+    │
     ▼
 release-approval
-    │ exit: decision recorded
+    │
     ▼
 post-release
 ```
 
-Each transition is gated. No stage can be skipped.
+This is the intended lifecycle. A transition is gated only where an
+enforcing implementation and required evidence exist. Documentation
+alone does not enforce a stage transition.
 
 ---
 
 ## 7. Reporting Flow
 
 ```
-Evidence Bundle (JSON)
+Validated Assessment
         │
         ▼
-   JsonReporter
+   JSON Reporter
         │
-        ├─→ report.json (machine-readable)
+        ├─→ Machine-readable report
         │
-        └─→ MarkdownReporter
+        └─→ Markdown Reporter
               │
-              ├─→ report.md (human-readable)
-              │
-              └─→ EngineeringQualityRenderer
-                    │
-                    └─→ 16 .md files (one per section)
+              └─→ Human-readable report sections
 ```
+
+Report formats and section counts are governed by the active report
+schema and templates.
 
 ---
 
@@ -252,43 +253,41 @@ Evidence Bundle (JSON)
 ```
 AI Agent                      Apxoh
    │                            │
-   │  reads AGENTS.md           │
-   │  reads SECURITY_AGENTS.md  │
-   │  reads system/charter/     │
+   │  reads governance guidance │
    │                            │
    │  writes code               │
    ├───────────────────────────▶│
    │                            │
-   │  "tests pass"              │  ignores claim
+   │  claims "tests pass"        │  claim is not evidence
    │                            │
-   │                            │  runs pytest
-   │                            │  (independently)
+   │                            │  runs configured tools
+   │                            │  records verifiable outputs
    │                            │
-   │  receives verification     │
+   │  receives result           │
    │◀───────────────────────────┤
-   │                            │
-   │  if FAIL: remediate        │
-   │  if PASS: continue         │
    │                            │
    ▼                            ▼
 ```
 
-The agent never produces evidence. Apxoh produces evidence by running
-independent tools against the agent's code.
+An agent's statement is not a verification result. Apxoh must rely on
+independently executed tools and validated evidence artifacts.
 
 ---
 
 ## 9. Trust Boundaries
 
-| Boundary | Crossing | Control |
+| Boundary | Crossing | Intended control |
 | :--- | :--- | :--- |
-| Agent → Code | Agent writes files | Governance files read-only |
-| Code → Verification | Apxoh reads code | Independent runner |
-| Verification → Evidence | Runner produces artifact | SHA-256 + sigstore |
-| Evidence → Gate | Assessment reads evidence | Contract verification |
-| Gate → Release | Human reviews | Signature + approval |
-| Apxoh → TSAR | Apxoh calls TSAR | CLI contract |
-| TSAR → Apxoh | TSAR returns evidence | Full verification |
+| Agent → Code | Agent writes files | Governance-file protection and review |
+| Code → Verification | Apxoh reads code | Independent configured runners |
+| Verification → Evidence | Runner produces artifact | Hashing and schema validation |
+| Evidence → Gate | Assessment reads evidence | Contract, commit, and freshness verification |
+| Gate → Release | Human reviews | Recorded approval and configured authorization |
+| Apxoh → TSAR | Apxoh calls TSAR | Versioned integration contract |
+| TSAR → Apxoh | TSAR returns evidence | Independent evidence verification |
+
+A listed control is an architectural requirement, not proof that the
+control is deployed or effective.
 
 ---
 
