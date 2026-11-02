@@ -1,3 +1,38 @@
-language: rust
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: rust
+delegates_to: tsar
+
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+
+  dependency_scanning:
+    tool: cargo-audit
+    required: true
+    invocation: "cargo audit --json"
+
+  dangerous_patterns:
+    - pattern: "unsafe {"
+      severity: medium
+      reason: "unsafe blocks bypass Rust's safety guarantees; require a safety comment"
+      allow_with_comment: "// SAFETY:"
+    - pattern: "std::mem::transmute"
+      severity: high
+      reason: "transmute is almost always wrong; use safe conversions"
+    - pattern: "unwrap()"
+      severity: medium
+      reason: "unwrap() panics on None/Err; prefer ? or match in production code"
+    - pattern: "panic!("
+      severity: low
+      reason: "panic in production code should be justified"
+
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
