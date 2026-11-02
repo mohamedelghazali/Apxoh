@@ -1,5 +1,49 @@
 id: typescript
-status: planned
-extensions: [".ts",".tsx"]
-entrypoints: []
-minimum_tooling: []
+name: TypeScript
+family: static-typed
+version: 1.0.0
+status: active
+
+runtime:
+  minimum: "5.0"
+  recommended: "5.6"
+  maximum: "5.x"
+  tested: ["5.0", "5.4", "5.6"]
+  interpreter: node
+
+build_system:
+  preferred: tsc-or-vite
+  alternatives: [webpack, esbuild, swc, rollup]
+  commands:
+    install: "npm ci"
+    build: "tsc --noEmit && npm run build"
+    test: "npm test"
+
+dependency_manager:
+  preferred: npm
+  lock_file: package-lock.json
+  alternatives: [pnpm, yarn, bun]
+
+testing:
+  framework: vitest
+  alternatives: [jest, playwright]
+  discovery: "**/*.{test,spec}.{ts,tsx,mts,cts}"
+
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - api-integration
+  - devops
+  - observability
+  - maintenance
+  - release
+
+notes: |
+  TypeScript projects default to strict mode. Apxoh enforces tsc --noEmit
+  as a required check: if the code does not type-check, the build is
+  BLOCKED, regardless of any other evidence.
