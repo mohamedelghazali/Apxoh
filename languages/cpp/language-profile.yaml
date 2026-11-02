@@ -1,5 +1,40 @@
 id: cpp
-status: planned
-extensions: [".cc",".cpp",".cxx",".h",".hpp"]
-entrypoints: []
-minimum_tooling: []
+name: C++
+family: static-typed-native
+version: 1.0.0
+status: active
+runtime:
+  minimum: "c++17"
+  recommended: "c++20"
+  maximum: "c++23"
+  tested: ["c++17", "c++20", "c++23"]
+build_system:
+  preferred: cmake
+  alternatives: [bazel, meson, make]
+  commands:
+    install: "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release"
+    build: "cmake --build build --parallel"
+    test: "ctest --test-dir build --output-on-failure"
+dependency_manager:
+  preferred: vcpkg
+  alternatives: [conan, system-packages]
+  lock_file: vcpkg.json
+testing:
+  framework: googletest
+  alternatives: [catch2, doctest]
+  discovery: "**/*_test.cpp, **/test_*.cpp"
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - infrastructure
+  - maintenance
+  - release
+notes: |
+  C++ requires careful memory management. Apxoh enforces that manual
+  memory management (new/delete) is minimized, smart pointers are used,
+  and every allocation has a documented ownership model.
