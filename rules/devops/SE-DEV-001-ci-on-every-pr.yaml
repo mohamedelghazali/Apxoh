@@ -1,0 +1,41 @@
+id: SE-DEV-001
+metadata:
+  title: CI Runs on Every Pull Request
+  domain: devops
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every pull request must trigger CI. CI must be a required check
+    before merge.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation]
+requirement:
+  statement: >
+    The repository must have a CI configuration that runs on every pull
+    request. The CI check must be marked as required in branch protection.
+verification:
+  mode: deterministic
+  methods:
+    - workflow-file-presence
+    - branch-protection-check
+acceptance:
+  ci_configured_for_prs: true
+  ci_required_for_merge: true
+evidence:
+  required:
+    - workflow-config
+    - branch-protection-config
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
