@@ -1,0 +1,41 @@
+id: SE-REQ-002
+metadata:
+  title: No Conflicting Requirements
+  domain: requirements
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Approved requirements must not contradict each other. Any conflict
+    must be resolved before architecture design begins.
+scope:
+  project_types: [all]
+  lifecycle_stages: [requirements, architecture]
+requirement:
+  statement: >
+    The requirements register must contain no pair of requirements whose
+    acceptance criteria cannot both be satisfied simultaneously.
+verification:
+  mode: hybrid
+  methods:
+    - requirements-conflict-analysis
+    - human-review
+acceptance:
+  unresolved_conflicts: 0
+evidence:
+  required:
+    - requirements-register
+    - conflict-analysis-report
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+human_review:
+  required: true
+  approver_role: "Requirements Lead"
+tests:
+  positive: required
+  negative: required
+  regression: required
