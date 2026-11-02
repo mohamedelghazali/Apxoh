@@ -1,6 +1,7 @@
 id: cpp
 framework: googletest
 minimum_version: "1.14"
+
 coverage:
   tool: lcov
   required: true
@@ -9,11 +10,13 @@ coverage:
   fail_under: 70
   report_formats: [lcov, html]
   command: "cmake --build build --target coverage"
+
 test_discovery:
   patterns:
     - "**/*_test.cpp"
     - "**/test_*.cpp"
   directories: [tests/, test/]
+
 test_categories:
   unit:
     required: true
@@ -28,6 +31,7 @@ test_categories:
     command: "ctest --test-dir build-sanitizers --output-on-failure"
     timeout_seconds: 1800
     note: "Build with -fsanitize=address,undefined"
+
 required_flags:
   - "-Wall"
   - "-Wextra"
