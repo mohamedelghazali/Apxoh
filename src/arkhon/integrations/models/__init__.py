@@ -44,7 +44,7 @@ for _alias_name, _directory in _ALIASES.items():
     _qualified_name = f"{__name__}.{_alias_name}"
     if _qualified_name not in sys.modules:
         _package = ModuleType(_qualified_name)
-        _package.__path__ = [str(_IMPL_ROOT / _directory)]  # type: ignore[attr-defined]
+        _package.__path__ = [str(_IMPL_ROOT / _directory)]
         _package.__package__ = _qualified_name
         _package.__spec__ = ModuleSpec(
             _qualified_name,

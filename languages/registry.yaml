@@ -86,7 +86,7 @@ languages:
     tools: csharp/tools.yaml
     detection:
       extensions: [.cs]
-      build_files: [*.csproj, *.sln]
+      build_files: ["*.csproj", "*.sln"]
       lock_files: [packages.lock.json]
     planned_tools:
       static_analysis: [dotnet-format, roslyn]
