@@ -1,6 +1,8 @@
 """Platform adapter registry."""
 from __future__ import annotations
 
+from arkhon.integrations.base import Integration
+
 from arkhon.integrations.platforms.github_copilot import GitHubCopilotAdapter
 
 _PLATFORM_FACTORIES = {"github-copilot": GitHubCopilotAdapter}
@@ -10,7 +12,7 @@ def list_platforms() -> list[str]:
     return sorted(_PLATFORM_FACTORIES)
 
 
-def get_platform_adapter(platform_id: str):
+def get_platform_adapter(platform_id: str) -> Integration:
     if platform_id not in _PLATFORM_FACTORIES:
         available = ", ".join(list_platforms())
         raise KeyError(f"unknown platform {platform_id!r}; available platforms: {available}")
