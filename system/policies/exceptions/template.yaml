@@ -1,8 +1,22 @@
-id: EXC-REPLACE
-risk_id: RISK-REPLACE
-owner: required
-approver: required
-justification: required
-compensating_controls: []
-expires_at: required
-status: pending
+# Template for a new exception. Copy this file, fill it in, and add it
+# to system/policies/exceptions/registry.yaml.
+
+exception_id: "EXC-0001"
+rule_id: "SE-TST-001"
+scope:
+  project: "example-project"
+  files:
+    - "src/legacy/module.py"
+  lines: []
+rationale: |
+  This legacy module cannot be tested because it depends on a hardware
+  device that is not available in CI. The compensating control is a
+  weekly manual test by the hardware team.
+owner: "engineering-lead@example.com"
+approver: "security-lead@example.com"
+approved_at: "2026-11-01T00:00:00Z"
+expires_at: "2027-02-01T00:00:00Z"
+compensating_control: |
+  Weekly manual test performed by the hardware team. Evidence of each
+  test run is recorded in the project's evidence store.
+status: "active"
