@@ -29,6 +29,9 @@ jobs:
       - name: Run Apxoh doctor
         run: arkhon doctor || true
 
+      - name: Verify validation module import
+        run: python -c "from scripts.validation.validate_all import main; print('validation import OK')"
+
       - name: Run Apxoh validate
         run: arkhon validate
 
