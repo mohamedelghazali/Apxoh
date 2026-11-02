@@ -67,11 +67,11 @@ system/ contains the engineering charter and governance documents:
 
 ## 4. Rules
 
-Global rules are stored one YAML file per rule under rules/<domain>/. The current catalog contains 17 global rules across these 14 domains:
+Global rules are stored one YAML file per rule under rules/<domain>/. The current catalog contains 20 global rules across these 16 domains:
 
-architecture, code-quality, database, devops, maintenance, observability, performance, privacy-compliance, release, reliability, requirements, scalability, software-security, and testing.
+api-integration, architecture, code-quality, database, devops, infrastructure, maintenance, observability, performance, privacy-compliance, release, reliability, requirements, scalability, software-security, and testing.
 
-Python-specific rules are under languages/python/rules/. At the time of this update, the combined catalog contains 20 rules (17 global + 3 Python).
+Python-specific rules are under languages/python/rules/. At the time of this update, the combined catalog contains 23 rules (20 global + 3 Python).
 
 The repository's rule test currently discovers rules under rules/; do not infer that it also validates language-specific rule files or this map.
 

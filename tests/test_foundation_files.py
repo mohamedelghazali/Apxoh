@@ -1,3 +1,14 @@
 from pathlib import Path
-def test_foundation_files_exist():
-    for p in ["README.md","LICENSE","VERSION","manifest.yaml","pyproject.toml","AGENTS.md"]: assert Path(p).is_file()
+
+
+def test_foundation_files_exist() -> None:
+    required = [
+        "README.md",
+        "LICENSE",
+        "VERSION",
+        "manifest/index.yaml",
+        "pyproject.toml",
+        "AGENTS.md",
+    ]
+    for path in required:
+        assert Path(path).is_file(), f"missing foundation file: {path}"

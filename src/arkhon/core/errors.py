@@ -94,3 +94,8 @@ class GateError(ArkhonError):
 
 class ReleaseBlockedError(GateError):
     default_code = "RELEASE_BLOCKED"
+
+
+class AssessmentError(ArkhonError):
+    """Assessment inputs or score calculations are invalid."""
+    default_code = "ASSESSMENT_ERROR"

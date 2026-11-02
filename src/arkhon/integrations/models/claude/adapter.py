@@ -15,6 +15,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 from typing import Any
 
 from arkhon.core.errors import ArkhonError
@@ -84,6 +85,13 @@ class ClaudeAdapter(Integration):
                 ok=False, reason="ANTHROPIC_API_KEY not set",
             )
 
+        endpoint = urlsplit(self._config.endpoint)
+        if endpoint.scheme != "https" or not endpoint.hostname:
+            return IntegrationResponse(
+                ok=False,
+                reason="Claude endpoint must use HTTPS",
+            )
+
         payload: dict[str, Any] = {
             "model": self._config.model,
             "max_tokens": self._config.max_tokens,
@@ -104,7 +112,9 @@ class ClaudeAdapter(Integration):
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=self._config.timeout_seconds) as resp:
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=self._config.timeout_seconds
+            ) as resp:
                 body = resp.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             return IntegrationResponse(

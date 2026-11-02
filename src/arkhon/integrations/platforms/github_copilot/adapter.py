@@ -21,8 +21,11 @@ class GitHubCopilotAdapter(Integration):
     @property
     def info(self) -> IntegrationInfo:
         return IntegrationInfo(
-            id="github-copilot", kind="platform", provider="github-microsoft",
-            version="1.0.0", capabilities=("project-instructions",),
+            id="github-copilot",
+            kind="platform",
+            provider="github-microsoft",
+            version="1.0.0",
+            capabilities=("project-instructions",),
         )
 
     def health_check(self) -> bool:
@@ -34,18 +37,36 @@ class GitHubCopilotAdapter(Integration):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(_INSTRUCTIONS_CONTENT, encoding="utf-8")
         except OSError as exc:
-            return IntegrationResponse(ok=False, reason=f"cannot install instructions: {exc}")
-        digest = hashlib.sha256(_INSTRUCTIONS_CONTENT.encode("utf-8")).hexdigest()
-        return IntegrationResponse(ok=True, payload={"sha256": digest}, artifacts=[target])
+            return IntegrationResponse(
+                ok=False,
+                reason=f"cannot install instructions: {exc}",
+            )
+        digest = hashlib.sha256(
+            _INSTRUCTIONS_CONTENT.encode("utf-8")
+        ).hexdigest()
+        return IntegrationResponse(
+            ok=True,
+            payload={"sha256": digest},
+            artifacts=[target],
+        )
 
     def verify(self, project: Path) -> IntegrationResponse:
         target = Path(project) / INSTRUCTIONS_REL_PATH
         if not target.is_file():
-            return IntegrationResponse(ok=False, reason=f"instructions file missing: {target}")
+            return IntegrationResponse(
+                ok=False,
+                reason=f"instructions file missing: {target}",
+            )
         actual = target.read_bytes()
         expected = _INSTRUCTIONS_CONTENT.encode("utf-8")
         if actual != expected:
-            return IntegrationResponse(ok=False, reason="instructions file does not match expected content")
+            return IntegrationResponse(
+                ok=False,
+                reason="instructions file does not match expected content",
+            )
+        digest = hashlib.sha256(actual).hexdigest()
         return IntegrationResponse(
-            ok=True, payload={"sha256": hashlib.sha256(actual).hexdigest()}, artifacts=[target],
+            ok=True,
+            payload={"sha256": digest},
+            artifacts=[target],
         )

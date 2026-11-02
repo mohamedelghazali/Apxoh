@@ -4,7 +4,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help install install-dev install-models clean test test-unit test-integration \
         test-security test-rules test-fixtures lint format typecheck audit validate \
-        self-audit ci release-check docs examples verify-all verify-fixtures
+        self-audit ci release-check docs examples verify-all verify-fixtures audit-all-rules
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -19,13 +19,29 @@ ARKHON := $(BIN)/arkhon
 
 help:
 	@echo "Apxoh — available targets:"
-	@echo "  Setup:        install install-dev install-models"
-	@echo "  Tests:        test test-unit test-integration test-security test-rules test-fixtures"
-	@echo "  Quality:      lint format typecheck audit"
-	@echo "  Verification: validate verify-all verify-fixtures self-audit"
-	@echo "  CI/release:   ci release-check"
-	@echo "  Utilities:    clean docs examples"
-
+	@echo "  install             Install the package"
+	@echo "  install-dev         Install development dependencies"
+	@echo "  install-models      List registered model directories"
+	@echo "  clean               Remove generated build and cache files"
+	@echo "  test                Run the complete pytest suite"
+	@echo "  test-unit           Run unit tests"
+	@echo "  test-integration    Run integration tests"
+	@echo "  test-security       Run security tests"
+	@echo "  test-rules          Run rule tests"
+	@echo "  test-fixtures       Run language fixture tests"
+	@echo "  lint                Run Ruff"
+	@echo "  format              Apply Ruff formatting"
+	@echo "  typecheck           Run strict Mypy"
+	@echo "  audit               Run Bandit and pip-audit"
+	@echo "  validate            Validate manifest, schemas, and rules"
+	@echo "  audit-all-rules     Run repository validation including all rules"
+	@echo "  verify-all          Validate and inspect the current project"
+	@echo "  verify-fixtures     Inspect and verify language fixtures"
+	@echo "  self-audit          Run Apxoh self-verification"
+	@echo "  ci                  Run lint, typecheck, tests, and validation"
+	@echo "  release-check       Validate release metadata and CI"
+	@echo "  docs                Show documentation build status"
+	@echo "  examples            List example projects"
 $(VENV):
 	$(PYTHON) -m venv $(VENV)
 
@@ -95,6 +111,8 @@ verify-fixtures:
 			$(ARKHON) verify "$$fixture" --domain testing; \
 		fi; \
 	done
+
+audit-all-rules: validate
 
 self-audit: verify-all
 
