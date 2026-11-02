@@ -1,0 +1,44 @@
+id: SE-ARC-001
+metadata:
+  title: Architecture Decision Records Required
+  domain: architecture
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every significant architectural decision must be recorded in an ADR
+    with context, decision, and consequences.
+scope:
+  project_types: [all]
+  lifecycle_stages: [architecture, release]
+requirement:
+  statement: >
+    Every significant architectural decision (technology choice, data model,
+    integration pattern, security boundary) must have a corresponding ADR
+    in docs/adr/ with status, context, decision, and consequences.
+verification:
+  mode: hybrid
+  methods:
+    - adr-presence-check
+    - adr-structure-validation
+    - human-review
+acceptance:
+  undocumented_major_decisions: 0
+  adrs_with_missing_sections: 0
+evidence:
+  required:
+    - adr-index
+    - adr-directory
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+human_review:
+  required: true
+  approver_role: "Software Architect"
+tests:
+  positive: required
+  negative: required
+  regression: required
