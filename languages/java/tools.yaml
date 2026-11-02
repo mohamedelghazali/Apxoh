@@ -1,15 +1,47 @@
-language: java
-required: false
+id: java
 tools:
-  - id: checkstyle
-    required: false
-    purpose: "style checks"
-    detection: executable_lookup
-  - id: spotbugs
-    required: false
-    purpose: "bytecode static analysis"
-    detection: executable_lookup
-  - id: junit
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
+  static_analysis:
+    - name: mvn
+      role: build-tool
+      required: true
+      invocation: "mvn -B -q compile"
+      version_arg: "--version"
+    - name: checkstyle
+      role: linter
+      required: true
+      invocation: "mvn -B checkstyle:check"
+      output_format: xml
+      version_arg: "--version"
+    - name: spotbugs
+      role: analyzer
+      required: true
+      invocation: "mvn -B spotbugs:check"
+      output_format: xml
+      version_arg: "-version"
+    - name: pmd
+      role: analyzer
+      required: false
+      invocation: "mvn -B pmd:check"
+      output_format: xml
+      version_arg: "-version"
+  testing:
+    - name: mvn
+      role: test-runner
+      required: true
+      invocation: "mvn -B test -Dmaven.test.failure.ignore=false"
+      output_format: junit-xml
+      version_arg: "--version"
+  build:
+    - name: mvn
+      role: builder
+      required: true
+      invocation: "mvn -B -DskipTests package"
+      version_arg: "--version"
+  supply_chain:
+    - name: mvn
+      role: dependency-auditor
+      required: true
+      invocation: "mvn -B org.owasp:dependency-check-maven:check"
+      output_format: xml
+      version_arg: "--version"
+missing_tool_policy: BLOCKED
