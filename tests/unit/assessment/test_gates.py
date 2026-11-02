@@ -103,3 +103,9 @@ def test_to_dict() -> None:
     data = verdict.to_dict()
     assert data["gate"] == "requirements_gate"
     assert data["status"] == "PASS"
+
+
+def test_empty_outcomes_are_blocked() -> None:
+    verdict = evaluate_gate("security_gate", [])
+    assert verdict.status == "BLOCKED"
+    assert not verdict.closes

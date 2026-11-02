@@ -60,6 +60,12 @@ class GateVerdict:
 def evaluate_gate(gate: str, outcomes: list[RuleOutcome]) -> GateVerdict:
     if gate not in GATE_DOMAINS:
         raise GateError(f"unknown gate: {gate}")
+    if not outcomes:
+        return GateVerdict(
+            gate=gate,
+            status=STATUS_BLOCKED,
+            reason="no rule outcomes were supplied; required verification is missing",
+        )
     critical = 0
     blocking = 0
     reasons: list[str] = []

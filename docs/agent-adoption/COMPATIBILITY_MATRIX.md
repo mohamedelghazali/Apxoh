@@ -1,68 +1,70 @@
-# Apxoh Compatibility Matrix
+# Apxoh Agent Compatibility Matrix
 
-**Version:** 1.0  
-**Status:** Initial inventory; no behavioral verification claims established  
-**Last updated:** 2026-11-01
+**Version:** 1.1  
+**Status:** Evidence-conscious inventory; no provider-wide behavioral verification is claimed  
+**Last updated:** 2026-11-02
 
-This matrix is a tracking baseline. A provider name or documented integration is not evidence that the integration exists, is configured, or has passed behavioral verification. Levels must be updated only from reproducible evidence.
+This matrix records the integrations declared by the repository. A registry entry, adapter file, prompt, or provider name is not proof that an external model is reachable, correctly configured, or behaviorally verified. Evidence must identify the exact model/platform version and reproducible test.
 
 ## 1. Model Integrations
 
-| Model family | Provider | Current evidenced level | Verification status | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| Claude | Anthropic | Not established | No evidence supplied in this matrix | Verify exact model, platform, and test procedure |
-| GPT / OpenAI reasoning models | OpenAI | Not established | No evidence supplied in this matrix | Do not generalize across model versions |
-| Gemini | Google | Not established | No evidence supplied in this matrix | Verify API and prompt behavior |
-| Kimi | Moonshot | Not established | No evidence supplied in this matrix | Verify exact model and deployment |
-| DeepSeek-Coder | DeepSeek | Not established | No evidence supplied in this matrix | Configuration is not behavioral verification |
-| Qwen-Coder | Alibaba | Not established | No evidence supplied in this matrix | Verify exact model and deployment |
-| Code Llama | Meta | Not established | No evidence supplied in this matrix | Verify local runtime and model version |
+| Model family | Provider | Declared in manifest | Evidence-backed adoption level | Notes |
+| :--- | :--- | :---: | :--- | :--- |
+| Claude | Anthropic | Yes | Not established here | Verify exact model and API configuration |
+| OpenAI o | OpenAI | Yes | Not established here | Do not generalize across model versions |
+| DeepSeek-Coder | DeepSeek | Yes | Not established here | Configuration is not behavioral verification |
+| GPT | OpenAI | Yes | Not established here | Keep distinct from reasoning-model aliases |
+| Gemini | Google | Yes | Not established here | Verify API and prompt behavior |
+| Code Llama | Meta | Yes | Not established here | Verify local runtime and exact model |
+| Qwen-Coder | Alibaba | Yes | Not established here | Verify exact model and deployment |
+| Kimi | Moonshot | Yes | Not established here | Verify exact model and deployment |
+
+The repository's structural contract tests are under `tests/integration/models/`. Passing them establishes only the structural properties asserted by those tests, not end-to-end provider behavior.
 
 ## 2. Platform Integrations
 
-| Platform | Provider | Current evidenced level | Notes |
-| :--- | :--- | :--- | :--- |
-| GitHub Copilot | GitHub / Microsoft | Not established | Platform configuration cannot prove internal model behavior |
+| Platform | Provider | Declared in manifest | Evidence-backed adoption level | Notes |
+| :--- | :--- | :---: | :--- | :--- |
+| GitHub Copilot | GitHub / Microsoft | Yes | Not established here | Apxoh cannot pin or observe the model selected internally by the platform |
 
-## 3. Security Integrations
+## 3. Security Integration
 
-| Integration | Intended role | Required? | Evidence condition |
-| :--- | :--- | :--- | :--- |
-| TSAR | Independent security verification | Required where the applicable security gate says so | Missing or unavailable TSAR must produce BLOCKED, not PASS |
+| Integration | Intended role | Declared | Evidence condition |
+| :--- | :--- | :---: | :--- |
+| TSAR | Independent security verification | Yes | A required security check remains BLOCKED unless configured TSAR execution and evidence are validated for the target commit |
+
+The TSAR contract is marked proposed in `integrations/tsar/contract.yaml`. Contract tests do not prove that a TSAR binary is installed or that a production audit has run.
 
 ## 4. Generic Agents
 
-| Integration | Current evidenced level | Notes |
-| :--- | :--- | :--- |
-| Generic agents | Not established | Instructions alone do not prove activation or behavior |
+Generic-agent guidance is a fallback for unlisted platforms. Manual instruction application does not establish activation or behavioral verification.
 
-## 5. Adoption Level Definitions
+## 5. Adoption Levels
 
-1. **Installed:** integration files are present and their hashes/locations are recorded.
-2. **Discoverable:** the platform demonstrably locates the integration instructions.
-3. **Activated:** the instructions are shown to be loaded into the active agent context.
+1. **Installed:** required integration files are present at the declared path.
+2. **Discoverable:** the target agent/platform demonstrably locates the relevant instructions.
+3. **Activated:** evidence shows that the instructions were loaded into the active agent context.
 4. **Configured:** platform settings are inspected and bound to the intended integration.
-5. **Verified:** a repeatable behavioral test suite passes and evidence authenticity is independently checked.
+5. **Verified:** repeatable behavioral tests pass for the exact model/platform version and evidence is independently checked.
 
-A level is the highest level for which all required evidence is available. Missing evidence means the level is not established.
+A level is the highest level for which all required evidence is available. Missing evidence means the level is not established. Level 5 is not inferred from a provider's marketing claims or a successful API connection.
 
-## 6. Versioning
+## 6. Evidence Required for an Update
 
-| Apxoh version | Matrix version | Changes |
-| :--- | :--- | :--- |
-| 0.1.0-dev.1 | 1.0 | Initial evidence-conscious inventory |
+A proposed matrix update should include exact provider/model/platform versions, configuration and commit SHA, test procedure and inputs, raw results and timestamps, integrity checks actually performed, and known limitations.
 
 ## 7. Reporting Discrepancies
 
-Open an issue with the integration identifier, exact model/platform version, claimed level, verification procedure, raw test results, and evidence references. Maintainers must independently review the evidence before changing the matrix.
+Open an issue with the integration identifier, exact version, claimed level, verification procedure, raw test results, and evidence references. Maintainers should independently review the evidence before changing the matrix.
 
-## 8. Reference
+## 8. References
 
 - `docs/agent-adoption/ADOPTION_GUIDE.md`
-- `integrations/models/*/README.md` (where present)
-- `integrations/platforms/*/README.md` (where present)
+- `integrations/models/*/README.md` where present
+- `integrations/platforms/*/README.md` where present
 - `manifest/integrations.yaml`
+- `tests/integration/models/`
 
 ---
 
-**End of Document**
+**End of Compatibility Matrix**

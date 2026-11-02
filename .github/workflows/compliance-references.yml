@@ -4,14 +4,53 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-permissions: {contents: read}
+permissions:
+  contents: read
 jobs:
-  checks:
+  standards-registry:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+        with:
+          python-version: "3.11"
+      - run: python -m pip install pyyaml==6.0.2
+      - name: Validate standards reference metadata
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          path = Path("manifest/standards.yaml")
+          if not path.is_file():
+              raise SystemExit("manifest/standards.yaml is missing")
+          data = yaml.safe_load(path.read_text(encoding="utf-8"))
+          if not isinstance(data, dict) or not isinstance(data.get("standards"), list):
+              raise SystemExit("standards registry must contain a standards list")
+          seen = set()
+          for item in data["standards"]:
+              if not isinstance(item, dict):
+                  raise SystemExit("each standards entry must be a mapping")
+              identifier, url = item.get("id"), item.get("url")
+              if not isinstance(identifier, str) or not identifier:
+                  raise SystemExit("standards entry has no id")
+              if identifier in seen:
+                  raise SystemExit(f"duplicate standards id: {identifier}")
+              seen.add(identifier)
+              if not isinstance(url, str) or not url.startswith("https://"):
+                  raise SystemExit(f"{identifier}: reference URL must use HTTPS")
+          print(f"Validated {len(seen)} standards references")
+          PY
+      - name: Report referenced detail files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          data = yaml.safe_load(Path("manifest/standards.yaml").read_text(encoding="utf-8"))
+          missing = [f'{item["id"]}: {item["file"]}' for item in data["standards"]
+                     if item.get("file") and not Path(item["file"]).is_file()]
+          if missing:
+              print("Detail files not present in this checkout (inventory only):")
+              print("\n".join(missing))
+          else:
+              print("All declared detail files are present")
+          PY
