@@ -1,11 +1,40 @@
-language: csharp
-required: false
+id: csharp
 tools:
-  - id: roslyn-analyzers
-    required: false
-    purpose: "compiler diagnostics and analyzers"
-    detection: executable_lookup
-  - id: dotnet-test
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
+  static_analysis:
+    - name: dotnet
+      role: build-tool
+      required: true
+      invocation: "dotnet build --nologo"
+      version_arg: "--version"
+    - name: dotnet-format
+      role: formatter
+      required: true
+      invocation: "dotnet format --verify-no-changes"
+      version_arg: "--version"
+    - name: roslyn-analyzers
+      role: analyzer
+      required: true
+      invocation: "dotnet build /p:TreatWarningsAsErrors=true /p:RunAnalyzers=true"
+      version_arg: "--version"
+      note: "Bundled with .NET SDK"
+  testing:
+    - name: dotnet
+      role: test-runner
+      required: true
+      invocation: "dotnet test --logger 'trx;LogFileName=results.trx'"
+      output_format: trx
+      version_arg: "--version"
+  build:
+    - name: dotnet
+      role: builder
+      required: true
+      invocation: "dotnet build --configuration Release"
+      version_arg: "--version"
+  supply_chain:
+    - name: dotnet
+      role: dependency-auditor
+      required: true
+      invocation: "dotnet list package --vulnerable --include-transitive"
+      output_format: text
+      version_arg: "--version"
+missing_tool_policy: BLOCKED
