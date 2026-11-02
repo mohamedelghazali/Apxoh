@@ -46,9 +46,26 @@ def cmd_doctor(_args:argparse.Namespace)->int:
     print(f"  Root:    {root}")
     return 0
 
-def cmd_validate(_args:argparse.Namespace)->int:
-    from scripts.validation.validate_all import main as validate_main
+def cmd_validate(_args: argparse.Namespace) -> int:
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    repo_root = _Path(__file__).resolve().parents[2]
+    if str(repo_root) not in _sys.path:
+        _sys.path.insert(0, str(repo_root))
+
+    try:
+        from scripts.validation.validate_all import main as validate_main
+    except ImportError:
+        print(
+            "[FAIL] scripts.validation.validate_all not available. "
+            "Run from a repository checkout.",
+            file=sys.stderr,
+        )
+        return 1
+
     return int(validate_main())
+
 
 def cmd_inspect(args:argparse.Namespace)->int:
     from arkhon.config import get_manifest
