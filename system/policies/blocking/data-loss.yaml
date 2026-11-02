@@ -1,4 +1,19 @@
 id: data-loss
-severity: critical
-condition: data_loss_or_restore_failure
-action: BLOCK
+title: "Any potential data loss blocks release"
+category: blocking
+enabled: true
+description: |
+  If any test, scan, or review identifies a potential data loss scenario
+  (missing backup, unverified restore, dangerous migration), the release
+  is blocked until the scenario is proven safe.
+trigger_rules:
+  - SE-REL-002
+  - SE-DB-001
+trigger_paths:
+  - "migrations/**"
+reason: "Potential data loss scenario — release blocked pending verification"
+override:
+  allowed: true
+  requires:
+    - documented_risk_acceptance
+    - owner_signature
