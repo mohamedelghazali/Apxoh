@@ -1,3 +1,34 @@
-language: rust
-frameworks: []
-missing_required_runner: BLOCKED
+id: rust
+framework: cargo-test
+minimum_version: "1.75"
+
+coverage:
+  tool: cargo-tarpaulin
+  required: true
+  minimum_line_coverage: 70
+  fail_under: 70
+  report_formats: [text, xml]
+  command: "cargo tarpaulin --out Xml"
+
+test_discovery:
+  directories: [tests/, "src/"]
+  patterns: ["*.rs"]
+
+test_categories:
+  unit:
+    required: true
+    command: "cargo test --lib --locked"
+    timeout_seconds: 300
+  integration:
+    required: true
+    command: "cargo test --test '*' --locked"
+    timeout_seconds: 600
+  doc:
+    required: true
+    command: "cargo test --doc --locked"
+    timeout_seconds: 300
+    note: "Doc tests are examples; they must compile and pass"
+
+required_flags:
+  - "--locked"
+  - "--all-targets"
