@@ -36,6 +36,7 @@ APPROVED_NETWORK_DOMAINS = {
     "api.deepseek.com",
     "generativelanguage.googleapis.com",
     "api.moonshot.cn",
+    "api.moonshot.ai",
     "dashscope.aliyuncs.com",
     "github.com",
     "objects.githubusercontent.com",
@@ -102,7 +103,6 @@ def test_adapter_does_not_log_secrets(adapter_source: tuple[Path, str]) -> None:
             pytest.fail(
                 f"{path.relative_to(ROOT)} logs a potential secret: {match.group(0)[:80]}"
             )
-
 
 
 def test_tsar_adapter_present() -> None:

@@ -30,6 +30,11 @@ class GovernanceError(ArkhonError):
     default_code = "GOVERNANCE_ERROR"
 
 
+class AssessmentError(ArkhonError):
+    """An engineering assessment could not be computed."""
+    default_code = "ASSESSMENT_ERROR"
+
+
 class RuleError(ArkhonError):
     """A rule is invalid or cannot be processed."""
     default_code = "RULE_ERROR"

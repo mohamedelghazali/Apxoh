@@ -85,9 +85,16 @@ class TsarAdapter(Integration):
         if not root.is_dir():
             return IntegrationResponse(ok=False, reason=f"project directory not found: {root}")
 
+        evidence_dir = root / ".arkhon" / "evidence" / "security"
+        try:
+            evidence_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            return IntegrationResponse(ok=False, reason=f"cannot prepare TSAR evidence directory: {exc}")
+        target = evidence_dir / f"tsar-{commit_sha[:12]}.json"
         command = [
             binary, "audit", "--project", str(root),
             "--output", "json", "--commit", commit_sha,
+            "--output-file", str(target),
         ]
         logger.info("running TSAR audit for commit %s", commit_sha)
         try:
@@ -107,24 +114,29 @@ class TsarAdapter(Integration):
                 ok=False,
                 reason=f"TSAR exited with {result.returncode}: {result.stderr.strip()[:300]}",
             )
+        output_text = target.read_text(encoding="utf-8") if target.is_file() else result.stdout
         try:
-            payload = json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
-            return IntegrationResponse(ok=False, reason=f"TSAR stdout is not valid JSON: {exc}")
+            payload = json.loads(output_text)
+        except (OSError, json.JSONDecodeError) as exc:
+            return IntegrationResponse(ok=False, reason=f"TSAR output is not valid JSON: {exc}")
         if not isinstance(payload, dict):
             return IntegrationResponse(ok=False, reason="TSAR JSON output must be an object")
 
-        evidence_dir = root / ".arkhon" / "evidence" / "security"
         try:
-            evidence_dir.mkdir(parents=True, exist_ok=True)
-            target = evidence_dir / f"tsar-{commit_sha[:12]}.json"
             # Avoid silently replacing evidence for the same commit.
             serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-            if target.exists() and target.read_text(encoding="utf-8") != serialized:
-                return IntegrationResponse(
-                    ok=False, reason=f"refusing to overwrite different TSAR evidence: {target}",
-                )
-            if not target.exists():
+            if target.exists():
+                try:
+                    existing_payload = json.loads(target.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    return IntegrationResponse(
+                        ok=False, reason=f"existing TSAR evidence is invalid: {exc}",
+                    )
+                if existing_payload != payload:
+                    return IntegrationResponse(
+                        ok=False, reason=f"refusing to overwrite different TSAR evidence: {target}",
+                    )
+            else:
                 target.write_text(serialized, encoding="utf-8")
         except OSError as exc:
             return IntegrationResponse(ok=False, reason=f"cannot persist TSAR evidence: {exc}")
