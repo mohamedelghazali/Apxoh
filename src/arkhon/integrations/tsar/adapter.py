@@ -125,11 +125,18 @@ class TsarAdapter(Integration):
         try:
             # Avoid silently replacing evidence for the same commit.
             serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-            if target.exists() and target.read_text(encoding="utf-8") != serialized:
-                return IntegrationResponse(
-                    ok=False, reason=f"refusing to overwrite different TSAR evidence: {target}",
-                )
-            if not target.exists():
+            if target.exists():
+                try:
+                    existing_payload = json.loads(target.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    return IntegrationResponse(
+                        ok=False, reason=f"existing TSAR evidence is invalid: {exc}",
+                    )
+                if existing_payload != payload:
+                    return IntegrationResponse(
+                        ok=False, reason=f"refusing to overwrite different TSAR evidence: {target}",
+                    )
+            else:
                 target.write_text(serialized, encoding="utf-8")
         except OSError as exc:
             return IntegrationResponse(ok=False, reason=f"cannot persist TSAR evidence: {exc}")
