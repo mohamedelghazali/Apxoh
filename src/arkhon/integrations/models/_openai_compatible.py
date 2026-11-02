@@ -30,6 +30,7 @@ class OpenAICompatibleConfig:
     api_key_env: str
     api_key_required: bool = True
     system_role: str = "system"
+    max_tokens_field: str = "max_tokens"
 
 
 class OpenAICompatibleAdapter(Integration):
@@ -81,7 +82,7 @@ class OpenAICompatibleAdapter(Integration):
         messages.append({"role": "user", "content": user_message})
         payload: dict[str, Any] = {
             "model": self.config.default_model,
-            "max_tokens": self.config.max_tokens,
+            self.config.max_tokens_field: self.config.max_tokens,
             "messages": messages,
         }
         if self.config.temperature is not None:
