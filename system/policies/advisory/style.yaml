@@ -1,4 +1,11 @@
 id: style
-severity: low
-condition: style_deviation
-action: ADVISE
+title: "Style and consistency recommendations"
+category: advisory
+enabled: true
+description: |
+  Non-blocking style recommendations. These are surfaced in the report
+  but do not block a release.
+trigger_rules:
+  - SE-CQ-001
+  - SE-CQ-002
+message: "Style issue — see rule for recommendation; not blocking"
