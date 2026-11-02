@@ -1,6 +1,7 @@
 id: csharp
 framework: xunit
 minimum_version: "2.9"
+
 coverage:
   tool: coverlet
   required: true
@@ -9,11 +10,13 @@ coverage:
   fail_under: 80
   report_formats: [cobertura, json, html]
   command: "dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+
 test_discovery:
   patterns:
     - "**/*Tests.cs"
     - "**/*Test.cs"
   directories: [tests/, "tests/UnitTests"]
+
 test_categories:
   unit:
     required: true
@@ -27,6 +30,7 @@ test_categories:
     required: true
     command: "dotnet test --filter Category=Regression"
     timeout_seconds: 300
+
 required_packages:
   - xunit
   - xunit.runner.visualstudio
