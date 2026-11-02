@@ -1,8 +1,8 @@
 # Apxoh System Overview
 
-**Version:** 1.0
-**Status:** Active
-**Last updated:** 2026-11-01
+**Version:** 1.1  
+**Status:** Active  
+**Last updated:** 2026-11-02
 
 ---
 
@@ -20,8 +20,8 @@ Not with opinion. Not with a claim. With evidence.
 
 ## 2. The Central Principle
 
-> **Evidence Before Approval. Verification Before Release.**
-> **No approval without evidence. No release without verification.**
+> **Evidence Before Approval. Verification Before Release.**  
+> **No approval without evidence. No release without verification.**  
 > **No trust without testing. No claim without proof.**
 
 ---
@@ -31,37 +31,54 @@ Not with opinion. Not with a claim. With evidence.
 | Product | Role |
 | :--- | :--- |
 | **Apxoh Core** | Local governance and verification engine (Python, CLI) |
-| **Apxoh Agent Governance** | Instructions and skills for AI coding agents |
-| **Apxoh Assurance** | Independent verification, evidence, release gating |
+| **Apxoh Agent Governance** | Instructions, skills, and integration guidance for AI coding agents |
+| **Apxoh Assurance** | Independent verification, evidence evaluation, and release gating |
 
-All three live in one repository, share one manifest, and obey one charter.
+All three are defined in the same repository and share the engineering charter and manifest. Their implementation status must be assessed from code and execution evidence, not from this product description alone.
 
 ---
 
-## 4. The Six Layers
+## 4. Working User Personas
 
-```
+These are working product-planning personas derived from the current product scope. They are not claims of completed user research or validated market segmentation.
+
+| Persona | Primary need | Apxoh touchpoint |
+| :--- | :--- | :--- |
+| **Software developer / maintainer** | Understand requirements, run local checks, resolve findings, and prepare changes | Apxoh Core, rules, CLI, reports |
+| **AI coding agent** | Discover project rules, follow role/skill guidance, and provide work that can be independently checked | Agent Governance, skills, agent integrations |
+| **Reviewer / software architect** | Evaluate requirements, design decisions, code changes, and supporting evidence | ADRs, rule catalog, review workflows |
+| **Assurance / release decision-maker** | Determine whether required checks and evidence support a release decision | Verification, evidence, assessment, gates |
+| **Security reviewer / integration operator** | Configure and review delegated security checks and their evidence | TSAR integration contract, security gates, incident procedures |
+
+AI agents are governed participants, not trusted approvers. An agent's assertion that work is complete is not a substitute for independent verification.
+
+These personas should be reviewed using feedback from actual users and revised when the product scope changes.
+
+---
+
+## 5. The Six Layers
+
+~~~text
 ┌────────────────────────────────────────────────────┐
-│ 6. Integration   — models, platform, TSAR, generic │
+│ 6. Integration   — models, platforms, TSAR, generic │
 ├────────────────────────────────────────────────────┤
 │ 5. Assessment    — gates + scoring + decision      │
 ├────────────────────────────────────────────────────┤
-│ 4. Evidence      — signed, hashed, commit-bound    │
+│ 4. Evidence      — collected, hashed, commit-bound │
 ├────────────────────────────────────────────────────┤
-│ 3. Verification  — independent runs, no trust      │
+│ 3. Verification  — tool execution and review       │
 ├────────────────────────────────────────────────────┤
-│ 2. Lifecycle     — 10 stages, each with a gate     │
+│ 2. Lifecycle     — 10 stages and defined criteria  │
 ├────────────────────────────────────────────────────┤
 │ 1. Governance    — charter, rules, policies        │
 └────────────────────────────────────────────────────┘
-```
+~~~
 
-Each layer is deterministic. Each layer trusts the layer above only
-after verification. No layer trusts an AI agent.
+This is a logical architecture view. Not every layer or control is fully automated. Human review remains required where rules or policies specify it. Evidence hashing and commit binding do not, by themselves, prove who produced an artifact or establish a trusted signature.
 
 ---
 
-## 5. The 10 Lifecycle Stages
+## 6. The 10 Lifecycle Stages
 
 1. Project Initialization
 2. Requirements Engineering
@@ -74,14 +91,15 @@ after verification. No layer trusts an AI agent.
 9. Release Approval
 10. Post-Release Monitoring
 
-A stage cannot be entered until its predecessor's exit criteria are met
-with evidence.
+A stage transition is subject to the criteria implemented for that stage. The presence of a lifecycle definition does not prove that every organizational handoff is automated.
 
 ---
 
-## 6. The 11 Integrations
+## 7. Declared Integrations
 
-### 6.1 Models (8)
+The manifest currently declares eight model integrations, one platform integration, one delegated security authority, and one generic fallback category. The repository also contains agent/editor integration packages. These are distinct catalog and implementation views; neither should be interpreted as proof that every provider or adapter has passed behavioral verification.
+
+### 7.1 Model integrations declared in the manifest
 - Claude (Anthropic)
 - OpenAI o (OpenAI)
 - DeepSeek-Coder (DeepSeek)
@@ -91,98 +109,70 @@ with evidence.
 - Qwen-Coder (Alibaba)
 - Kimi (Moonshot)
 
-### 6.2 Platforms (1)
+### 7.2 Platform
 - GitHub Copilot
 
-### 6.3 Security (1)
-- TSAR (delegated security authority)
+### 7.3 Delegated security authority
+- TSAR, for security checks specified by the integration contract.
 
-### 6.4 Generic (1)
-- Generic agents (fallback)
+### 7.4 Generic fallback
+- Generic agent integration material.
 
----
-
-## 7. The 9 Languages
-
-Python, JavaScript, TypeScript, Java, C#, C++, Go, Rust, Ruby.
-
-Apxoh itself is Python. The other languages are **verified**, not executed.
+If TSAR or required evidence is unavailable, the applicable required security gate must remain BLOCKED, not PASS.
 
 ---
 
-## 8. The Score
+## 8. The 9 Declared Languages
 
-| Domain | Weight |
-| :--- | ---: |
-| Requirements | 15 |
-| Architecture & Code Quality | 10 |
-| Testing & QA | 15 |
-| Security | 20 |
-| Performance | 10 |
-| Reliability | 10 |
-| Scalability | 10 |
-| Documentation, Deployment & Maintenance | 10 |
-| **Total** | **100** |
+Python, JavaScript, TypeScript, Java, C#, C++, Go, Rust, and Ruby.
 
-| Score | Level |
-| :--- | :--- |
-| 95–100 | Hyperscale Validated |
-| 90–94 | Enterprise Grade |
-| 80–89 | Production Ready |
-| 70–79 | Controlled Release |
-| < 70 | Development |
-
-A critical gate failure rejects the release regardless of score.
+Apxoh's engine is Python. The language registry declares supported targets, but registry presence alone does not prove that every profile, external toolchain, or fixture has been fully implemented and executed.
 
 ---
 
-## 9. The Security Authority: TSAR
+## 9. The Score
 
-All security decisions are delegated to TSAR:
-
-- Vulnerability scanning
-- Cryptographic audit
-- Secret scanning
-- ASVS compliance
-- Dependency vulnerabilities
-
-If TSAR is unavailable, the security gate is `BLOCKED`. Never `PASS`.
-
-Contract: `integrations/tsar/contract.yaml`
+The scoring model and thresholds are defined by the active configuration and policy. Any displayed weights or levels must be checked against the code and profile used for a particular assessment. A critical gate failure must not be overridden by a high numeric score.
 
 ---
 
-## 10. The Evidence Model
+## 10. The Security Authority: TSAR
 
-Every claim requires evidence:
+Security checks delegated by the Apxoh integration contract are handled by TSAR. The documented scope includes vulnerability scanning, cryptographic audit, secret scanning, ASVS-related evidence, and dependency vulnerability checks, subject to the current contract.
 
-- Bound to a specific commit SHA
-- Timestamped
-- SHA-256 hashed
-- Signed with sigstore (for gate-closing evidence)
-- Fresh (within a defined window)
+The repository contains an adapter, verifier, and proposed contract. Their presence does not prove that an external TSAR installation is available in a deployment. If the required authority or its evidence is unavailable, the relevant security gate is BLOCKED.
 
-Tampered evidence → gate `BLOCKED` → incident → human review.
+Contract: integrations/tsar/contract.yaml
 
 ---
 
-## 11. What Apxoh Is Not
+## 11. The Evidence Model
+
+The evidence implementation and design distinguish integrity from authenticity:
+
+- Evidence can identify a target commit.
+- Artifact digests can be calculated and checked.
+- Evidence timestamps can be evaluated against freshness policy.
+- Signing and signer-identity verification must only be claimed when a configured signer and independent verification have actually run successfully.
+
+A digest detects a mismatch against recorded bytes; it does not establish who produced the evidence or whether the evidence is truthful. Missing or invalid required evidence must not produce PASS.
+
+---
+
+## 12. What Apxoh Is Not
 
 - Not a prompt library.
-- Not a linter.
+- Not a linter alone.
 - Not a replacement for human engineering judgment.
 - Not a certificate from any standards body.
 
-Apxoh is a governance and assurance layer between AI-generated code
-and production release.
+Apxoh is intended to provide a governance and assurance layer between software development—including AI-assisted development—and production release.
 
 ---
 
-## 12. The One-Sentence Summary
+## 13. The One-Sentence Summary
 
-Apxoh ensures that **no software is released without evidence, no
-evidence is accepted without verification, and no verification happens
-without independence.**
+Apxoh aims to ensure that **software release decisions are supported by evidence, that evidence is independently checked, and that missing verification is not mistaken for success.**
 
 ---
 
