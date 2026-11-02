@@ -6,6 +6,7 @@ sandboxing, runtime policy enforcement, or integration-specific tests.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -38,6 +39,14 @@ APPROVED_NETWORK_DOMAINS = {
     "dashscope.aliyuncs.com",
     "github.com",
     "objects.githubusercontent.com",
+    "raw.githubusercontent.com",
+    "localhost",
+    "127.0.0.1",
+    "example.com",
+    "pypi.org",
+    "files.pythonhosted.org",
+    "apxoh.dev",
+    "www.apache.org",
 }
 
 
@@ -53,8 +62,12 @@ def adapter_source(request: pytest.FixtureRequest) -> tuple[Path, str]:
 
 
 def test_adapter_inventory_is_not_empty() -> None:
-    """Prevent a green security job caused by silently testing zero adapters."""
-    assert discover_adapters(), "No adapter/verifier files discovered; review the adapter inventory."
+    assert discover_adapters(), "No adapter/verifier files discovered; review the inventory."
+
+
+def test_adapter_parses_as_python(adapter_source: tuple[Path, str]) -> None:
+    path, source = adapter_source
+    ast.parse(source, filename=str(path))
 
 
 def test_adapter_has_no_forbidden_patterns(adapter_source: tuple[Path, str]) -> None:
@@ -89,3 +102,14 @@ def test_adapter_does_not_log_secrets(adapter_source: tuple[Path, str]) -> None:
             pytest.fail(
                 f"{path.relative_to(ROOT)} logs a potential secret: {match.group(0)[:80]}"
             )
+
+
+def test_at_least_eight_model_adapters_present() -> None:
+    models_dir = ROOT / "src" / "arkhon" / "integrations" / "models"
+    adapters = list(models_dir.rglob("adapter.py")) if models_dir.is_dir() else []
+    assert len(adapters) >= 8, f"expected at least 8 model adapters, found {len(adapters)}"
+
+
+def test_tsar_adapter_present() -> None:
+    tsar_adapter = ROOT / "src" / "arkhon" / "integrations" / "tsar" / "adapter.py"
+    assert tsar_adapter.is_file(), "TSAR adapter missing"

@@ -1,14 +1,33 @@
 ---
-name: bug report
-about: ARKHON contribution template
+name: Bug Report
+about: Report a defect in Apxoh
+title: "[BUG] "
+labels: bug
 ---
 
-## Context
+## What happened?
 
-## Expected outcome
+<!-- Describe the observed defect. Remove secrets and private data. -->
 
-## Acceptance criteria
+## What did you expect?
 
-## Evidence and environment
+<!-- Describe the expected behavior. -->
 
-## Risks
+## Steps to reproduce
+
+1.
+2.
+3.
+
+## Environment
+
+- Apxoh version (`arkhon version`):
+- Python version:
+- OS:
+- TSAR version (if relevant):
+
+## Evidence
+
+<!-- Paste sanitized output, screenshots, or logs. Do not include credentials. -->
+
+## Additional context

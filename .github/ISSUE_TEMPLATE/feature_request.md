@@ -1,14 +1,29 @@
 ---
-name: feature request
-about: ARKHON contribution template
+name: Feature Request
+about: Suggest a new capability for Apxoh
+title: "[FEAT] "
+labels: enhancement
 ---
 
-## Context
+## What problem does this solve?
 
-## Expected outcome
+<!-- Describe the problem and affected users. -->
 
-## Acceptance criteria
+## Proposed solution
 
-## Evidence and environment
+<!-- Describe the desired behavior and acceptance criteria. -->
 
-## Risks
+## Alternatives considered
+
+<!-- Describe alternatives and trade-offs. -->
+
+## Does this require a new rule, integration, or schema?
+
+- [ ] New rule
+- [ ] New integration
+- [ ] New schema
+- [ ] CLI command change
+- [ ] Documentation
+- [ ] Other:
+
+## Additional context

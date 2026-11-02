@@ -1,12 +1,43 @@
-.git
-.venv
-venv
-__pycache__
-.pytest_cache
-.mypy_cache
-.ruff_cache
+# Apxoh Docker build context exclusions
+
+# Git metadata
+.git/
+.gitignore
+.gitattributes
+
+# Python caches and build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
 .coverage
-htmlcov
-dist
-build
-*.egg-info
+coverage.xml
+htmlcov/
+
+# IDE and operating system files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Runtime state and local credentials
+.arkhon/
+.env
+.env.*
+!.env.example
+*.log
+logs/
+
+# CI and development-only content
+.github/
+docs/
+examples/
+tests/
