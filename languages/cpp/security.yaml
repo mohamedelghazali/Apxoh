@@ -1,3 +1,45 @@
-language: cpp
-checks: [dependency_review, secret_detection, static_analysis]
-status: planned
+id: cpp
+delegates_to: tsar
+local_checks:
+  secret_scanning:
+    tool: gitleaks
+    required: true
+    invocation: "gitleaks detect --source . --no-git --report-format json"
+  dependency_scanning:
+    tool: vcpkg
+    required: true
+    invocation: "vcpkg export --dry-run"
+  dangerous_patterns:
+    - pattern: "strcpy("
+      severity: high
+      reason: "strcpy does not bound-check; use strncpy or std::string"
+    - pattern: "strcat("
+      severity: high
+      reason: "strcat does not bound-check; use std::string"
+    - pattern: "sprintf("
+      severity: high
+      reason: "sprintf does not bound-check; use snprintf"
+    - pattern: "gets("
+      severity: critical
+      reason: "gets is unsafe by definition; never use it"
+    - pattern: "malloc("
+      severity: medium
+      reason: "Prefer std::make_unique or std::vector over raw malloc"
+    - pattern: "free("
+      severity: medium
+      reason: "Prefer smart pointers; raw free() must be justified"
+    - pattern: "reinterpret_cast<"
+      severity: medium
+      reason: "reinterpret_cast bypasses type safety"
+    - pattern: "system("
+      severity: high
+      reason: "system() enables command injection"
+tsar_delegation:
+  required_rules:
+    - TSAR-SEC-SECRET-001
+    - TSAR-SEC-CRYPTO-001
+    - TSAR-SEC-DEP-001
+    - TSAR-SEC-ASVS-V2
+  freshness_hours: 168
+  gate: security_gate
+  on_tsar_unavailable: BLOCKED
