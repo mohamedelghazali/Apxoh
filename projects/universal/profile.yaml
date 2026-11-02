@@ -1,5 +1,29 @@
-id: universal
-version: 1
+# Universal baseline profile. Status remains draft until reviewed against schemas and gates.
+name: universal
+version: "1.0.0"
 status: draft
-scope: universal
-inherit: universal
+display_name: "Universal"
+description: >
+  Default verification profile for projects without a more specific
+  application or deployment profile.
+risk_level: medium
+applies_to:
+  - library
+  - library-and-cli
+  - application
+  - tool
+
+evidence:
+  freshness_hours: 720
+  require_signature: true
+  require_commit_binding: true
+
+overrides:
+  strictness: standard
+  allow_exceptions: true
+  require_human_review_for_critical: true
+
+notes: |
+  This is a general baseline, not a claim that every listed control is
+  implemented or automatically enforced. Projects with specialized risk
+  should select a more specific profile.
