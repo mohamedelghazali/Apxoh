@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 from arkhon.core.logging import get_logger
@@ -30,7 +31,7 @@ class RuffRunner(Runner):
                 reason="ruff not found on PATH",
             )
         root = project_root.resolve()
-        with __import__("tempfile").TemporaryDirectory(prefix="apxoh-ruff-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="apxoh-ruff-") as tmp:
             output = Path(tmp) / "ruff.json"
             command = [binary, "check", "--output-format=json", "--no-fix", "."]
             try:
@@ -62,7 +63,7 @@ class RuffRunner(Runner):
                 target_dir.mkdir(parents=True, exist_ok=True)
                 target = target_dir / "ruff.json"
                 output.write_text(json.dumps(issues, indent=2) + "\n", encoding="utf-8")
-                __import__("shutil").copy2(output, target)
+                shutil.copy2(output, target)
             except OSError as exc:
                 return RunnerResult(
                     runner=self.name, outcome=RunnerOutcome.BLOCKED,
