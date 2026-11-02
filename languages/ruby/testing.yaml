@@ -1,6 +1,7 @@
 id: ruby
 framework: rspec
 minimum_version: "3.13"
+
 coverage:
   tool: simplecov
   required: true
@@ -9,9 +10,11 @@ coverage:
   fail_under: 80
   report_formats: [html, json]
   command: "COVERAGE=true bundle exec rspec"
+
 test_discovery:
   patterns: ["**/*_spec.rb"]
   directories: [spec/]
+
 test_categories:
   unit:
     required: true
@@ -25,6 +28,7 @@ test_categories:
     required: true
     command: "bundle exec rspec spec/regression"
     timeout_seconds: 300
+
 required_gems:
   - rspec
   - rspec_junit_formatter
