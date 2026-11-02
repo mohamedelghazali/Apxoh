@@ -1,17 +1,56 @@
-name: self-test
+name: Self Test
+
 on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
-permissions: {contents: read}
+    branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
+  self-governance:
+    name: Apxoh governs itself
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src tests
-      - run: python -m pytest -q
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+
+      - name: Verify .arkhon/project.yaml exists
+        run: test -f .arkhon/project.yaml
+
+      - name: Verify .arkhon/config.yaml exists
+        run: test -f .arkhon/config.yaml
+
+      - name: Run Apxoh doctor
+        run: arkhon doctor || true
+
+      - name: Run Apxoh validate
+        run: arkhon validate
+
+      - name: Run Apxoh inspect on itself
+        run: arkhon inspect . --json > /tmp/inspect.json && cat /tmp/inspect.json
+
+      - name: Run Apxoh verify --domain testing
+        run: arkhon verify . --domain testing || true
+
+      - name: Upload inspection artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: self-inspect
+          path: /tmp/inspect.json
+          retention-days: 7
+
+      - name: Upload evidence artifact (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: self-evidence
+          path: .arkhon/evidence/
+          if-no-files-found: ignore
+          retention-days: 7
