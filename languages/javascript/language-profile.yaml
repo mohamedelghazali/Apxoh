@@ -1,5 +1,49 @@
 id: javascript
-status: planned
-extensions: [".js",".mjs",".cjs"]
-entrypoints: []
-minimum_tooling: []
+name: JavaScript
+family: dynamic-typed
+version: 1.0.0
+status: active
+
+runtime:
+  minimum: "18.0"
+  recommended: "20.0"
+  maximum: "22.x"
+  tested: ["18.x", "20.x", "22.x"]
+  interpreter: node
+
+build_system:
+  preferred: vite
+  alternatives: [webpack, esbuild, rollup, parcel]
+  commands:
+    install: "npm ci"
+    build: "npm run build"
+    test: "npm test"
+
+dependency_manager:
+  preferred: npm
+  lock_file: package-lock.json
+  alternatives: [pnpm, yarn, bun]
+
+testing:
+  framework: vitest
+  alternatives: [jest, mocha, ava]
+  discovery: "**/*.{test,spec}.{js,mjs,cjs,jsx}"
+
+rule_domains_supported:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - api-integration
+  - devops
+  - observability
+  - maintenance
+  - release
+
+notes: |
+  JavaScript and TypeScript are related but distinct. A project using both
+  is detected as both; Apxoh runs the JavaScript profile for .js files and
+  the TypeScript profile for .ts files.
