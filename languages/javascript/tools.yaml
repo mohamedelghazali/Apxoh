@@ -1,15 +1,47 @@
-language: javascript
-required: false
+id: javascript
 tools:
-  - id: eslint
-    required: false
-    purpose: "linting"
-    detection: executable_lookup
-  - id: prettier
-    required: false
-    purpose: "formatting"
-    detection: executable_lookup
-  - id: vitest
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
+  static_analysis:
+    - name: eslint
+      role: linter
+      required: true
+      invocation: "eslint . --format=json"
+      output_format: json
+      version_arg: "--version"
+
+    - name: prettier
+      role: formatter
+      required: false
+      invocation: "prettier --check ."
+      output_format: text
+      version_arg: "--version"
+
+  testing:
+    - name: vitest
+      role: test-runner
+      required: true
+      invocation: "vitest run --reporter=json --reporter=junit --outputFile=junit.xml"
+      output_format: junit-xml
+      version_arg: "--version"
+
+  build:
+    - name: node
+      role: runtime
+      required: true
+      invocation: "node --version"
+      version_arg: "--version"
+
+  supply_chain:
+    - name: npm
+      role: dependency-auditor
+      required: true
+      invocation: "npm audit --json"
+      output_format: json
+      version_arg: "--version"
+
+    - name: license-checker
+      role: license-checker
+      required: false
+      invocation: "npx license-checker --json"
+      output_format: json
+
+missing_tool_policy: BLOCKED
