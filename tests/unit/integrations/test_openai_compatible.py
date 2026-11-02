@@ -34,7 +34,7 @@ def _config(api_key_required: bool = True) -> OpenAICompatibleConfig:
 
         provider="test-provider",
 
-        endpoint="https\://example.com/v1/chat/completions",
+        endpoint="https://example.com/v1/chat/completions",
 
         default_model="test-model-1",
 
