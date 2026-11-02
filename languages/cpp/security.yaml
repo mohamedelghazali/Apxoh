@@ -1,14 +1,17 @@
 id: cpp
 delegates_to: tsar
+
 local_checks:
   secret_scanning:
     tool: gitleaks
     required: true
     invocation: "gitleaks detect --source . --no-git --report-format json"
+
   dependency_scanning:
     tool: vcpkg
     required: true
     invocation: "vcpkg export --dry-run"
+
   dangerous_patterns:
     - pattern: "strcpy("
       severity: high
@@ -34,6 +37,7 @@ local_checks:
     - pattern: "system("
       severity: high
       reason: "system() enables command injection"
+
 tsar_delegation:
   required_rules:
     - TSAR-SEC-SECRET-001
