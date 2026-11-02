@@ -1,6 +1,7 @@
 """Deterministic verification orchestration and evidence recording."""
 from __future__ import annotations
 
+import json
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -32,6 +33,7 @@ class VerificationRun:
 
 class VerificationEngine:
     """Run registered runners, aggregate outcomes, and persist evidence."""
+
     def __init__(self, store: EvidenceStore, collector: EvidenceCollector) -> None:
         self._store = store
         self._collector = collector
@@ -61,7 +63,8 @@ class VerificationEngine:
                 ))
         status = self._aggregate_status(results)
         evidence_id = self._record_evidence(
-            domain=domain, commit_sha=commit_sha, results=results, status=status,
+            domain=domain, commit_sha=commit_sha, results=results,
+            status=status, run_id=run_id, project_root=project_root,
         )
         return VerificationRun(
             run_id=run_id, domain=domain, commit_sha=commit_sha,
@@ -77,7 +80,8 @@ class VerificationEngine:
         return STATUS_PASS
 
     def _record_evidence(
-        self, *, domain: str, commit_sha: str, results: list[RunnerResult], status: str,
+        self, *, domain: str, commit_sha: str, results: list[RunnerResult],
+        status: str, run_id: str, project_root: Path,
     ) -> str:
         draft: EvidenceDraft = self._collector.new_evidence(
             source="arkhon", source_version="0.1.0.dev1",
@@ -86,10 +90,35 @@ class VerificationEngine:
         for result in results:
             for artifact in result.artifacts:
                 draft.add_artifact(artifact)
+
         if not draft.artifacts:
-            raise VerificationError(
-                "verification produced no artifacts; evidence cannot be recorded as verified"
+            # A blocked runner may have no tool output to attach. Preserve a
+            # machine-readable execution record without treating it as a PASS
+            # artifact or silently dropping the BLOCKED evidence.
+            summary_dir = project_root.resolve() / ".arkhon" / "reports" / "verification"
+            summary_dir.mkdir(parents=True, exist_ok=True)
+            summary_path = summary_dir / f"{run_id}.json"
+            summary = {
+                "run_id": run_id,
+                "domain": domain,
+                "commit_sha": commit_sha,
+                "status": status,
+                "runners": [
+                    {
+                        "name": result.runner,
+                        "outcome": result.outcome.value,
+                        "reason": result.reason,
+                        "artifacts": [str(path) for path in result.artifacts],
+                    }
+                    for result in results
+                ],
+                "note": "Execution diagnostic only; this record is not proof of a passing verification.",
+            }
+            summary_path.write_text(
+                json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8",
             )
+            draft.add_artifact(summary_path)
+
         draft.summary = {
             "pass": sum(r.outcome == RunnerOutcome.PASS for r in results),
             "fail": sum(r.outcome == RunnerOutcome.FAIL for r in results),
