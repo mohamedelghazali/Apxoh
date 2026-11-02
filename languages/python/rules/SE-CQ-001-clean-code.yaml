@@ -1,0 +1,52 @@
+id: SE-CQ-001
+metadata:
+  title: Clean Code — No Dead Code, No Placeholder Functions
+  domain: code-quality
+  version: 1.0.0
+  status: active
+  severity: medium
+  enforcement: required
+  description: >
+    Source files must not contain dead code, unused imports, or
+    placeholder functions that raise NotImplementedError in production
+    paths.
+
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, release]
+  languages: [python]
+
+requirement:
+  statement: >
+    No unused imports, no unused variables, no unreachable code, and
+    no placeholder functions in production modules. Test modules are
+    exempt from the placeholder rule.
+
+verification:
+  mode: deterministic
+  methods:
+    - ruff-check
+    - ast-analysis
+
+acceptance:
+  unused_imports: 0
+  unreachable_blocks: 0
+  placeholder_functions_in_production: 0
+
+evidence:
+  required:
+    - ruff-json
+    - ast-analysis-json
+
+failure:
+  actions:
+    - create-finding
+    - require-remediation
+
+human_review:
+  required: false
+
+tests:
+  positive: required
+  negative: required
+  regression: required
