@@ -140,8 +140,9 @@ def _commit_sha(project: Path) -> str | None:
         print("[FAIL] git executable not found on PATH", file=sys.stderr)
         return None
     try:
+        # The executable and argument vector are fixed; shell execution is disabled.
         result = subprocess.run(
-            [git_executable, "rev-parse", "HEAD"],  # noqa: S603 - fixed executable, no shell
+            [git_executable, "rev-parse", "HEAD"],  # noqa: S603
             cwd=project,
             capture_output=True,
             text=True,
