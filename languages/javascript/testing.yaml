@@ -1,3 +1,42 @@
-language: javascript
-frameworks: []
-missing_required_runner: BLOCKED
+id: javascript
+framework: vitest
+minimum_version: "1.0"
+
+coverage:
+  tool: vitest-coverage-v8
+  required: true
+  minimum_line_coverage: 80
+  minimum_branch_coverage: 70
+  fail_under: 80
+  report_formats: [text, json, html]
+
+test_discovery:
+  patterns:
+    - "**/*.test.js"
+    - "**/*.spec.js"
+    - "**/*.test.mjs"
+    - "**/*.test.cjs"
+    - "**/*.test.jsx"
+  directories: [tests/, __tests__/, src/]
+
+test_categories:
+  unit:
+    required: true
+    command: "vitest run --dir tests/unit"
+    timeout_seconds: 300
+  integration:
+    required: true
+    command: "vitest run --dir tests/integration"
+    timeout_seconds: 600
+  regression:
+    required: true
+    command: "vitest run --dir tests/regression"
+    timeout_seconds: 300
+  e2e:
+    required: false
+    command: "playwright test"
+    timeout_seconds: 1800
+
+required_plugins:
+  - "@vitest/coverage-v8"
+  - "@vitest/ui"
