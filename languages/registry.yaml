@@ -1,38 +1,166 @@
 schema_version: 1
+version: "1.0.0"
+engine_language: python
 languages:
   - id: python
-    maturity: planned
-    profile: python/profile.yaml
+    name: Python
+    family: dynamic-typed
+    primary_use: [application-development, automation, data-analysis]
+    status: planned
+    milestone: 0
+    profile: python/language-profile.yaml
+    profile_path: languages/python/language-profile.yaml
+    rules_path: languages/python/rules
     tools: python/tools.yaml
+    detection:
+      extensions: [.py]
+      build_files: [pyproject.toml, setup.py, setup.cfg, requirements.txt]
+      lock_files: [requirements.lock, poetry.lock, uv.lock]
+    planned_tools:
+      static_analysis: [ruff, mypy]
+      testing: [pytest]
+      build: [pip]
   - id: javascript
-    maturity: planned
-    profile: javascript/profile.yaml
+    name: JavaScript
+    family: dynamic-typed
+    primary_use: [web-development, server-side-development]
+    status: planned
+    milestone: 0
+    profile: javascript/language-profile.yaml
+    profile_path: languages/javascript/language-profile.yaml
+    rules_path: languages/javascript/rules
     tools: javascript/tools.yaml
+    detection:
+      extensions: [.js, .jsx, .mjs, .cjs]
+      build_files: [package.json]
+      lock_files: [package-lock.json, yarn.lock, pnpm-lock.yaml]
+    planned_tools:
+      static_analysis: [eslint]
+      testing: [jest, vitest]
+      build: [npm]
   - id: typescript
-    maturity: planned
-    profile: typescript/profile.yaml
+    name: TypeScript
+    family: static-typed
+    primary_use: [web-development, server-side-development]
+    status: planned
+    milestone: 0
+    profile: typescript/language-profile.yaml
+    profile_path: languages/typescript/language-profile.yaml
+    rules_path: languages/typescript/rules
     tools: typescript/tools.yaml
+    detection:
+      extensions: [.ts, .tsx, .mts, .cts]
+      build_files: [package.json, tsconfig.json]
+      lock_files: [package-lock.json, yarn.lock, pnpm-lock.yaml]
+    planned_tools:
+      static_analysis: [tsc, eslint]
+      testing: [jest, vitest]
+      build: [npm]
   - id: java
-    maturity: planned
-    profile: java/profile.yaml
+    name: Java
+    family: static-typed-jvm
+    primary_use: [enterprise-development, backend-development]
+    status: planned
+    milestone: 0
+    profile: java/language-profile.yaml
+    profile_path: languages/java/language-profile.yaml
+    rules_path: languages/java/rules
     tools: java/tools.yaml
+    detection:
+      extensions: [.java]
+      build_files: [pom.xml, build.gradle, build.gradle.kts]
+      lock_files: []
+    planned_tools:
+      static_analysis: [checkstyle, spotbugs, pmd]
+      testing: [maven, junit]
+      build: [maven, gradle]
   - id: csharp
-    maturity: planned
-    profile: csharp/profile.yaml
+    name: C#
+    family: static-typed-dotnet
+    primary_use: [enterprise-development, desktop-development]
+    status: planned
+    milestone: 0
+    profile: csharp/language-profile.yaml
+    profile_path: languages/csharp/language-profile.yaml
+    rules_path: languages/csharp/rules
     tools: csharp/tools.yaml
+    detection:
+      extensions: [.cs]
+      build_files: [*.csproj, *.sln]
+      lock_files: [packages.lock.json]
+    planned_tools:
+      static_analysis: [dotnet-format, roslyn]
+      testing: [xunit, nunit]
+      build: [dotnet]
   - id: cpp
-    maturity: planned
-    profile: cpp/profile.yaml
+    name: C++
+    family: static-typed-native
+    primary_use: [systems-development, performance-critical-development]
+    status: planned
+    milestone: 0
+    profile: cpp/language-profile.yaml
+    profile_path: languages/cpp/language-profile.yaml
+    rules_path: languages/cpp/rules
     tools: cpp/tools.yaml
+    detection:
+      extensions: [.c, .cc, .cpp, .cxx, .h, .hh, .hpp, .hxx]
+      build_files: [CMakeLists.txt, Makefile, meson.build]
+      lock_files: [conan.lock, vcpkg-lock.json]
+    planned_tools:
+      static_analysis: [clang-tidy, cppcheck]
+      testing: [catch2, googletest]
+      build: [cmake, make]
   - id: go
-    maturity: planned
-    profile: go/profile.yaml
+    name: Go
+    family: static-typed
+    primary_use: [backend-development, systems-development]
+    status: planned
+    milestone: 0
+    profile: go/language-profile.yaml
+    profile_path: languages/go/language-profile.yaml
+    rules_path: languages/go/rules
     tools: go/tools.yaml
+    detection:
+      extensions: [.go]
+      build_files: [go.mod]
+      lock_files: [go.sum]
+    planned_tools:
+      static_analysis: [go-vet, staticcheck]
+      testing: [go-test]
+      build: [go]
   - id: rust
-    maturity: planned
-    profile: rust/profile.yaml
+    name: Rust
+    family: static-typed-systems
+    primary_use: [systems-development, security-sensitive-development]
+    status: planned
+    milestone: 0
+    profile: rust/language-profile.yaml
+    profile_path: languages/rust/language-profile.yaml
+    rules_path: languages/rust/rules
     tools: rust/tools.yaml
+    detection:
+      extensions: [.rs]
+      build_files: [Cargo.toml]
+      lock_files: [Cargo.lock]
+    planned_tools:
+      static_analysis: [clippy]
+      testing: [cargo-test]
+      build: [cargo]
   - id: ruby
-    maturity: planned
-    profile: ruby/profile.yaml
+    name: Ruby
+    family: dynamic-typed
+    primary_use: [web-development, automation]
+    status: planned
+    milestone: 0
+    profile: ruby/language-profile.yaml
+    profile_path: languages/ruby/language-profile.yaml
+    rules_path: languages/ruby/rules
     tools: ruby/tools.yaml
+    detection:
+      extensions: [.rb]
+      build_files: [Gemfile, "*.gemspec"]
+      lock_files: [Gemfile.lock]
+    planned_tools:
+      static_analysis: [rubocop]
+      testing: [rspec]
+      build: [bundler]
