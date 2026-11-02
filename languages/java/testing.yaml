@@ -1,3 +1,37 @@
-language: java
-frameworks: []
-missing_required_runner: BLOCKED
+id: java
+framework: junit
+minimum_version: "5.10"
+
+coverage:
+  tool: jacoco
+  required: true
+  minimum_line_coverage: 80
+  minimum_branch_coverage: 70
+  fail_under: 80
+  report_formats: [xml, html, csv]
+  command: "mvn -B test jacoco:report jacoco:check"
+
+test_discovery:
+  patterns:
+    - "**/*Test.java"
+    - "**/*Tests.java"
+  directories: [src/test/java/]
+
+test_categories:
+  unit:
+    required: true
+    command: "mvn -B test -Dtest='*Test'"
+    timeout_seconds: 300
+  integration:
+    required: true
+    command: "mvn -B verify -Dtest='*IT'"
+    timeout_seconds: 900
+  regression:
+    required: true
+    command: "mvn -B test -Dtest='*RegressionTest'"
+    timeout_seconds: 300
+
+required_plugins:
+  - org.apache.maven.plugins:maven-surefire-plugin
+  - org.apache.maven.plugins:maven-failsafe-plugin
+  - org.jacoco:jacoco-maven-plugin
