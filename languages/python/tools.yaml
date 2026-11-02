@@ -1,19 +1,56 @@
-language: python
-required: false
+# Tools for Python projects.
+id: python
 tools:
-  - id: ruff
-    required: false
-    purpose: "lint and formatting"
-    detection: executable_lookup
-  - id: mypy
-    required: false
-    purpose: "static typing"
-    detection: executable_lookup
-  - id: pytest
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
-  - id: bandit
-    required: false
-    purpose: "Python security linting"
-    detection: executable_lookup
+  static_analysis:
+    - name: ruff
+      role: linter
+      required: true
+      invocation: "ruff check --output-format=json"
+      output_format: json
+      version_arg: "--version"
+
+    - name: mypy
+      role: type-checker
+      required: true
+      invocation: "mypy --strict --no-incremental src"
+      output_format: text
+      version_arg: "--version"
+
+    - name: bandit
+      role: security-linter
+      required: false
+      invocation: "bandit -r src -c pyproject.toml"
+      output_format: text
+      version_arg: "--version"
+      note: "Security scanning is delegated to TSAR; bandit is optional as a fast local check."
+
+  testing:
+    - name: pytest
+      role: test-runner
+      required: true
+      invocation: "pytest --junit-xml=result.xml"
+      output_format: junit-xml
+      version_arg: "--version"
+
+  build:
+    - name: python
+      role: interpreter
+      required: true
+      invocation: "python -m build"
+      version_arg: "--version"
+
+  supply_chain:
+    - name: pip-audit
+      role: dependency-auditor
+      required: true
+      invocation: "pip-audit --strict --desc"
+      output_format: json
+      version_arg: "--version"
+
+    - name: pip-licenses
+      role: license-checker
+      required: false
+      invocation: "pip-licenses --format=json"
+      output_format: json
+
+missing_tool_policy: BLOCKED
