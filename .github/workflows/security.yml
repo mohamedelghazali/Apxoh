@@ -68,8 +68,11 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -e ".[dev]" pip-licenses
-      - name: pip-audit
-        run: pip-audit --strict --desc --skip-editable
+      - name: Dependency audit
+        run: |
+          pip install pip-audit
+          pip uninstall -y arkhon || true
+          pip-audit --strict --desc
       - name: License inventory
         run: pip-licenses --format=csv --with-urls > licenses.csv
       - uses: actions/upload-artifact@v4
