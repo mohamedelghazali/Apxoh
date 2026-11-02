@@ -128,6 +128,6 @@ def test_config_defaults() -> None:
 
     cfg = ClaudeConfig()
 
-    assert cfg.endpoint == "https\://api.anthropic.com/v1/messages"
+    assert cfg.endpoint == "https://api.anthropic.com/v1/messages"
 
     assert "claude" in cfg.model
