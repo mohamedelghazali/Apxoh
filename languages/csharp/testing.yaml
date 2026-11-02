@@ -1,3 +1,34 @@
-language: csharp
-frameworks: []
-missing_required_runner: BLOCKED
+id: csharp
+framework: xunit
+minimum_version: "2.9"
+coverage:
+  tool: coverlet
+  required: true
+  minimum_line_coverage: 80
+  minimum_branch_coverage: 70
+  fail_under: 80
+  report_formats: [cobertura, json, html]
+  command: "dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+test_discovery:
+  patterns:
+    - "**/*Tests.cs"
+    - "**/*Test.cs"
+  directories: [tests/, "tests/UnitTests"]
+test_categories:
+  unit:
+    required: true
+    command: "dotnet test --filter Category=Unit"
+    timeout_seconds: 300
+  integration:
+    required: true
+    command: "dotnet test --filter Category=Integration"
+    timeout_seconds: 900
+  regression:
+    required: true
+    command: "dotnet test --filter Category=Regression"
+    timeout_seconds: 300
+required_packages:
+  - xunit
+  - xunit.runner.visualstudio
+  - coverlet.collector
+  - Microsoft.NET.Test.Sdk
