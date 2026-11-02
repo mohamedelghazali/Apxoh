@@ -8,6 +8,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Final
 
+from arkhon.integrations.base import Integration
+
 _MODEL_MODULES: Final[dict[str, str]] = {
     "claude": "claude",
     "openai-o": "openai_o",
@@ -39,7 +41,7 @@ def list_models() -> list[str]:
     return sorted(_MODEL_MODULES)
 
 
-def get_model_adapter(model_id: str):
+def get_model_adapter(model_id: str) -> Integration:
     """Instantiate a registered adapter; unknown IDs fail closed."""
     if model_id not in _MODEL_MODULES:
         available = ", ".join(list_models())
