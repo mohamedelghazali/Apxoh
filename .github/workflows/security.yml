@@ -48,7 +48,7 @@ jobs:
           docker run --rm
           --volume "${{ github.workspace }}:/src"
           semgrep/semgrep:1.183.0
-          semgrep scan --config auto --sarif --output /src/semgrep.sarif /src/src
+          semgrep scan --config auto --error --sarif --output /src/semgrep.sarif /src/src
       - name: Upload Bandit report
         if: always() && hashFiles('bandit.json') != ''
         uses: actions/upload-artifact@v4
@@ -101,6 +101,7 @@ jobs:
           output: trivy.sarif
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          exit-code: "1"
       - name: Upload Trivy SARIF
         if: always() && hashFiles('trivy.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
