@@ -1,14 +1,17 @@
 id: ruby
 delegates_to: tsar
+
 local_checks:
   secret_scanning:
     tool: gitleaks
     required: true
     invocation: "gitleaks detect --source . --no-git --report-format json"
+
   dependency_scanning:
     tool: bundle-audit
     required: true
     invocation: "bundle exec bundle-audit check --update --format json"
+
   dangerous_patterns:
     - pattern: "eval("
       severity: high
@@ -28,6 +31,7 @@ local_checks:
     - pattern: "params.permit!"
       severity: medium
       reason: "permit! allows all parameters; use explicit permits"
+
 tsar_delegation:
   required_rules:
     - TSAR-SEC-SECRET-001
