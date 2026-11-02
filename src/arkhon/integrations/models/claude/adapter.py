@@ -9,10 +9,9 @@ back to the caller; it never decides anything.
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -86,10 +85,17 @@ class ClaudeAdapter(Integration):
             )
 
         endpoint = urlsplit(self._config.endpoint)
-        if endpoint.scheme != "https" or not endpoint.hostname:
+        if (
+            endpoint.scheme != "https"
+            or not endpoint.hostname
+            or endpoint.username
+            or endpoint.password
+            or endpoint.query
+            or endpoint.fragment
+        ):
             return IntegrationResponse(
                 ok=False,
-                reason="Claude endpoint must use HTTPS",
+                reason="Claude endpoint must be a valid HTTPS URL without credentials or query",
             )
 
         payload: dict[str, Any] = {
@@ -100,35 +106,36 @@ class ClaudeAdapter(Integration):
             "messages": [{"role": "user", "content": user_message}],
         }
 
-        req = urllib.request.Request(
-            self._config.endpoint,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": self._config.api_version,
-                "content-type": "application/json",
-            },
-            method="POST",
+        connection = http.client.HTTPSConnection(
+            endpoint.hostname,
+            endpoint.port or 443,
+            timeout=self._config.timeout_seconds,
         )
-
         try:
-            with urllib.request.urlopen(  # noqa: S310
-                req, timeout=self._config.timeout_seconds
-            ) as resp:
-                body = resp.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
+            connection.request(
+                "POST",
+                endpoint.path or "/",
+                body=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": self._config.api_version,
+                    "content-type": "application/json",
+                },
+            )
+            response = connection.getresponse()
+            body = response.read().decode("utf-8")
+            if response.status >= 400:
+                return IntegrationResponse(
+                    ok=False,
+                    reason=f"HTTP {response.status}: {body[:200]}",
+                )
+        except (OSError, http.client.HTTPException, TimeoutError) as exc:
             return IntegrationResponse(
                 ok=False,
-                reason=f"HTTP {exc.code}: {exc.read().decode('utf-8', 'replace')[:200]}",
+                reason=f"network error: {exc}",
             )
-        except urllib.error.URLError as exc:
-            return IntegrationResponse(
-                ok=False, reason=f"network error: {exc}",
-            )
-        except TimeoutError:
-            return IntegrationResponse(
-                ok=False, reason=f"timeout after {self._config.timeout_seconds}s",
-            )
+        finally:
+            connection.close()
 
         try:
             parsed = json.loads(body)
