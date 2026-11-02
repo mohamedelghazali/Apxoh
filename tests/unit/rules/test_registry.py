@@ -28,7 +28,8 @@ def registry() -> RuleRegistry:
         _rule("SE-REQ-001", enforcement="blocking"),
         _rule("SE-REQ-002", enforcement="advisory"),
         _rule("SE-TST-001", domain="testing", enforcement="critical"),
-        _rule("SE-SEC-001", domain="software-security", status="deprecated"),
+        _rule("SE-SEC-001", domain="software-security", status="deprecated",
+              enforcement="required"),
     ])
 
 
@@ -88,6 +89,7 @@ def test_duplicate_raises() -> None:
 
 def test_build_registry_from_dir(tmp_path: Path) -> None:
     import yaml
+
     raw = {
         "id": "SE-REQ-001",
         "metadata": {"title": "x", "domain": "requirements", "version": "1.0.0",
