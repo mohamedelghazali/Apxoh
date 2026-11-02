@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import RuleNotFoundError
+from arkhon.core.errors import RuleError, RuleNotFoundError
 from arkhon.rules.loader import Rule
 from arkhon.rules.registry import RuleRegistry, build_registry
 
@@ -28,7 +28,8 @@ def registry() -> RuleRegistry:
         _rule("SE-REQ-001", enforcement="blocking"),
         _rule("SE-REQ-002", enforcement="advisory"),
         _rule("SE-TST-001", domain="testing", enforcement="critical"),
-        _rule("SE-SEC-001", domain="software-security", status="deprecated"),
+        _rule("SE-SEC-001", domain="software-security", status="deprecated",
+              enforcement="required"),
     ])
 
 
@@ -82,12 +83,13 @@ def test_domains(registry: RuleRegistry) -> None:
 
 
 def test_duplicate_raises() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(RuleError, match="duplicate rule id"):
         RuleRegistry([_rule("SE-REQ-001"), _rule("SE-REQ-001")])
 
 
 def test_build_registry_from_dir(tmp_path: Path) -> None:
     import yaml
+
     raw = {
         "id": "SE-REQ-001",
         "metadata": {"title": "x", "domain": "requirements", "version": "1.0.0",

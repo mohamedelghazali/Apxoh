@@ -40,17 +40,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install -e ".[dev]" semgrep
+      - run: python -m pip install -e ".[dev]"
       - name: Bandit
         run: bandit -r src/ -c pyproject.toml -f json -o bandit.json
       - name: Semgrep
-        run: semgrep scan --config auto --sarif --output semgrep.sarif src/
+        run: >-
+          docker run --rm
+          --volume "${{ github.workspace }}:/src"
+          semgrep/semgrep:1.183.0
+          semgrep scan --config auto --error --sarif --output /src/semgrep.sarif /src/src
       - name: Upload Bandit report
         if: always() && hashFiles('bandit.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: bandit-results
           path: bandit.json
+      - name: Archive Semgrep SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: semgrep.sarif
+          if-no-files-found: error
       - name: Upload Semgrep SARIF
         if: always() && hashFiles('semgrep.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
@@ -69,10 +80,7 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install -e ".[dev]" pip-licenses
       - name: Dependency audit
-        run: |
-          pip install pip-audit
-          pip uninstall -y arkhon || true
-          pip-audit --strict --desc
+        run: pip-audit --skip-editable --strict --desc
       - name: License inventory
         run: pip-licenses --format=csv --with-urls > licenses.csv
       - uses: actions/upload-artifact@v4
@@ -92,7 +100,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -100,6 +108,7 @@ jobs:
           output: trivy.sarif
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          exit-code: "1"
       - name: Upload Trivy SARIF
         if: always() && hashFiles('trivy.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4

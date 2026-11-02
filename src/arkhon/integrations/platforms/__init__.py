@@ -13,7 +13,7 @@ def list_platforms() -> list[str]:
     return sorted(_PLATFORM_ADAPTERS)
 
 
-def get_platform_adapter(platform_id: str):
+def get_platform_adapter(platform_id: str) -> GitHubCopilotAdapter:
     """Instantiate a registered platform adapter."""
     if platform_id not in _PLATFORM_ADAPTERS:
         available = ", ".join(list_platforms())
