@@ -1,28 +1,37 @@
 """JSON report generator."""
 from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
 from arkhon.core.errors import EvidenceError
 from arkhon.core.logging import get_logger
 from arkhon.evidence.store import EvidenceStore
 
 logger = get_logger("reporting.json")
+
 SECTION_MAP = {
-    "requirements": "requirements", "architecture": "architecture",
-    "code-quality": "code_quality", "testing": "testing",
-    "software-security": "security", "performance": "performance",
-    "reliability": "reliability", "scalability": "scalability",
-    "infrastructure": "deployment", "database": "dependencies",
+    "requirements": "requirements",
+    "architecture": "architecture",
+    "code-quality": "code_quality",
+    "testing": "testing",
+    "software-security": "security",
+    "performance": "performance",
+    "reliability": "reliability",
+    "scalability": "scalability",
+    "infrastructure": "deployment",
+    "database": "dependencies",
     "release": "final_acceptance",
 }
-EMPTY_SECTION = {"status": "NOT_APPLICABLE", "content": "", "evidence_ids": []}
+
 
 @dataclass
 class JsonReporter:
     """Writes a JSON report aggregating all evidence."""
+
     def build(self, project_root: Path) -> dict[str, Any]:
         store = EvidenceStore(project_root)
         records = list(store.iter_records())
@@ -31,18 +40,25 @@ class JsonReporter:
         commit_sha = records[0].data.get("commit_sha", "")
         if not isinstance(commit_sha, str) or len(commit_sha) != 40:
             raise EvidenceError("evidence missing valid commit_sha")
-        sections = {name: dict(EMPTY_SECTION) for name in SECTION_MAP.values()}
+
+        # Construct each section independently; sharing the evidence_ids list
+        # would leak IDs across unrelated domains.
+        sections: dict[str, dict[str, Any]] = {
+            name: {"status": "NOT_APPLICABLE", "content": "", "evidence_ids": []}
+            for name in SECTION_MAP.values()
+        }
         for record in records:
             section_name = SECTION_MAP.get(record.path.parent.name)
             if not section_name:
                 continue
             status = record.data.get("status", "NOT_APPLICABLE")
             section = sections[section_name]
-            section["evidence_ids"].append(record.evidence_id)
+            section["evidence_ids"] = [*section["evidence_ids"], record.evidence_id]
             if status in {"FAIL", "BLOCKED"}:
                 section["status"] = status
             elif status == "PASS" and section["status"] == "NOT_APPLICABLE":
                 section["status"] = "PASS"
+
         statuses = {section["status"] for section in sections.values()}
         if "FAIL" in statuses:
             final = "REJECTED"
