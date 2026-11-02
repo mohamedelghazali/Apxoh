@@ -82,6 +82,7 @@ def test_adapter_has_no_forbidden_patterns(adapter_source: tuple[Path, str]) -> 
 
 
 def test_adapter_network_domains_are_approved(adapter_source: tuple[Path, str]) -> None:
+    path, source = adapter_source
     url_pattern = re.compile(r"https?://([A-Za-z0-9.\-]+)")
     for match in url_pattern.finditer(source):
         domain = match.group(1).lower()
@@ -94,6 +95,7 @@ def test_adapter_network_domains_are_approved(adapter_source: tuple[Path, str]) 
 
 
 def test_adapter_does_not_log_secrets(adapter_source: tuple[Path, str]) -> None:
+    path, source = adapter_source
     logging_pattern = re.compile(r"\b(print|logger\.\w+|logging\.\w+)\s*\(([^)]*)\)")
     for match in logging_pattern.finditer(source):
         args = match.group(2).lower()
