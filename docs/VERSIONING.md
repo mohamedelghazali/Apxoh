@@ -58,10 +58,10 @@ Breaking changes are allowed at any pre-1.0 version. From `1.0.0`, semantic vers
 
 ### 3.1 Engine (`arkhon` package)
 
-- **File:** `VERSION` (plain text, e.g., `0.1.0-dev.1`)
+- **File:** `VERSION` (plain text, canonical PEP 440 form, e.g., `0.1.0.dev1`)
 - **File:** `pyproject.toml` (`version = "0.1.0.dev1"`, PEP 440)
 - **File:** `src/arkhon/__init__.py` (`__version__ = "0.1.0.dev1"`)
-- **Rule:** all three must match. Enforced by `tests/test_foundation_files.py`.
+- **Rule:** `VERSION`, `pyproject.toml`, and `__version__` use the same canonical PEP 440 value. The manifest keeps its SemVer-style display version. Enforced by release checks.
 
 ### 3.2 Manifest
 

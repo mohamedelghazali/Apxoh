@@ -1,0 +1,36 @@
+id: SE-REQ-003
+metadata:
+  title: Requirements Traceability
+  domain: requirements
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Approved requirements must remain traceable through design,
+    implementation, and verification.
+scope:
+  project_types: [all]
+  lifecycle_stages: [requirements, architecture, implementation, verification]
+requirement:
+  statement: >
+    Every approved requirement must map to an architecture or design
+    element and to at least one verification method or acceptance test.
+    Orphaned requirements and unlinked acceptance criteria must be resolved.
+verification:
+  mode: hybrid
+  methods: [requirements-traceability-analysis, test-traceability-analysis, human-review]
+acceptance:
+  approved_requirements_without_design_trace: 0
+  approved_requirements_without_verification_trace: 0
+evidence:
+  required: [requirements-traceability-matrix, verification-traceability-report]
+failure:
+  actions: [create-finding, block-stage, require-remediation]
+human_review:
+  required: true
+  approver_role: "Requirements Lead"
+tests:
+  positive: required
+  negative: required
+  regression: required

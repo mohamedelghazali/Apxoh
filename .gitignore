@@ -17,3 +17,7 @@ build/
 !.arkhon/evidence/.gitkeep
 .arkhon/reports/*
 !.arkhon/reports/.gitkeep
+
+# Runtime-generated state records
+.arkhon/state/*
+!.arkhon/state/.gitkeep

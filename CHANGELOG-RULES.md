@@ -8,6 +8,11 @@ Rule versioning follows docs/VERSIONING.md §3.4. The lifecycle is described in 
 
 ## [Unreleased]
 
+### Added
+- **SE-API-001** — Versioned APIs; high / blocking / deterministic. Public API endpoints must be versioned and preserve compatibility within a major version. Location: rules/api-integration/SE-API-001-versioned-apis.yaml.
+- **SE-INF-001** — Infrastructure as Code Reviewed; high / blocking / hybrid. Infrastructure changes must be represented as code and reviewed before application. Location: rules/infrastructure/SE-INF-001-iac-reviewed.yaml.
+- **SE-REQ-003** — Requirements Traceability; high / blocking / hybrid. Approved requirements must trace to design and verification artifacts. Location: rules/requirements/SE-REQ-003-requirement-traceability.yaml.
+
 ### Planned
 - Expand the catalog in line with the rule-engine milestones in ROADMAP.md.
 - Add language- and project-specific rules only after their schema, applicability, verification methods, and tests are defined.
@@ -73,11 +78,12 @@ Initial catalog snapshot: **20 active rules** — 17 global rules under rules/ a
 
 ## Rule Statistics
 
-Counts are derived from the 20 rule files present in the repository at the time of this update. Recalculate them when rules are added, removed, or their metadata changes.
+Current counts include 20 global rule files under rules/ and 3 Python-specific rule files under languages/python/rules/. Recalculate them when rules are added, removed, or their metadata changes.
 
 | Domain | Count | Critical | High | Medium |
 | :--- | ---: | ---: | ---: | ---: |
 | Architecture | 1 | 0 | 1 | 0 |
+| API Integration | 1 | 0 | 1 | 0 |
 | Code Quality | 2 | 0 | 1 | 1 |
 | Database | 1 | 1 | 0 | 0 |
 | DevOps | 1 | 0 | 1 | 0 |
@@ -87,20 +93,21 @@ Counts are derived from the 20 rule files present in the repository at the time 
 | Privacy & Compliance | 1 | 0 | 1 | 0 |
 | Release | 1 | 0 | 0 | 1 |
 | Reliability | 2 | 1 | 1 | 0 |
-| Requirements | 2 | 0 | 2 | 0 |
+| Infrastructure | 1 | 0 | 1 | 0 |
+| Requirements | 3 | 0 | 3 | 0 |
 | Scalability | 1 | 0 | 1 | 0 |
 | Software Security | 2 | 1 | 1 | 0 |
 | Testing | 3 | 0 | 2 | 1 |
-| **Total** | **20** | **3** | **13** | **4** |
+| **Total** | **23** | **3** | **16** | **4** |
 
 ### Verification Mode Statistics
 
 | Mode | Count |
 | :--- | ---: |
-| deterministic | 11 |
-| hybrid | 7 |
+| deterministic | 12 |
+| hybrid | 9 |
 | delegated | 2 |
-| **Total** | **20** |
+| **Total** | **23** |
 
 ## Inventory and Validation Notes
 
