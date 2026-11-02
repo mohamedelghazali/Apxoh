@@ -1,15 +1,41 @@
-language: ruby
-required: false
+id: ruby
 tools:
-  - id: rubocop
-    required: false
-    purpose: "linting"
-    detection: executable_lookup
-  - id: rspec
-    required: false
-    purpose: "test execution"
-    detection: executable_lookup
-  - id: brakeman
-    required: false
-    purpose: "Rails security analysis"
-    detection: executable_lookup
+  static_analysis:
+    - name: bundle
+      role: dependency-manager
+      required: true
+      invocation: "bundle install --deployment"
+      version_arg: "--version"
+    - name: rubocop
+      role: linter
+      required: true
+      invocation: "bundle exec rubocop --format json"
+      output_format: json
+      version_arg: "--version"
+    - name: reek
+      role: analyzer
+      required: false
+      invocation: "bundle exec reek"
+      output_format: text
+      version_arg: "--version"
+  testing:
+    - name: rspec
+      role: test-runner
+      required: true
+      invocation: "bundle exec rspec --format documentation --format RspecJunitFormatter --out results.xml"
+      output_format: junit-xml
+      version_arg: "--version"
+  build:
+    - name: rake
+      role: builder
+      required: true
+      invocation: "bundle exec rake build"
+      version_arg: "--version"
+  supply_chain:
+    - name: bundle-audit
+      role: dependency-auditor
+      required: true
+      invocation: "bundle exec bundle-audit check --update --format json"
+      output_format: json
+      version_arg: "--version"
+missing_tool_policy: BLOCKED
