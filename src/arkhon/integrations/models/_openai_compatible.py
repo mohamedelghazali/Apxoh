@@ -1,10 +1,9 @@
 """Shared transport for OpenAI Chat Completions-compatible APIs."""
 from __future__ import annotations
 
+import http.client
 import json
 import os
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -128,34 +127,38 @@ class OpenAICompatibleAdapter(Integration):
         if api_key:
             headers["authorization"] = f"Bearer {api_key}"
 
-        request = urllib.request.Request(
-            self.config.endpoint,
-            data=json.dumps(payload).encode("utf-8"),
-            headers=headers,
-            method="POST",
+        endpoint = urlsplit(self.config.endpoint)
+        connection_type = (
+            http.client.HTTPSConnection
+            if endpoint.scheme == "https"
+            else http.client.HTTPConnection
+        )
+        connection = connection_type(
+            endpoint.hostname,
+            endpoint.port,
+            timeout=self.config.timeout_seconds,
         )
         try:
-            # The endpoint scheme/host are allowlisted above.
-            with urllib.request.urlopen(  # noqa: S310
-                request,
-                timeout=self.config.timeout_seconds,
-            ) as response:
-                raw = response.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
+            connection.request(
+                "POST",
+                endpoint.path or "/",
+                body=json.dumps(payload).encode("utf-8"),
+                headers=headers,
+            )
+            response = connection.getresponse()
+            raw = response.read().decode("utf-8")
+            if response.status >= 400:
+                return IntegrationResponse(
+                    ok=False,
+                    reason=f"HTTP {response.status}: {response.reason}",
+                )
+        except (OSError, http.client.HTTPException, TimeoutError) as exc:
             return IntegrationResponse(
                 ok=False,
-                reason=f"HTTP {exc.code}: {exc.reason}",
+                reason=f"network error: {exc}",
             )
-        except TimeoutError:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"timeout after {self.config.timeout_seconds}s",
-            )
-        except urllib.error.URLError as exc:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"network error: {exc.reason}",
-            )
+        finally:
+            connection.close()
 
         try:
             parsed = json.loads(raw)
