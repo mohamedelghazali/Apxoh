@@ -73,7 +73,7 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install -e ".[dev]" pip-licenses
       - name: Dependency audit
-        run: pip-audit --strict --desc
+        run: pip-audit --skip-editable --strict --desc
       - name: License inventory
         run: pip-licenses --format=csv --with-urls > licenses.csv
       - uses: actions/upload-artifact@v4
