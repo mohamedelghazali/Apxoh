@@ -23,5 +23,6 @@ class OpenAIOAdapter(OpenAICompatibleAdapter):
             available_models=("o3", "o4-mini"),
             max_tokens=8192, temperature=None, timeout_seconds=180,
             api_key_env="OPENAI_API_KEY", system_role="developer",
+            max_tokens_field="max_completion_tokens",
         ))
 
