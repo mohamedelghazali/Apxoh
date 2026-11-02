@@ -1,3 +1,22 @@
+# Universal profile rule-domain selection.
+# Domain names must be reconciled with the current rule catalogue before enforcement.
 profile: universal
-include: []
-exclude: []
+domains:
+  - requirements
+  - architecture
+  - code-quality
+  - software-security
+  - testing
+  - performance
+  - reliability
+  - database
+  - api-integration
+  - devops
+  - observability
+  - privacy-compliance
+  - scalability
+  - infrastructure
+  - maintenance
+  - release
+
+enforcement_floor: required
