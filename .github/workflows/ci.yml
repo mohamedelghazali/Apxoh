@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests scripts
+
+  typecheck:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+      - run: mypy src
+
+  test:
+    name: Test (pytest, py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+          cache: "pip"
+      - run: pip install -e ".[dev]"
+      - run: pytest -ra --cov=src/arkhon --cov-report=xml --cov-report=term
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python }}
+          path: coverage.xml
+          retention-days: 7
+
+  validate:
+    name: Validate (manifest + schemas + rules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -e ".[dev]"
+      - run: python scripts/validation/validate_all.py
+
+  install:
+    name: Install (clean environment)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+      - run: pip install -e .
+      - run: arkhon version
+      - run: arkhon doctor || true
+
+  aggregate:
+    name: CI gate
+    needs: [lint, typecheck, test, validate, install]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.typecheck.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.validate.result }}" != "success" ] || \
+             [ "${{ needs.install.result }}" != "success" ]; then
+            echo "CI gate FAILED"
+            exit 1
+          fi
+          echo "CI gate PASSED"
