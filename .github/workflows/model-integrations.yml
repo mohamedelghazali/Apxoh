@@ -17,7 +17,9 @@ jobs:
           cache: pip
       - run: python -m pip install -e ".[dev]"
       - name: Test available model integration contracts
-        run: python -m pytest -q tests/integration/models --ignore=tests/integration/models/test_all_models.py
+        run: python -m pytest -q tests/integration/models
+      - name: Test model factories and shared transport
+        run: python -m pytest -q tests/unit/integrations
       - name: Report declared versus implemented model adapters
         run: |
           python - <<'PY'
@@ -31,6 +33,6 @@ jobs:
           ) if root.is_dir() else []
           print(f"Declared model integrations: {', '.join(declared)}")
           print(f"Adapter directories currently present: {', '.join(implemented) or 'none'}")
-          if not implemented:
-              raise SystemExit("No model adapter implementation found")
+          if set(declared) != set(implemented):
+              raise SystemExit(f"Model registry mismatch: declared={sorted(declared)}, implemented={implemented}")
           PY
