@@ -58,6 +58,13 @@ jobs:
           pip install dist/*.whl
           arkhon version
           arkhon doctor || true
+          fixture="$RUNNER_TEMP/arkhon-agent-pack-fixture"
+          mkdir -p "$fixture"
+          arkhon install --scope project --project "$fixture"
+          test -f "$fixture/.arkhon/agent-pack/AGENTS.md"
+          test -f "$fixture/.arkhon/agent-pack/SECURITY_AGENTS.md"
+          test -f "$fixture/.arkhon/agent-pack/skills/arkhon-governance/SKILL.md"
+          python -c "import json, pathlib; p=pathlib.Path('$fixture/.arkhon/agent-pack/manifest.json'); d=json.loads(p.read_text()); assert d['activation']=='manual' and len(d['files']) == 20"
 
   offline-check:
     name: Offline check (no network after install)
