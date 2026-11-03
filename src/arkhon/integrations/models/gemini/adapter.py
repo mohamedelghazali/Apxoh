@@ -61,8 +61,17 @@ class GeminiAdapter(Integration):
             )
 
         parsed_endpoint = urlsplit(self.config.endpoint)
+        try:
+            endpoint_port = parsed_endpoint.port
+        except ValueError:
+            return IntegrationResponse(
+                ok=False,
+                reason="Gemini endpoint contains an invalid port",
+            )
         if (
-            parsed_endpoint.scheme != "https"
+            endpoint_port == 0
+            or any(ord(char) < 32 for char in parsed_endpoint.path)
+            or parsed_endpoint.scheme != "https"
             or not parsed_endpoint.hostname
             or parsed_endpoint.username
             or parsed_endpoint.password
