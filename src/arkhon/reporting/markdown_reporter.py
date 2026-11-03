@@ -60,8 +60,13 @@ class MarkdownReporter:
         )
         return "\n".join(lines)
 
-    def write(self, project_root: Path, output_dir: Path) -> Path:
-        report = JsonReporter().build(project_root)
+    def write(
+        self,
+        project_root: Path,
+        output_dir: Path,
+        expected_commit_sha: str | None = None,
+    ) -> Path:
+        report = JsonReporter().build(project_root, expected_commit_sha=expected_commit_sha)
         output_dir.mkdir(parents=True, exist_ok=True)
         target = output_dir / "report.md"
         target.write_text(self.render(report), encoding="utf-8")
