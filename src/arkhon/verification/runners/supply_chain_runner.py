@@ -17,10 +17,6 @@ from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 logger = get_logger("verification.runners.supply_chain")
 _SOURCE_URI = "github.com/mohamedelghazali/Apxoh"
 _OIDC_ISSUER = "https://token.actions.githubusercontent.com"
-_IDENTITY_REGEXP = (
-    r"^https://github\.com/mohamedelghazali/Apxoh/"
-    r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
-)
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _TAG_RE = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
 
@@ -43,6 +39,7 @@ def _commit_sha(project_root: Path) -> str | None:
     value = result.stdout.strip()
     return value if _COMMIT_RE.fullmatch(value) else None
 
+
 def _tag_commit_sha(project_root: Path, source_tag: str) -> str | None:
     """Resolve a release tag to a commit without invoking a shell."""
     if not _TAG_RE.fullmatch(source_tag):
@@ -63,6 +60,7 @@ def _tag_commit_sha(project_root: Path, source_tag: str) -> str | None:
         return None
     value = result.stdout.strip()
     return value if _COMMIT_RE.fullmatch(value) else None
+
 
 def _safe_directory(root: Path, path: Path) -> Path | None:
     try:
