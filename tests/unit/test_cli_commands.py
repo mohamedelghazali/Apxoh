@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
