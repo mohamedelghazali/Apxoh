@@ -218,3 +218,45 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
     malformed.write_text("[]", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="not an object"):
         list(store.iter_records("testing"))
+
+
+def test_evidence_store_skips_non_record_json_artifacts(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = {
+        "evidence_id": "EVID-STORE-1",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+        "executed_at": "2026-11-01T00:00:00Z",
+    }
+    store.write("testing", record)
+    evidence_dir = store.root / "testing"
+    (evidence_dir / "ruff.json").write_text("[]", encoding="utf-8")
+    (evidence_dir / "tsar-aaaaaaaaaaaa.json").write_text(
+        '{"status":"PASS","commit_sha":"' + "a" * 40 + '"}', encoding="utf-8"
+    )
+    records = list(store.iter_records("testing"))
+    assert [item.evidence_id for item in records] == ["EVID-STORE-1"]
+
+
+def test_evidence_store_rejects_filename_id_mismatch(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = {
+        "evidence_id": "EVID-STORE-2",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+    }
+    target = store.write("testing", record)
+    target.write_text(json.dumps({**record, "evidence_id": "EVID-OTHER"}), encoding="utf-8")
+    with pytest.raises(EvidenceTamperedError, match="does not match filename"):
+        store.read("testing", "EVID-STORE-2")
+    with pytest.raises(EvidenceTamperedError, match="does not match filename"):
+        list(store.iter_records("testing"))
+
+
+def test_evidence_store_rejects_malformed_evidence_filename(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    evidence_dir = store.root / "testing"
+    evidence_dir.mkdir(parents=True)
+    (evidence_dir / "EVID-lowercase.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(EvidenceTamperedError, match="invalid evidence record filename"):
+        list(store.iter_records("testing"))
