@@ -112,3 +112,30 @@ def test_all_domains_have_prefixes() -> None:
 
 def test_all_constants_non_empty() -> None:
     assert ALL_ENFORCEMENT and ALL_SEVERITIES and ALL_RULE_STATUSES
+
+
+def test_schema_validation_import_invalid_json_and_schema_errors(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import sys
+
+    from arkhon.core.errors import RuleValidationError
+    from arkhon.rules.validator import validate_against_schema
+
+    rule = _make_rule(_valid_raw())
+    missing_dependency = tmp_path / "missing-dependency.json"
+    monkeypatch.setitem(sys.modules, "jsonschema", None)
+    errors = validate_against_schema(rule, missing_dependency)
+    assert any("jsonschema is required" in str(error) for error in errors)
+    monkeypatch.delitem(sys.modules, "jsonschema")
+    malformed = tmp_path / "malformed.json"
+    malformed.write_text("{", encoding="utf-8")
+    errors = validate_against_schema(rule, malformed)
+    assert any("cannot load valid rule schema" in str(error) for error in errors)
+    schema = tmp_path / "schema.json"
+    schema.write_text('{"type": "object", "required": ["missing"]}', encoding="utf-8")
+    errors = validate_against_schema(rule, schema)
+    assert errors and isinstance(errors[0], RuleValidationError)
+    invalid_schema = tmp_path / "invalid-schema.json"
+    invalid_schema.write_text('{"type": "not-a-json-schema-type"}', encoding="utf-8")
+    assert validate_against_schema(rule, invalid_schema)
