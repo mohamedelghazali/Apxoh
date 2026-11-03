@@ -24,7 +24,7 @@ SHA = "a" * 40
 def _bom(commit: str = SHA) -> dict:
     return {
         "bomFormat": "CycloneDX",
-        "specVersion": "1.6",
+        "specVersion": "1.7",
         "components": [],
         "metadata": {
             "component": {
