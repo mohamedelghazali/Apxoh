@@ -165,8 +165,6 @@ def test_install_finally_retries_backup_restore_after_rename_failure(
                 raise OSError("simulated first backup restore failure")
         return real_rename(path, destination)
 
-    real_staging_rename = Path.rename
-
     def fail_staging_and_restore_once(path: Path, destination: Path) -> Path:
         if path.name.startswith(".agent-pack-staging-") and destination == target:
             raise OSError("simulated staging swap failure")
