@@ -93,6 +93,9 @@ class RuffRunner(Runner):
             return RunnerResult(
                 runner=self.name,
                 outcome=RunnerOutcome.BLOCKED,
-                reason=f"ruff exited unexpectedly with code {result.returncode}: {result.stderr[:300]}",
+                reason=(
+                    f"ruff exited unexpectedly with code {result.returncode}: "
+                    f"{result.stderr[:300]}"
+                ),
                 artifacts=[target],
             )
