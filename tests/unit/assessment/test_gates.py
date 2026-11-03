@@ -109,3 +109,13 @@ def test_empty_outcomes_are_blocked() -> None:
     verdict = evaluate_gate("security_gate", [])
     assert verdict.status == "BLOCKED"
     assert not verdict.closes
+
+
+def test_unknown_enforcement_cannot_downgrade_failure() -> None:
+    with pytest.raises(GateError, match="unsupported enforcement"):
+        evaluate_gate("security_gate", [_outcome("SE-SEC-999", "unrecognized", "FAIL")])
+
+
+def test_unknown_enforcement_is_rejected_even_for_pass() -> None:
+    with pytest.raises(GateError, match="unsupported enforcement"):
+        evaluate_gate("testing_gate", [_outcome("SE-TST-999", "unknown", "PASS")])
