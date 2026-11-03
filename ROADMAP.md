@@ -1,14 +1,16 @@
 # Apxoh Roadmap
 
-**Version:** 1.1  
-**Status:** Active  
-**Last updated:** 2026-11-02
+**Version:** 1.2  
+**Status:** Active — pre-release  
+**Last updated:** 2026-11-03
 
 ---
 
 ## Current Status
 
-Apxoh is in **pre-release** (0.1.0.dev1). Milestone completion is tracked below; a checked item indicates repository work recorded as complete, not necessarily successful execution in every environment.
+Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
+
+The latest `main` commit at this update is `8da1c6da5a7105f804a8b8abecbc59dc1fedddc1`. Its GitHub Actions checks were queued when inspected; no successful result is claimed. The repository had no open pull requests or issues at that inspection time.
 
 ---
 
@@ -59,63 +61,68 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] Rule loader, validator, registry
 - [x] Rule schema
 - [x] 9-language registry
-- [x] Python language profile
-- [x] 20 initial rule files across 14 domains (17 global and 3 Python-specific)
-- [ ] Remaining language profiles and their verification evidence
-- [ ] Language detector tests and fixture coverage review
+- [x] Language profiles and per-language tool, testing, and security metadata for all 9 registered languages
+- [x] Initial rule catalog (20 rules across 14 domains: 17 global and 3 Python-specific)
+- [x] Language detector, registry, profile-loader, tool-resolution tests, and 9 language fixtures
+- [ ] CI execution and review of all 9 language fixture jobs
+- [ ] Broader language-specific rule catalog and semantic verification
 
-**Status:** Rule files and the registry are present. Language maturity and execution coverage remain subject to validation.
+**Status:** Implementation and test fixtures are present for all 9 declared languages. Completion of the fixture/CI gate is pending successful execution against the current main commit. The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
 
-### Milestone 3 — Verification & Evidence ✅ (Core) / 🔄 (Full)
+### Milestone 3 — Verification & Evidence 🔄
 
-- [x] Evidence collector, integrity, store
-- [x] Evidence schema
-- [x] Assessment scorer, gates, decision
-- [x] Verification engine
-- [x] Runners: pytest, ruff, mypy, tsar
-- [x] TSAR adapter + verifier + proposed contract
-- [ ] Full integration tests for TSAR (requires TSAR installed)
-- [ ] SBOM generation runner
-- [ ] SLSA provenance runner
+- [x] Evidence collector, integrity, store, and schema
+- [x] Assessment scorer, gates, decision, and verification engine
+- [x] Local verification runners: pytest, Ruff, mypy, TSAR, and Syft SBOM generation
+- [x] Commit-bound CycloneDX SBOM acceptance and evidence persistence
+- [x] SLSA/Sigstore release-attestation verification runner and release workflow
+- [x] TSAR adapter, verifier, contract tests, and real-CLI end-to-end workflow definition
+- [ ] Successful real TSAR end-to-end workflow execution on main
+- [ ] Successful Syft SBOM end-to-end workflow execution on main
+- [ ] First signed release with independently verified provenance
+- [ ] End-to-end release-attestation evidence accepted from an actual tagged release
 
-**Status:** Core components are present. Full completion requires external tools and verified end-to-end execution.
+**Status:** Core and supply-chain implementations are present, including executable CI workflow definitions. The external-tool and release gates are not considered complete until their jobs run successfully and their generated evidence is verified. A source-code implementation or workflow file alone does not close these gates.
 
 ### Milestone 4 — AI Agent Adoption 🔄
 
-- [x] AGENTS.md
-- [x] SECURITY_AGENTS.md
-- [x] 8 skills
-- [x] 9 agent roles
-- [ ] Complete behavioral verification for agent integrations
-- [ ] Integration tests and environment-specific validation
-- [ ] arkhon install --scope project|global command
+- [x] AGENTS.md and SECURITY_AGENTS.md
+- [x] 8 skills and 9 agent roles
+- [x] Packaged 20-file agent governance resource bundle
+- [x] `arkhon install --scope project|global` implementation, manifest, safe staging, and unit tests
+- [x] Agent/model/platform integration contracts and integration test scaffolding
+- [ ] Behavioral verification with each supported agent product in a real configured environment
+- [ ] Verify instruction discovery, activation, precedence, and enforcement per supported platform
+- [ ] Complete platform-specific integration validation, including GitHub Copilot
+- [ ] Successful CI execution of agent integration checks
 
-**Status:** Agent instructions, skills, roles, and integration packages are present; operational adoption and behavioral verification remain distinct tasks.
+**Status:** The resource pack and installer are implemented. Integration scaffolding and contract tests do not establish that every third-party agent actually loads or obeys the instructions. The generic-agent adapter is explicitly marked manual; behavioral adoption remains open.
 
 ### Milestone 5 — Orchestrator & Full CLI 🔄
 
-- [x] Lifecycle state machine
-- [x] Stage manager
-- [x] Reporting (JSON + Markdown)
+- [x] Lifecycle state machine and stage manager
+- [x] JSON and Markdown reporting
 - [x] CLI: version, doctor, validate, inspect, audit, assess, report, verify
-- [ ] CLI: install, status, exceptions
-- [ ] arkhon project init command
+- [x] CLI: install, status, exceptions list
+- [x] `arkhon project init` with schema validation
+- [x] CLI parser registration and unit tests for the added commands
+- [ ] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
+- [ ] Complete rule-outcome assessment integration; the current assessment command fails closed when rule-level outcomes are unavailable
 
-**Status:** In progress.
+**Status:** The listed commands are implemented and registered. Runtime/package validation remains pending the queued CI jobs. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
 
 ### Milestone 6 — Self-Governance & CI 🔄
 
 - [x] .pre-commit-config.yaml
 - [x] .github/CODEOWNERS
 - [x] .github/dependabot.yml
-- [x] .github/workflows/ci.yml
-- [x] .github/workflows/security.yml
-- [x] .github/workflows/scorecard.yml
-- [x] .github/workflows/slsa-release.yml
-- [ ] Branch protection configured and verified on GitHub
+- [x] CI, integration, installation, security, schema, infrastructure, TSAR, supply-chain, and scorecard workflow definitions
+- [ ] Current-main CI, unit, integration, installation, security, TSAR, and supply-chain workflows completed successfully
+- [ ] Branch protection/ruleset configuration read back and independently verified
+- [ ] Required status checks enforced for main
 - [ ] First signed release with independently verified provenance
 
-**Status:** Workflow files are present. Branch protection and release-signing/provenance status require live configuration and execution evidence.
+**Status:** Workflow definitions are present. The latest main commit had 53 check runs queued at the time of inspection, with no completed success/failure evidence. Branch-protection settings could not be read through the available GitHub integration and are therefore unverified. Do not bypass checks or mark this milestone complete until both CI results and repository enforcement settings are confirmed.
 
 ---
 
@@ -123,7 +130,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 
 ### v0.2.0 — Rules Expansion
 - Expand the catalog beyond the initial 20 rules, targeting the roadmap's broader domain coverage.
-- Complete language profiles and fixture verification for all 9 declared languages.
+- Add deeper language-specific rules and semantic verification for all 9 declared languages.
 - Extend rule-authoring examples and semantic validation.
 
 ### v0.3.0 — Model and Agent Integration Depth
@@ -132,11 +139,10 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - Verify Copilot platform integration behavior.
 
 ### v0.4.0 — Advanced Verification
-- SBOM generation (CycloneDX).
-- SLSA provenance end-to-end.
 - Mutation testing runner.
 - Chaos testing runner.
 - Load testing runner.
+- Expand CycloneDX and SLSA verification coverage beyond the current initial implementation.
 
 ### v0.5.0 — Enterprise Features
 - Exception workflow (approval, expiry, revocation).
