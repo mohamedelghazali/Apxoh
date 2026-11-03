@@ -380,6 +380,20 @@ def test_safe_directory_rejects_project_escape(tmp_path: Path) -> None:
     root.mkdir()
     outside = tmp_path / "outside"
     assert _safe_directory(root, outside) is None
+    assert not outside.exists()
+
+
+def test_safe_directory_rejects_symlinked_parent_without_side_effects(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "project"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (root / ".arkhon").symlink_to(outside, target_is_directory=True)
+    candidate = root / ".arkhon" / "reports" / "supply-chain"
+    assert _safe_directory(root, candidate) is None
+    assert not (outside / "reports").exists()
 
 
 def test_syft_runner_rejects_symlinked_output_directory(
