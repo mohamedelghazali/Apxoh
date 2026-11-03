@@ -135,5 +135,5 @@ def test_verify_all_runs_security_domain_and_fails_closed(
 
     monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
     assert main(["verify", str(project), "--domain", "all"]) == 1
-    assert seen == ["testing", "code-quality", "software-security"]
+    assert seen == ["testing", "code-quality", "software-security", "supply-chain"]
     assert "Domain:   software-security" in capsys.readouterr().out

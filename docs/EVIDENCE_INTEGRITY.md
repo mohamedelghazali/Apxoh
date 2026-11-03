@@ -1,9 +1,9 @@
 # Apxoh Evidence Integrity Model
 
 **Version:** 1.0
-**Status:** Integrity baseline — schema and runtime enforcement require verification
+**Status:** Runtime enforcement implemented for evidence integrity, SBOM, and release-attestation gates; validate against the exact CI/release run before claiming a release passed
 **Owner:** Security Lead (TBD)
-**Last reviewed:** 2026-11-01
+**Last reviewed:** 2026-11-03
 **Review cadence:** Every release and after any evidence-integrity incident
 
 ---
@@ -172,14 +172,14 @@ The baseline relationship must be verified; an ancestor relationship alone does 
 
 ### 5.1 Sigstore Signing
 
-Where a gate requires cryptographic authenticity, evidence should be signed using an approved Sigstore keyless identity or another documented signing mechanism.
+Release artifacts are signed by the pinned Cosign CLI in `.github/workflows/slsa-release.yml` using GitHub Actions OIDC. The release workflow signs wheels, source distributions, and the generated CycloneDX source SBOM; it then verifies those bundles before the release evidence gate can pass.
 
-- **Tool:** `tools/signing/sign-artifacts.py`, subject to implementation verification.
-- **Identity:** a trusted CI workflow or explicitly approved signing identity.
-- **Bundle:** the Sigstore bundle format produced by the selected tool/version.
-- **Verification:** the configured Sigstore verifier or compatible Cosign verification procedure.
+- **Signing tool:** Cosign `v3.1.4` (`cosign sign-blob --bundle`).
+- **Verifier:** Cosign `verify-blob` with issuer `https://token.actions.githubusercontent.com`.
+- **Identity:** the exact `slsa-release.yml` workflow identity for the configured semantic release tag, not an arbitrary workflow or tag.
+- **Bundle:** a Sigstore bundle stored beside the signed artifact.
 
-Local developer signing must not be treated as equivalent to a protected CI identity unless the gate explicitly trusts that identity.
+The standalone `tools/signing/sign-artifacts.py` helper is optional; the protected release workflow uses Cosign directly. Local developer signing is not accepted by the release gate.
 
 ### 5.2 What Signing Proves
 
@@ -233,7 +233,19 @@ Before a gate closes, Apxoh must verify the evidence required by that gate.
 
 Every step should produce an auditable verification result. The gate must not infer success from missing data or a tool that did not run.
 
-### 6.2 Re-verification
+### 6.2 Implemented supply-chain gates
+
+The runtime separates source inventory from release authenticity:
+
+- `arkhon verify <project> --domain supply-chain` runs Syft and writes a CycloneDX SBOM bound to the checked-out commit. CycloneDX versions 1.4–1.7 are accepted. The verification engine validates the commit binding before it records `PASS`.
+- `arkhon verify <project> --domain release-attestations` is an explicit release-only gate. `.arkhon/supply-chain.json` must identify in-project `artifact`, `provenance`, `signature_bundle`, and `source_tag` paths/values.
+- The release tag must be a semantic version tag and must resolve to the exact checked-out `HEAD`. `slsa-verifier` checks both the repository URI and exact tag; Cosign checks the exact workflow/tag certificate identity and GitHub OIDC issuer.
+- The engine re-runs SLSA and Cosign verification before recording release-attestation `PASS`. The JSON reporter repeats cryptographic verification when consuming that evidence.
+- `arkhon verify <project> --domain all` includes local SBOM generation but intentionally excludes `release-attestations`, because ordinary source checkouts do not have release artifacts/provenance.
+
+The tag-triggered SLSA release workflow builds distributions, generates and signs a CycloneDX SBOM, creates SLSA provenance, verifies signatures, and runs both Apxoh evidence gates. A successful pull-request CI run proves the source SBOM path; it does not by itself prove that a real release tag has completed the OIDC/SLSA/Cosign workflow.
+
+### 6.3 Re-verification
 
 Evidence may be re-verified at any time. Re-verification must not modify the original signed evidence; it should create a separate verification record with verifier version, timestamp, policy version, and outcome.
 
@@ -274,8 +286,8 @@ These actions are requirements; their implementation and notification paths must
 ## 8. References
 
 - `schemas/evidence.schema.json` — current evidence schema (minimal; does not yet express the full contract above)
-- `tools/signing/sign-artifacts.py` — evidence signing tool, subject to implementation verification
-- `integrations/tsar/verifier.py` — TSAR evidence verification integration, subject to implementation verification
+- `.github/workflows/slsa-release.yml` — pinned Cosign signing and SLSA provenance release workflow
+- `src/arkhon/verification/runners/tsar_runner.py` — TSAR CLI runner; real CLI scan is exercised by `.github/workflows/tsar-e2e.yml`
 - `SECURITY_AGENTS.md` §4 — evidence tampering defenses
 - `docs/SUPPLY_CHAIN.md` §5 — artifact signing
 

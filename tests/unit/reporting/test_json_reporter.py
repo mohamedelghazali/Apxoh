@@ -11,7 +11,11 @@ import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
-from arkhon.evidence.supply_chain import IDENTITY_REGEXP, OIDC_ISSUER, SOURCE_URI
+from arkhon.evidence.supply_chain import (
+    identity_regexp_for_tag,
+    OIDC_ISSUER,
+    SOURCE_URI,
+)
 from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
 
 
@@ -68,7 +72,7 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
-                "specVersion": "1.6",
+                "specVersion": "1.7",
                 "components": [],
                 "metadata": {
                     "component": {"properties": [{"name": "arkhon:commit-sha", "value": "a" * 40}]}
@@ -84,7 +88,8 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
                 "commit_sha": "a" * 40,
                 "source_uri": SOURCE_URI,
                 "oidc_issuer": OIDC_ISSUER,
-                "certificate_identity_regexp": IDENTITY_REGEXP,
+                "source_tag": "v1.2.3",
+                "certificate_identity_regexp": identity_regexp_for_tag("v1.2.3"),
                 "artifact": "dist/release.whl",
                 "artifact_sha256": digest(artifact),
                 "provenance": "dist/provenance.intoto.jsonl",
@@ -104,9 +109,21 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
             "commit_sha": "a" * 40,
             "executed_at": "2026-11-03T00:00:00Z",
             "status": "PASS",
+            "artifacts": [{"path": sbom.relative_to(project).as_posix(), "sha256": digest(sbom)}],
+        },
+    )
+    EvidenceStore(project).write(
+        "release-attestations",
+        {
+            "evidence_id": f"{evidence_id}-ATTEST",
+            "source": "arkhon",
+            "source_version": "0.1.0.dev1",
+            "commit_sha": "a" * 40,
+            "executed_at": "2026-11-03T00:00:00Z",
+            "status": "PASS",
             "artifacts": [
                 {"path": item.relative_to(project).as_posix(), "sha256": digest(item)}
-                for item in (sbom, report, artifact, provenance, signature)
+                for item in (report, artifact, provenance, signature)
             ],
         },
     )
@@ -185,14 +202,16 @@ def test_build_approves_only_when_every_section_has_verified_evidence(
         evidence_id = f"EVID-ALL-{index}"
         if domain == "supply-chain":
             _write_supply_chain_evidence(tmp_path, evidence_id)
-        else:
+        elif domain != "release-attestations":
             _write_evidence(tmp_path, domain, evidence_id)
     monkeypatch.setattr(
         "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
     )
     monkeypatch.setattr(
         "arkhon.evidence.supply_chain.subprocess.run",
-        lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "verified", ""),
+        lambda command, **kwargs: subprocess.CompletedProcess(
+            command, 0, "a" * 40 if command[1] == "rev-parse" else "verified", ""
+        ),
     )
     report = JsonReporter().build(tmp_path)
     assert report["final_decision"] == "APPROVED"

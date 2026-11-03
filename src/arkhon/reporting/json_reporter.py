@@ -28,6 +28,7 @@ SECTION_MAP = {
     "testing": "testing",
     "software-security": "security",
     "supply-chain": "supply_chain",
+    "release-attestations": "final_acceptance",
     "performance": "performance",
     "reliability": "reliability",
     "observability": "reliability",
@@ -51,6 +52,7 @@ FRESHNESS_HOURS = {
     "dependencies": 168,
     "testing": 720,
     "supply-chain": 168,
+    "release-attestations": 168,
 }
 _ALLOWED_STATUSES = {"PASS", "FAIL", "BLOCKED", "NOT_APPLICABLE", "ACCEPTED_RISK"}
 
@@ -107,36 +109,44 @@ class JsonReporter:
                     evidence_root=project_root,
                     expected_commit_sha=commit_sha,
                 )
-                if record.path.parent.name == "supply-chain" and status == "PASS":
+                domain = record.path.parent.name
+                if status == "PASS" and domain in {"supply-chain", "release-attestations"}:
                     evidence_artifacts = record.data.get("artifacts")
                     if not isinstance(evidence_artifacts, list):
                         raise EvidenceError("supply-chain evidence artifacts must be an array")
-                    sbom_paths = [
-                        project_root / item["path"]
-                        for item in evidence_artifacts
-                        if isinstance(item, dict)
-                        and isinstance(item.get("path"), str)
-                        and item["path"].endswith(".cdx.json")
-                    ]
-                    attestation_paths = [
-                        project_root / item["path"]
-                        for item in evidence_artifacts
-                        if isinstance(item, dict)
-                        and isinstance(item.get("path"), str)
-                        and item["path"].endswith(".attestation.json")
-                    ]
-                    if len(sbom_paths) != 1 or len(attestation_paths) != 1:
-                        raise EvidenceError(
-                            "PASS supply-chain evidence requires exactly one SBOM "
-                            "and attestation report"
+                    if domain == "supply-chain":
+                        sbom_paths = [
+                            project_root / item["path"]
+                            for item in evidence_artifacts
+                            if isinstance(item, dict)
+                            and isinstance(item.get("path"), str)
+                            and Path(item["path"]).name.startswith("sbom-")
+                            and item["path"].endswith(".cdx.json")
+                        ]
+                        if len(sbom_paths) != 1:
+                            raise EvidenceError(
+                                "PASS SBOM evidence requires exactly one CycloneDX SBOM"
+                            )
+                        verify_cyclonedx_sbom(sbom_paths[0], expected_commit_sha=commit_sha)
+                    else:
+                        attestation_paths = [
+                            project_root / item["path"]
+                            for item in evidence_artifacts
+                            if isinstance(item, dict)
+                            and isinstance(item.get("path"), str)
+                            and item["path"].endswith(".attestation.json")
+                        ]
+                        if len(attestation_paths) != 1:
+                            raise EvidenceError(
+                                "PASS release-attestation evidence requires exactly one "
+                                "attestation report"
+                            )
+                        verify_supply_chain_attestation_report(
+                            attestation_paths[0],
+                            evidence_root=project_root,
+                            expected_commit_sha=commit_sha,
+                            evidence_artifacts=evidence_artifacts,
                         )
-                    verify_cyclonedx_sbom(sbom_paths[0], expected_commit_sha=commit_sha)
-                    verify_supply_chain_attestation_report(
-                        attestation_paths[0],
-                        evidence_root=project_root,
-                        expected_commit_sha=commit_sha,
-                        evidence_artifacts=evidence_artifacts,
-                    )
                 executed_at = _record_timestamp(record)
                 verify_freshness(
                     executed_at.isoformat(),

@@ -240,13 +240,14 @@ def cmd_verify(args: argparse.Namespace) -> int:
         "testing": (PytestRunner(),),
         "code-quality": (RuffRunner(), MypyRunner()),
         "software-security": (TsarRunner(),),
-        "supply-chain": (SyftRunner(), SupplyChainAttestationRunner()),
+        "supply-chain": (SyftRunner(),),
+        "release-attestations": (SupplyChainAttestationRunner(),)
     }
     domains: tuple[str, ...]
     if domain == "all":
         # Release supply-chain verification requires release artifacts and is
         # an explicit gate, not a local source-only default.
-        domains = ("testing", "code-quality", "software-security")
+        domains = ("testing", "code-quality", "software-security", "supply-chain")
     elif domain in runners_map:
         domains = (domain,)
     else:

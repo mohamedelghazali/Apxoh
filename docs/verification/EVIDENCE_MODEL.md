@@ -1,7 +1,7 @@
 # Apxoh Evidence Model
 
 **Version:** 1.0
-**Status:** Active — specification; implementation status of individual controls must be verified.
+**Status:** Active — source SBOM and release-attestation gates are implemented; release-tag signing/provenance is verified only when the tag-triggered workflow completes.
 **Last updated:** 2026-11-01
 
 ---
@@ -134,12 +134,12 @@ or file existing at this path does not prove those properties.
 
 ### 5.5 Verify
 
-Before evidence is used to close a gate, the implementation should
-validate, as required by policy:
+Before evidence is used to close a gate, the implementation validates, as required by policy:
 
 - Evidence schema and required fields.
 - Artifact existence and SHA-256 digests.
 - Signature and signer identity, when signing is required.
+- SLSA provenance repository and exact release tag for release-attestation evidence.
 - Commit binding.
 - Timestamp validity and freshness.
 - Producer and tool identity.
@@ -177,7 +177,7 @@ Freshness is policy-specific. Example defaults:
 | Security scan | 7 days |
 | Test results | 30 days |
 | Dependency audit | 7 days |
-| SBOM | 30 days |
+| SBOM | 7 days |
 | Provenance | Bound to a specific release |
 | Manual review | 90 days |
 
@@ -199,7 +199,7 @@ documented policy explicitly defines a narrower impact model.
 
 ## 8. Signature Model
 
-Sigstore keyless signing is a supported design option.
+Sigstore keyless signing is implemented for release artifacts by the tag-triggered SLSA release workflow.
 
 A successfully verified signature can provide evidence that:
 - The signed bytes have not changed since signing.
@@ -248,7 +248,10 @@ replacement for independently validated evidence.
 - `src/arkhon/evidence/collector.py` — evidence collection
 - `src/arkhon/evidence/integrity.py` — integrity verification
 - `src/arkhon/evidence/store.py` — evidence storage
-- `tools/signing/sign-artifacts.py` — signing workflow, if present and configured
+- `src/arkhon/verification/runners/supply_chain_runner.py` — Syft SBOM and release attestation runners
+- `src/arkhon/evidence/supply_chain.py` — CycloneDX, SLSA, and Sigstore evidence verification
+- `.github/workflows/supply-chain-e2e.yml` — real Syft SBOM and evidence acceptance test
+- `.github/workflows/slsa-release.yml` — release signing and SLSA provenance workflow
 
 ---
 
