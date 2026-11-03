@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Callable, Iterator
 from types import SimpleNamespace
+from typing import Any, Callable, Iterator
 from unittest.mock import patch
 
 
