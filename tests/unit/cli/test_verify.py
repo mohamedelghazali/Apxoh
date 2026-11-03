@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -13,7 +15,14 @@ from arkhon.cli import main
 def _init_project(tmp_path: Path) -> None:
     """Create a minimal project with git."""
 
-    import subprocess
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise RuntimeError("git executable not found on PATH")
+
+    def run_git(args: list[str]) -> None:
+        subprocess.run(  # noqa: S603 - resolved git executable; fixed test arguments
+            [git_executable, *args], cwd=tmp_path, check=True
+        )
 
     (tmp_path / ".arkhon").mkdir()
 
@@ -26,7 +35,7 @@ def _init_project(tmp_path: Path) -> None:
 
     (tmp_path / "src" / "main.py").write_text("x = 1\n", encoding="utf-8")
 
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    run_git(["init", "-q"])
 
     subprocess.run(
         ["git", "config", "user.email", r"test\@example.com"],
@@ -34,19 +43,11 @@ def _init_project(tmp_path: Path) -> None:
         check=True,
     )
 
-    subprocess.run(
-        ["git", "config", "user.name", "Test"],
-        cwd=tmp_path,
-        check=True,
-    )
+    run_git(["config", "user.name", "Test"])
 
-    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True)
+    run_git(["add", "."])
 
-    subprocess.run(
-        ["git", "commit", "-q", "-m", "init"],
-        cwd=tmp_path,
-        check=True,
-    )
+    run_git(["commit", "-q", "-m", "init"])
 
 
 def test_verify_unknown_domain(
@@ -86,7 +87,7 @@ def test_verify_code_quality_domain(
         encoding="utf-8",
     )
 
-    rc = main(["verify", str(tmp_path), "--domain", "code-quality"])
+    main(["verify", str(tmp_path), "--domain", "code-quality"])
 
     out = capsys.readouterr().out
 
