@@ -3,6 +3,7 @@ from __future__ import annotations
 import builtins
 import json
 import runpy
+import sys
 from argparse import Namespace
 from pathlib import Path
 from types import SimpleNamespace
@@ -106,8 +107,9 @@ def test_cli_report_unknown_format_and_verify_success(
     assert "RUN-1" in output and "EVID-1" in output
 
 
-def test_cli_module_entrypoint_exits_with_usage_code() -> None:
+def test_cli_module_entrypoint_exits_with_usage_code(monkeypatch) -> None:
     cli_path = Path(__file__).resolve().parents[2] / "src" / "arkhon" / "cli.py"
+    monkeypatch.setattr(sys, "argv", [str(cli_path)])
     with pytest.raises(SystemExit) as exc_info:
         runpy.run_path(str(cli_path), run_name="__main__")
     assert exc_info.value.code == 1
