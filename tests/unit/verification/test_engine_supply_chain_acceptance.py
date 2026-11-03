@@ -113,6 +113,8 @@ def _enable_verifiers(monkeypatch: pytest.MonkeyPatch, *, returncode: int = 0) -
 
     def run(command, **kwargs):
         calls.append(command)
+        if command[1] == "rev-parse":
+            return subprocess.CompletedProcess(command, 0, COMMIT, "")
         return subprocess.CompletedProcess(
             command, returncode, "verified", "invalid" if returncode else ""
         )
@@ -164,9 +166,10 @@ def test_engine_rechecks_slsa_and_sigstore_before_release_attestation_pass(
     record = EvidenceStore(tmp_path).read("release-attestations", run.evidence_id)
     assert run.status == "PASS"
     assert record.status == "PASS"
-    assert len(calls) == 2
-    assert calls[0][calls[0].index("--source-tag") + 1] == SOURCE_TAG
-    assert calls[1][1] == "verify-blob"
+    assert len(calls) == 3
+    assert calls[0][1] == "rev-parse"
+    assert calls[1][calls[1].index("--source-tag") + 1] == SOURCE_TAG
+    assert calls[2][1] == "verify-blob"
 
 
 def test_engine_blocks_when_crypto_verification_fails(
