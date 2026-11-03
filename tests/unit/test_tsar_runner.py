@@ -128,3 +128,21 @@ def test_tsar_runner_blocks_untrusted_payload(
     result = TsarRunner().run(tmp_path)
     assert result.outcome == RunnerOutcome.BLOCKED
     assert "verification failed" in result.reason
+
+
+def test_tsar_runner_maps_critical_findings_to_fail(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _git(monkeypatch)
+    payload = _payload(tmp_path)
+    payload["summary"]["critical"] = 1
+    monkeypatch.setattr(
+        TsarAdapter,
+        "audit",
+        lambda _self, _root, _sha: SimpleNamespace(
+            ok=True, reason="", payload=payload, artifacts=[]
+        ),
+    )
+    result = TsarRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.FAIL
+    assert "critical/high" in result.reason
