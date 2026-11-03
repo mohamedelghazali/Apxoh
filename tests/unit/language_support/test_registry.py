@@ -96,3 +96,29 @@ def test_every_language_has_milestone() -> None:
     reg = load_registry()
     for lang in reg.all():
         assert lang.milestone >= 0
+
+
+def test_registry_rejects_duplicate_extension_and_invalid_entries(tmp_path: Path) -> None:
+    import yaml
+
+    from arkhon.core.errors import ConfigError
+    from arkhon.language_support.registry import _parse_language, load_registry
+
+    folder = tmp_path / "languages"
+    folder.mkdir()
+    (folder / "registry.yaml").write_text(
+        yaml.safe_dump({
+            "languages": [
+                {"id": "one", "detection": {"extensions": [".x"]}},
+                {"id": "two", "detection": {"extensions": [".x"]}},
+            ]
+        }),
+        encoding="utf-8",
+    )
+    with pytest.raises(ConfigError, match="assigned to multiple languages"):
+        load_registry(tmp_path)
+    (folder / "registry.yaml").write_text("languages: [bad]", encoding="utf-8")
+    with pytest.raises(ConfigError, match="entry 0"):
+        load_registry(tmp_path)
+    with pytest.raises(ConfigError, match="detection and planned_tools"):
+        _parse_language({"id": "broken", "detection": [], "planned_tools": {}})

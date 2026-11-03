@@ -130,8 +130,6 @@ def _maximum_version_tuple(value: str) -> tuple[int, int, int]:
     first_wildcard = wildcard_indexes[0]
     if first_wildcard == 0 or any(part.lower() != "x" for part in parts[first_wildcard:]):
         raise SecurityError(f"invalid version bound: {value!r}")
-    if any(part.lower() == "x" for part in parts[:first_wildcard]):
-        raise SecurityError(f"invalid version bound: {value!r}")
     numeric = [int(part) for part in parts[:first_wildcard]]
     if any(str(number) != part for number, part in zip(numeric, parts, strict=False)):
         raise SecurityError(f"invalid version bound: {value!r}")
@@ -149,6 +147,8 @@ def _check_version(version: str, minimum: str, maximum: str) -> None:
 
 
 def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
+    if not isinstance(executed_at, str) or not executed_at.strip():
+        raise EvidenceStaleError(f"invalid executed_at: {executed_at!r}")
     try:
         value = executed_at[:-1] + "+00:00" if executed_at.endswith("Z") else executed_at
         executed = datetime.fromisoformat(value)

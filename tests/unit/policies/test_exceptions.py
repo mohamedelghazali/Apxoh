@@ -136,3 +136,41 @@ def test_add_duplicate_raises(tmp_path: Path) -> None:
     add_exception(p, _exc("EXC-1"))
     with pytest.raises(GovernanceError, match="already exists"):
         add_exception(p, _exc("EXC-1"))
+
+
+def test_load_exceptions_skips_malformed_records_and_handles_empty_registry(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text(
+        yaml.safe_dump({
+            "exceptions": [
+                "not-a-mapping",
+                {"exception_id": "missing-required-fields"},
+                {
+                    "exception_id": "EXC-BAD-DATE",
+                    "rule_id": "SE-TST-001",
+                    "scope": {},
+                    "rationale": "rationale",
+                    "owner": "owner",
+                    "approver": "approver",
+                    "approved_at": "not-a-date",
+                    "expires_at": "not-a-date",
+                    "compensating_control": "control",
+                },
+            ]
+        }),
+        encoding="utf-8",
+    )
+    assert load_exceptions(path).exceptions == []
+    empty = tmp_path / "empty.yaml"
+    empty.write_text("null", encoding="utf-8")
+    assert load_exceptions(empty).exceptions == []
+
+
+def test_add_exception_repairs_missing_exceptions_key(tmp_path: Path) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text("metadata: {}\n", encoding="utf-8")
+    add_exception(path, _exc("EXC-REPAIRED"))
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert [item["exception_id"] for item in data["exceptions"]] == ["EXC-REPAIRED"]

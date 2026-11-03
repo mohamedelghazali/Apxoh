@@ -111,3 +111,10 @@ def test_load_rules_dir_skips_templates_and_recurses(tmp_path: Path) -> None:
     _write_rule(nested / "rule.yaml", VALID_RULE)
     result = load_rules_dir(tmp_path)
     assert result.ok and len(result.rules) == 1
+
+
+def test_load_invalid_yaml(tmp_path: Path) -> None:
+    path = tmp_path / "malformed.yaml"
+    path.write_text("[", encoding="utf-8")
+    with pytest.raises(RuleValidationError, match="valid YAML"):
+        load_rule_file(path)

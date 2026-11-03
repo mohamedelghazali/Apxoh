@@ -84,16 +84,25 @@ def load_exceptions(registry_path: Path) -> ExceptionRegistry:
             logger.warning("skipping malformed exception: missing %s", missing)
             continue
         try:
+            scope = raw["scope"]
+            if not isinstance(scope, dict):
+                raise ValueError("scope must be a mapping")
+            approved_at = str(raw["approved_at"])
+            expires_at = str(raw["expires_at"])
+            # Reject malformed timestamps at load time rather than allowing a
+            # bad exception to fail later during an authorization decision.
+            _parse_iso(approved_at)
+            _parse_iso(expires_at)
             exceptions.append(
                 Exception(
                     exception_id=str(raw["exception_id"]),
                     rule_id=str(raw["rule_id"]),
-                    scope=raw["scope"],
+                    scope=scope,
                     rationale=str(raw["rationale"]),
                     owner=str(raw["owner"]),
                     approver=str(raw["approver"]),
-                    approved_at=str(raw["approved_at"]),
-                    expires_at=str(raw["expires_at"]),
+                    approved_at=approved_at,
+                    expires_at=expires_at,
                     compensating_control=str(raw["compensating_control"]),
                     status=str(raw.get("status", "active")),
                 )

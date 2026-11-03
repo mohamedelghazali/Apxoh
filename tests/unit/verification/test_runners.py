@@ -130,3 +130,27 @@ def test_engine_writes_evidence(engine: VerificationEngine, project: Path) -> No
     )
     assert run.evidence_id.startswith("EVID-ARKHON-")
     assert list((project / ".arkhon" / "evidence" / "testing").glob("*.json"))
+
+
+class FakeInvalidResultRunner(Runner):
+    @property
+    def name(self) -> str:
+        return "fake-invalid-result"
+
+    def run(self, project_root: Path) -> RunnerResult:
+        return None  # type: ignore[return-value]
+
+
+def test_engine_blocks_invalid_runner_result_and_persists_diagnostic(
+    engine: VerificationEngine, project: Path
+) -> None:
+    run = engine.run(
+        domain="testing",
+        commit_sha="f" * 40,
+        runners=[FakeInvalidResultRunner()],
+        project_root=project,
+    )
+    assert run.status == "BLOCKED"
+    assert "invalid result object" in run.results[0].reason
+    diagnostics = list((project / ".arkhon" / "reports" / "verification").glob("*.json"))
+    assert diagnostics
