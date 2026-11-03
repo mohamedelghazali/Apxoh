@@ -172,3 +172,51 @@ def test_gemini_rejects_unsafe_endpoint_or_model(
 
     assert not result.ok
     assert "HTTPS" in result.reason or "safe identifier" in result.reason
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "adapter_kind"),
+    [
+        ("https://api.example.com:99999/v1/chat/completions", "openai"),
+        ("https://api.anthropic.com:99999/v1/messages", "claude"),
+        ("https://generativelanguage.googleapis.com:99999/v1beta/models", "gemini"),
+    ],
+)
+def test_model_adapters_reject_invalid_endpoint_ports(
+    monkeypatch: pytest.MonkeyPatch,
+    endpoint: str,
+    adapter_kind: str,
+) -> None:
+    monkeypatch.setenv("TEST_API_KEY", "test-key")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+
+    if adapter_kind == "openai":
+        from arkhon.integrations.models._openai_compatible import (
+            OpenAICompatibleAdapter,
+            OpenAICompatibleConfig,
+        )
+
+        config = OpenAICompatibleConfig(
+            id="test-model",
+            provider="test",
+            endpoint=endpoint,
+            default_model="test-model",
+            available_models=("test-model",),
+            max_tokens=128,
+            temperature=0.0,
+            timeout_seconds=1,
+            api_key_env="TEST_API_KEY",
+        )
+        result = OpenAICompatibleAdapter(config).send("hello")
+    elif adapter_kind == "claude":
+        from arkhon.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
+
+        result = ClaudeAdapter(ClaudeConfig(endpoint=endpoint)).send("hello")
+    else:
+        from arkhon.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
+
+        result = GeminiAdapter(GeminiConfig(endpoint=endpoint)).send("hello")
+
+    assert not result.ok
+    assert "port" in result.reason or "endpoint" in result.reason
