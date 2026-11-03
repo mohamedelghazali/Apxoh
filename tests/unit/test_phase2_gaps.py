@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -22,9 +23,19 @@ from arkhon.core.logging import JsonFormatter, configure_logging, get_logger
 from arkhon.evidence.store import EvidenceStore
 from arkhon.governance.charter_loader import Principle, _parse_principles, load_charter
 from arkhon.governance.enforcement import EnforcementEngine, RuleOutcome
-from arkhon.governance.policy_loader import Policy, PolicyRegistry
+from arkhon.governance.policy_loader import (
+    Policy,
+    PolicyLoadResult,
+    PolicyRegistry,
+    _load_policy_file,
+    load_policies,
+)
 from arkhon.policies.advisory import AdvisoryPolicyEvaluator
 from arkhon.projects.loader import _load_yaml, list_profiles, load_profile
+from arkhon.verification.runners.base import RunnerOutcome
+from arkhon.verification.runners.mypy_runner import MypyRunner
+from arkhon.verification.runners.pytest_runner import PytestRunner
+from arkhon.verification.runners.ruff_runner import RuffRunner
 
 
 def score(value: float = 90) -> Score:
@@ -106,7 +117,9 @@ def verdict(name: str, status: str, reason: str = "") -> GateVerdict:
         ),
     ],
 )
-def test_decision_paths(gates: dict[str, GateVerdict], points: float, risks: int, expected: str) -> None:
+def test_decision_paths(
+    gates: dict[str, GateVerdict], points: float, risks: int, expected: str
+) -> None:
     assert decide(score(points), gates, risks).decision == expected
 
 
@@ -293,3 +306,198 @@ def test_logging_json_extras_exceptions_and_configuration() -> None:
         configure_logging("invalid")
     with pytest.raises(ValueError):
         configure_logging("info", "invalid")
+
+
+def test_policy_registry_properties_and_validation(tmp_path: Path) -> None:
+    policy = Policy(
+        "P1", "advisory", tmp_path / "p.yaml",
+        {"title": "Title", "description": "Description", "enabled": True},
+    )
+    assert policy.title == "Title"
+    assert policy.description == "Description"
+    assert policy.enabled
+    assert not Policy("P2", "advisory", tmp_path / "p2.yaml",
+                      {"enabled": 1}).enabled
+    registry = PolicyRegistry([
+        policy,
+        Policy("P3", "blocking", tmp_path / "p3.yaml", {"enabled": False}),
+        Policy("P4", "exceptions", tmp_path / "p4.yaml", {}),
+    ])
+    assert registry.get("P1") == policy
+    assert registry.blocking() == []
+    assert registry.advisory() == [policy]
+    assert len(registry.exceptions()) == 1
+    assert len(registry.all()) == 3
+    assert len(registry) == 3
+    with pytest.raises(GovernanceError, match="not found"):
+        registry.get("MISSING")
+    with pytest.raises(GovernanceError, match="duplicate"):
+        PolicyRegistry([policy, policy])
+    with pytest.raises(GovernanceError, match="unknown"):
+        PolicyRegistry([Policy("X", "unknown", tmp_path / "x.yaml", {})])
+    assert PolicyLoadResult().ok
+
+
+def test_policy_loader_reads_yaml_variants_and_fails_closed(tmp_path: Path) -> None:
+    import yaml
+
+    base = tmp_path / "system" / "policies"
+    for category in ("blocking", "advisory", "exceptions"):
+        (base / category).mkdir(parents=True)
+    (base / "blocking" / "one.yaml").write_text(
+        yaml.safe_dump({"id": "B-1", "enabled": True}), encoding="utf-8"
+    )
+    (base / "advisory" / "two.yml").write_text(
+        yaml.safe_dump({"id": "A-1", "enabled": False}), encoding="utf-8"
+    )
+    registry = load_policies(tmp_path)
+    assert len(registry) == 2
+    assert registry.get("B-1").enabled
+    assert not registry.get("A-1").enabled
+    with pytest.raises(GovernanceError, match="directory missing"):
+        load_policies(tmp_path / "missing")
+    (base / "blocking" / "bad.yaml").write_text("[]", encoding="utf-8")
+    with pytest.raises(GovernanceError, match="policy loading failed"):
+        load_policies(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("content", "message"),
+    [
+        ("[", "cannot load policy"),
+        ("- item", "must be a mapping"),
+        ("title: no-id", "missing valid"),
+        ("id: P1\nenabled: yes-maybe", "enabled"),
+    ],
+)
+def test_policy_file_rejects_malformed_yaml(
+    tmp_path: Path, content: str, message: str
+) -> None:
+    path = tmp_path / "policy.yaml"
+    path.write_text(content, encoding="utf-8")
+    with pytest.raises(GovernanceError, match=message):
+        _load_policy_file(path, "blocking")
+
+
+def test_pytest_runner_handles_timeout_start_failure_and_empty_xml(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "tests").mkdir()
+    def timeout(*args: object, **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired("pytest", 1)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.pytest_runner.subprocess.run", timeout
+    )
+    assert PytestRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+
+    def start_error(*args: object, **kwargs: object) -> None:
+        raise OSError("cannot start")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.pytest_runner.subprocess.run", start_error
+    )
+    assert "failed to start" in PytestRunner().run(tmp_path).reason
+
+    def empty_xml(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        junit = Path(command[command.index("--junit-xml") + 1])
+        junit.write_text('<testsuite tests="0"/>', encoding="utf-8")
+        return subprocess.CompletedProcess(command, 0, "", "")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.pytest_runner.subprocess.run", empty_xml
+    )
+    assert "collected no tests" in PytestRunner().run(tmp_path).reason
+
+
+def test_pytest_runner_handles_missing_xml_and_copy_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "tests").mkdir()
+    monkeypatch.setattr(
+        "arkhon.verification.runners.pytest_runner.subprocess.run",
+        lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "", ""),
+    )
+    assert "no JUnit XML" in PytestRunner().run(tmp_path).reason
+    def with_xml(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        junit = Path(command[command.index("--junit-xml") + 1])
+        junit.write_text('<testsuite tests="1"/>', encoding="utf-8")
+        return subprocess.CompletedProcess(command, 0, "", "")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.pytest_runner.subprocess.run", with_xml
+    )
+    def copy_error(*args: object, **kwargs: object) -> None:
+        raise OSError("disk full")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.pytest_runner.shutil.copy2", copy_error
+    )
+    assert "cannot persist" in PytestRunner().run(tmp_path).reason
+
+
+def test_ruff_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.shutil.which", lambda _: None)
+    assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+    monkeypatch.setattr(
+        "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
+    )
+    def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 0, "[]", "")
+    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", run)
+    assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.PASS
+    def issue(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 1, '[{"code":"E501"}]', "")
+    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", issue)
+    assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.FAIL
+    def invalid(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 0, "{}", "")
+    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", invalid)
+    assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+
+
+def test_ruff_runner_timeout_and_start_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
+    )
+    def timeout(*args: object, **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired("ruff", 1)
+    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", timeout)
+    assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+    def start_error(*args: object, **kwargs: object) -> None:
+        raise OSError("no executable")
+    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", start_error)
+    assert "failed to start" in RuffRunner().run(tmp_path).reason
+
+
+def test_mypy_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.shutil.which", lambda _: None)
+    assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
+    )
+    def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 0, "Success", "")
+    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", run)
+    assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.PASS
+    def fail(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 1, "type error", "")
+    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", fail)
+    assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.FAIL
+    def blocked(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 2, "", "crashed")
+    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", blocked)
+    assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+
+
+def test_mypy_runner_timeout_and_start_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
+    )
+    def timeout(*args: object, **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired("mypy", 1)
+    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", timeout)
+    assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+    def start_error(*args: object, **kwargs: object) -> None:
+        raise OSError("no executable")
+    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", start_error)
+    assert "failed to start" in MypyRunner().run(tmp_path).reason
