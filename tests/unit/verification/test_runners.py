@@ -154,3 +154,49 @@ def test_engine_blocks_invalid_runner_result_and_persists_diagnostic(
     assert "invalid result object" in run.results[0].reason
     diagnostics = list((project / ".arkhon" / "reports" / "verification").glob("*.json"))
     assert diagnostics
+
+
+class FakePassWithoutArtifactRunner(Runner):
+    @property
+    def name(self) -> str:
+        return "fake-pass-no-artifact"
+
+    def run(self, project_root: Path) -> RunnerResult:
+        return RunnerResult(self.name, RunnerOutcome.PASS)
+
+
+class FakePassOutsideArtifactRunner(Runner):
+    @property
+    def name(self) -> str:
+        return "fake-pass-outside-artifact"
+
+    def run(self, project_root: Path) -> RunnerResult:
+        artifact = project_root.parent / "outside-evidence.txt"
+        artifact.write_text("not in project", encoding="utf-8")
+        return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
+
+
+def test_engine_blocks_pass_without_evidence_artifacts(
+    engine: VerificationEngine, project: Path
+) -> None:
+    run = engine.run(
+        domain="testing",
+        commit_sha="1" * 40,
+        runners=[FakePassWithoutArtifactRunner()],
+        project_root=project,
+    )
+    assert run.status == "BLOCKED"
+    assert "without evidence artifacts" in run.results[0].reason
+
+
+def test_engine_blocks_pass_with_artifact_outside_project(
+    engine: VerificationEngine, project: Path
+) -> None:
+    run = engine.run(
+        domain="testing",
+        commit_sha="2" * 40,
+        runners=[FakePassOutsideArtifactRunner()],
+        project_root=project,
+    )
+    assert run.status == "BLOCKED"
+    assert "outside project root" in run.results[0].reason
