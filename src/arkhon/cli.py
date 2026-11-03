@@ -391,10 +391,12 @@ def cmd_install(args: argparse.Namespace) -> int:
         if staging is not None and staging.exists():
             shutil.rmtree(staging, ignore_errors=True)
         if backup is not None and backup.exists():
-            if not target.exists():
-                backup.rename(target)
-            else:
-                shutil.rmtree(backup, ignore_errors=True)
+            if target.exists():
+                if target.is_dir() and not target.is_symlink():
+                    shutil.rmtree(target)
+                else:
+                    target.unlink()
+            backup.rename(target)
 
     print(f"[OK] governance pack staged: {target}")
     print("  Agent-specific settings were not changed; activation must be verified per product.")
