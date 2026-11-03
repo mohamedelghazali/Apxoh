@@ -212,10 +212,7 @@ def test_report_returns_failure_when_commit_cannot_be_resolved(
 def test_verify_supply_chain_domain_uses_real_assurance_runners(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from arkhon.verification.runners.supply_chain_runner import (
-        SupplyChainAttestationRunner,
-        SyftRunner,
-    )
+    from arkhon.verification.runners.supply_chain_runner import SyftRunner
 
     _git_project(tmp_path)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
@@ -234,4 +231,68 @@ def test_verify_supply_chain_domain_uses_real_assurance_runners(
 
     monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
     assert main(["verify", str(tmp_path), "--domain", "supply-chain"]) == 1
-    assert captured == [SyftRunner, SupplyChainAttestationRunner]
+    assert captured == [SyftRunner]
+
+
+
+def test_verify_release_attestations_uses_release_verifier(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from arkhon.verification.runners.supply_chain_runner import SupplyChainAttestationRunner
+
+    _git_project(tmp_path)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    captured: list[type] = []
+
+    def fake_run(_self, *, runners, **_kwargs):
+        captured.extend(type(runner) for runner in runners)
+        return SimpleNamespace(
+            run_id="RUN-RELEASE-ATTEST",
+            domain="release-attestations",
+            commit_sha="a" * 40,
+            status="BLOCKED",
+            evidence_id="EVID-RELEASE-ATTEST",
+            results=[],
+        )
+
+    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    assert main(["verify", str(tmp_path), "--domain", "release-attestations"]) == 1
+    assert captured == [SupplyChainAttestationRunner]
+
+
+def test_verify_all_includes_local_sbom_but_not_release_only_attestations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from arkhon.verification.runners.pytest_runner import PytestRunner
+    from arkhon.verification.runners.ruff_runner import RuffRunner
+    from arkhon.verification.runners.supply_chain_runner import SyftRunner
+    from arkhon.verification.runners.tsar_runner import TsarRunner
+
+    _git_project(tmp_path)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    captured: list[tuple[str, list[type]]] = []
+
+    def fake_run(_self, *, domain, runners, **_kwargs):
+        captured.append((domain, [type(runner) for runner in runners]))
+        return SimpleNamespace(
+            run_id=f"RUN-{domain}",
+            domain=domain,
+            commit_sha="a" * 40,
+            status="PASS",
+            evidence_id=f"EVID-{domain.upper().replace('-', '-')}",
+            results=[],
+        )
+
+    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    assert main(["verify", str(tmp_path), "--domain", "all"]) == 0
+    assert [domain for domain, _ in captured] == [
+        "testing",
+        "code-quality",
+        "software-security",
+        "supply-chain",
+    ]
+    assert captured[0][1] == [PytestRunner]
+    assert captured[1][1] == [RuffRunner, MypyRunner]
+    assert captured[2][1] == [TsarRunner]
+    assert captured[3][1] == [SyftRunner]
