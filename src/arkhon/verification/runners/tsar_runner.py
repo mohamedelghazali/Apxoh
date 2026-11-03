@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -25,9 +26,16 @@ class TsarRunner(Runner):
         return "tsar"
 
     def run(self, project_root: Path) -> RunnerResult:
+        git_executable = shutil.which("git")
+        if git_executable is None:
+            return RunnerResult(
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
+                reason="git executable not found on PATH",
+            )
         try:
-            result = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
+            result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+                [git_executable, "rev-parse", "HEAD"],
                 cwd=project_root,
                 capture_output=True,
                 text=True,
