@@ -35,7 +35,7 @@ class MypyRunner(Runner):
         target_path = source if source.is_dir() else root
         command = [binary, "--strict", "--no-incremental", str(target_path)]
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603 - resolved mypy executable and fixed arguments
                 command,
                 cwd=root,
                 capture_output=True,
