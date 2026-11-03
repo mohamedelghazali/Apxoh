@@ -54,20 +54,18 @@ def test_check_version_invalid_string() -> None:
 
 
 def test_check_freshness_ok() -> None:
-        now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
+    now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
     _check_freshness("2026-11-02T00:00:00Z", now=now)
 
 
 def test_check_freshness_stale() -> None:
-    from datetime import datetime
-
     now = datetime(2026, 11, 20, 0, 0, 0, tzinfo=UTC)
     with pytest.raises(EvidenceStaleError):
         _check_freshness("2026-11-01T00:00:00Z", now=now)
 
 
 def test_check_freshness_boundary() -> None:
-        executed = "2026-11-01T00:00:00Z"
+    executed = "2026-11-01T00:00:00Z"
     executed_dt = datetime(2026, 11, 1, tzinfo=UTC)
 
     just_at_limit = executed_dt + timedelta(hours=FRESHNESS_HOURS)
