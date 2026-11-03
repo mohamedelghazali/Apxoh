@@ -9,14 +9,13 @@ back to the caller; it never decides anything.
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlsplit
 from typing import Any
+from urllib.parse import urlsplit
 
 from arkhon.core.errors import ArkhonError
 from arkhon.core.logging import get_logger
@@ -86,10 +85,26 @@ class ClaudeAdapter(Integration):
             )
 
         endpoint = urlsplit(self._config.endpoint)
-        if endpoint.scheme != "https" or not endpoint.hostname:
+        try:
+            endpoint_port = endpoint.port
+        except ValueError:
             return IntegrationResponse(
                 ok=False,
-                reason="Claude endpoint must use HTTPS",
+                reason="Claude endpoint contains an invalid port",
+            )
+        if (
+            endpoint_port == 0
+            or any(ord(char) < 32 for char in endpoint.path)
+            or endpoint.scheme != "https"
+            or not endpoint.hostname
+            or endpoint.username
+            or endpoint.password
+            or endpoint.query
+            or endpoint.fragment
+        ):
+            return IntegrationResponse(
+                ok=False,
+                reason="Claude endpoint must be a valid HTTPS URL without credentials or query",
             )
 
         payload: dict[str, Any] = {
@@ -100,47 +115,61 @@ class ClaudeAdapter(Integration):
             "messages": [{"role": "user", "content": user_message}],
         }
 
-        req = urllib.request.Request(
-            self._config.endpoint,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": self._config.api_version,
-                "content-type": "application/json",
-            },
-            method="POST",
+        connection = http.client.HTTPSConnection(
+            endpoint.hostname or "",
+            endpoint.port or 443,
+            timeout=self._config.timeout_seconds,
         )
-
         try:
-            with urllib.request.urlopen(  # noqa: S310
-                req, timeout=self._config.timeout_seconds
-            ) as resp:
-                body = resp.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"HTTP {exc.code}: {exc.read().decode('utf-8', 'replace')[:200]}",
+            connection.request(
+                "POST",
+                endpoint.path or "/",
+                body=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": self._config.api_version,
+                    "content-type": "application/json",
+                },
             )
-        except urllib.error.URLError as exc:
-            return IntegrationResponse(
-                ok=False, reason=f"network error: {exc}",
-            )
+            response = connection.getresponse()
+            body = response.read().decode("utf-8")
+            if response.status >= 400:
+                return IntegrationResponse(
+                    ok=False,
+                    reason=f"HTTP {response.status}: {body[:200]}",
+                )
         except TimeoutError:
             return IntegrationResponse(
-                ok=False, reason=f"timeout after {self._config.timeout_seconds}s",
+                ok=False,
+                reason=f"timeout after {self._config.timeout_seconds}s",
             )
+        except (OSError, http.client.HTTPException) as exc:
+            return IntegrationResponse(
+                ok=False,
+                reason=f"network error: {exc}",
+            )
+        finally:
+            connection.close()
 
         try:
             parsed = json.loads(body)
-        except json.JSONDecodeError as exc:
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             return IntegrationResponse(
                 ok=False, reason=f"invalid JSON response: {exc}",
             )
+        if not isinstance(parsed, dict):
+            return IntegrationResponse(
+                ok=False, reason="invalid response: expected JSON object",
+            )
 
         text = ""
-        for block in parsed.get("content", []):
-            if block.get("type") == "text":
-                text += block.get("text", "")
+        content = parsed.get("content", [])
+        if isinstance(content, list):
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    value = block.get("text", "")
+                    if isinstance(value, str):
+                        text += value
 
         return IntegrationResponse(
             ok=True,
