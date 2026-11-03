@@ -11,7 +11,11 @@ import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
-from arkhon.evidence.supply_chain import OIDC_ISSUER, SOURCE_URI, identity_regexp_for_tag
+from arkhon.evidence.supply_chain import (
+    identity_regexp_for_tag,
+    OIDC_ISSUER,
+    SOURCE_URI,
+)
 from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
 
 
