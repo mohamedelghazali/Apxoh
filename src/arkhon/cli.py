@@ -6,8 +6,8 @@ import argparse
 import json
 import re
 import shutil
-import tempfile
 import subprocess
+import tempfile
 import sys
 from pathlib import Path
 from typing import Any
@@ -620,6 +620,32 @@ def build_parser() -> argparse.ArgumentParser:
     assess = sub.add_parser("assess", help="Compute engineering score and gate status")
     assess.add_argument("project", nargs="?", default=".")
     assess.set_defaults(func=cmd_assess)
+    install = sub.add_parser("install", help="Stage the agent governance pack")
+    install.add_argument("--scope", choices=["project", "global"], default="project")
+    install.add_argument("--project", default=".")
+    install.add_argument("--force", action="store_true")
+    install.set_defaults(func=cmd_install)
+    project = sub.add_parser("project", help="Initialize and manage project configuration")
+    project_sub = project.add_subparsers(dest="project_command")
+    project_init = project_sub.add_parser("init", help="Create .arkhon/project.yaml")
+    project_init.add_argument("project", nargs="?", default=".")
+    project_init.add_argument("--name")
+    project_init.add_argument("--identifier")
+    project_init.add_argument(
+        "--type",
+        dest="project_type",
+        choices=["library", "library-and-cli", "application", "service", "platform", "tool"],
+        default="library",
+    )
+    project_init.add_argument("--profile", default="universal")
+    project_init.add_argument(
+        "--risk-level",
+        choices=["low", "medium", "high", "critical"],
+        default="medium",
+    )
+    project_init.add_argument("--description", default="")
+    project_init.add_argument("--force", action="store_true")
+    project_init.set_defaults(func=cmd_project_init)
     status = sub.add_parser("status", help="Summarize project configuration and evidence")
     status.add_argument("project", nargs="?", default=".")
     status.add_argument("--json", action="store_true")
