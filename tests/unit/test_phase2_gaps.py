@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Any
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -50,7 +51,7 @@ def test_decision_rejects_missing_inputs() -> None:
                          "release_gate": verdict("release_gate", "PASS")}, -1)
 
 
-def principles() -> dict[str, list[dict[str, object]]]:
+def principles() -> dict[str, Any]:
     return {"principles": [{"number": n, "statement": f"Principle {n}"} for n in range(1, 13)]}
 
 
@@ -118,7 +119,7 @@ def test_profile_loader_rejects_invalid_yaml_and_profile(tmp_path: Path) -> None
 
 
 def test_advisory_evaluator_filters_and_matches(tmp_path: Path) -> None:
-    def policy(pid: str, enabled: bool, raw: dict) -> Policy:
+    def policy(pid: str, enabled: bool, raw: dict[str, Any]) -> Policy:
         return Policy(pid, "advisory", Path(pid + ".yaml"), {"enabled": enabled, **raw})
     registry = PolicyRegistry([
         policy("A1", True, {"trigger_rules": ["R1"], "message": "Improve"}),
@@ -180,9 +181,11 @@ def test_evidence_store_integrity_iteration_and_latest(tmp_path: Path) -> None:
         store.write("testing", {**data, "status": "FAIL"})
     with pytest.raises(EvidenceError):
         store.write("testing", {"evidence_id": "../escape"})
-    for domain in ("../escape", "", None):
+    for domain in ("../escape", ""):
         with pytest.raises(EvidenceError):
-            list(store.iter_records(domain))  # type: ignore[arg-type]
+            list(store.iter_records(domain))
+    with pytest.raises(EvidenceError):
+        store._domain_dir(None)  # type: ignore[arg-type]
     path.write_text("{", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError):
         store.read("testing", "EVID-1")
