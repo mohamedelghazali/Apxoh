@@ -53,14 +53,32 @@ def test_json_formatter_includes_exception_and_extra() -> None:
     assert payload["extra"] == {"component": "unit-test"}
 
 
-def test_configure_logging_rejects_bad_values_and_installs_json_handler() -> None:
+def test_configure_logging_rejects_bad_values_and_installs_json_handler(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     with pytest.raises(ValueError, match="unknown logging level"):
         configure_logging("not-a-level")
     with pytest.raises(ValueError, match="unknown logging format"):
         configure_logging("info", "xml")
+    class FakeRoot:
+        def __init__(self) -> None:
+            self.handlers = []
+            self.level = logging.INFO
+
+        def setLevel(self, level: int) -> None:
+            self.level = level
+
+        def addHandler(self, handler: logging.Handler) -> None:
+            self.handlers.append(handler)
+
+    fake_root = FakeRoot()
+    original_get_logger = logging.getLogger
+    monkeypatch.setattr(
+        "arkhon.core.logging.logging.getLogger",
+        lambda name=None: fake_root if name is None else original_get_logger(name),
+    )
     configure_logging("debug", "json")
     logger = get_logger("coverage")
     assert logger.name == "arkhon.coverage"
-    root = logging.getLogger()
-    assert root.level == logging.DEBUG
-    assert isinstance(root.handlers[-1].formatter, JsonFormatter)
+    assert fake_root.level == logging.DEBUG
+    assert isinstance(fake_root.handlers[-1].formatter, JsonFormatter)
