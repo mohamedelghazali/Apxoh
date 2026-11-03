@@ -39,6 +39,7 @@ def _config(root: Path) -> None:
         "artifact": "dist/app.whl",
         "provenance": "dist/provenance.intoto.jsonl",
         "signature_bundle": "dist/app.sigstore.json",
+        "source_tag": "v1.2.3",
     }
     config_path = root / ".arkhon" / "supply-chain.json"
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -204,6 +205,10 @@ def test_attestation_runner_blocks_without_config_or_tools(
     assert "config is missing" in runner.run(tmp_path).reason
     _config(tmp_path)
     monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
+    monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner.shutil.which", lambda name: None
     )
     assert "verifier(s) not found" in runner.run(tmp_path).reason
@@ -252,7 +257,9 @@ def test_attestation_runner_executes_both_verifiers_and_writes_report(
     assert result.outcome == RunnerOutcome.PASS
     assert len(commands) == 2
     assert commands[0][1] == "verify-artifact"
+    assert commands[0][commands[0].index("--source-tag") + 1] == "v1.2.3"
     assert commands[1][1] == "verify-blob"
+    assert "v1\\.2\\.3" in commands[1][commands[1].index("--certificate-identity-regexp") + 1]
     report = next(path for path in result.artifacts if path.name.endswith(".attestation.json"))
     assert (
         json.loads(report.read_text(encoding="utf-8"))["verification"]["sigstore"]["verified"]
@@ -486,3 +493,62 @@ def test_attestation_runner_blocks_when_report_cannot_be_written(
     result = SupplyChainAttestationRunner().run(tmp_path)
     assert result.outcome == RunnerOutcome.BLOCKED
     assert "cannot persist attestation report" in result.reason
+
+
+def test_tag_commit_sha_rejects_invalid_tag_and_missing_git(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from arkhon.verification.runners.supply_chain_runner import _tag_commit_sha
+
+    assert _tag_commit_sha(tmp_path, "not-a-tag") is None
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: None
+    )
+    assert _tag_commit_sha(tmp_path, "v1.2.3") is None
+
+
+@pytest.mark.parametrize(
+    ("output", "raises", "expected"),
+    [
+        (SHA, False, SHA),
+        ("invalid", False, None),
+        ("", True, None),
+    ],
+)
+def test_tag_commit_sha_resolves_and_fails_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    output: str,
+    raises: bool,
+    expected: str | None,
+) -> None:
+    from arkhon.verification.runners.supply_chain_runner import _tag_commit_sha
+
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.shutil.which",
+        lambda _name: "/usr/bin/git",
+    )
+
+    def run(*args, **kwargs):
+        if raises:
+            raise OSError("git unavailable")
+        return subprocess.CompletedProcess(args[0], 0, output, "")
+
+    monkeypatch.setattr("arkhon.verification.runners.supply_chain_runner.subprocess.run", run)
+    assert _tag_commit_sha(tmp_path, "v1.2.3") == expected
+
+
+def test_attestation_runner_blocks_when_tag_points_to_another_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _config(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: "b" * 40,
+    )
+    result = SupplyChainAttestationRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "does not resolve to the checked-out commit" in result.reason
