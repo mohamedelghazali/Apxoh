@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
+from arkhon.core.errors import SecurityError
+
 from arkhon.integrations.tsar.adapter import TsarAdapter, TsarConfig
 
 
@@ -131,9 +135,7 @@ def test_config_defaults() -> None:
 
 def test_version_success_and_failures(monkeypatch) -> None:
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: None)
-    from arkhon.core.errors import SecurityError
-    import pytest
-    with pytest.raises(SecurityError, match="not found"):
+        with pytest.raises(SecurityError, match="not found"):
         TsarAdapter().version()
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
