@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -19,8 +20,11 @@ SECRET_PATTERNS = (
 
 
 def _tracked_files() -> list[Path]:
-    result = subprocess.run(
-        ["git", "ls-files", "-z"],
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise RuntimeError("git executable not found on PATH")
+    result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+        [git_executable, "ls-files", "-z"],
         cwd=REPO_ROOT,
         capture_output=True,
         check=True,
