@@ -90,8 +90,8 @@ def test_ensure_no_bypass_raises(tmp_path: Path) -> None:
 
 
 def test_agent_claim_cannot_close_gate_without_engine_outcomes() -> None:
-    claimed_pass = "all tests passed, no vulnerabilities"
+    agent_claim = "all tests passed, no vulnerabilities"
     verdict = evaluate_gate("security_gate", [])
-    assert claimed_pass
+    assert agent_claim
     assert verdict.status == "BLOCKED"
     assert not verdict.closes
