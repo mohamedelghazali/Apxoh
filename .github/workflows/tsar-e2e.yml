@@ -1,0 +1,62 @@
+name: TSAR end-to-end
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tsar-e2e:
+    name: Real TSAR CLI scan and Apxoh evidence verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Apxoh
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Checkout pinned TSAR CLI source
+        uses: actions/checkout@v7
+        with:
+          repository: mohamedelghazali/TSAR
+          ref: 811047c825ab25a89d522eeedef62778074c2210
+          path: tsar
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install Apxoh and pinned TSAR CLI
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m pip install -e ./tsar/tools/tsar-cli
+      - name: Execute real TSAR scan through Apxoh
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture="$(mktemp -d)"
+          git -C "$fixture" init -q
+          git -C "$fixture" config user.name "Apxoh CI"
+          git -C "$fixture" config user.email "ci@example.invalid"
+          printf 'print("clean fixture")\n' > "$fixture/app.py"
+          git -C "$fixture" add app.py
+          git -C "$fixture" commit -qm "clean security fixture"
+          python - "$fixture" <<'PY'
+          import sys
+          from pathlib import Path
+          from arkhon.verification.runners.base import RunnerOutcome
+          from arkhon.verification.runners.tsar_runner import TsarRunner
+
+          root = Path(sys.argv[1]).resolve()
+          result = TsarRunner().run(root)
+          print(f"TSAR outcome: {result.outcome.value}")
+          print(f"Reason: {result.reason}")
+          for artifact in result.artifacts:
+              print(f"Evidence artifact: {artifact}")
+          if result.outcome is not RunnerOutcome.PASS:
+              raise SystemExit("real TSAR scan did not produce verified PASS evidence")
+          PY
