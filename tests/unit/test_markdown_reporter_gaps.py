@@ -36,7 +36,8 @@ def test_markdown_reporter_defaults_and_write(
         "generated_at": "now", "apxoh_version": "1.0",
     }
     monkeypatch.setattr(
-        "arkhon.reporting.markdown_reporter.JsonReporter.build", lambda _self, _root, **_kwargs: report
+        "arkhon.reporting.markdown_reporter.JsonReporter.build",
+        lambda _self, _root, **_kwargs: report,
     )
     output = tmp_path / "reports"
     target = reporter.write(tmp_path, output)
