@@ -43,7 +43,7 @@ def test_no_violations() -> None:
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
         failing_rules=set(),
-        project_root=Path("/tmp"),
+        project_root=Path.cwd(),
     )
     assert not result.blocks
     assert result.count == 0
