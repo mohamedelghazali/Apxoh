@@ -43,7 +43,7 @@ def verify_cyclonedx_sbom(path: Path, *, expected_commit_sha: str) -> None:
         raise EvidenceTamperedError(f"CycloneDX SBOM is unreadable: {exc}") from exc
     if not isinstance(bom, dict) or bom.get("bomFormat") != "CycloneDX":
         raise EvidenceTamperedError("SBOM is not CycloneDX")
-    if bom.get("specVersion") not in {"1.4", "1.5", "1.6"}:
+    if bom.get("specVersion") not in {"1.4", "1.5", "1.6", "1.7"}:
         raise EvidenceTamperedError("SBOM has an unsupported CycloneDX specVersion")
     metadata = bom.get("metadata")
     component = metadata.get("component") if isinstance(metadata, dict) else None

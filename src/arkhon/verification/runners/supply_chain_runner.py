@@ -113,7 +113,7 @@ class SyftRunner(Runner):
             )
         if not isinstance(bom, dict) or bom.get("bomFormat") != "CycloneDX":
             return RunnerResult(self.name, RunnerOutcome.BLOCKED, "Syft output is not CycloneDX")
-        if bom.get("specVersion") not in {"1.4", "1.5", "1.6"}:
+        if bom.get("specVersion") not in {"1.4", "1.5", "1.6", "1.7"}:
             return RunnerResult(
                 self.name, RunnerOutcome.BLOCKED, "unsupported CycloneDX specVersion"
             )
