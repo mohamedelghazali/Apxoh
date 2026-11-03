@@ -18,7 +18,7 @@ from arkhon.evidence.integrity import sha256_of
 
 logger = get_logger("integrations.tsar.verifier")
 
-# This marker proves a real TSAR scan completed; it does not claim unsupported crypto, dependency, or ASVS coverage.
+# This marker proves TSAR ran; it does not claim crypto, dependency, or ASVS coverage.
 REQUIRED_RULE_IDS = ("TSAR-SCAN-EXECUTED",)
 FRESHNESS_HOURS = 168
 
