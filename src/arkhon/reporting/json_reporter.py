@@ -108,8 +108,9 @@ class JsonReporter:
                     evidence_root=project_root,
                     expected_commit_sha=commit_sha,
                 )
+                executed_at = _record_timestamp(record)
                 verify_freshness(
-                    record.data.get("executed_at"),
+                    executed_at.isoformat(),
                     max_age_hours=FRESHNESS_HOURS.get(record.path.parent.name, 720),
                 )
             except EvidenceError as exc:
