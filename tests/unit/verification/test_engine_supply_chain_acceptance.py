@@ -12,9 +12,9 @@ import pytest
 from arkhon.evidence.collector import EvidenceCollector
 from arkhon.evidence.store import EvidenceStore
 from arkhon.evidence.supply_chain import (
+    identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
-    identity_regexp_for_tag,
 )
 from arkhon.verification.engine import VerificationEngine
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
@@ -113,7 +113,9 @@ def _enable_verifiers(monkeypatch: pytest.MonkeyPatch, *, returncode: int = 0) -
 
     def run(command, **kwargs):
         calls.append(command)
-        return subprocess.CompletedProcess(command, returncode, "verified", "invalid" if returncode else "")
+        return subprocess.CompletedProcess(
+            command, returncode, "verified", "invalid" if returncode else ""
+        )
 
     monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
     return calls
