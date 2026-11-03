@@ -109,8 +109,11 @@ def test_report_writes_json_and_markdown(
 
 
 def test_report_rejects_missing_project_and_missing_evidence(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
     assert main(["report", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
     with pytest.raises(EvidenceError, match="no evidence"):
