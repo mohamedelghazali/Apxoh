@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-import defusedxml.ElementTree as element_tree
+from defusedxml import ElementTree
 
 from arkhon.core.logging import get_logger
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
@@ -77,7 +77,7 @@ class PytestRunner(Runner):
                     reason=f"pytest produced no JUnit XML (exit={result.returncode}): {detail}",
                 )
             try:
-                xml_root = element_tree.parse(junit).getroot()
+                xml_root = ElementTree.parse(junit).getroot()
                 suites = (
                     [xml_root]
                     if xml_root.tag == "testsuite"
