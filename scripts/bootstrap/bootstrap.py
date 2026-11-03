@@ -5,7 +5,9 @@ import sys
 
 
 def main() -> int:
-    return subprocess.call([sys.executable, "-m", "pip", "install", "-e", ".[dev]"])
+    return subprocess.call(  # noqa: S603 - fixed interpreter and arguments; shell is disabled
+        [sys.executable, "-m", "pip", "install", "-e", ".[dev]"]
+    )
 
 
 if __name__ == "__main__":
