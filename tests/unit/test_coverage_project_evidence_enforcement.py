@@ -150,9 +150,18 @@ def test_enforcement_rule_evidence_declarations(tmp_path: Path) -> None:
     with pytest.raises(GovernanceError, match="invalid outcome"):
         RuleOutcome("R1", "UNKNOWN")
     assert engine.evaluate_rule(_rule(raw={"evidence": "bad"}), tmp_path).status == "BLOCKED"
-    assert engine.evaluate_rule(_rule(raw={"evidence": {"required": "bad"}}), tmp_path).status == "BLOCKED"
-    assert engine.evaluate_rule(_rule(raw={"evidence": {"required": ["x"]}}), None).status == "BLOCKED"
-    assert engine.evaluate_rule(_rule(raw={"evidence": {"required": ["../outside"]}}), tmp_path).reason.endswith("escapes evidence root")
+    invalid_list = engine.evaluate_rule(
+        _rule(raw={"evidence": {"required": "bad"}}), tmp_path
+    )
+    assert invalid_list.status == "BLOCKED"
+    missing_root = engine.evaluate_rule(
+        _rule(raw={"evidence": {"required": ["x"]}}), None
+    )
+    assert missing_root.status == "BLOCKED"
+    escaped = engine.evaluate_rule(
+        _rule(raw={"evidence": {"required": ["../outside"]}}), tmp_path
+    )
+    assert escaped.reason.endswith("escapes evidence root")
     (tmp_path / "artifact.json").write_text("{}", encoding="utf-8")
     assert engine.evaluate_rule(
         _rule(raw={"evidence": {"required": ["artifact.json", {"type": "artifact"}]}}),
