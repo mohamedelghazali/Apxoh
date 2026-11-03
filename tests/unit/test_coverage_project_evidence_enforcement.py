@@ -105,28 +105,28 @@ def test_evidence_store_read_iteration_and_latest_error_paths(tmp_path: Path, mo
     with pytest.raises(EvidenceError, match="invalid or missing"):
         store.write("testing", {"evidence_id": "../escape"})
     with pytest.raises(EvidenceError, match="invalid domain"):
-        store.write("../escape", {"evidence_id": "E1"})
+        store.write("../escape", {"evidence_id": "EVID-INVALID"})
     assert list(store.iter_records()) == []
     assert list(store.iter_records("testing")) == []
     with pytest.raises(EvidenceError, match="not found"):
-        store.read("testing", "E1")
+        store.read("testing", "EVID-MISSING")
 
-    first = {"evidence_id": "E1", "commit_sha": "a" * 40, "status": "PASS",
+    first = {"evidence_id": "EVID-1", "commit_sha": "a" * 40, "status": "PASS",
              "executed_at": "2026-01-01T00:00:00Z"}
     target = store.write("testing", first)
     assert store.write("testing", first) == target
-    assert store.read("testing", "E1").evidence_id == "E1"
-    second = {"evidence_id": "E2", "commit_sha": "a" * 40, "status": "PASS",
+    assert store.read("testing", "EVID-1").evidence_id == "E1"
+    second = {"evidence_id": "EVID-2", "commit_sha": "a" * 40, "status": "PASS",
               "executed_at": "2026-02-01T00:00:00Z"}
     store.write("testing", second)
-    assert store.latest_for_commit("testing", "a" * 40).evidence_id == "E2"
+    assert store.latest_for_commit("testing", "a" * 40).evidence_id == "EVID-2"
     assert store.latest_for_commit("testing", "b" * 40) is None
     assert len(list(store.iter_records())) == 2
 
-    corrupt = store.root / "testing" / "bad.json"
+    corrupt = store.root / "testing" / "EVID-BAD.json"
     corrupt.write_text("{", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="unreadable"):
-        store.read("testing", "bad")
+        store.read("testing", "EVID-BAD")
     with pytest.raises(EvidenceTamperedError, match="unreadable"):
         list(store.iter_records("testing"))
     corrupt.write_text("[]", encoding="utf-8")
@@ -194,7 +194,7 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
 ) -> None:
     store = EvidenceStore(tmp_path)
     record = {
-        "evidence_id": "E-RACE",
+        "evidence_id": "EVID-RACE",
         "commit_sha": "a" * 40,
         "status": "PASS",
     }
@@ -214,7 +214,7 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
     assert store.write("testing", record) == target
     assert hashlib.sha256(target.read_bytes()).hexdigest() == hashlib.sha256(payload).hexdigest()
 
-    malformed = store.root / "testing" / "array.json"
+    malformed = store.root / "testing" / "EVID-ARRAY.json"
     malformed.write_text("[]", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="not an object"):
         list(store.iter_records("testing"))
