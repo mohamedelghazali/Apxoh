@@ -64,9 +64,10 @@ def test_commit_sha_missing_git_and_git_failure(
 def test_assess_reports_score_and_gates(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert main(["assess", str(tmp_path)]) == 0
+    assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
     assert "Score:" in output and "Gates:" in output
+    assert "[BLOCKED]" in output
     assert main(["assess", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
 
