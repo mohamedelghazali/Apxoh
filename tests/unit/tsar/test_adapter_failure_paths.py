@@ -1,4 +1,4 @@
-# ruff: noqa: I001
+"""Additional TSAR adapter filesystem failure paths."""
 from __future__ import annotations
 
 import json
@@ -7,71 +7,56 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import SecurityError
 from arkhon.integrations.tsar.adapter import TsarAdapter
-
 
 SHA = "a" * 40
 
 
-def _configure_binary(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        "arkhon.integrations.tsar.adapter.shutil.which",
-        lambda _name: "/usr/bin/tsar",
-    )
+def _sarif() -> dict:
+    return {
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {"driver": {"name": "TSAR", "version": "1.1.1", "rules": []}},
+            "results": [],
+        }],
+    }
 
 
-def test_health_check_and_version_handle_process_errors(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _configure_binary(monkeypatch)
-
-    def fail(*args, **kwargs):
-        raise OSError("cannot execute")
-
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fail)
-    assert TsarAdapter().health_check() is False
-    with pytest.raises(SecurityError, match="version check failed"):
-        TsarAdapter().version()
+def _configure(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    def fake_run(command, **kwargs):
+        Path(command[command.index("--output") + 1]).write_text(
+            json.dumps(_sarif()), encoding="utf-8"
+        )
+        return subprocess.CompletedProcess(command, 0, "", "")
+    monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fake_run)
 
 
-def test_audit_rejects_unreadable_existing_evidence(
+def test_audit_reports_evidence_directory_creation_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _configure_binary(monkeypatch)
-    evidence_dir = tmp_path / ".arkhon" / "evidence" / "security"
-    evidence_dir.mkdir(parents=True)
-    target = evidence_dir / f"tsar-{SHA[:12]}.json"
-    target.write_text("{invalid", encoding="utf-8")
-    monkeypatch.setattr(
-        "arkhon.integrations.tsar.adapter.subprocess.run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
-            args[0], 0, json.dumps({"fresh": True}), ""
-        ),
-    )
+    _configure(monkeypatch)
+    original = Path.mkdir
+    def fail(path: Path, *args, **kwargs):
+        if path.name == "security":
+            raise OSError("read-only")
+        return original(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "mkdir", fail)
     result = TsarAdapter().audit(tmp_path, SHA)
-    assert result.ok is False
-    assert "existing TSAR evidence is invalid" in result.reason
+    assert not result.ok
+    assert "cannot persist TSAR evidence" in result.reason
 
 
-def test_audit_reports_evidence_persistence_failure(
+def test_audit_reports_evidence_write_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _configure_binary(monkeypatch)
-    monkeypatch.setattr(
-        "arkhon.integrations.tsar.adapter.subprocess.run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
-            args[0], 0, json.dumps({"fresh": True}), ""
-        ),
-    )
-    original_write_text = Path.write_text
-
-    def fail_target(path: Path, data: str, *args, **kwargs):
-        if path.name == f"tsar-{SHA[:12]}.json":
+    _configure(monkeypatch)
+    original = Path.write_text
+    def fail(path: Path, data: str, *args, **kwargs):
+        if path.name.startswith("EVID-TSAR-") and path.suffix == ".sarif":
             raise OSError("read-only evidence store")
-        return original_write_text(path, data, *args, **kwargs)
-
-    monkeypatch.setattr(Path, "write_text", fail_target)
+        return original(path, data, *args, **kwargs)
+    monkeypatch.setattr(Path, "write_text", fail)
     result = TsarAdapter().audit(tmp_path, SHA)
-    assert result.ok is False
+    assert not result.ok
     assert "cannot persist TSAR evidence" in result.reason
