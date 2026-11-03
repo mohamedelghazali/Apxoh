@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -103,68 +104,85 @@ class TsarAdapter(Integration):
                 ok=False, reason=f"cannot prepare TSAR evidence directory: {exc}"
             )
         target = evidence_dir / f"tsar-{commit_sha[:12]}.json"
-        command = [
-            binary,
-            "audit",
-            "--project",
-            str(root),
-            "--output",
-            "json",
-            "--commit",
-            commit_sha,
-            "--output-file",
-            str(target),
-        ]
-        logger.info("running TSAR audit for commit %s", commit_sha)
+        # Scan into an isolated temporary file. Reusing target as TSAR's output
+        # path could make an old record look like fresh output when TSAR fails
+        # to replace it, defeating the append-only collision check.
         try:
-            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
-                command,
-                cwd=root,
-                capture_output=True,
-                text=True,
-                timeout=self._config.timeout_seconds,
-                check=False,
-            )
-        except subprocess.TimeoutExpired:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"TSAR timed out after {self._config.timeout_seconds}s",
-            )
-        except OSError as exc:
-            return IntegrationResponse(ok=False, reason=f"TSAR failed to start: {exc}")
-
-        if result.returncode != 0:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"TSAR exited with {result.returncode}: {result.stderr.strip()[:300]}",
-            )
-        output_text = target.read_text(encoding="utf-8") if target.is_file() else result.stdout
-        try:
-            payload = json.loads(output_text)
-        except (OSError, json.JSONDecodeError) as exc:
-            return IntegrationResponse(ok=False, reason=f"TSAR output is not valid JSON: {exc}")
-        if not isinstance(payload, dict):
-            return IntegrationResponse(ok=False, reason="TSAR JSON output must be an object")
-
-        try:
-            # Avoid silently replacing evidence for the same commit.
-            serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-            if target.exists():
+            with tempfile.TemporaryDirectory(prefix=".tsar-", dir=evidence_dir) as tmp:
+                output_path = Path(tmp) / "result.json"
+                command = [
+                    binary,
+                    "audit",
+                    "--project",
+                    str(root),
+                    "--output",
+                    "json",
+                    "--commit",
+                    commit_sha,
+                    "--output-file",
+                    str(output_path),
+                ]
+                logger.info("running TSAR audit for commit %s", commit_sha)
                 try:
-                    existing_payload = json.loads(target.read_text(encoding="utf-8"))
+                    result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
+                        command,
+                        cwd=root,
+                        capture_output=True,
+                        text=True,
+                        timeout=self._config.timeout_seconds,
+                        check=False,
+                    )
+                except subprocess.TimeoutExpired:
+                    return IntegrationResponse(
+                        ok=False,
+                        reason=f"TSAR timed out after {self._config.timeout_seconds}s",
+                    )
+                except OSError as exc:
+                    return IntegrationResponse(ok=False, reason=f"TSAR failed to start: {exc}")
+
+                if result.returncode != 0:
+                    return IntegrationResponse(
+                        ok=False,
+                        reason=(
+                            f"TSAR exited with {result.returncode}: "
+                            f"{result.stderr.strip()[:300]}"
+                        ),
+                    )
+                output_text = (
+                    output_path.read_text(encoding="utf-8")
+                    if output_path.is_file()
+                    else result.stdout
+                )
+                try:
+                    payload = json.loads(output_text)
                 except (OSError, json.JSONDecodeError) as exc:
                     return IntegrationResponse(
-                        ok=False,
-                        reason=f"existing TSAR evidence is invalid: {exc}",
+                        ok=False, reason=f"TSAR output is not valid JSON: {exc}"
                     )
-                if existing_payload != payload:
+                if not isinstance(payload, dict):
                     return IntegrationResponse(
-                        ok=False,
-                        reason=f"refusing to overwrite different TSAR evidence: {target}",
+                        ok=False, reason="TSAR JSON output must be an object"
                     )
-            else:
-                target.write_text(serialized, encoding="utf-8")
+
+                serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+                if target.exists():
+                    try:
+                        existing_payload = json.loads(target.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError) as exc:
+                        return IntegrationResponse(
+                            ok=False,
+                            reason=f"existing TSAR evidence is invalid: {exc}",
+                        )
+                    if existing_payload != payload:
+                        return IntegrationResponse(
+                            ok=False,
+                            reason=f"refusing to overwrite different TSAR evidence: {target}",
+                        )
+                else:
+                    target.write_text(serialized, encoding="utf-8")
         except OSError as exc:
-            return IntegrationResponse(ok=False, reason=f"cannot persist TSAR evidence: {exc}")
+            return IntegrationResponse(
+                ok=False, reason=f"cannot persist TSAR evidence: {exc}"
+            )
 
         return IntegrationResponse(ok=True, payload=payload, artifacts=[target])

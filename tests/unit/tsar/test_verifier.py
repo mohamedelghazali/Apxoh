@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -19,6 +19,7 @@ from arkhon.integrations.tsar.verifier import (
     _check_freshness,
     _check_required_rules,
     _check_version,
+    _maximum_version_tuple,
     _parse_tsar_payload,
     verify_tsar_evidence,
 )
@@ -53,23 +54,17 @@ def test_check_version_invalid_string() -> None:
 
 
 def test_check_freshness_ok() -> None:
-    from datetime import datetime
-
     now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
     _check_freshness("2026-11-02T00:00:00Z", now=now)
 
 
 def test_check_freshness_stale() -> None:
-    from datetime import datetime
-
     now = datetime(2026, 11, 20, 0, 0, 0, tzinfo=UTC)
     with pytest.raises(EvidenceStaleError):
         _check_freshness("2026-11-01T00:00:00Z", now=now)
 
 
 def test_check_freshness_boundary() -> None:
-    from datetime import datetime, timedelta
-
     executed = "2026-11-01T00:00:00Z"
     executed_dt = datetime(2026, 11, 1, tzinfo=UTC)
 
@@ -181,4 +176,46 @@ def test_verify_invalid_status(tmp_path: Path) -> None:
             payload,
             expected_commit_sha="a" * 40,
             evidence_root=tmp_path,
+        )
+
+
+def test_parse_payload_rejects_invalid_shapes_and_summary() -> None:
+    from arkhon.core.errors import SecurityError
+    from arkhon.integrations.tsar.verifier import _parse_tsar_payload
+
+    with pytest.raises(SecurityError, match="object"):
+        _parse_tsar_payload([])  # type: ignore[arg-type]
+    payload = {
+        "evidence_id": "E1", "tsar_version": "1.2.0", "commit_sha": "a" * 40,
+        "executed_at": "2026-11-01T00:00:00Z", "status": "PASS",
+        "rule_ids": list(REQUIRED_RULE_IDS), "summary": {"critical": True},
+        "artifacts": [{"path": "a", "sha256": "a" * 64}],
+    }
+    with pytest.raises(SecurityError, match="summary counts"):
+        _parse_tsar_payload(payload)
+    payload["summary"] = []
+    with pytest.raises(SecurityError, match="summary"):
+        _parse_tsar_payload(payload)
+    payload["summary"] = {"critical": 0}
+    payload["artifacts"] = []
+    with pytest.raises(SecurityError, match="artifacts"):
+        _parse_tsar_payload(payload)
+
+
+def test_verify_rejects_invalid_commit_version_time_and_paths(tmp_path: Path) -> None:
+    with pytest.raises(SecurityError, match="expected_commit_sha"):
+        verify_tsar_evidence({}, expected_commit_sha="bad", evidence_root=tmp_path)
+    with pytest.raises(SecurityError, match="invalid version bound"):
+        _maximum_version_tuple("x.1.x")
+    with pytest.raises(EvidenceStaleError, match="timezone"):
+        _check_freshness("2026-11-01T00:00:00")
+    with pytest.raises(ValueError, match="timezone-aware"):
+        _check_freshness(
+            "2026-11-01T00:00:00Z", now=datetime(2026, 11, 2)
+        )
+    payload = _valid_payload(tmp_path)
+    payload["artifacts"][0]["path"] = "../outside.json"
+    with pytest.raises(EvidenceTamperedError, match="escapes"):
+        verify_tsar_evidence(
+            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path
         )
