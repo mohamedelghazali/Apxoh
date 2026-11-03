@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 from pathlib import Path
+import subprocess
 
 import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
 from arkhon.evidence.supply_chain import (
-    identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
+    identity_regexp_for_tag,
 )
 from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
 
