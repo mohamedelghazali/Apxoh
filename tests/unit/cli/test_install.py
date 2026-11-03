@@ -146,3 +146,29 @@ def test_install_restores_previous_pack_if_atomic_swap_fails(
     assert main(["install", "--project", str(tmp_path), "--force"]) == 1
     assert "installation failed" in capsys.readouterr().err
     assert original.read_text(encoding="utf-8") == "preserve old pack"
+
+
+def test_install_restores_previous_pack_after_partial_target_creation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["install", "--project", str(tmp_path)]) == 0
+    target = tmp_path / ".arkhon" / "agent-pack"
+    original = target / "AGENTS.md"
+    original.write_text("preserve previous pack", encoding="utf-8")
+    real_rename = Path.rename
+    failed = False
+
+    def create_partial_target(path: Path, destination: Path) -> Path:
+        nonlocal failed
+        if path.name.startswith(".agent-pack-staging-") and not failed:
+            failed = True
+            destination.mkdir()
+            raise OSError("simulated partial directory swap")
+        return real_rename(path, destination)
+
+    monkeypatch.setattr(Path, "rename", create_partial_target)
+    assert main(["install", "--project", str(tmp_path), "--force"]) == 1
+    assert "installation failed" in capsys.readouterr().err
+    assert original.read_text(encoding="utf-8") == "preserve previous pack"
