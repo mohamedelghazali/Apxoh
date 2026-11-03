@@ -46,6 +46,7 @@ def _config(root: Path) -> None:
 
 
 def test_safe_file_rejects_absolute_escape_and_missing(tmp_path: Path) -> None:
+    assert _safe_file(tmp_path, None) is None
     assert _safe_file(tmp_path, "/etc/passwd") is None
     assert _safe_file(tmp_path, "../outside") is None
     assert _safe_file(tmp_path, "missing") is None
@@ -372,3 +373,116 @@ def test_syft_runner_rejects_symlinked_output_directory(
     result = SyftRunner().run(tmp_path)
     assert result.outcome == RunnerOutcome.BLOCKED
     assert "escapes project root" in result.reason
+
+
+def test_syft_runner_rejects_symlinked_sbom_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: "/usr/bin/syft"
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, json.dumps(_bom()), ""),
+    )
+    output_dir = tmp_path / ".arkhon" / "reports" / "supply-chain"
+    output_dir.mkdir(parents=True)
+    outside = tmp_path.parent / f"{tmp_path.name}-outside-sbom.json"
+    outside.write_text("outside", encoding="utf-8")
+    (output_dir / f"sbom-{SHA[:12]}.cdx.json").symlink_to(outside)
+    result = SyftRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "symlinked SBOM" in result.reason
+
+
+def test_syft_runner_blocks_when_sbom_cannot_be_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: "/usr/bin/syft"
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, json.dumps(_bom()), ""),
+    )
+    original = Path.write_text
+
+    def fail(path: Path, *args, **kwargs):
+        if path.name.endswith(".cdx.json"):
+            raise OSError("read-only")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", fail)
+    result = SyftRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "cannot persist SBOM" in result.reason
+
+
+def test_attestation_runner_blocks_without_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: None
+    )
+    result = SupplyChainAttestationRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "full Git commit SHA" in result.reason
+
+
+def test_attestation_runner_rejects_symlinked_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _config(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.shutil.which",
+        lambda name: f"/usr/bin/{name}",
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, "", ""),
+    )
+    report_dir = tmp_path / ".arkhon" / "reports" / "supply-chain"
+    report_dir.mkdir(parents=True)
+    outside = tmp_path.parent / f"{tmp_path.name}-outside-attestation.json"
+    outside.write_text("outside", encoding="utf-8")
+    (report_dir / f"attestation-{SHA[:12]}.attestation.json").symlink_to(outside)
+    result = SupplyChainAttestationRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "symlinked attestation report" in result.reason
+
+
+def test_attestation_runner_blocks_when_report_cannot_be_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _config(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.shutil.which",
+        lambda name: f"/usr/bin/{name}",
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, "", ""),
+    )
+    original = Path.write_text
+
+    def fail(path: Path, *args, **kwargs):
+        if path.name.endswith(".attestation.json"):
+            raise OSError("read-only")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", fail)
+    result = SupplyChainAttestationRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "cannot persist attestation report" in result.reason
