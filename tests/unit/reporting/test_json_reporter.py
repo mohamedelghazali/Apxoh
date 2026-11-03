@@ -88,3 +88,16 @@ def test_write_creates_file(tmp_path: Path) -> None:
     path = JsonReporter().write(tmp_path, output)
     assert path.is_file()
     assert json.loads(path.read_text(encoding="utf-8"))["project"] == tmp_path.name
+
+
+def test_build_rejects_invalid_commit_and_ignores_unknown_domain(tmp_path: Path) -> None:
+    _write_evidence(tmp_path, "unmapped-domain", "EVID-UNKNOWN")
+    report = JsonReporter().build(tmp_path)
+    assert report["final_decision"] == "APPROVED"
+    (tmp_path / ".arkhon" / "evidence" / "testing").mkdir(parents=True)
+    (tmp_path / ".arkhon" / "evidence" / "testing" / "bad.json").write_text(
+        json.dumps({"evidence_id": "bad", "commit_sha": "short", "status": "PASS"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(EvidenceError, match="valid commit_sha"):
+        JsonReporter().build(tmp_path)
