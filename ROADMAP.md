@@ -118,11 +118,11 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] .github/dependabot.yml
 - [x] CI, integration, installation, security, schema, infrastructure, TSAR, supply-chain, and scorecard workflow definitions
 - [ ] Current-main CI, unit, integration, installation, security, TSAR, and supply-chain workflows completed successfully
-- [ ] Branch protection/ruleset configuration read back and independently verified
-- [ ] Required status checks enforced for main
+- [ ] Enable branch protection or a ruleset for main and require the CI/security status checks
+- [ ] Read back the effective settings and verify that required checks are enforced
 - [ ] First signed release with independently verified provenance
 
-**Status:** Workflow definitions are present. The latest main commit had 53 check runs queued at the time of inspection, with no completed success/failure evidence. Branch-protection settings could not be read through the available GitHub integration and are therefore unverified. Do not bypass checks or mark this milestone complete until both CI results and repository enforcement settings are confirmed.
+**Status:** Workflow definitions are present. The latest main commit had 53 check runs queued at the time of inspection, with no completed success/failure evidence. The GitHub branch API reports `main` as `protected: false`, and the repository rulesets endpoint returns an empty list. Branch protection is absent and must be configured before this milestone can close. Do not bypass checks or mark this milestone complete until both CI results and repository enforcement settings are confirmed.
 
 ---
 
