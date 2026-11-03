@@ -17,6 +17,8 @@ from arkhon.language_support.registry import LanguageRegistry, load_registry
 _LANGUAGE_ID = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
 _STATUSES = frozenset({"active", "experimental", "planned", "deprecated"})
 
+__all__ = ["LanguageProfile", "load_language_profile"]
+
 
 @dataclass(frozen=True)
 class LanguageProfile:
