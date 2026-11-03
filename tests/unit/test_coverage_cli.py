@@ -7,6 +7,7 @@ from argparse import Namespace
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 
 from arkhon.cli import cmd_report, main
 
