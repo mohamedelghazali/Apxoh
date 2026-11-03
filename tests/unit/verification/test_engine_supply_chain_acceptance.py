@@ -7,6 +7,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from arkhon.evidence.collector import EvidenceCollector
 from arkhon.evidence.store import EvidenceStore
 from arkhon.evidence.supply_chain import (
@@ -102,7 +104,7 @@ def _engine(root: Path) -> VerificationEngine:
     )
 
 
-def _enable_verifiers(monkeypatch, *, returncode: int = 0) -> list[list[str]]:
+def _enable_verifiers(monkeypatch: pytest.MonkeyPatch, *, returncode: int = 0) -> list[list[str]]:
     calls: list[list[str]] = []
     monkeypatch.setattr(
         "arkhon.evidence.supply_chain.shutil.which",
@@ -117,27 +119,22 @@ def _enable_verifiers(monkeypatch, *, returncode: int = 0) -> list[list[str]]:
     return calls
 
 
-def test_engine_accepts_only_cryptographically_verified_supply_chain_evidence(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_engine_accepts_commit_bound_sbom_before_recording_pass(tmp_path: Path) -> None:
     artifacts = _fixture(tmp_path)
-    calls = _enable_verifiers(monkeypatch)
     run = _engine(tmp_path).run(
         domain="supply-chain",
         commit_sha=COMMIT,
-        runners=[FixtureRunner(artifacts)],
+        runners=[FixtureRunner([artifacts[0]])],
         project_root=tmp_path,
     )
     record = EvidenceStore(tmp_path).read("supply-chain", run.evidence_id)
     assert run.status == "PASS"
     assert record.status == "PASS"
-    assert len(calls) == 2
-    assert calls[0][calls[0].index("--source-tag") + 1] == SOURCE_TAG
-    assert calls[1][1] == "verify-blob"
+    assert record.data["artifacts"][0]["path"].endswith(".cdx.json")
 
 
 def test_engine_blocks_supply_chain_pass_without_required_artifacts(tmp_path: Path) -> None:
-    sbom = tmp_path / "sbom-only.cdx.json"
+    sbom = tmp_path / "not-a-sbom.json"
     sbom.write_text("{}", encoding="utf-8")
     run = _engine(tmp_path).run(
         domain="supply-chain",
@@ -151,18 +148,37 @@ def test_engine_blocks_supply_chain_pass_without_required_artifacts(tmp_path: Pa
     assert record.data["summary"]["blocked"] == 1
 
 
+def test_engine_rechecks_slsa_and_sigstore_before_release_attestation_pass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifacts = _fixture(tmp_path)
+    calls = _enable_verifiers(monkeypatch)
+    run = _engine(tmp_path).run(
+        domain="release-attestations",
+        commit_sha=COMMIT,
+        runners=[FixtureRunner(artifacts[1:])],
+        project_root=tmp_path,
+    )
+    record = EvidenceStore(tmp_path).read("release-attestations", run.evidence_id)
+    assert run.status == "PASS"
+    assert record.status == "PASS"
+    assert len(calls) == 2
+    assert calls[0][calls[0].index("--source-tag") + 1] == SOURCE_TAG
+    assert calls[1][1] == "verify-blob"
+
+
 def test_engine_blocks_when_crypto_verification_fails(
-    tmp_path: Path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     artifacts = _fixture(tmp_path)
     _enable_verifiers(monkeypatch, returncode=1)
     run = _engine(tmp_path).run(
-        domain="supply-chain",
+        domain="release-attestations",
         commit_sha=COMMIT,
-        runners=[FixtureRunner(artifacts)],
+        runners=[FixtureRunner(artifacts[1:])],
         project_root=tmp_path,
     )
-    record = EvidenceStore(tmp_path).read("supply-chain", run.evidence_id)
+    record = EvidenceStore(tmp_path).read("release-attestations", run.evidence_id)
     assert run.status == "BLOCKED"
     assert record.status == "BLOCKED"
     assert record.data["summary"]["blocked"] == 1
