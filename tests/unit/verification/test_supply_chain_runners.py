@@ -11,7 +11,9 @@ from arkhon.verification.runners.base import RunnerOutcome
 from arkhon.verification.runners.supply_chain_runner import (
     SupplyChainAttestationRunner,
     SyftRunner,
+    _safe_directory,
     _safe_file,
+    _commit_sha,
 )
 
 SHA = "a" * 40
@@ -242,3 +244,52 @@ def test_attestation_runner_reports_write_failure(
         return original(path, *args, **kwargs)
     monkeypatch.setattr(Path, "mkdir", fail)
     assert "report directory escapes" in SupplyChainAttestationRunner().run(tmp_path).reason
+
+
+def test_commit_sha_resolution_failures_and_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: None)
+    assert _commit_sha(tmp_path) is None
+    monkeypatch.setattr("arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: "/usr/bin/git")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: (_ for _ in ()).throw(OSError("git error")),
+    )
+    assert _commit_sha(tmp_path) is None
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, "not-a-sha", ""),
+    )
+    assert _commit_sha(tmp_path) is None
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, SHA, ""),
+    )
+    assert _commit_sha(tmp_path) == SHA
+
+
+def test_safe_directory_rejects_project_escape(tmp_path: Path) -> None:
+    root = tmp_path / "project"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    assert _safe_directory(root, outside) is None
+
+
+def test_syft_runner_rejects_symlinked_output_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA)
+    monkeypatch.setattr("arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: "/usr/bin/syft")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner.subprocess.run",
+        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, json.dumps(_bom()), ""),
+    )
+    outside = tmp_path.parent / f"{tmp_path.name}-outside"
+    outside.mkdir()
+    target = tmp_path / ".arkhon" / "reports"
+    target.mkdir(parents=True)
+    (target / "supply-chain").symlink_to(outside, target_is_directory=True)
+    result = SyftRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "escapes project root" in result.reason
