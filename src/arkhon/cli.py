@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
+import tempfile
 import subprocess
 import sys
 from pathlib import Path
@@ -191,6 +193,105 @@ def cmd_assess(args: argparse.Namespace) -> int:
     if not outcomes_per_domain:
         print("[BLOCKED] rule-level assessment outcomes are not available")
     return 1
+
+
+
+def cmd_project_init(args: argparse.Namespace) -> int:
+    """Create a schema-validated project declaration without overwriting by default."""
+    import jsonschema
+    import yaml
+
+    from arkhon.language_support.detector import detect_languages
+    from arkhon.projects.loader import list_profiles
+
+    project = Path(args.project).expanduser().resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}", file=sys.stderr)
+        return 1
+
+    metadata_dir = project / ".arkhon"
+    if metadata_dir.is_symlink():
+        print("[FAIL] refusing symlinked .arkhon directory", file=sys.stderr)
+        return 1
+    target = metadata_dir / "project.yaml"
+    if target.is_symlink():
+        print("[FAIL] refusing symlinked project declaration", file=sys.stderr)
+        return 1
+    if target.exists() and not args.force:
+        print(f"[FAIL] project declaration already exists: {target} (use --force)", file=sys.stderr)
+        return 1
+
+    available_profiles = list_profiles(_repo_root())
+    if args.profile not in available_profiles:
+        print(f"[FAIL] unknown profile {args.profile!r}; available: {', '.join(available_profiles)}", file=sys.stderr)
+        return 1
+
+    name = (args.name or project.name).strip()
+    if not name:
+        print("[FAIL] project name cannot be empty", file=sys.stderr)
+        return 1
+    identifier = args.identifier or re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    if len(identifier) < 2:
+        identifier = f"{identifier or 'project'}-project"
+    if not re.fullmatch(r"[a-z][a-z0-9-]{1,62}", identifier):
+        print("[FAIL] identifier must match ^[a-z][a-z0-9-]{1,62}$", file=sys.stderr)
+        return 1
+
+    try:
+        detection = detect_languages(project)
+        detected = [item.definition.id for item in detection.detected]
+        declaration = {
+            "project": {
+                "name": name,
+                "identifier": identifier,
+                "type": args.project_type,
+                "profile": args.profile,
+                "risk_level": args.risk_level,
+                "description": args.description or "",
+            },
+            "languages": {
+                "primary": detected[0] if detected else "unknown",
+                "secondary": detected[1:],
+            },
+            "lifecycle": {
+                "current_stage": "development",
+                "current_milestone": 2,
+                "release_channel": "pre-release",
+            },
+            "gates": {
+                "requirements_gate": "required",
+                "testing_gate": "required",
+                "security_gate": "required",
+                "release_gate": "required",
+            },
+        }
+        schema_path = _repo_root() / "schemas" / "project.schema.json"
+        if not schema_path.is_file():
+            raise OSError(f"project schema not found: {schema_path}")
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        jsonschema.validate(instance=declaration, schema=schema)
+        metadata_dir.mkdir(parents=True, exist_ok=True)
+        metadata_dir.resolve().relative_to(project)
+        payload = yaml.safe_dump(declaration, sort_keys=False, allow_unicode=True)
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=metadata_dir,
+            prefix=".project-",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            stream.write(payload)
+            temporary = Path(stream.name)
+        temporary.replace(target)
+    except (OSError, ValueError, jsonschema.ValidationError) as exc:
+        print(f"[FAIL] project initialization failed: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"[OK] project declaration created: {target}")
+    print(f"  Profile: {args.profile}")
+    print(f"  Languages: {', '.join(detected) if detected else 'unknown'}")
+    return 0
 
 
 def cmd_report(args: argparse.Namespace) -> int:
