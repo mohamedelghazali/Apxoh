@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 class RunnerOutcome(str, Enum):
-    PASS = "PASS"
+    PASS = "PASS"  # noqa: S105 - verification outcome, not a password
     FAIL = "FAIL"
     BLOCKED = "BLOCKED"
 
