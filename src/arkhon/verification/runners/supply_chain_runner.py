@@ -57,12 +57,15 @@ def _safe_file(root: Path, value: object) -> Path | None:
     candidate = Path(value)
     if candidate.is_absolute():
         return None
-    resolved = (root / candidate).resolve()
+    unresolved = root / candidate
+    if unresolved.is_symlink():
+        return None
+    resolved = unresolved.resolve()
     try:
         resolved.relative_to(root.resolve())
     except ValueError:
         return None
-    if not resolved.is_file() or candidate.is_symlink():
+    if not resolved.is_file():
         return None
     return resolved
 
