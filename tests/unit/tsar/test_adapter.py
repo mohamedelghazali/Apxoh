@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
@@ -113,8 +114,6 @@ def test_audit_invalid_json(tmp_path: Path) -> None:
 
 
 def test_audit_timeout(tmp_path: Path) -> None:
-    import subprocess
-
     with (
         patch("shutil.which", return_value="/usr/local/bin/tsar"),
         patch("subprocess.run", side_effect=subprocess.TimeoutExpired("tsar", 1)),
@@ -183,8 +182,6 @@ def test_audit_rejects_non_object_json(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_audit_rejects_different_existing_evidence(tmp_path: Path, monkeypatch) -> None:
-    import json
-
     commit = "a" * 40
     target_dir = tmp_path / ".arkhon" / "evidence" / "security"
     target_dir.mkdir(parents=True)
@@ -205,8 +202,6 @@ def test_audit_rejects_different_existing_evidence(tmp_path: Path, monkeypatch) 
 
 
 def test_audit_handles_start_and_directory_errors(tmp_path: Path, monkeypatch) -> None:
-    from pathlib import Path as PathType
-
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
     )
@@ -218,12 +213,12 @@ def test_audit_handles_start_and_directory_errors(tmp_path: Path, monkeypatch) -
     result = TsarAdapter().audit(tmp_path, "a" * 40)
     assert not result.ok and "failed to start" in result.reason
 
-    original_mkdir = PathType.mkdir
+    original_mkdir = Path.mkdir
     def mkdir(path, *args, **kwargs):
         if path.name == "security" and path.parent.name == "evidence":
             raise OSError("read only")
         return original_mkdir(path, *args, **kwargs)
-    monkeypatch.setattr(PathType, "mkdir", mkdir)
+    monkeypatch.setattr(Path, "mkdir", mkdir)
     project = tmp_path / "other"
     project.mkdir()
     result = TsarAdapter().audit(project, "b" * 40)
