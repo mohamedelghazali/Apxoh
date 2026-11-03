@@ -63,7 +63,7 @@ def test_health_check_missing_and_success(monkeypatch: pytest.MonkeyPatch) -> No
 
 @pytest.mark.parametrize(
     ("code", "stdout", "expected"),
-    [(1, "", False), (0, "no scan subcommand", False)],
+    [(1, "", False), (0, "usage: tsar audit", False)],
 )
 def test_health_check_rejects_invalid_cli(
     monkeypatch: pytest.MonkeyPatch, code: int, stdout: str, expected: bool
