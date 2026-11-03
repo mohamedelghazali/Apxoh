@@ -109,3 +109,11 @@ def test_stage_manager_advance_raises_on_blocked(tmp_path: Path) -> None:
     )
     with pytest.raises(RuntimeError, match="cannot advance"):
         manager.advance()
+
+
+def test_stage_manager_without_gate_can_advance(tmp_path: Path) -> None:
+    state = LifecycleState(current=Stage.IMPLEMENTATION_PLANNING)
+    manager = StageManager(state, {}, tmp_path)
+    check = manager.can_advance()
+    assert check.allowed
+    assert check.reason == "exit criteria satisfied"
