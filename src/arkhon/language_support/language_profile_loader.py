@@ -36,17 +36,27 @@ class LanguageProfile:
     notes: str
 
 
-def _section(raw: dict[str, Any], key: str, language_id: str, *, optional: bool = False) -> dict[str, Any]:
+def _section(
+    raw: dict[str, Any],
+    key: str,
+    language_id: str,
+    *,
+    optional: bool = False,
+) -> dict[str, Any]:
     value = raw.get(key, {} if optional else None)
     if not isinstance(value, dict) or (not optional and not value):
-        raise ConfigError(f"language profile {language_id}: {key} must be a non-empty mapping")
+        raise ConfigError(
+            f"language profile {language_id}: {key} must be a non-empty mapping"
+        )
     return dict(value)
 
 
 def _text(raw: dict[str, Any], key: str, language_id: str) -> str:
     value = raw.get(key)
     if not isinstance(value, str) or not value.strip():
-        raise ConfigError(f"language profile {language_id}: {key} must be a non-empty string")
+        raise ConfigError(
+            f"language profile {language_id}: {key} must be a non-empty string"
+        )
     return value.strip()
 
 
@@ -59,6 +69,7 @@ def load_language_profile(
     """Load a registered profile, rejecting malformed IDs and path traversal."""
     if not isinstance(language_id, str) or not _LANGUAGE_ID.fullmatch(language_id):
         raise ConfigError(f"invalid language id: {language_id!r}")
+
     repo_root = (root or find_repo_root()).resolve()
     language_registry = registry or load_registry(repo_root)
     definition = language_registry.get(language_id)
@@ -68,7 +79,10 @@ def load_language_profile(
     try:
         path.relative_to(languages_root)
     except ValueError as exc:
-        raise ConfigError(f"language profile path escapes languages directory: {relative!r}") from exc
+        raise ConfigError(
+            f"language profile path escapes languages directory: {relative!r}"
+        ) from exc
+
     if not path.is_file():
         raise ConfigError(f"language profile not found for {language_id}: {path}")
     try:
@@ -81,30 +95,50 @@ def load_language_profile(
 
     declared_id = _text(raw, "id", language_id)
     if declared_id != language_id:
-        raise ConfigError(f"language profile id mismatch: requested={language_id!r}, declared={declared_id!r}")
+        raise ConfigError(
+            f"language profile id mismatch: requested={language_id!r}, "
+            f"declared={declared_id!r}"
+        )
+
     name, family, version, status = (
-        _text(raw, key, language_id) for key in ("name", "family", "version", "status")
+        _text(raw, key, language_id)
+        for key in ("name", "family", "version", "status")
     )
     if status not in _STATUSES:
         raise ConfigError(f"language profile {language_id}: unsupported status {status!r}")
+
     domains = raw.get("rule_domains_supported")
     if not isinstance(domains, list) or not domains or any(
         not isinstance(item, str) or not item.strip() for item in domains
     ):
-        raise ConfigError(f"language profile {language_id}: rule_domains_supported must be a non-empty list of strings")
+        raise ConfigError(
+            f"language profile {language_id}: "
+            "rule_domains_supported must be a non-empty list of strings"
+        )
     if len(set(domains)) != len(domains):
         raise ConfigError(f"language profile {language_id}: duplicate rule domains")
+
     notes = raw.get("notes", "")
     if not isinstance(notes, str):
         raise ConfigError(f"language profile {language_id}: notes must be a string")
 
     sections = {
-        key: MappingProxyType(_section(raw, key, language_id, optional=key == "entry_points"))
+        key: MappingProxyType(
+            _section(raw, key, language_id, optional=key == "entry_points")
+        )
         for key in ("runtime", "build_system", "dependency_manager", "testing", "entry_points")
     }
     return LanguageProfile(
-        id=language_id, name=name, family=family, version=version, status=status,
-        runtime=sections["runtime"], build_system=sections["build_system"],
-        dependency_manager=sections["dependency_manager"], testing=sections["testing"],
-        rule_domains_supported=tuple(domains), entry_points=sections["entry_points"], notes=notes,
+        id=language_id,
+        name=name,
+        family=family,
+        version=version,
+        status=status,
+        runtime=sections["runtime"],
+        build_system=sections["build_system"],
+        dependency_manager=sections["dependency_manager"],
+        testing=sections["testing"],
+        rule_domains_supported=tuple(domains),
+        entry_points=sections["entry_points"],
+        notes=notes,
     )
