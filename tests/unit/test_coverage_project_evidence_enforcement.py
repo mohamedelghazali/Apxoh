@@ -198,7 +198,7 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
         "commit_sha": "a" * 40,
         "status": "PASS",
     }
-    target = store.root / "testing" / "E-RACE.json"
+    target = store.root / "testing" / "EVID-RACE.json"
     import hashlib
 
     payload = json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
