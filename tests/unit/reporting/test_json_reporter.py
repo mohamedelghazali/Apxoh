@@ -138,3 +138,16 @@ def test_build_rejects_stale_evidence(tmp_path: Path) -> None:
     target.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(EvidenceError, match="stale"):
         JsonReporter().build(tmp_path)
+
+
+def test_accepted_risk_cannot_create_unconditional_approval(tmp_path: Path) -> None:
+    _write_evidence(tmp_path, "testing", "EVID-RISK", "ACCEPTED_RISK")
+    report = JsonReporter().build(tmp_path)
+    assert report["sections"]["testing"]["status"] == "BLOCKED"
+    assert report["final_decision"] == "PENDING_EVIDENCE"
+
+
+def test_build_rejects_unknown_evidence_status(tmp_path: Path) -> None:
+    _write_evidence(tmp_path, "testing", "EVID-UNKNOWN-STATUS", "MAYBE")
+    with pytest.raises(EvidenceError, match="invalid status"):
+        JsonReporter().build(tmp_path)
