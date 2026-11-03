@@ -121,3 +121,31 @@ def test_artifact_outside_explicit_root_is_rejected(tmp_path: Path) -> None:
     draft.add_artifact(artifact)
     with pytest.raises(EvidenceError, match="outside evidence root"):
         draft.artifacts[0].to_dict(root=tmp_path / "root")
+
+
+def test_to_evidence_rejects_artifact_outside_collector_root(tmp_path: Path) -> None:
+    root = tmp_path / "project"
+    root.mkdir()
+    outside = _write(tmp_path, "outside.txt")
+    draft = EvidenceCollector(root=root).new_evidence(
+        source="arkhon",
+        source_version="0.1.0.dev1",
+        commit_sha="a" * 40,
+        status="PASS",
+    )
+    draft.add_artifact(outside)
+    with pytest.raises(EvidenceError, match="outside evidence root"):
+        draft.to_evidence()
+
+
+def test_to_evidence_stores_relative_artifact_paths(tmp_path: Path) -> None:
+    artifact = _write(tmp_path, "inside.txt")
+    draft = EvidenceCollector(root=tmp_path).new_evidence(
+        source="arkhon",
+        source_version="0.1.0.dev1",
+        commit_sha="b" * 40,
+        status="PASS",
+    )
+    draft.add_artifact(artifact)
+    evidence = draft.to_evidence()
+    assert evidence["artifacts"][0]["path"] == "inside.txt"
