@@ -87,7 +87,7 @@ class PytestRunner(Runner):
                 failures = sum(int(suite.get("failures", "0")) for suite in suites)
                 errors = sum(int(suite.get("errors", "0")) for suite in suites)
                 skipped = sum(int(suite.get("skipped", "0")) for suite in suites)
-            except (ET.ParseError, ValueError) as exc:
+            except (ElementTree.ParseError, ValueError) as exc:
                 return RunnerResult(
                     runner=self.name,
                     outcome=RunnerOutcome.BLOCKED,
