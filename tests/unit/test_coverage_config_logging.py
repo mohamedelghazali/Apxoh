@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -65,20 +66,22 @@ def test_configure_logging_rejects_bad_values_and_installs_json_handler(
             self.handlers = []
             self.level = logging.INFO
 
-        def setLevel(self, level: int) -> None:
+        def setLevel(self, level: str) -> None:
             self.level = level
 
         def addHandler(self, handler: logging.Handler) -> None:
             self.handlers.append(handler)
 
     fake_root = FakeRoot()
-    original_get_logger = logging.getLogger
-    monkeypatch.setattr(
-        "arkhon.core.logging.logging.getLogger",
-        lambda name=None: fake_root if name is None else original_get_logger(name),
+    fake_logging = SimpleNamespace(
+        getLogger=lambda name=None: fake_root if name is None else logging.getLogger(name),
+        StreamHandler=logging.StreamHandler,
+        INFO=logging.INFO,
+        DEBUG=logging.DEBUG,
     )
+    monkeypatch.setattr("arkhon.core.logging.logging", fake_logging)
     configure_logging("debug", "json")
     logger = get_logger("coverage")
     assert logger.name == "arkhon.coverage"
-    assert fake_root.level == logging.DEBUG
+    assert fake_root.level == "DEBUG"
     assert isinstance(fake_root.handlers[-1].formatter, JsonFormatter)
