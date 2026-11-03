@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from arkhon.config import get_manifest
 
-STATUS_PASS = "PASS"
+STATUS_PASS = "PASS"  # noqa: S105 - protocol status, not a credential
 STATUS_FAIL = "FAIL"
 STATUS_BLOCKED = "BLOCKED"
 STATUS_NOT_APPLICABLE = "NOT_APPLICABLE"
