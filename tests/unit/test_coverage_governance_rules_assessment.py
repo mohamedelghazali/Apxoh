@@ -89,9 +89,30 @@ def test_charter_load_and_validation_edges(tmp_path: Path) -> None:
     valid[0]["number"] = 2
     with pytest.raises(GovernanceError, match="unique and ordered"):
         _parse_principles({"principles": valid})
-    path.write_text("version: ''\nprinciples: []\n", encoding="utf-8")
-    with pytest.raises(GovernanceError, match="exactly 12"):
+    path.write_text(
+        yaml.safe_dump({
+            "version": "",
+            "principles": [
+                {"number": index, "statement": f"Principle {index}"}
+                for index in range(1, 13)
+            ],
+        }),
+        encoding="utf-8",
+    )
+    with pytest.raises(GovernanceError, match="version"):
         load_charter(tmp_path)
+    missing_markdown = tmp_path / "missing-markdown"
+    charter_dir = missing_markdown / "system" / "charter"
+    charter_dir.mkdir(parents=True)
+    (charter_dir / "PRINCIPLES.yaml").write_text(
+        yaml.safe_dump({"principles": [
+            {"number": index, "statement": f"Principle {index}"}
+            for index in range(1, 13)
+        ]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(GovernanceError, match="markdown missing"):
+        load_charter(missing_markdown)
 
 
 def test_policy_loader_registry_and_fail_closed(tmp_path: Path) -> None:
