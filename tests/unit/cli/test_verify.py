@@ -37,11 +37,7 @@ def _init_project(tmp_path: Path) -> None:
 
     run_git(["init", "-q"])
 
-    subprocess.run(
-        ["git", "config", "user.email", r"test\@example.com"],
-        cwd=tmp_path,
-        check=True,
-    )
+    run_git(["config", "user.email", "test@example.com"])
 
     run_git(["config", "user.name", "Test"])
 
