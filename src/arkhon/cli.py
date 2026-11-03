@@ -225,11 +225,11 @@ def cmd_verify(args: argparse.Namespace) -> int:
     from arkhon.verification.runners.mypy_runner import MypyRunner
     from arkhon.verification.runners.pytest_runner import PytestRunner
     from arkhon.verification.runners.ruff_runner import RuffRunner
-    from arkhon.verification.runners.tsar_runner import TsarRunner
     from arkhon.verification.runners.supply_chain_runner import (
         SupplyChainAttestationRunner,
         SyftRunner,
     )
+    from arkhon.verification.runners.tsar_runner import TsarRunner
 
     project = Path(args.project).resolve()
     if not project.is_dir():

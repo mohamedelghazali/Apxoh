@@ -85,9 +85,7 @@ def evaluate_gate(gate: str, outcomes: list[RuleOutcome]) -> GateVerdict:
     reasons: list[str] = []
     for outcome in outcomes:
         if outcome.enforcement not in ALL_ENFORCEMENT:
-            raise GateError(
-                f"{outcome.rule_id}: unsupported enforcement {outcome.enforcement!r}"
-            )
+            raise GateError(f"{outcome.rule_id}: unsupported enforcement {outcome.enforcement!r}")
         if outcome.status in {STATUS_PASS, STATUS_NOT_APPLICABLE}:
             continue
         if outcome.status not in {STATUS_FAIL, STATUS_BLOCKED}:

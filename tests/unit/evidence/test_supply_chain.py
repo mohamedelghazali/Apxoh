@@ -1,4 +1,5 @@
 """Evidence acceptance tests for SBOM commit binding and cryptographic attestations."""
+
 from __future__ import annotations
 
 import hashlib
@@ -16,7 +17,6 @@ from arkhon.evidence.supply_chain import (
     verify_cyclonedx_sbom,
     verify_supply_chain_attestation_report,
 )
-
 
 SHA = "a" * 40
 
@@ -95,9 +95,32 @@ def test_verify_cyclonedx_sbom_accepts_only_commit_bound_bom(tmp_path: Path) -> 
         ([], "not CycloneDX"),
         ({"bomFormat": "SPDX"}, "not CycloneDX"),
         ({"bomFormat": "CycloneDX", "specVersion": "1.3"}, "unsupported"),
-        ({"bomFormat": "CycloneDX", "specVersion": "1.6", "metadata": {}, "components": []}, "commit-binding"),
-        ({"bomFormat": "CycloneDX", "specVersion": "1.6", "metadata": {"component": {"properties": [{"name": "arkhon:commit-sha", "value": "bad"}]}}, "components": []}, "mismatched"),
-        ({"bomFormat": "CycloneDX", "specVersion": "1.6", "metadata": {"component": {"properties": [{"name": "arkhon:commit-sha", "value": SHA}]}}, "components": {}}, "components"),
+        (
+            {"bomFormat": "CycloneDX", "specVersion": "1.6", "metadata": {}, "components": []},
+            "commit-binding",
+        ),
+        (
+            {
+                "bomFormat": "CycloneDX",
+                "specVersion": "1.6",
+                "metadata": {
+                    "component": {"properties": [{"name": "arkhon:commit-sha", "value": "bad"}]}
+                },
+                "components": [],
+            },
+            "mismatched",
+        ),
+        (
+            {
+                "bomFormat": "CycloneDX",
+                "specVersion": "1.6",
+                "metadata": {
+                    "component": {"properties": [{"name": "arkhon:commit-sha", "value": SHA}]}
+                },
+                "components": {},
+            },
+            "components",
+        ),
     ],
 )
 def test_verify_cyclonedx_sbom_rejects_invalid_shapes(
@@ -113,11 +136,15 @@ def test_attestation_reverification_accepts_and_runs_both_tools(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
-    monkeypatch.setattr("arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(
+        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+    )
     calls = []
+
     def run(command, **kwargs):
         calls.append(command)
         return subprocess.CompletedProcess(command, 0, "verified", "")
+
     monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
     verify_supply_chain_attestation_report(
         report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
@@ -127,9 +154,7 @@ def test_attestation_reverification_accepts_and_runs_both_tools(
     assert calls[1][1] == "verify-blob"
 
 
-def test_attestation_report_rejects_unreadable_or_wrong_schema(
-    tmp_path: Path
-) -> None:
+def test_attestation_report_rejects_unreadable_or_wrong_schema(tmp_path: Path) -> None:
     report = tmp_path / "report.json"
     report.write_text("bad json", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="unreadable"):
@@ -143,13 +168,20 @@ def test_attestation_report_rejects_unreadable_or_wrong_schema(
         )
 
 
-@pytest.mark.parametrize("field,value,message", [
-    ("commit_sha", "b" * 40, "commit binding"),
-    ("source_uri", "github.com/attacker/repo", "trust identity"),
-    ("oidc_issuer", "https://attacker.invalid", "trust identity"),
-    ("certificate_identity_regexp", ".*", "trust identity"),
-    ("verification", {"slsa": {"verified": False}, "sigstore": {"verified": True}}, "both verifications"),
-])
+@pytest.mark.parametrize(
+    "field,value,message",
+    [
+        ("commit_sha", "b" * 40, "commit binding"),
+        ("source_uri", "github.com/attacker/repo", "trust identity"),
+        ("oidc_issuer", "https://attacker.invalid", "trust identity"),
+        ("certificate_identity_regexp", ".*", "trust identity"),
+        (
+            "verification",
+            {"slsa": {"verified": False}, "sigstore": {"verified": True}},
+            "both verifications",
+        ),
+    ],
+)
 def test_attestation_report_rejects_wrong_trust_metadata(
     tmp_path: Path, field: str, value: object, message: str
 ) -> None:
@@ -159,7 +191,10 @@ def test_attestation_report_rejects_wrong_trust_metadata(
     report_path.write_text(json.dumps(report), encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match=message):
         verify_supply_chain_attestation_report(
-            report_path, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
+            report_path,
+            evidence_root=tmp_path,
+            expected_commit_sha=SHA,
+            evidence_artifacts=artifacts,
         )
 
 
@@ -172,21 +207,30 @@ def test_attestation_report_requires_bound_paths_and_digests(
     report_path.write_text(json.dumps(report), encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="not bound"):
         verify_supply_chain_attestation_report(
-            report_path, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
+            report_path,
+            evidence_root=tmp_path,
+            expected_commit_sha=SHA,
+            evidence_artifacts=artifacts,
         )
     report["artifact"] = "dist/release.whl"
     report["artifact_sha256"] = "0" * 64
     report_path.write_text(json.dumps(report), encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="not bound"):
         verify_supply_chain_attestation_report(
-            report_path, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
+            report_path,
+            evidence_root=tmp_path,
+            expected_commit_sha=SHA,
+            evidence_artifacts=artifacts,
         )
     report["artifact_sha256"] = artifacts[0]["sha256"]
     report_path.write_text(json.dumps(report), encoding="utf-8")
     (tmp_path / "dist" / "release.whl").write_text("tampered", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="digest mismatch"):
         verify_supply_chain_attestation_report(
-            report_path, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
+            report_path,
+            evidence_root=tmp_path,
+            expected_commit_sha=SHA,
+            evidence_artifacts=artifacts,
         )
 
 
@@ -195,7 +239,9 @@ def test_attestation_report_must_be_an_evidence_artifact(
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
     artifacts.pop()
-    monkeypatch.setattr("arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(
+        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+    )
     with pytest.raises(EvidenceTamperedError, match="not itself bound"):
         verify_supply_chain_attestation_report(
             report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
@@ -218,11 +264,15 @@ def test_attestation_verification_rejects_invalid_crypto(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mode: str
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
-    monkeypatch.setattr("arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(
+        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+    )
+
     def fail(command, **kwargs):
         if mode == "spawn":
             raise OSError("missing executable")
         return subprocess.CompletedProcess(command, 1, "", "signature invalid")
+
     monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", fail)
     error = EvidenceError if mode == "spawn" else EvidenceTamperedError
     with pytest.raises(error):

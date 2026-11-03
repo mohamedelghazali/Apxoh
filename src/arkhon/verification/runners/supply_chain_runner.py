@@ -1,4 +1,5 @@
 """SBOM generation and release-attestation verification runners."""
+
 from __future__ import annotations
 
 import json
@@ -97,9 +98,7 @@ class SyftRunner(Runner):
                 check=False,
             )
         except (OSError, subprocess.SubprocessError) as exc:
-            return RunnerResult(
-                self.name, RunnerOutcome.BLOCKED, f"Syft execution failed: {exc}"
-            )
+            return RunnerResult(self.name, RunnerOutcome.BLOCKED, f"Syft execution failed: {exc}")
         if result.returncode != 0:
             return RunnerResult(
                 self.name,
@@ -109,11 +108,15 @@ class SyftRunner(Runner):
         try:
             bom = json.loads(result.stdout)
         except json.JSONDecodeError as exc:
-            return RunnerResult(self.name, RunnerOutcome.BLOCKED, f"Syft output is invalid JSON: {exc}")
+            return RunnerResult(
+                self.name, RunnerOutcome.BLOCKED, f"Syft output is invalid JSON: {exc}"
+            )
         if not isinstance(bom, dict) or bom.get("bomFormat") != "CycloneDX":
             return RunnerResult(self.name, RunnerOutcome.BLOCKED, "Syft output is not CycloneDX")
         if bom.get("specVersion") not in {"1.4", "1.5", "1.6"}:
-            return RunnerResult(self.name, RunnerOutcome.BLOCKED, "unsupported CycloneDX specVersion")
+            return RunnerResult(
+                self.name, RunnerOutcome.BLOCKED, "unsupported CycloneDX specVersion"
+            )
         metadata = bom.get("metadata")
         components = bom.get("components")
         if not isinstance(metadata, dict) or not isinstance(components, list):
@@ -138,14 +141,17 @@ class SyftRunner(Runner):
             properties = []
             component["properties"] = properties
         properties[:] = [
-            item for item in properties
+            item
+            for item in properties
             if not isinstance(item, dict) or item.get("name") != "arkhon:commit-sha"
         ]
         properties.append({"name": "arkhon:commit-sha", "value": commit})
         properties.append({"name": "arkhon:generator", "value": "Apxoh SyftRunner"})
         output_dir = _safe_directory(root, root / ".arkhon" / "reports" / "supply-chain")
         if output_dir is None:
-            return RunnerResult(self.name, RunnerOutcome.BLOCKED, "SBOM output directory escapes project root")
+            return RunnerResult(
+                self.name, RunnerOutcome.BLOCKED, "SBOM output directory escapes project root"
+            )
         output = output_dir / f"sbom-{commit[:12]}.cdx.json"
         if output.is_symlink():
             return RunnerResult(self.name, RunnerOutcome.BLOCKED, "refusing symlinked SBOM output")
@@ -190,7 +196,9 @@ class SupplyChainAttestationRunner(Runner):
                 self.name, RunnerOutcome.BLOCKED, f"attestation config is invalid: {exc}"
             )
         if not isinstance(config, dict):
-            return RunnerResult(self.name, RunnerOutcome.BLOCKED, "attestation config must be an object")
+            return RunnerResult(
+                self.name, RunnerOutcome.BLOCKED, "attestation config must be an object"
+            )
         artifact = _safe_file(root, config.get("artifact"))
         provenance = _safe_file(root, config.get("provenance"))
         signature = _safe_file(root, config.get("signature_bundle"))
@@ -203,25 +211,38 @@ class SupplyChainAttestationRunner(Runner):
         slsa = shutil.which("slsa-verifier")
         cosign = shutil.which("cosign")
         if slsa is None or cosign is None:
-            missing = [name for name, path in (("slsa-verifier", slsa), ("cosign", cosign)) if path is None]
+            missing = [
+                name for name, path in (("slsa-verifier", slsa), ("cosign", cosign)) if path is None
+            ]
             return RunnerResult(
-                self.name, RunnerOutcome.BLOCKED, f"required verifier(s) not found: {', '.join(missing)}"
+                self.name,
+                RunnerOutcome.BLOCKED,
+                f"required verifier(s) not found: {', '.join(missing)}",
             )
         commands = [
             (
                 "slsa",
                 [
-                    slsa, "verify-artifact", str(artifact),
-                    "--provenance-path", str(provenance),
-                    "--source-uri", _SOURCE_URI,
+                    slsa,
+                    "verify-artifact",
+                    str(artifact),
+                    "--provenance-path",
+                    str(provenance),
+                    "--source-uri",
+                    _SOURCE_URI,
                 ],
             ),
             (
                 "sigstore",
                 [
-                    cosign, "verify-blob", "--bundle", str(signature),
-                    "--certificate-identity-regexp", _IDENTITY_REGEXP,
-                    "--certificate-oidc-issuer", _OIDC_ISSUER,
+                    cosign,
+                    "verify-blob",
+                    "--bundle",
+                    str(signature),
+                    "--certificate-identity-regexp",
+                    _IDENTITY_REGEXP,
+                    "--certificate-oidc-issuer",
+                    _OIDC_ISSUER,
                     str(artifact),
                 ],
             ),
@@ -252,7 +273,9 @@ class SupplyChainAttestationRunner(Runner):
         report_dir = _safe_directory(root, root / ".arkhon" / "reports" / "supply-chain")
         if report_dir is None:
             return RunnerResult(
-                self.name, RunnerOutcome.BLOCKED, "attestation report directory escapes project root"
+                self.name,
+                RunnerOutcome.BLOCKED,
+                "attestation report directory escapes project root",
             )
         report_path = report_dir / f"attestation-{commit[:12]}.attestation.json"
         if report_path.is_symlink():
@@ -282,5 +305,9 @@ class SupplyChainAttestationRunner(Runner):
                 self.name, RunnerOutcome.BLOCKED, f"cannot persist attestation report: {exc}"
             )
         artifacts = [artifact, provenance, signature, report_path]
-        reason = "" if overall == RunnerOutcome.PASS else "SLSA provenance or Sigstore verification failed"
+        reason = (
+            ""
+            if overall == RunnerOutcome.PASS
+            else "SLSA provenance or Sigstore verification failed"
+        )
         return RunnerResult(self.name, overall, reason, artifacts)

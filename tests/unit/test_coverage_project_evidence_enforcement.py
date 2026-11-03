@@ -23,8 +23,14 @@ def _profile_tree(root: Path, name: str = "demo") -> Path:
     base = root / "projects" / name
     base.mkdir(parents=True)
     (base / "profile.yaml").write_text(
-        yaml.safe_dump({"name": name, "description": "Demo", "risk_level": "low",
-                        "evidence": {"required": ["report.json"]}}),
+        yaml.safe_dump(
+            {
+                "name": name,
+                "description": "Demo",
+                "risk_level": "low",
+                "evidence": {"required": ["report.json"]},
+            }
+        ),
         encoding="utf-8",
     )
     (base / "rules.yaml").write_text("domains:\n  - testing\n", encoding="utf-8")
@@ -111,13 +117,21 @@ def test_evidence_store_read_iteration_and_latest_error_paths(tmp_path: Path, mo
     with pytest.raises(EvidenceError, match="not found"):
         store.read("testing", "EVID-MISSING")
 
-    first = {"evidence_id": "EVID-1", "commit_sha": "a" * 40, "status": "PASS",
-             "executed_at": "2026-01-01T00:00:00Z"}
+    first = {
+        "evidence_id": "EVID-1",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+        "executed_at": "2026-01-01T00:00:00Z",
+    }
     target = store.write("testing", first)
     assert store.write("testing", first) == target
     assert store.read("testing", "EVID-1").evidence_id == "EVID-1"
-    second = {"evidence_id": "EVID-2", "commit_sha": "a" * 40, "status": "PASS",
-              "executed_at": "2026-02-01T00:00:00Z"}
+    second = {
+        "evidence_id": "EVID-2",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+        "executed_at": "2026-02-01T00:00:00Z",
+    }
     store.write("testing", second)
     assert store.latest_for_commit("testing", "a" * 40).evidence_id == "EVID-2"
     assert store.latest_for_commit("testing", "b" * 40) is None
@@ -134,11 +148,21 @@ def test_evidence_store_read_iteration_and_latest_error_paths(tmp_path: Path, mo
         store.read("testing", "EVID-BAD")
 
 
-def _rule(rule_id: str = "TEST-001", raw: dict | None = None, *,
-          status: str = "active", enforcement: str = "blocking",
-          severity: str = "medium", domain: str = "testing") -> Rule:
-    metadata = {"status": status, "enforcement": enforcement,
-                "severity": severity, "domain": domain}
+def _rule(
+    rule_id: str = "TEST-001",
+    raw: dict | None = None,
+    *,
+    status: str = "active",
+    enforcement: str = "blocking",
+    severity: str = "medium",
+    domain: str = "testing",
+) -> Rule:
+    metadata = {
+        "status": status,
+        "enforcement": enforcement,
+        "severity": severity,
+        "domain": domain,
+    }
     payload = {"metadata": metadata}
     if raw:
         payload.update(raw)
@@ -150,29 +174,32 @@ def test_enforcement_rule_evidence_declarations(tmp_path: Path) -> None:
     with pytest.raises(GovernanceError, match="invalid outcome"):
         RuleOutcome("R1", "UNKNOWN")
     assert engine.evaluate_rule(_rule(raw={"evidence": "bad"}), tmp_path).status == "BLOCKED"
-    invalid_list = engine.evaluate_rule(
-        _rule(raw={"evidence": {"required": "bad"}}), tmp_path
-    )
+    invalid_list = engine.evaluate_rule(_rule(raw={"evidence": {"required": "bad"}}), tmp_path)
     assert invalid_list.status == "BLOCKED"
-    missing_root = engine.evaluate_rule(
-        _rule(raw={"evidence": {"required": ["x"]}}), None
-    )
+    missing_root = engine.evaluate_rule(_rule(raw={"evidence": {"required": ["x"]}}), None)
     assert missing_root.status == "BLOCKED"
-    escaped = engine.evaluate_rule(
-        _rule(raw={"evidence": {"required": ["../outside"]}}), tmp_path
-    )
+    escaped = engine.evaluate_rule(_rule(raw={"evidence": {"required": ["../outside"]}}), tmp_path)
     assert escaped.reason.endswith("escapes evidence root")
     (tmp_path / "artifact.json").write_text("{}", encoding="utf-8")
-    assert engine.evaluate_rule(
-        _rule(raw={"evidence": {"required": ["artifact.json", {"type": "artifact"}]}}),
-        tmp_path,
-    ).status == "PASS"
-    assert engine.evaluate_rule(
-        _rule(raw={"evidence": {"required": [{"type": ""}, 1]}}), tmp_path
-    ).status == "BLOCKED"
-    assert engine.evaluate_rule(
-        _rule(raw={"evidence": {"required": [{"type": "missing"}]}}), tmp_path
-    ).status == "BLOCKED"
+    assert (
+        engine.evaluate_rule(
+            _rule(raw={"evidence": {"required": ["artifact.json", {"type": "artifact"}]}}),
+            tmp_path,
+        ).status
+        == "PASS"
+    )
+    assert (
+        engine.evaluate_rule(
+            _rule(raw={"evidence": {"required": [{"type": ""}, 1]}}), tmp_path
+        ).status
+        == "BLOCKED"
+    )
+    assert (
+        engine.evaluate_rule(
+            _rule(raw={"evidence": {"required": [{"type": "missing"}]}}), tmp_path
+        ).status
+        == "BLOCKED"
+    )
 
 
 def test_enforcement_gate_counts_critical_blocking_and_inactive(tmp_path: Path) -> None:

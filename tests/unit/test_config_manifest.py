@@ -27,7 +27,13 @@ def test_manifest_load_and_properties(tmp_path: Path) -> None:
     assert manifest.identifier == "arkhon"
     assert manifest.version == "1.0.0"
     assert set(manifest.to_dict()) == {
-        "index", "system", "products", "integrations", "languages", "standards", "compatibility"
+        "index",
+        "system",
+        "products",
+        "integrations",
+        "languages",
+        "standards",
+        "compatibility",
     }
 
 
@@ -51,14 +57,32 @@ def test_manifest_missing_and_invalid_files(tmp_path: Path) -> None:
     [
         ({}, "files"),
         ({"files": {"system": "system.yaml"}}, "missing references"),
-        ({"files": {
-            "system": "", "products": "p.yaml", "integrations": "i.yaml",
-            "languages": "l.yaml", "standards": "s.yaml", "compatibility": "c.yaml",
-        }}, "non-empty string"),
-        ({"files": {
-            "system": "../escape.yaml", "products": "p.yaml", "integrations": "i.yaml",
-            "languages": "l.yaml", "standards": "s.yaml", "compatibility": "c.yaml",
-        }}, "escapes manifest"),
+        (
+            {
+                "files": {
+                    "system": "",
+                    "products": "p.yaml",
+                    "integrations": "i.yaml",
+                    "languages": "l.yaml",
+                    "standards": "s.yaml",
+                    "compatibility": "c.yaml",
+                }
+            },
+            "non-empty string",
+        ),
+        (
+            {
+                "files": {
+                    "system": "../escape.yaml",
+                    "products": "p.yaml",
+                    "integrations": "i.yaml",
+                    "languages": "l.yaml",
+                    "standards": "s.yaml",
+                    "compatibility": "c.yaml",
+                }
+            },
+            "escapes manifest",
+        ),
     ],
 )
 def test_manifest_rejects_bad_index(tmp_path: Path, index: dict, message: str) -> None:

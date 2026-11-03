@@ -86,13 +86,17 @@ def test_claude_success_and_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
     module = "arkhon.integrations.models.claude.adapter"
     connection = _Connection(
-        _Response(json.dumps({
-            "content": [
-                {"type": "text", "text": "hello "},
-                {"type": "image", "data": "ignored"},
-                {"type": "text", "text": "world"},
-            ]
-        }))
+        _Response(
+            json.dumps(
+                {
+                    "content": [
+                        {"type": "text", "text": "hello "},
+                        {"type": "image", "data": "ignored"},
+                        {"type": "text", "text": "world"},
+                    ]
+                }
+            )
+        )
     )
     _patch_connection(monkeypatch, module, connection)
     result = ClaudeAdapter().send("prompt")
@@ -121,9 +125,7 @@ def test_claude_transport_errors(
 
 
 @pytest.mark.parametrize("body", ["not-json", "[]"])
-def test_claude_rejects_invalid_response_json(
-    monkeypatch: pytest.MonkeyPatch, body: str
-) -> None:
+def test_claude_rejects_invalid_response_json(monkeypatch: pytest.MonkeyPatch, body: str) -> None:
     monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
     _patch_connection(
         monkeypatch,
@@ -172,17 +174,25 @@ def test_gemini_rejects_unsafe_configuration(
 def test_gemini_success_and_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
     module = "arkhon.integrations.models.gemini.adapter"
-    connection = _Connection(_Response(json.dumps({
-        "candidates": [{
-            "content": {
-                "parts": [
-                    {"text": "hello "},
-                    {"inlineData": "ignored"},
-                    {"text": "world"},
-                ]
-            }
-        }]
-    })))
+    connection = _Connection(
+        _Response(
+            json.dumps(
+                {
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [
+                                    {"text": "hello "},
+                                    {"inlineData": "ignored"},
+                                    {"text": "world"},
+                                ]
+                            }
+                        }
+                    ]
+                }
+            )
+        )
+    )
     _patch_connection(monkeypatch, module, connection)
     result = GeminiAdapter().send("prompt")
     assert result.ok and result.payload["text"] == "hello world"
@@ -210,9 +220,7 @@ def test_gemini_transport_errors(
 
 
 @pytest.mark.parametrize("body", ["not-json", "[]"])
-def test_gemini_rejects_invalid_response_json(
-    monkeypatch: pytest.MonkeyPatch, body: str
-) -> None:
+def test_gemini_rejects_invalid_response_json(monkeypatch: pytest.MonkeyPatch, body: str) -> None:
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
     _patch_connection(
         monkeypatch,

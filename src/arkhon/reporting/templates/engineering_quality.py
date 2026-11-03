@@ -11,9 +11,7 @@ from arkhon.core.logging import get_logger
 logger = get_logger("reporting.templates")
 TEMPLATES = {
     "00-ENGINEERING-CHARTER": (
-        "# Engineering Charter\n\n"
-        "Commit: `{commit_sha}`\n\n"
-        "Charter version: 1.0\n"
+        "# Engineering Charter\n\n" "Commit: `{commit_sha}`\n\n" "Charter version: 1.0\n"
     ),
     "01-REQUIREMENTS-AUDIT": (
         "# Requirements Audit\n\n"

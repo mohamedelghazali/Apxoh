@@ -107,12 +107,14 @@ def test_registry_rejects_duplicate_extension_and_invalid_entries(tmp_path: Path
     folder = tmp_path / "languages"
     folder.mkdir()
     (folder / "registry.yaml").write_text(
-        yaml.safe_dump({
-            "languages": [
-                {"id": "one", "detection": {"extensions": [".x"]}},
-                {"id": "two", "detection": {"extensions": [".x"]}},
-            ]
-        }),
+        yaml.safe_dump(
+            {
+                "languages": [
+                    {"id": "one", "detection": {"extensions": [".x"]}},
+                    {"id": "two", "detection": {"extensions": [".x"]}},
+                ]
+            }
+        ),
         encoding="utf-8",
     )
     with pytest.raises(ConfigError, match="assigned to multiple languages"):

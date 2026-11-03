@@ -1,4 +1,5 @@
 """Tests for the supported TSAR scan/SARIF CLI adapter."""
+
 from __future__ import annotations
 
 import json
@@ -10,21 +11,24 @@ import pytest
 from arkhon.core.errors import SecurityError
 from arkhon.integrations.tsar.adapter import TsarAdapter, TsarConfig
 
-
 SHA = "a" * 40
 
 
 def _sarif(*, version: str = "1.1.1", results: list | None = None) -> dict:
     return {
         "version": "2.1.0",
-        "runs": [{
-            "tool": {"driver": {
-                "name": "TSAR",
-                "version": version,
-                "rules": [{"id": "tsar/secret"}],
-            }},
-            "results": results or [],
-        }],
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "TSAR",
+                        "version": version,
+                        "rules": [{"id": "tsar/secret"}],
+                    }
+                },
+                "results": results or [],
+            }
+        ],
     }
 
 
@@ -35,7 +39,10 @@ def _run_with_sarif(monkeypatch: pytest.MonkeyPatch, payload: dict, code: int = 
         output = Path(command[command.index("--output") + 1])
         output.write_text(json.dumps(payload), encoding="utf-8")
         return subprocess.CompletedProcess(command, code, "", "")
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fake_run)
 
 
@@ -52,7 +59,9 @@ def test_health_check_missing_and_success(monkeypatch: pytest.MonkeyPatch) -> No
     adapter = TsarAdapter()
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: None)
     assert adapter.health_check() is False
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.subprocess.run",
         lambda *a, **k: subprocess.CompletedProcess(a[0], 0, "usage: tsar scan", ""),
@@ -68,7 +77,9 @@ def test_health_check_missing_and_success(monkeypatch: pytest.MonkeyPatch) -> No
 def test_health_check_rejects_invalid_cli(
     monkeypatch: pytest.MonkeyPatch, code: int, stdout: str, expected: bool
 ) -> None:
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.subprocess.run",
         lambda *a, **k: subprocess.CompletedProcess(a[0], code, stdout, ""),
@@ -77,7 +88,9 @@ def test_health_check_rejects_invalid_cli(
 
 
 def test_health_check_handles_process_and_version_failures(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.subprocess.run",
         lambda *a, **k: (_ for _ in ()).throw(OSError("no process")),
@@ -99,11 +112,15 @@ def test_version_checks_installed_distribution(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: None)
     with pytest.raises(SecurityError, match="not found"):
         adapter.version()
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.package_version",
         lambda _name: (_ for _ in ()).throw(
-            __import__("importlib.metadata", fromlist=["PackageNotFoundError"]).PackageNotFoundError()
+            __import__(
+                "importlib.metadata", fromlist=["PackageNotFoundError"]
+            ).PackageNotFoundError()
         ),
     )
     with pytest.raises(SecurityError, match="metadata"):
@@ -120,7 +137,9 @@ def test_audit_rejects_invalid_inputs(tmp_path: Path, monkeypatch: pytest.Monkey
     assert adapter.audit(tmp_path, "bad").reason == "invalid commit SHA"
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: None)
     assert "not found" in adapter.audit(tmp_path, SHA).reason
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     assert "not found" in adapter.audit(tmp_path / "missing", SHA).reason
 
 
@@ -140,7 +159,9 @@ def test_audit_clean_sarif_passes_and_binds_artifact(
 def test_audit_findings_are_fail_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _run_with_sarif(
         monkeypatch,
-        _sarif(results=[{"ruleId": "tsar/secret", "level": "error", "message": {"text": "finding"}}]),
+        _sarif(
+            results=[{"ruleId": "tsar/secret", "level": "error", "message": {"text": "finding"}}]
+        ),
         code=1,
     )
     result = TsarAdapter().audit(tmp_path, SHA)
@@ -150,8 +171,12 @@ def test_audit_findings_are_fail_closed(tmp_path: Path, monkeypatch: pytest.Monk
     assert result.payload["findings"][0]["ruleId"] == "tsar/secret"
 
 
-def test_audit_rejects_tool_exit_without_sarif(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+def test_audit_rejects_tool_exit_without_sarif(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.subprocess.run",
         lambda *a, **k: subprocess.CompletedProcess(a[0], 2, "", "tool error"),
@@ -173,18 +198,31 @@ def test_audit_rejects_tool_exit_without_sarif(tmp_path: Path, monkeypatch: pyte
         ('{"version":"2.1.0","runs":[null]}', "run must be an object"),
         ('{"version":"2.1.0","runs":[{}]}', "driver identity"),
         ('{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR"}}}]}', "semantic version"),
-        ('{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR","version":"1.1.1"}},"results":{}}]}', "arrays"),
-        ('{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR","version":"1.1.1"}},"results":[{}]}]}', "malformed finding"),
-        ('{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR","version":"1.1.1"}},"results":[{"ruleId":"x","level":"fatal"}]}]}', "severity"),
+        (
+            '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR","version":"1.1.1"}},"results":{}}]}',
+            "arrays",
+        ),
+        (
+            '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR","version":"1.1.1"}},"results":[{}]}]}',
+            "malformed finding",
+        ),
+        (
+            '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"TSAR","version":"1.1.1"}},"results":[{"ruleId":"x","level":"fatal"}]}]}',
+            "severity",
+        ),
     ],
 )
 def test_audit_rejects_malformed_sarif(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, raw: str, message: str
 ) -> None:
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
+
     def fake_run(command, **kwargs):
         Path(command[command.index("--output") + 1]).write_text(raw, encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, "", "")
+
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fake_run)
     result = TsarAdapter().audit(tmp_path, SHA)
     assert result.ok is False
@@ -202,10 +240,18 @@ def test_audit_rejects_unsupported_version(tmp_path: Path, monkeypatch: pytest.M
 def test_audit_handles_process_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
 ) -> None:
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar")
+    monkeypatch.setattr(
+        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+    )
+
     def fail(*args, **kwargs):
         raise error
+
     monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fail)
     result = TsarAdapter().audit(tmp_path, SHA)
     assert not result.ok
-    assert "timed out" in result.reason if isinstance(error, subprocess.TimeoutExpired) else "failed to start" in result.reason
+    assert (
+        "timed out" in result.reason
+        if isinstance(error, subprocess.TimeoutExpired)
+        else "failed to start" in result.reason
+    )

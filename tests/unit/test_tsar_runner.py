@@ -18,8 +18,9 @@ SHA = "a" * 40
 
 
 def _git(monkeypatch: pytest.MonkeyPatch, output: str = SHA) -> None:
-    monkeypatch.setattr("arkhon.verification.runners.tsar_runner.shutil.which",
-                        lambda _name: "/usr/bin/git")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.tsar_runner.shutil.which", lambda _name: "/usr/bin/git"
+    )
     monkeypatch.setattr(
         "arkhon.verification.runners.tsar_runner.subprocess.run",
         lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, output, ""),
@@ -47,25 +48,30 @@ def test_tsar_runner_requires_positive_timeout_and_git(
 ) -> None:
     with pytest.raises(ValueError):
         TsarRunner(0)
-    monkeypatch.setattr("arkhon.verification.runners.tsar_runner.shutil.which",
-                        lambda _name: None)
+    monkeypatch.setattr("arkhon.verification.runners.tsar_runner.shutil.which", lambda _name: None)
     result = TsarRunner().run(tmp_path)
     assert result.outcome == RunnerOutcome.BLOCKED
     assert "git executable" in result.reason
 
 
-@pytest.mark.parametrize("error", [
-    subprocess.CalledProcessError(1, "git"),
-    subprocess.TimeoutExpired("git", 1),
-    OSError("git unavailable"),
-])
+@pytest.mark.parametrize(
+    "error",
+    [
+        subprocess.CalledProcessError(1, "git"),
+        subprocess.TimeoutExpired("git", 1),
+        OSError("git unavailable"),
+    ],
+)
 def test_tsar_runner_git_resolution_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
 ) -> None:
-    monkeypatch.setattr("arkhon.verification.runners.tsar_runner.shutil.which",
-                        lambda _name: "/usr/bin/git")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.tsar_runner.shutil.which", lambda _name: "/usr/bin/git"
+    )
+
     def fail(*args: object, **kwargs: object) -> None:
         raise error
+
     monkeypatch.setattr("arkhon.verification.runners.tsar_runner.subprocess.run", fail)
     assert "cannot resolve commit SHA" in TsarRunner().run(tmp_path).reason
 

@@ -72,9 +72,7 @@ def _record_timestamp(record: Any) -> datetime:
 class JsonReporter:
     """Writes a JSON report aggregating all evidence."""
 
-    def build(
-        self, project_root: Path, expected_commit_sha: str | None = None
-    ) -> dict[str, Any]:
+    def build(self, project_root: Path, expected_commit_sha: str | None = None) -> dict[str, Any]:
         store = EvidenceStore(project_root)
         all_records = list(store.iter_records())
         if not all_records:

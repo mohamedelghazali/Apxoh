@@ -169,7 +169,6 @@ def test_send_does_not_leak_key(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "sk-very-secret-key" not in result.reason
 
 
-
 @pytest.mark.parametrize(
     "endpoint",
     [
@@ -198,9 +197,12 @@ def test_endpoint_allows_https_and_loopback_http() -> None:
 
 def test_response_text_variants() -> None:
     assert OpenAICompatibleAdapter._response_text("text") == "text"
-    assert OpenAICompatibleAdapter._response_text([
-        {"text": "one"}, {"text": "two"}, {"image": "ignored"}, "ignored"
-    ]) == "onetwo"
+    assert (
+        OpenAICompatibleAdapter._response_text(
+            [{"text": "one"}, {"text": "two"}, {"image": "ignored"}, "ignored"]
+        )
+        == "onetwo"
+    )
     assert OpenAICompatibleAdapter._response_text({"text": "ignored"}) == ""
     assert OpenAICompatibleAdapter._response_text(None) == ""
 

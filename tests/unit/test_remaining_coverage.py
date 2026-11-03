@@ -121,11 +121,7 @@ def test_charter_rejects_invalid_entries_order_and_version(tmp_path: Path) -> No
     raw = {"principles": [None] * 12}
     with pytest.raises(GovernanceError, match="must be a mapping"):
         _parse_principles(raw)
-    raw = {
-        "principles": [
-            {"number": n, "statement": f"P{n}"} for n in range(1, 13)
-        ]
-    }
+    raw = {"principles": [{"number": n, "statement": f"P{n}"} for n in range(1, 13)]}
     raw["principles"][0]["statement"] = 7
     with pytest.raises(GovernanceError, match="invalid fields"):
         _parse_principles(raw)
@@ -137,9 +133,12 @@ def test_charter_rejects_invalid_entries_order_and_version(tmp_path: Path) -> No
     base.mkdir(parents=True)
     (base / "ENGINEERING_CHARTER.md").write_text("# Charter", encoding="utf-8")
     (base / "PRINCIPLES.yaml").write_text(
-        yaml.safe_dump({"version": "", "principles": [
-            {"number": n, "statement": f"P{n}"} for n in range(1, 13)
-        ]}),
+        yaml.safe_dump(
+            {
+                "version": "",
+                "principles": [{"number": n, "statement": f"P{n}"} for n in range(1, 13)],
+            }
+        ),
         encoding="utf-8",
     )
     with pytest.raises(GovernanceError, match="version"):
@@ -151,23 +150,25 @@ def test_exception_registry_skips_bad_entries_and_adds_to_empty_mapping(
 ) -> None:
     path = tmp_path / "exceptions.yaml"
     path.write_text(
-        yaml.safe_dump({
-            "exceptions": [
-                "not a mapping",
-                {"exception_id": "missing-fields"},
-                {
-                    "exception_id": "EXC-1",
-                    "rule_id": "R-1",
-                    "scope": {},
-                    "rationale": "reason",
-                    "owner": "owner",
-                    "approver": "approver",
-                    "approved_at": "2026-01-01T00:00:00Z",
-                    "expires_at": "2030-01-01T00:00:00Z",
-                    "compensating_control": "control",
-                },
-            ]
-        }),
+        yaml.safe_dump(
+            {
+                "exceptions": [
+                    "not a mapping",
+                    {"exception_id": "missing-fields"},
+                    {
+                        "exception_id": "EXC-1",
+                        "rule_id": "R-1",
+                        "scope": {},
+                        "rationale": "reason",
+                        "owner": "owner",
+                        "approver": "approver",
+                        "approved_at": "2026-01-01T00:00:00Z",
+                        "expires_at": "2030-01-01T00:00:00Z",
+                        "compensating_control": "control",
+                    },
+                ]
+            }
+        ),
         encoding="utf-8",
     )
     registry = load_exceptions(path)
@@ -175,8 +176,15 @@ def test_exception_registry_skips_bad_entries_and_adds_to_empty_mapping(
     empty = tmp_path / "empty.yaml"
     empty.write_text("{}", encoding="utf-8")
     exception = PolicyException(
-        "EXC-2", "R-2", {}, "reason", "owner", "approver",
-        "2026-01-01T00:00:00Z", "2030-01-01T00:00:00Z", "control",
+        "EXC-2",
+        "R-2",
+        {},
+        "reason",
+        "owner",
+        "approver",
+        "2026-01-01T00:00:00Z",
+        "2030-01-01T00:00:00Z",
+        "control",
     )
     add_exception(empty, exception)
     assert len(yaml.safe_load(empty.read_text(encoding="utf-8"))["exceptions"]) == 1
@@ -184,14 +192,29 @@ def test_exception_registry_skips_bad_entries_and_adds_to_empty_mapping(
 
 def test_exception_naive_expiry_and_registry_filters() -> None:
     exception = PolicyException(
-        "EXC-3", "R-3", {}, "reason", "owner", "approver",
-        "2026-01-01", "2030-01-01", "control",
+        "EXC-3",
+        "R-3",
+        {},
+        "reason",
+        "owner",
+        "approver",
+        "2026-01-01",
+        "2030-01-01",
+        "control",
     )
     now = datetime(2026, 11, 3, tzinfo=UTC)
     assert exception.is_active(now=now)
     revoked = PolicyException(
-        "EXC-4", "R-3", {}, "reason", "owner", "approver",
-        "2026-01-01", "2030-01-01", "control", status="revoked",
+        "EXC-4",
+        "R-3",
+        {},
+        "reason",
+        "owner",
+        "approver",
+        "2026-01-01",
+        "2030-01-01",
+        "control",
+        status="revoked",
     )
     registry = ExceptionRegistry([exception, revoked])
     assert registry.active_for_rule("R-3", now=now) == [exception]
@@ -231,16 +254,19 @@ def test_language_registry_rejects_yaml_duplicates_and_extensions(tmp_path: Path
     path.write_text(yaml.safe_dump({"languages": []}), encoding="utf-8")
     with pytest.raises(ConfigError, match="non-empty"):
         load_registry(tmp_path)
-    path.write_text(yaml.safe_dump({"languages": [_language("x", [".x"]), _language("x", [".y"])]}),
-                    encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump({"languages": [_language("x", [".x"]), _language("x", [".y"])]}),
+        encoding="utf-8",
+    )
     with pytest.raises(ConfigError, match="duplicate language"):
         load_registry(tmp_path)
     path.write_text(yaml.safe_dump({"languages": [_language("x", ["x"])]}), encoding="utf-8")
     with pytest.raises(ConfigError, match="invalid extension"):
         load_registry(tmp_path)
-    path.write_text(yaml.safe_dump({
-        "languages": [_language("x", [".x"]), _language("y", [".x"])]
-    }), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump({"languages": [_language("x", [".x"]), _language("y", [".x"])]}),
+        encoding="utf-8",
+    )
     with pytest.raises(ConfigError, match="multiple languages"):
         load_registry(tmp_path)
 
@@ -285,9 +311,9 @@ def test_rule_loader_handles_non_directory_yaml_errors_and_nonrecursive(
     nested = folder / "nested"
     nested.mkdir()
     nested_rule = nested / "nested.yaml"
-    nested_rule.write_text(yaml.safe_dump({
-        "id": "SE-REQ-777", "metadata": {"title": "nested"}
-    }), encoding="utf-8")
+    nested_rule.write_text(
+        yaml.safe_dump({"id": "SE-REQ-777", "metadata": {"title": "nested"}}), encoding="utf-8"
+    )
     assert load_rules_dir(folder, recursive=False).rules == []
 
 
@@ -297,8 +323,12 @@ def test_rule_validator_handles_invalid_schema_and_raw_shapes(tmp_path: Path) ->
         Path("rule.yaml"),
         {
             "id": "OTHER-001",
-            "metadata": {"domain": "requirements", "enforcement": "blocking",
-                         "severity": "high", "status": "active"},
+            "metadata": {
+                "domain": "requirements",
+                "enforcement": "blocking",
+                "severity": "high",
+                "status": "active",
+            },
             "verification": [],
             "acceptance": [],
         },

@@ -26,6 +26,7 @@ FRESHNESS_HOURS = 168
 class TsarFindingsError(SecurityError):
     """Verified TSAR evidence contains unresolved critical or high findings."""
 
+
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _SEMVER_RE = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?")
@@ -74,7 +75,9 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
     ):
         raise SecurityError("TSAR rule_ids must be a list of non-empty strings")
     findings_raw = payload["findings"]
-    if not isinstance(findings_raw, list) or not all(isinstance(item, dict) for item in findings_raw):
+    if not isinstance(findings_raw, list) or not all(
+        isinstance(item, dict) for item in findings_raw
+    ):
         raise SecurityError("TSAR findings must be an array of objects")
     summary_raw = payload["summary"]
     if not isinstance(summary_raw, dict):

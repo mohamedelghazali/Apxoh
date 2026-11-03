@@ -1,4 +1,5 @@
 """Cryptographic re-verification for accepted supply-chain evidence."""
+
 from __future__ import annotations
 
 import json
@@ -50,7 +51,8 @@ def verify_cyclonedx_sbom(path: Path, *, expected_commit_sha: str) -> None:
     if not isinstance(properties, list):
         raise EvidenceTamperedError("SBOM is missing Apxoh commit-binding properties")
     binding = [
-        item.get("value") for item in properties
+        item.get("value")
+        for item in properties
         if isinstance(item, dict) and item.get("name") == "arkhon:commit-sha"
     ]
     if binding != [expected_commit_sha]:
@@ -87,7 +89,9 @@ def verify_supply_chain_attestation_report(
         or verification[name].get("verified") is not True
         for name in ("slsa", "sigstore")
     ):
-        raise EvidenceTamperedError("attestation report does not record both verifications as passed")
+        raise EvidenceTamperedError(
+            "attestation report does not record both verifications as passed"
+        )
 
     registered: dict[str, str] = {}
     for entry in evidence_artifacts:
@@ -110,25 +114,34 @@ def verify_supply_chain_attestation_report(
         if sha256_of(candidate) != digest:
             raise EvidenceTamperedError(f"{path_key} digest mismatch")
         resolved[path_key] = candidate
-    if report_path.resolve() not in {
-        _in_root(evidence_root, path) for path in registered
-    }:
+    if report_path.resolve() not in {_in_root(evidence_root, path) for path in registered}:
         raise EvidenceTamperedError("attestation report is not itself bound by the evidence record")
 
     slsa = shutil.which("slsa-verifier")
     cosign = shutil.which("cosign")
     if slsa is None or cosign is None:
-        raise EvidenceError("cannot accept signed supply-chain evidence: slsa-verifier and cosign are required")
+        raise EvidenceError(
+            "cannot accept signed supply-chain evidence: slsa-verifier and cosign are required"
+        )
     commands = (
         [
-            slsa, "verify-artifact", str(resolved["artifact"]),
-            "--provenance-path", str(resolved["provenance"]),
-            "--source-uri", SOURCE_URI,
+            slsa,
+            "verify-artifact",
+            str(resolved["artifact"]),
+            "--provenance-path",
+            str(resolved["provenance"]),
+            "--source-uri",
+            SOURCE_URI,
         ],
         [
-            cosign, "verify-blob", "--bundle", str(resolved["signature_bundle"]),
-            "--certificate-identity-regexp", IDENTITY_REGEXP,
-            "--certificate-oidc-issuer", OIDC_ISSUER,
+            cosign,
+            "verify-blob",
+            "--bundle",
+            str(resolved["signature_bundle"]),
+            "--certificate-identity-regexp",
+            IDENTITY_REGEXP,
+            "--certificate-oidc-issuer",
+            OIDC_ISSUER,
             str(resolved["artifact"]),
         ],
     )

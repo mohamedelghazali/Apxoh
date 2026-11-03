@@ -27,10 +27,12 @@ def _git_project(root: Path, *, with_tests: bool = False) -> None:
         (root / "tests" / "test_app.py").write_text(
             "def test_value():\n    assert 1 == 1\n", encoding="utf-8"
         )
+
     def run(args: list[str]) -> None:
         subprocess.run(  # noqa: S603 - resolved git binary and fixed test arguments
             [git, *args], cwd=root, check=True, capture_output=True
         )
+
     run(["init", "-q"])
     run(["config", "user.email", "ci@example.com"])
     run(["config", "user.name", "CI"])
@@ -55,16 +57,16 @@ def test_commit_sha_missing_git_and_git_failure(
     assert _commit_sha(tmp_path) is None
     assert "not found" in capsys.readouterr().err
     monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: "/usr/bin/git")
+
     def fail(*args: object, **kwargs: object) -> None:
         raise OSError("git unavailable")
+
     monkeypatch.setattr("arkhon.cli.subprocess.run", fail)
     assert _commit_sha(tmp_path) is None
     assert "cannot resolve commit SHA" in capsys.readouterr().err
 
 
-def test_assess_reports_score_and_gates(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_assess_reports_score_and_gates(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
     assert "Score:" in output and "Gates:" in output
@@ -103,9 +105,7 @@ def test_report_writes_json_and_markdown(
     assert "report.json" in capsys.readouterr().out
     assert (tmp_path / ".arkhon" / "reports" / "report.json").is_file()
     output = tmp_path / "custom-reports"
-    assert main([
-        "report", str(tmp_path), "--format", "markdown", "--output", str(output)
-    ]) == 0
+    assert main(["report", str(tmp_path), "--format", "markdown", "--output", str(output)]) == 0
     assert "report.md" in capsys.readouterr().out
     assert (output / "report.md").is_file()
 
