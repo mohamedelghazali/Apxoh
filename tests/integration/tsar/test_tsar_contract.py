@@ -63,12 +63,8 @@ def _valid_payload(tmp_path: Path, commit_sha: str) -> dict:
         "commit_sha": commit_sha,
         "executed_at": executed,
         "status": "PASS",
-        "rule_ids": [
-            "TSAR-SEC-SECRET-001",
-            "TSAR-SEC-CRYPTO-001",
-            "TSAR-SEC-DEP-001",
-            "TSAR-SEC-ASVS-V2",
-        ],
+        "rule_ids": ["TSAR-SCAN-EXECUTED"],
+        "findings": [],
         "summary": {"critical": 0, "high": 0, "medium": 2, "low": 5},
         "artifacts": [{"path": "scan.json", "sha256": sha256_of(artifact)}],
     }
@@ -99,7 +95,7 @@ def test_verifier_rejects_version_out_of_range(tmp_path: Path) -> None:
 
 def test_verifier_rejects_missing_required_rule(tmp_path: Path) -> None:
     payload = _valid_payload(tmp_path, "a" * 40)
-    payload["rule_ids"] = ["TSAR-SEC-SECRET-001"]
+    payload["rule_ids"] = ["TSAR-SOME-OTHER-RULE"]
     with pytest.raises(SecurityError, match="missing required"):
         verify_tsar_evidence(payload, expected_commit_sha="a" * 40, evidence_root=tmp_path)
 

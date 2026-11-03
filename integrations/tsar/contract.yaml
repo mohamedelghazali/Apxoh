@@ -1,87 +1,50 @@
-# Apxoh <-> TSAR integration contract.
-# This is a desired contract; operational enforcement must be verified separately.
-version: "1.0.0"
-status: proposed
+# Apxoh <-> TSAR integration contract, aligned with the released TSAR CLI.
+version: "1.1.0"
+status: implemented-contract
 relation: consumer-provider
-
 provider:
   name: TSAR
   repository: "https://github.com/mohamedelghazali/TSAR"
   minimum_version: "1.1.0"
   maximum_version_exclusive: "2.0.0"
-  role: "Delegated security scanning authority"
+  role: "Delegated secret scanning and static security review"
   required_for:
-    - security_gate
-    - crypto_audit
-    - secrets_exposure_check
-    - vulnerability_scan
-    - asvs_compliance_evidence
-
+    - secret_scanning
+    - static_security_review
 consumer:
   name: Apxoh
   identifier: arkhon
   role: "Governance and release decision authority"
-  owns:
-    - security_policy
-    - gate_placement
-    - evidence_acceptance
-    - release_decision
-
+  owns: [security_policy, gate_placement, evidence_acceptance, release_decision]
 handshake:
   method: cli-invocation
-  command_pattern: "tsar audit --project {project} --output json --commit {commit}"
-  output_format: json
+  command_pattern: "tsar scan {project} --format sarif --output {sarif_file}"
+  output_format: "SARIF 2.1.0"
   timeout_seconds: 1800
-  output_transport: stdout
-
+  output_transport: file
+  exit_codes:
+    0: clean_scan
+    1: findings
+    2: tooling_error
 evidence_contract:
-  required_fields:
-    - evidence_id
-    - tsar_version
-    - rule_ids
-    - findings
-    - commit_sha
-    - executed_at
-    - artifacts
-    - summary
-    - status
+  required_fields: [evidence_id, tsar_version, rule_ids, findings, commit_sha, executed_at, artifacts, summary, status]
   freshness_window_hours: 168
+  required_rule_ids: [TSAR-SCAN-EXECUTED]
   integrity_check:
-    - sha256_on_each_artifact
-    - commit_sha_matches_expected
+    - sarif_version_is_2_1_0
+    - sarif_driver_name_is_TSAR
     - tsar_version_in_range
-    - no_missing_rule_ids_from_required_set
+    - commit_sha_matches_expected
+    - sha256_on_each_artifact
     - reject_future_timestamps
-  required_rule_ids:
-    - TSAR-SEC-SECRET-001
-    - TSAR-SEC-CRYPTO-001
-    - TSAR-SEC-DEP-001
-    - TSAR-SEC-ASVS-V2
-
+  coverage_limitations:
+    - "This TSAR CLI scan covers secret scanning and static security review only."
+    - "It does not establish cryptographic inventory, dependency vulnerability, or ASVS compliance coverage."
 failure_handling:
-  tsar_unavailable:
-    gate_status: BLOCKED
-    reason: "Security authority unavailable"
-    action: install_or_configure_tsar
-  tsar_version_out_of_range:
-    gate_status: BLOCKED
-    reason: "TSAR version not in compatibility window"
-    action: upgrade_or_downgrade_tsar
-  evidence_stale:
-    gate_status: BLOCKED
-    reason: "Evidence older than freshness window"
-    action: rerun_tsar_audit
-  evidence_commit_mismatch:
-    gate_status: BLOCKED
-    reason: "Evidence tied to a different commit"
-    action: rerun_tsar_audit_on_current_commit
-  evidence_tampered:
-    gate_status: BLOCKED
-    reason: "Artifact SHA-256 mismatch"
-    action: reject_and_escalate
-  critical_findings_open:
-    gate_status: FAIL
-    reason: "Unresolved critical or high severity findings"
-    action: remediate_and_reaudit
-
+  tsar_unavailable: {gate_status: BLOCKED, reason: "TSAR executable unavailable", action: install_or_configure_tsar}
+  tsar_version_out_of_range: {gate_status: BLOCKED, reason: "TSAR version unsupported", action: upgrade_or_downgrade_tsar}
+  evidence_stale: {gate_status: BLOCKED, reason: "Evidence older than freshness window", action: rerun_tsar}
+  evidence_commit_mismatch: {gate_status: BLOCKED, reason: "Evidence tied to a different commit", action: rerun_tsar}
+  evidence_tampered: {gate_status: BLOCKED, reason: "SARIF artifact integrity failure", action: reject_and_escalate}
+  high_findings_open: {gate_status: FAIL, reason: "TSAR reported high severity findings", action: remediate_and_reaudit}
 no_trust_without_verification: true

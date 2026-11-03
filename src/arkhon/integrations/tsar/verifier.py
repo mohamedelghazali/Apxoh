@@ -18,12 +18,8 @@ from arkhon.evidence.integrity import sha256_of
 
 logger = get_logger("integrations.tsar.verifier")
 
-REQUIRED_RULE_IDS = (
-    "TSAR-SEC-SECRET-001",
-    "TSAR-SEC-CRYPTO-001",
-    "TSAR-SEC-DEP-001",
-    "TSAR-SEC-ASVS-V2",
-)
+# This marker proves a real TSAR scan completed; it does not claim unsupported crypto, dependency, or ASVS coverage.
+REQUIRED_RULE_IDS = ("TSAR-SCAN-EXECUTED",)
 FRESHNESS_HOURS = 168
 
 
@@ -57,6 +53,7 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
         "executed_at",
         "status",
         "rule_ids",
+        "findings",
         "summary",
         "artifacts",
     )
@@ -76,6 +73,9 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
         isinstance(item, str) and item for item in payload["rule_ids"]
     ):
         raise SecurityError("TSAR rule_ids must be a list of non-empty strings")
+    findings_raw = payload["findings"]
+    if not isinstance(findings_raw, list) or not all(isinstance(item, dict) for item in findings_raw):
+        raise SecurityError("TSAR findings must be an array of objects")
     summary_raw = payload["summary"]
     if not isinstance(summary_raw, dict):
         raise SecurityError("TSAR summary must be an object")

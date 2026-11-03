@@ -103,6 +103,7 @@ def test_parse_payload_malformed_artifact() -> None:
         "executed_at": "2026-11-01T00:00:00Z",
         "status": "PASS",
         "rule_ids": list(REQUIRED_RULE_IDS),
+        "findings": [],
         "summary": {"critical": 0, "high": 0},
         "artifacts": [{"path": "x"}],
     }
