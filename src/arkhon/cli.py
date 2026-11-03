@@ -6,9 +6,9 @@ import argparse
 import json
 import re
 import shutil
+import tempfile
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -196,6 +196,115 @@ def cmd_assess(args: argparse.Namespace) -> int:
 
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    """Summarize project configuration and persisted verification evidence."""
+    from arkhon.core.errors import ConfigError, EvidenceError
+    from arkhon.evidence.store import EvidenceStore
+    from arkhon.language_support.detector import detect_languages
+    from arkhon.projects.matcher import match_profile
+
+    project = Path(args.project).resolve()
+    if not project.is_dir():
+        print(f"[FAIL] not a directory: {project}", file=sys.stderr)
+        return 1
+    try:
+        records = list(EvidenceStore(project).iter_records())
+        profile = match_profile(project)
+        languages = detect_languages(project)
+    except EvidenceError as exc:
+        print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
+        return 1
+    except (ConfigError, OSError, ValueError) as exc:
+        print(f"[FAIL] project status could not be computed: {exc}", file=sys.stderr)
+        return 1
+
+    by_domain: dict[str, dict[str, int]] = {}
+    totals = {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "other": 0}
+    for record in records:
+        domain = record.path.parent.name
+        status = record.status.upper()
+        bucket = by_domain.setdefault(domain, {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "other": 0})
+        key = status if status in {"PASS", "FAIL", "BLOCKED"} else "other"
+        bucket[key] += 1
+        totals[key] += 1
+
+    detected_language_ids = [item.definition.id for item in languages.detected]
+    report = {
+        "project": str(project),
+        "profile": {
+            "name": profile.profile,
+            "reason": profile.reason,
+            "explicit": profile.explicit,
+        },
+        "languages": {
+            "detected": detected_language_ids,
+            "unknown": languages.unknown,
+        },
+        "evidence": {
+            "total": len(records),
+            "counts": totals,
+            "by_domain": by_domain,
+        },
+    }
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print(f"Project: {project}")
+        print(f"Profile: {profile.profile} ({profile.reason})")
+        print("Languages: " + (", ".join(detected_language_ids) or "none"))
+        print(f"Evidence records: {len(records)}")
+        for key, value in totals.items():
+            print(f"  {key}: {value}")
+        if not records:
+            print("  [INFO] no evidence has been recorded yet")
+    return 0
+
+
+def cmd_exceptions_list(args: argparse.Namespace) -> int:
+    """List policy exceptions without granting, extending, or revoking them."""
+    import yaml
+
+    from arkhon.policies.exceptions import load_exceptions
+
+    registry_path = (
+        Path(args.registry).expanduser().resolve()
+        if args.registry
+        else _repo_root() / "system" / "policies" / "exceptions" / "registry.yaml"
+    )
+    try:
+        registry = load_exceptions(registry_path)
+    except (OSError, yaml.YAMLError, TypeError, AttributeError, ValueError) as exc:
+        print(f"[FAIL] cannot load exception registry: {exc}", file=sys.stderr)
+        return 1
+
+    items = []
+    for exception in sorted(registry.exceptions, key=lambda item: item.exception_id):
+        state = "expired" if exception.is_expired() else exception.status
+        items.append(
+            {
+                "exception_id": exception.exception_id,
+                "rule_id": exception.rule_id,
+                "owner": exception.owner,
+                "approver": exception.approver,
+                "expires_at": exception.expires_at,
+                "status": state,
+                "active": exception.is_active(),
+            }
+        )
+    if args.json:
+        print(json.dumps({"registry": str(registry_path), "exceptions": items}, indent=2))
+    elif not items:
+        print(f"No exceptions registered in {registry_path}")
+    else:
+        print(f"Exception registry: {registry_path}")
+        for item in items:
+            marker = "ACTIVE" if item["active"] else str(item["status"]).upper()
+            print(
+                f"{item['exception_id']} | {item['rule_id']} | {marker} | "
+                f"expires {item['expires_at']} | owner {item['owner']}"
+            )
+    return 0
+
 
 def cmd_project_init(args: argparse.Namespace) -> int:
     """Create a schema-validated project declaration without overwriting by default."""
@@ -302,118 +411,6 @@ def cmd_project_init(args: argparse.Namespace) -> int:
     print(f"[OK] project declaration created: {target}")
     print(f"  Profile: {args.profile}")
     print(f"  Languages: {', '.join(detected) if detected else 'unknown'}")
-    return 0
-
-
-
-
-def cmd_status(args: argparse.Namespace) -> int:
-    """Summarize project configuration and persisted verification evidence."""
-    from arkhon.core.errors import ConfigError, EvidenceError
-    from arkhon.evidence.store import EvidenceStore
-    from arkhon.language_support.detector import detect_languages
-    from arkhon.projects.matcher import match_profile
-
-    project = Path(args.project).resolve()
-    if not project.is_dir():
-        print(f"[FAIL] not a directory: {project}", file=sys.stderr)
-        return 1
-    try:
-        records = list(EvidenceStore(project).iter_records())
-        profile = match_profile(project)
-        languages = detect_languages(project)
-    except EvidenceError as exc:
-        print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
-        return 1
-    except (ConfigError, OSError, ValueError) as exc:
-        print(f"[FAIL] project status could not be computed: {exc}", file=sys.stderr)
-        return 1
-
-    by_domain: dict[str, dict[str, int]] = {}
-    totals = {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "other": 0}
-    for record in records:
-        domain = record.path.parent.name
-        status = record.status.upper()
-        bucket = by_domain.setdefault(domain, {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "other": 0})
-        key = status if status in {"PASS", "FAIL", "BLOCKED"} else "other"
-        bucket[key] += 1
-        totals[key] += 1
-
-    detected_language_ids = [item.definition.id for item in languages.detected]
-    report = {
-        "project": str(project),
-        "profile": {
-            "name": profile.profile,
-            "reason": profile.reason,
-            "explicit": profile.explicit,
-        },
-        "languages": {
-            "detected": detected_language_ids,
-            "unknown": languages.unknown,
-        },
-        "evidence": {
-            "total": len(records),
-            "counts": totals,
-            "by_domain": by_domain,
-        },
-    }
-    if args.json:
-        print(json.dumps(report, indent=2))
-    else:
-        print(f"Project: {project}")
-        print(f"Profile: {profile.profile} ({profile.reason})")
-        print("Languages: " + (", ".join(detected_language_ids) or "none"))
-        print(f"Evidence records: {len(records)}")
-        for key, value in totals.items():
-            print(f"  {key}: {value}")
-        if not records:
-            print("  [INFO] no evidence has been recorded yet")
-    return 0
-
-
-def cmd_exceptions_list(args: argparse.Namespace) -> int:
-    """List policy exceptions without granting, extending, or revoking them."""
-    import yaml
-
-    from arkhon.policies.exceptions import load_exceptions
-
-    registry_path = (
-        Path(args.registry).expanduser().resolve()
-        if args.registry
-        else _repo_root() / "system" / "policies" / "exceptions" / "registry.yaml"
-    )
-    try:
-        registry = load_exceptions(registry_path)
-    except (OSError, yaml.YAMLError) as exc:
-        print(f"[FAIL] cannot load exception registry: {exc}", file=sys.stderr)
-        return 1
-
-    items = []
-    for exception in sorted(registry.exceptions, key=lambda item: item.exception_id):
-        state = "expired" if exception.is_expired() else exception.status
-        items.append(
-            {
-                "exception_id": exception.exception_id,
-                "rule_id": exception.rule_id,
-                "owner": exception.owner,
-                "approver": exception.approver,
-                "expires_at": exception.expires_at,
-                "status": state,
-                "active": exception.is_active(),
-            }
-        )
-    if args.json:
-        print(json.dumps({"registry": str(registry_path), "exceptions": items}, indent=2))
-    elif not items:
-        print(f"No exceptions registered in {registry_path}")
-    else:
-        print(f"Exception registry: {registry_path}")
-        for item in items:
-            marker = "ACTIVE" if item["active"] else str(item["status"]).upper()
-            print(
-                f"{item['exception_id']} | {item['rule_id']} | {marker} | "
-                f"expires {item['expires_at']} | owner {item['owner']}"
-            )
     return 0
 
 
@@ -529,37 +526,18 @@ def build_parser() -> argparse.ArgumentParser:
     assess = sub.add_parser("assess", help="Compute engineering score and gate status")
     assess.add_argument("project", nargs="?", default=".")
     assess.set_defaults(func=cmd_assess)
-    project = sub.add_parser("project", help="Initialize and manage project configuration")
-    project_sub = project.add_subparsers(dest="project_command")
-    project_init = project_sub.add_parser("init", help="Create .arkhon/project.yaml")
-    project_init.add_argument("project", nargs="?", default=".")
-    project_init.add_argument("--name")
-    project_init.add_argument("--identifier")
-    project_init.add_argument(
-        "--type",
-        dest="project_type",
-        choices=["library", "library-and-cli", "application", "service", "platform", "tool"],
-        default="library",
-    )
-    project_init.add_argument("--profile", default="universal")
-    project_init.add_argument(
-        "--risk-level",
-        choices=["low", "medium", "high", "critical"],
-        default="medium",
-    )
-    project_init.add_argument("--description", default="")
-    project_init.add_argument("--force", action="store_true")
-    project_init.set_defaults(func=cmd_project_init)
     status = sub.add_parser("status", help="Summarize project configuration and evidence")
     status.add_argument("project", nargs="?", default=".")
     status.add_argument("--json", action="store_true")
     status.set_defaults(func=cmd_status)
     exceptions = sub.add_parser("exceptions", help="Inspect governance exceptions")
     exceptions_sub = exceptions.add_subparsers(dest="exceptions_command")
+    exceptions_sub.required = True
     exceptions_list = exceptions_sub.add_parser("list", help="List registered exceptions")
     exceptions_list.add_argument("--registry")
     exceptions_list.add_argument("--json", action="store_true")
     exceptions_list.set_defaults(func=cmd_exceptions_list)
+
     report = sub.add_parser("report", help="Generate an engineering-quality report")
     report.add_argument("project", nargs="?", default=".")
     report.add_argument("--format", choices=["json", "markdown"], default="json")
