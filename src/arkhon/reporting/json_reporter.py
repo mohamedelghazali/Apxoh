@@ -124,7 +124,9 @@ class JsonReporter:
                             and item["path"].endswith(".cdx.json")
                         ]
                         if len(sbom_paths) != 1:
-                            raise EvidenceError("PASS SBOM evidence requires exactly one CycloneDX SBOM")
+                            raise EvidenceError(
+                                "PASS SBOM evidence requires exactly one CycloneDX SBOM"
+                            )
                         verify_cyclonedx_sbom(sbom_paths[0], expected_commit_sha=commit_sha)
                     else:
                         attestation_paths = [
@@ -136,7 +138,8 @@ class JsonReporter:
                         ]
                         if len(attestation_paths) != 1:
                             raise EvidenceError(
-                                "PASS release-attestation evidence requires exactly one attestation report"
+                                "PASS release-attestation evidence requires exactly one "
+                                "attestation report"
                             )
                         verify_supply_chain_attestation_report(
                             attestation_paths[0],
