@@ -8,7 +8,7 @@ import yaml
 from arkhon.assessment.decision import decide
 from arkhon.assessment.gates import GateVerdict, RuleOutcome as AssessmentOutcome, evaluate_all_gates, evaluate_gate
 from arkhon.assessment.scorer import Score, ScoreBreakdown, score_from_ratios
-from arkhon.core.errors import AssessmentError, GovernanceError, RuleError
+from arkhon.core.errors import AssessmentError, GateError, GovernanceError, RuleError
 from arkhon.governance.charter_loader import (
     Principle,
     _load_yaml as load_charter_yaml,
@@ -87,7 +87,6 @@ def test_charter_load_and_validation_edges(tmp_path: Path) -> None:
     path.write_text("version: ''\nprinciples: []\n", encoding="utf-8")
     with pytest.raises(GovernanceError, match="exactly 12"):
         load_charter(tmp_path)
-    _charter_yaml(tmp_path / "rebuild")
 
 
 def test_policy_loader_registry_and_fail_closed(tmp_path: Path) -> None:
@@ -159,7 +158,7 @@ def test_rule_loader_and_registry_error_paths(tmp_path: Path) -> None:
     with pytest.raises(RuleError, match="does not exist"):
         build_registry(missing)
     loaded = load_rules_dir(rules, recursive=False)
-    assert loaded.rules == []
+    assert len(loaded.rules) == 1
     rule = load_rules_dir(rules).rules[0]
     registry = RuleRegistry([rule])
     assert registry.get(rule.id) == rule
@@ -196,11 +195,11 @@ def test_scoring_and_gate_validation_edges() -> None:
         {"security_gate": GateVerdict("security_gate", "PASS"),
          "release_gate": GateVerdict("release_gate", "PASS")},
     ).decision == "APPROVED"
-    with pytest.raises(Exception):
+    with pytest.raises(GateError, match="unknown gate"):
         evaluate_gate("unknown_gate", [])
-    with pytest.raises(Exception):
+    with pytest.raises(GateError, match="unknown outcome domains"):
         evaluate_all_gates({"unknown-domain": []})
-    with pytest.raises(Exception):
+    with pytest.raises(GateError, match="unsupported outcome status"):
         evaluate_gate("security_gate", [AssessmentOutcome("R1", "blocking", "UNKNOWN")])
 
 
