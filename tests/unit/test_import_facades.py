@@ -28,7 +28,6 @@ _EMPTY_MODULES = (
     "arkhon.integrations.agents.tabnine",
     "arkhon.integrations.agents.windsurf",
     "arkhon.language_support.compatibility",
-    "arkhon.language_support.language_profile_loader",
     "arkhon.orchestrator.task_dispatcher",
     "arkhon.reporting.html_reporter",
     "arkhon.rules.evaluator",
@@ -58,3 +57,10 @@ def test_legacy_model_adapter_shims_export_internal_implementations(
     namespace = runpy.run_path(str(root / relative))
     assert export in namespace["__all__"]
     assert namespace[export].__name__ == export
+
+
+
+def test_language_profile_loader_exports_public_api() -> None:
+    module = importlib.import_module("arkhon.language_support.language_profile_loader")
+    assert module.__all__ == ["LanguageProfile", "load_language_profile"]
+    assert callable(module.load_language_profile)
