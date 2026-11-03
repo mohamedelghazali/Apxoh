@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
 from pathlib import Path
+from typing import Any
 from types import SimpleNamespace
 
 import pytest
@@ -11,7 +11,13 @@ import pytest
 from arkhon.assessment.decision import decide
 from arkhon.assessment.gates import GateVerdict
 from arkhon.assessment.scorer import Score
-from arkhon.core.errors import AssessmentError, ConfigError, EvidenceError, EvidenceTamperedError, GovernanceError
+from arkhon.core.errors import (
+    AssessmentError,
+    ConfigError,
+    EvidenceError,
+    EvidenceTamperedError,
+    GovernanceError,
+)
 from arkhon.core.logging import JsonFormatter, configure_logging, get_logger
 from arkhon.evidence.store import EvidenceStore
 from arkhon.governance.charter_loader import Principle, _parse_principles, load_charter
@@ -29,16 +35,77 @@ def verdict(name: str, status: str, reason: str = "") -> GateVerdict:
     return GateVerdict(name, status, reason=reason)
 
 
-@pytest.mark.parametrize(("gates", "points", "risks", "expected"), [
-    ({"release_gate": verdict("release_gate", "PASS")}, 99, 0, "REJECTED"),
-    ({"security_gate": verdict("security_gate", "FAIL"), "release_gate": verdict("release_gate", "PASS")}, 99, 0, "REJECTED"),
-    ({"security_gate": verdict("security_gate", "BLOCKED"), "release_gate": verdict("release_gate", "PASS")}, 99, 0, "PENDING_EVIDENCE"),
-    ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS"), "testing_gate": verdict("testing_gate", "BLOCKED")}, 99, 0, "PENDING_EVIDENCE"),
-    ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS"), "testing_gate": verdict("testing_gate", "FAIL")}, 99, 0, "REJECTED"),
-    ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS")}, 79, 0, "REJECTED"),
-    ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS")}, 80, 1, "APPROVED_WITH_CONDITIONS"),
-    ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS")}, 100, 0, "APPROVED"),
-])
+@pytest.mark.parametrize(
+    ("gates", "points", "risks", "expected"),
+    [
+        ({"release_gate": verdict("release_gate", "PASS")}, 99, 0, "REJECTED"),
+        (
+            {
+                "security_gate": verdict("security_gate", "FAIL"),
+                "release_gate": verdict("release_gate", "PASS"),
+            },
+            99,
+            0,
+            "REJECTED",
+        ),
+        (
+            {
+                "security_gate": verdict("security_gate", "BLOCKED"),
+                "release_gate": verdict("release_gate", "PASS"),
+            },
+            99,
+            0,
+            "PENDING_EVIDENCE",
+        ),
+        (
+            {
+                "security_gate": verdict("security_gate", "PASS"),
+                "release_gate": verdict("release_gate", "PASS"),
+                "testing_gate": verdict("testing_gate", "BLOCKED"),
+            },
+            99,
+            0,
+            "PENDING_EVIDENCE",
+        ),
+        (
+            {
+                "security_gate": verdict("security_gate", "PASS"),
+                "release_gate": verdict("release_gate", "PASS"),
+                "testing_gate": verdict("testing_gate", "FAIL"),
+            },
+            99,
+            0,
+            "REJECTED",
+        ),
+        (
+            {
+                "security_gate": verdict("security_gate", "PASS"),
+                "release_gate": verdict("release_gate", "PASS"),
+            },
+            79,
+            0,
+            "REJECTED",
+        ),
+        (
+            {
+                "security_gate": verdict("security_gate", "PASS"),
+                "release_gate": verdict("release_gate", "PASS"),
+            },
+            80,
+            1,
+            "APPROVED_WITH_CONDITIONS",
+        ),
+        (
+            {
+                "security_gate": verdict("security_gate", "PASS"),
+                "release_gate": verdict("release_gate", "PASS"),
+            },
+            100,
+            0,
+            "APPROVED",
+        ),
+    ],
+)
 def test_decision_paths(gates: dict[str, GateVerdict], points: float, risks: int, expected: str) -> None:
     assert decide(score(points), gates, risks).decision == expected
 
@@ -148,7 +215,10 @@ def test_enforcement_evidence_validation_and_path_safety(tmp_path: Path) -> None
     assert engine.evaluate_rule(rule("R3", {"required": ["proof.txt"]}), root).evidence_present
     assert engine.evaluate_rule(rule("R4", {"required": ["missing"]}), root).status == "BLOCKED"
     assert "escapes" in engine.evaluate_rule(rule("R5", {"required": ["../escape"]}), root).reason
-    assert engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status == "PASS"
+    assert (
+        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status
+        == "PASS"
+    )
     assert engine.evaluate_rule(rule("R7", {"required": [{"type": ""}]}), root).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R8", {"required": [None]}), root).status == "BLOCKED"
 
@@ -211,7 +281,7 @@ def test_logging_json_extras_exceptions_and_configuration() -> None:
         import sys
         record = logging.LogRecord("arkhon.test", logging.ERROR, __file__, 1, "message", (),
                                    sys.exc_info())
-    setattr(record, "arkhon_extra", {"component": "test"})
+    record.arkhon_extra = {"component": "test"}
     payload = json.loads(JsonFormatter().format(record))
     assert payload["extra"]["component"] == "test"
     assert "RuntimeError" in payload["exception"]
