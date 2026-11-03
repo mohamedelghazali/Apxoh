@@ -4,15 +4,22 @@ This module does not execute scanners or infer that evidence is trustworthy.
 Presence is only a preliminary check; delegated verification must validate
 content, provenance, integrity, freshness, and target binding separately.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from arkhon.core.constants import (
-    ENFORCEMENT_BLOCKING, ENFORCEMENT_CRITICAL, ENFORCEMENT_REQUIRED,
-    SEVERITY_CRITICAL, SEVERITY_HIGH, STATUS_BLOCKED, STATUS_FAIL,
-    STATUS_NOT_APPLICABLE, STATUS_PASS,
+    ENFORCEMENT_BLOCKING,
+    ENFORCEMENT_CRITICAL,
+    ENFORCEMENT_REQUIRED,
+    SEVERITY_CRITICAL,
+    SEVERITY_HIGH,
+    STATUS_BLOCKED,
+    STATUS_FAIL,
+    STATUS_NOT_APPLICABLE,
+    STATUS_PASS,
 )
 from arkhon.core.errors import GovernanceError
 from arkhon.core.logging import get_logger
@@ -44,7 +51,9 @@ class GateVerdict:
 
     @property
     def closes(self) -> bool:
-        return self.status == STATUS_PASS and not self.blocking_failures and not self.critical_failures
+        return (
+            self.status == STATUS_PASS and not self.blocking_failures and not self.critical_failures
+        )
 
 
 class EnforcementEngine:
@@ -71,7 +80,9 @@ class EnforcementEngine:
             if isinstance(item, str) and item:
                 candidate = (root / item).resolve()
                 if root not in candidate.parents and candidate != root:
-                    return RuleOutcome(rule.id, STATUS_BLOCKED, "evidence path escapes evidence root")
+                    return RuleOutcome(
+                        rule.id, STATUS_BLOCKED, "evidence path escapes evidence root"
+                    )
                 if not candidate.exists() or not candidate.is_file():
                     missing.append(item)
             elif isinstance(item, dict):

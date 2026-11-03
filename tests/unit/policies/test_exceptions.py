@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -63,27 +62,33 @@ def test_is_not_active_if_revoked() -> None:
 
 
 def test_registry_active_for_rule() -> None:
-    reg = ExceptionRegistry(exceptions=[
-        _exc("EXC-1", "SE-TST-001"),
-        _exc("EXC-2", "SE-SEC-001"),
-    ])
+    reg = ExceptionRegistry(
+        exceptions=[
+            _exc("EXC-1", "SE-TST-001"),
+            _exc("EXC-2", "SE-SEC-001"),
+        ]
+    )
     active = reg.active_for_rule("SE-TST-001")
     assert len(active) == 1
     assert active[0].exception_id == "EXC-1"
 
 
 def test_registry_expired_not_returned() -> None:
-    reg = ExceptionRegistry(exceptions=[
-        _exc("EXC-1", expires_at="2020-01-01T00:00:00Z"),
-    ])
+    reg = ExceptionRegistry(
+        exceptions=[
+            _exc("EXC-1", expires_at="2020-01-01T00:00:00Z"),
+        ]
+    )
     assert reg.active_for_rule("SE-TST-001") == []
 
 
 def test_registry_all_active() -> None:
-    reg = ExceptionRegistry(exceptions=[
-        _exc("EXC-1"),
-        _exc("EXC-2"),
-    ])
+    reg = ExceptionRegistry(
+        exceptions=[
+            _exc("EXC-1"),
+            _exc("EXC-2"),
+        ]
+    )
     assert len(reg.all_active()) == 2
 
 
@@ -94,19 +99,26 @@ def test_load_exceptions_missing_file() -> None:
 
 def test_load_exceptions_from_yaml(tmp_path: Path) -> None:
     p = tmp_path / "registry.yaml"
-    p.write_text(yaml.safe_dump({
-        "exceptions": [{
-            "exception_id": "EXC-0001",
-            "rule_id": "SE-TST-001",
-            "scope": {"project": "x"},
-            "rationale": "r" * 50,
-            "owner": "a@b.c",
-            "approver": "d@e.f",
-            "approved_at": "2026-01-01T00:00:00Z",
-            "expires_at": "2030-01-01T00:00:00Z",
-            "compensating_control": "c" * 20,
-        }],
-    }), encoding="utf-8")
+    p.write_text(
+        yaml.safe_dump(
+            {
+                "exceptions": [
+                    {
+                        "exception_id": "EXC-0001",
+                        "rule_id": "SE-TST-001",
+                        "scope": {"project": "x"},
+                        "rationale": "r" * 50,
+                        "owner": "a@b.c",
+                        "approver": "d@e.f",
+                        "approved_at": "2026-01-01T00:00:00Z",
+                        "expires_at": "2030-01-01T00:00:00Z",
+                        "compensating_control": "c" * 20,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     reg = load_exceptions(p)
     assert len(reg.exceptions) == 1
 

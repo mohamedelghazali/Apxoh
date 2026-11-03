@@ -62,11 +62,13 @@ class BlockingPolicyEvaluator:
 
             for rule_id in trigger_rules:
                 if rule_id in failing_rules:
-                    result.violations.append(BlockingViolation(
-                        policy_id=policy.id,
-                        rule_id=rule_id,
-                        reason=str(policy.raw.get("reason", f"policy {policy.id} triggered")),
-                    ))
+                    result.violations.append(
+                        BlockingViolation(
+                            policy_id=policy.id,
+                            rule_id=rule_id,
+                            reason=str(policy.raw.get("reason", f"policy {policy.id} triggered")),
+                        )
+                    )
 
             # Optional: path-based triggers
             paths = policy.raw.get("trigger_paths", [])
@@ -74,11 +76,13 @@ class BlockingPolicyEvaluator:
                 for pattern in paths:
                     matches = list(project_root.glob(pattern))
                     if matches:
-                        result.violations.append(BlockingViolation(
-                            policy_id=policy.id,
-                            rule_id=f"path:{pattern}",
-                            reason=str(policy.raw.get("reason", f"path {pattern} matched")),
-                        ))
+                        result.violations.append(
+                            BlockingViolation(
+                                policy_id=policy.id,
+                                rule_id=f"path:{pattern}",
+                                reason=str(policy.raw.get("reason", f"path {pattern} matched")),
+                            )
+                        )
 
         if result.violations:
             logger.warning("blocking evaluation found %d violation(s)", result.count)

@@ -1,7 +1,9 @@
 """TSAR runner — delegates security scanning and verifies its evidence."""
+
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -24,50 +26,72 @@ class TsarRunner(Runner):
         return "tsar"
 
     def run(self, project_root: Path) -> RunnerResult:
+        git_executable = shutil.which("git")
+        if git_executable is None:
+            return RunnerResult(
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
+                reason="git executable not found on PATH",
+            )
         try:
-            result = subprocess.run(
-                ["git", "rev-parse", "HEAD"], cwd=project_root,
-                capture_output=True, text=True, timeout=10, check=True,
+            result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+                [git_executable, "rev-parse", "HEAD"],
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=True,
             )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"cannot resolve commit SHA: {exc}",
             )
         commit_sha = result.stdout.strip()
         if not re.fullmatch(r"[0-9a-f]{40}", commit_sha):
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"invalid commit SHA: {commit_sha!r}",
             )
         response = self._adapter.audit(project_root, commit_sha)
         if not response.ok:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=response.reason or "TSAR audit failed",
             )
         try:
             evidence = verify_tsar_evidence(
-                response.payload, expected_commit_sha=commit_sha,
+                response.payload,
+                expected_commit_sha=commit_sha,
                 evidence_root=project_root,
             )
         except Exception as exc:
             logger.warning("TSAR evidence verification failed: %s", exc)
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"TSAR evidence verification failed: {exc}",
                 artifacts=response.artifacts,
             )
         if evidence.status == "FAIL":
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.FAIL,
-                reason="TSAR reported FAIL", artifacts=response.artifacts,
+                runner=self.name,
+                outcome=RunnerOutcome.FAIL,
+                reason="TSAR reported FAIL",
+                artifacts=response.artifacts,
             )
         if evidence.status == "BLOCKED":
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
-                reason="TSAR reported BLOCKED", artifacts=response.artifacts,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
+                reason="TSAR reported BLOCKED",
+                artifacts=response.artifacts,
             )
         return RunnerResult(
-            runner=self.name, outcome=RunnerOutcome.PASS, artifacts=response.artifacts,
+            runner=self.name,
+            outcome=RunnerOutcome.PASS,
+            artifacts=response.artifacts,
         )

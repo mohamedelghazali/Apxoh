@@ -1,4 +1,5 @@
 """Local Code Llama adapter using an Ollama-compatible endpoint."""
+
 from __future__ import annotations
 
 from arkhon.integrations.models._openai_compatible import (

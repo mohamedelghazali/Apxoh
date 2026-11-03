@@ -53,9 +53,11 @@ class AdvisoryPolicyEvaluator:
                 continue
             for rule_id in trigger_rules:
                 if rule_id in failing_rules:
-                    result.notes.append(AdvisoryNote(
-                        policy_id=policy.id,
-                        rule_id=rule_id,
-                        message=str(policy.raw.get("message", f"see {policy.id}")),
-                    ))
+                    result.notes.append(
+                        AdvisoryNote(
+                            policy_id=policy.id,
+                            rule_id=rule_id,
+                            message=str(policy.raw.get("message", f"see {policy.id}")),
+                        )
+                    )
         return result

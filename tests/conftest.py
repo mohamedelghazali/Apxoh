@@ -3,14 +3,24 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+GIT_EXECUTABLE = shutil.which("git")
+
+
+def _run_git(args: list[str], cwd: Path) -> None:
+    if GIT_EXECUTABLE is None:
+        raise RuntimeError("git executable not found on PATH")
+    subprocess.run(  # noqa: S603 - resolved git executable; arguments are test fixtures
+        [GIT_EXECUTABLE, *args], cwd=cwd, check=True
+    )
 
 
 @pytest.fixture(scope="session")
@@ -107,10 +117,10 @@ def clean_git_env() -> Iterator[None]:
 @pytest.fixture
 def git_repo(tmp_path: Path, clean_git_env: None) -> Path:
     """Initialize a minimal git repository in tmp_path."""
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    _run_git(["init", "-q"], cwd=tmp_path)
+    _run_git(["config", "user.email", "test@example.com"], cwd=tmp_path)
+    _run_git(["config", "user.name", "Test"], cwd=tmp_path)
     (tmp_path / "README.md").write_text("# tmp\n", encoding="utf-8")
-    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
+    _run_git(["add", "."], cwd=tmp_path)
+    _run_git(["commit", "-q", "-m", "init"], cwd=tmp_path)
     return tmp_path

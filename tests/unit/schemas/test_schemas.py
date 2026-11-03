@@ -1,4 +1,5 @@
 """Structural tests for every JSON Schema in schemas/."""
+
 from __future__ import annotations
 
 import json
@@ -10,9 +11,15 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCHEMAS_DIR = REPO_ROOT / "schemas"
 EXPECTED_SCHEMAS = {
-    "rule.schema.json", "evidence.schema.json", "finding.schema.json",
-    "assessment.schema.json", "exception.schema.json", "report.schema.json",
-    "project.schema.json", "state.schema.json", "integration-contract.schema.json",
+    "rule.schema.json",
+    "evidence.schema.json",
+    "finding.schema.json",
+    "assessment.schema.json",
+    "exception.schema.json",
+    "report.schema.json",
+    "project.schema.json",
+    "state.schema.json",
+    "integration-contract.schema.json",
 }
 
 
@@ -62,4 +69,6 @@ def test_manifest_compatibility_lists_all_schemas() -> None:
     data = yaml.safe_load(compat.read_text(encoding="utf-8"))
     declared = {item["path"] for item in data.get("schemas", [])}
     actual = {str(path.relative_to(REPO_ROOT)) for path in _all_schema_files()}
-    assert actual == declared, f"manifest/compatibility.yaml out of sync: declared={declared} actual={actual}"
+    assert (
+        actual == declared
+    ), f"manifest/compatibility.yaml out of sync: declared={declared} actual={actual}"

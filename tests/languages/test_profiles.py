@@ -1,4 +1,5 @@
 """Validate the initial language profile inventory."""
+
 from pathlib import Path
 
 import yaml

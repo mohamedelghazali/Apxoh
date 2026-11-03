@@ -29,7 +29,7 @@ class FakeConnection:
 
     def __init__(
         self,
-        response: "FakeResponse | Callable[..., FakeResponse] | Exception",
+        response: FakeResponse | Callable[..., FakeResponse] | Exception,
         calls: list[dict[str, Any]],
         timeout: int | float | None = None,
     ) -> None:
@@ -45,9 +45,7 @@ class FakeConnection:
         body: bytes | None = None,
         headers: dict[str, str] | None = None,
     ) -> None:
-        self._calls.append(
-            {"method": method, "url": url, "body": body, "headers": headers}
-        )
+        self._calls.append({"method": method, "url": url, "body": body, "headers": headers})
         self._request = SimpleNamespace(
             data=body,
             headers=headers or {},

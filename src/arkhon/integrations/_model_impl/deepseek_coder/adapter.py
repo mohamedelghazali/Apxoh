@@ -1,4 +1,5 @@
 """DeepSeek Coder compatible Chat Completions adapter."""
+
 from __future__ import annotations
 
 from arkhon.integrations.models._openai_compatible import (

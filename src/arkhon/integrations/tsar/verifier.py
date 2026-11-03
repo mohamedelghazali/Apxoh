@@ -3,11 +3,12 @@
 No TSAR status is trusted until commit, version, timestamp, required rules,
 artifact paths, and SHA-256 digests have been checked.
 """
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,9 +27,7 @@ REQUIRED_RULE_IDS = (
 FRESHNESS_HOURS = 168
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
-_SEMVER_RE = re.compile(
-    r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?"
-)
+_SEMVER_RE = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?")
 
 
 @dataclass(frozen=True)
@@ -60,12 +59,13 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
     if missing:
         raise SecurityError(f"TSAR payload missing fields: {missing}")
     identity_fields = (
-        "evidence_id", "tsar_version", "commit_sha", "executed_at", "status",
+        "evidence_id",
+        "tsar_version",
+        "commit_sha",
+        "executed_at",
+        "status",
     )
-    if not all(
-        isinstance(payload[key], str) and payload[key]
-        for key in identity_fields
-    ):
+    if not all(isinstance(payload[key], str) and payload[key] for key in identity_fields):
         raise SecurityError("TSAR evidence identity and status fields must be non-empty strings")
     if not isinstance(payload["rule_ids"], list) or not all(
         isinstance(item, str) and item for item in payload["rule_ids"]
@@ -101,10 +101,14 @@ def _parse_tsar_payload(payload: dict[str, Any]) -> TsarEvidence:
             raise SecurityError("TSAR artifact requires a relative path and lowercase SHA-256")
         artifacts.append((path, digest))
     return TsarEvidence(
-        evidence_id=payload["evidence_id"], tsar_version=payload["tsar_version"],
-        commit_sha=payload["commit_sha"], executed_at=payload["executed_at"],
-        status=payload["status"], rule_ids=tuple(payload["rule_ids"]),
-        summary=summary, artifacts=tuple(artifacts),
+        evidence_id=payload["evidence_id"],
+        tsar_version=payload["tsar_version"],
+        commit_sha=payload["commit_sha"],
+        executed_at=payload["executed_at"],
+        status=payload["status"],
+        rule_ids=tuple(payload["rule_ids"]),
+        summary=summary,
+        artifacts=tuple(artifacts),
     )
 
 
@@ -124,9 +128,7 @@ def _maximum_version_tuple(value: str) -> tuple[int, int, int]:
     if not wildcard_indexes:
         return _version_tuple(value)
     first_wildcard = wildcard_indexes[0]
-    if first_wildcard == 0 or any(
-        part.lower() != "x" for part in parts[first_wildcard:]
-    ):
+    if first_wildcard == 0 or any(part.lower() != "x" for part in parts[first_wildcard:]):
         raise SecurityError(f"invalid version bound: {value!r}")
     if any(part.lower() == "x" for part in parts[:first_wildcard]):
         raise SecurityError(f"invalid version bound: {value!r}")
@@ -154,16 +156,14 @@ def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
         raise EvidenceStaleError(f"invalid executed_at: {executed_at!r}") from exc
     if executed.tzinfo is None:
         raise EvidenceStaleError("executed_at must include a timezone")
-    now_dt = now or datetime.now(timezone.utc)
+    now_dt = now or datetime.now(UTC)
     if now_dt.tzinfo is None:
         raise ValueError("now must be timezone-aware")
-    age = (now_dt - executed.astimezone(timezone.utc)).total_seconds() / 3600
+    age = (now_dt - executed.astimezone(UTC)).total_seconds() / 3600
     if age < 0:
         raise EvidenceStaleError("TSAR evidence timestamp is in the future")
     if age > FRESHNESS_HOURS:
-        raise EvidenceStaleError(
-            f"TSAR evidence is stale: {age:.1f}h, maximum {FRESHNESS_HOURS}h"
-        )
+        raise EvidenceStaleError(f"TSAR evidence is stale: {age:.1f}h, maximum {FRESHNESS_HOURS}h")
 
 
 def _check_required_rules(rule_ids: tuple[str, ...]) -> None:
@@ -175,7 +175,8 @@ def _check_required_rules(rule_ids: tuple[str, ...]) -> None:
 
 
 def _check_artifacts(
-    artifacts: tuple[tuple[str, str], ...], evidence_root: Path,
+    artifacts: tuple[tuple[str, str], ...],
+    evidence_root: Path,
 ) -> None:
     root = evidence_root.resolve()
     for relative, expected in artifacts:
@@ -197,8 +198,12 @@ def _check_artifacts(
 
 
 def verify_tsar_evidence(
-    payload: dict[str, Any], *, expected_commit_sha: str, evidence_root: Path,
-    minimum_version: str = "1.1.0", maximum_version: str = "2.0.0",
+    payload: dict[str, Any],
+    *,
+    expected_commit_sha: str,
+    evidence_root: Path,
+    minimum_version: str = "1.1.0",
+    maximum_version: str = "2.0.0",
     required_rule_ids: tuple[str, ...] = REQUIRED_RULE_IDS,
     now: datetime | None = None,
 ) -> TsarEvidence:

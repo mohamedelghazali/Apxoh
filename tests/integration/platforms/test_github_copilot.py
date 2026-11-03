@@ -16,36 +16,31 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 import yaml
 
 from arkhon.integrations.platforms.github_copilot.adapter import (
-
     INSTRUCTIONS_REL_PATH,
-
     GitHubCopilotAdapter,
-
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 PLATFORM_DIR = REPO_ROOT / "integrations" / "platforms" / "github-copilot"
 
-def test_info() -> None:
 
+def test_info() -> None:
     info = GitHubCopilotAdapter().info
 
     assert info.id == "github-copilot"
 
     assert info.kind == "platform"
 
-def test_health_check_with_prompt() -> None:
 
+def test_health_check_with_prompt() -> None:
     assert GitHubCopilotAdapter().health_check() is True
 
-def test_install_creates_file(copilot_project: Path) -> None:
 
+def test_install_creates_file(copilot_project: Path) -> None:
     adapter = GitHubCopilotAdapter()
 
     result = adapter.install(copilot_project)
@@ -58,8 +53,8 @@ def test_install_creates_file(copilot_project: Path) -> None:
 
     assert target.stat().st_size > 0
 
-def test_verify_passes_after_install(copilot_project: Path) -> None:
 
+def test_verify_passes_after_install(copilot_project: Path) -> None:
     adapter = GitHubCopilotAdapter()
 
     adapter.install(copilot_project)
@@ -70,16 +65,16 @@ def test_verify_passes_after_install(copilot_project: Path) -> None:
 
     assert "sha256" in result.payload
 
-def test_verify_fails_without_file(copilot_project: Path) -> None:
 
+def test_verify_fails_without_file(copilot_project: Path) -> None:
     result = GitHubCopilotAdapter().verify(copilot_project)
 
     assert not result.ok
 
     assert "missing" in result.reason
 
-def test_verify_fails_on_tampered_file(copilot_project: Path) -> None:
 
+def test_verify_fails_on_tampered_file(copilot_project: Path) -> None:
     adapter = GitHubCopilotAdapter()
 
     adapter.install(copilot_project)
@@ -94,8 +89,8 @@ def test_verify_fails_on_tampered_file(copilot_project: Path) -> None:
 
     assert "does not match" in result.reason
 
-def test_underlying_models_declared() -> None:
 
+def test_underlying_models_declared() -> None:
     path = PLATFORM_DIR / "underlying-models.yaml"
 
     assert path.is_file()
@@ -106,8 +101,8 @@ def test_underlying_models_declared() -> None:
 
     assert len(data["underlying_models"]) >= 1
 
-def test_max_verification_is_configured() -> None:
 
+def test_max_verification_is_configured() -> None:
     """The adapter must not claim Verified — it cannot verify Copilot."""
 
     path = PLATFORM_DIR / "underlying-models.yaml"

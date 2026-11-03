@@ -1,12 +1,14 @@
 """Append-only JSON evidence storage scoped to a project."""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from arkhon.core.errors import EvidenceError, EvidenceTamperedError
 from arkhon.core.logging import get_logger
@@ -36,6 +38,7 @@ class EvidenceRecord:
 
 class EvidenceStore:
     """Append-only evidence store scoped to a project."""
+
     def __init__(self, root: Path) -> None:
         self._root = Path(root).resolve() / ".arkhon" / "evidence"
 
@@ -74,7 +77,7 @@ class EvidenceStore:
                 stream.write(payload)
         except FileExistsError:
             if sha256_of(target) != new_hash:
-                raise EvidenceTamperedError(f"concurrent evidence collision: {target}")
+                raise EvidenceTamperedError(f"concurrent evidence collision: {target}") from None
         logger.debug("wrote evidence %s to %s", evidence_id, target)
         return target
 

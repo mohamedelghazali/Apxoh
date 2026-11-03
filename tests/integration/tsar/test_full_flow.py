@@ -53,6 +53,7 @@ def _setup_tsar_mock(output_file_writer):
         output_path = Path(cmd[output_idx])
         output_file_writer(output_path)
         return type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+
     return _fake_run
 
 
@@ -64,8 +65,10 @@ def test_full_flow_pass(tmp_path: Path) -> None:
     def _writer(out_path: Path) -> None:
         out_path.write_text(json.dumps(payload), encoding="utf-8")
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=_setup_tsar_mock(_writer)):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=_setup_tsar_mock(_writer)),
+    ):
         result = TsarAdapter().audit(tmp_path, commit)
 
     assert result.ok
@@ -82,15 +85,19 @@ def test_full_flow_critical_blocks(tmp_path: Path) -> None:
     commit = "b" * 40
     evidence_dir, artifact = _prepare_evidence_dir(tmp_path)
     payload = _make_tsar_output(
-        commit, artifact, status="FAIL",
+        commit,
+        artifact,
+        status="FAIL",
         summary={"critical": 3, "high": 0, "medium": 0, "low": 0},
     )
 
     def _writer(out_path: Path) -> None:
         out_path.write_text(json.dumps(payload), encoding="utf-8")
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=_setup_tsar_mock(_writer)):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=_setup_tsar_mock(_writer)),
+    ):
         result = TsarAdapter().audit(tmp_path, commit)
 
     assert result.ok
@@ -118,8 +125,10 @@ def test_full_flow_wrong_commit(tmp_path: Path) -> None:
     def _writer(out_path: Path) -> None:
         out_path.write_text(json.dumps(payload), encoding="utf-8")
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=_setup_tsar_mock(_writer)):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=_setup_tsar_mock(_writer)),
+    ):
         result = TsarAdapter().audit(tmp_path, commit)
 
     with pytest.raises(Exception, match="commit"):

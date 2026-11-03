@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from pathlib import Path
 
 import pytest
@@ -52,25 +53,25 @@ def test_check_version_invalid_string() -> None:
 
 
 def test_check_freshness_ok() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
     _check_freshness("2026-11-02T00:00:00Z", now=now)
 
 
 def test_check_freshness_stale() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 11, 20, 0, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 20, 0, 0, 0, tzinfo=UTC)
     with pytest.raises(EvidenceStaleError):
         _check_freshness("2026-11-01T00:00:00Z", now=now)
 
 
 def test_check_freshness_boundary() -> None:
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     executed = "2026-11-01T00:00:00Z"
-    executed_dt = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    executed_dt = datetime(2026, 11, 1, tzinfo=UTC)
 
     just_at_limit = executed_dt + timedelta(hours=FRESHNESS_HOURS)
     _check_freshness(executed, now=just_at_limit)
@@ -113,9 +114,7 @@ def test_parse_payload_malformed_artifact() -> None:
     with pytest.raises(SecurityError) as exc_info:
         _parse_tsar_payload(payload)
     message = str(exc_info.value).lower()
-    assert "artifact" in message, (
-        f"expected 'artifact' in error message, got: {exc_info.value!r}"
-    )
+    assert "artifact" in message, f"expected 'artifact' in error message, got: {exc_info.value!r}"
 
 
 def _valid_payload(tmp_path: Path, commit_sha: str = "a" * 40) -> dict:
@@ -157,7 +156,9 @@ def test_verify_tampered_artifact(tmp_path: Path) -> None:
     (tmp_path / "scan.json").write_text("TAMPERED", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="hash mismatch"):
         verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path,
+            payload,
+            expected_commit_sha="a" * 40,
+            evidence_root=tmp_path,
         )
 
 
@@ -166,7 +167,9 @@ def test_verify_critical_findings(tmp_path: Path) -> None:
     payload["summary"]["critical"] = 1
     with pytest.raises(SecurityError, match="critical/high"):
         verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path,
+            payload,
+            expected_commit_sha="a" * 40,
+            evidence_root=tmp_path,
         )
 
 
@@ -175,5 +178,7 @@ def test_verify_invalid_status(tmp_path: Path) -> None:
     payload["status"] = "MAYBE"
     with pytest.raises(SecurityError, match="invalid TSAR status"):
         verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path,
+            payload,
+            expected_commit_sha="a" * 40,
+            evidence_root=tmp_path,
         )

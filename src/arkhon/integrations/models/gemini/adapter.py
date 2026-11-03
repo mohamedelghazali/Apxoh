@@ -1,11 +1,12 @@
 """Google Gemini generateContent adapter."""
+
 from __future__ import annotations
 
 import http.client
 import json
 import os
-import ssl
 import re
+import ssl
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -86,9 +87,7 @@ class GeminiAdapter(Integration):
             )
 
         payload: dict[str, Any] = {
-            "contents": [
-                {"role": "user", "parts": [{"text": user_message}]}
-            ],
+            "contents": [{"role": "user", "parts": [{"text": user_message}]}],
             "generationConfig": {
                 "maxOutputTokens": self.config.max_tokens,
                 "temperature": self.config.temperature,
@@ -98,6 +97,8 @@ class GeminiAdapter(Integration):
         if system:
             payload["systemInstruction"] = {"parts": [{"text": system}]}
 
+        # Explicit default SSL context verifies peer certificates.
+        # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
         connection = http.client.HTTPSConnection(
             parsed_endpoint.hostname or "",
             parsed_endpoint.port or 443,
@@ -159,8 +160,7 @@ class GeminiAdapter(Integration):
                         text = "".join(
                             part.get("text", "")
                             for part in parts
-                            if isinstance(part, dict)
-                            and isinstance(part.get("text", ""), str)
+                            if isinstance(part, dict) and isinstance(part.get("text", ""), str)
                         )
 
         return IntegrationResponse(

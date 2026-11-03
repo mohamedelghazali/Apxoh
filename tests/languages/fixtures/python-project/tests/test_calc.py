@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from calc import add, divide, multiply, subtract
 
 

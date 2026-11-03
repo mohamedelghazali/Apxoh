@@ -1,4 +1,5 @@
 """Tests for arkhon.rules.registry."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,27 +11,49 @@ from arkhon.rules.loader import Rule
 from arkhon.rules.registry import RuleRegistry, build_registry
 
 
-def _rule(rule_id: str, domain: str = "requirements", status: str = "active",
-          enforcement: str = "blocking", severity: str = "high") -> Rule:
-    return Rule(id=rule_id, path=Path(f"{rule_id}.yaml"), raw={
-        "id": rule_id,
-        "metadata": {"title": rule_id, "domain": domain, "version": "1.0.0",
-                     "status": status, "severity": severity, "enforcement": enforcement},
-        "scope": {"project_types": ["all"]}, "requirement": {"statement": "x"},
-        "verification": {"mode": "deterministic", "methods": ["schema-validation"]},
-        "acceptance": {"x": 1},
-    })
+def _rule(
+    rule_id: str,
+    domain: str = "requirements",
+    status: str = "active",
+    enforcement: str = "blocking",
+    severity: str = "high",
+) -> Rule:
+    return Rule(
+        id=rule_id,
+        path=Path(f"{rule_id}.yaml"),
+        raw={
+            "id": rule_id,
+            "metadata": {
+                "title": rule_id,
+                "domain": domain,
+                "version": "1.0.0",
+                "status": status,
+                "severity": severity,
+                "enforcement": enforcement,
+            },
+            "scope": {"project_types": ["all"]},
+            "requirement": {"statement": "x"},
+            "verification": {"mode": "deterministic", "methods": ["schema-validation"]},
+            "acceptance": {"x": 1},
+        },
+    )
 
 
 @pytest.fixture
 def registry() -> RuleRegistry:
-    return RuleRegistry([
-        _rule("SE-REQ-001", enforcement="blocking"),
-        _rule("SE-REQ-002", enforcement="advisory"),
-        _rule("SE-TST-001", domain="testing", enforcement="critical"),
-        _rule("SE-SEC-001", domain="software-security", status="deprecated",
-              enforcement="required"),
-    ])
+    return RuleRegistry(
+        [
+            _rule("SE-REQ-001", enforcement="blocking"),
+            _rule("SE-REQ-002", enforcement="advisory"),
+            _rule("SE-TST-001", domain="testing", enforcement="critical"),
+            _rule(
+                "SE-SEC-001",
+                domain="software-security",
+                status="deprecated",
+                enforcement="required",
+            ),
+        ]
+    )
 
 
 def test_len(registry: RuleRegistry) -> None:
@@ -92,9 +115,16 @@ def test_build_registry_from_dir(tmp_path: Path) -> None:
 
     raw = {
         "id": "SE-REQ-001",
-        "metadata": {"title": "x", "domain": "requirements", "version": "1.0.0",
-                     "status": "active", "severity": "high", "enforcement": "blocking"},
-        "scope": {"project_types": ["all"]}, "requirement": {"statement": "x"},
+        "metadata": {
+            "title": "x",
+            "domain": "requirements",
+            "version": "1.0.0",
+            "status": "active",
+            "severity": "high",
+            "enforcement": "blocking",
+        },
+        "scope": {"project_types": ["all"]},
+        "requirement": {"statement": "x"},
         "verification": {"mode": "deterministic", "methods": ["x"]},
         "acceptance": {"x": 1},
     }

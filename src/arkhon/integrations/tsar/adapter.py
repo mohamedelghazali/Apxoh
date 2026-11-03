@@ -3,6 +3,7 @@
 TSAR output is untrusted. The verifier must validate it before it can
 contribute to a gate decision.
 """
+
 from __future__ import annotations
 
 import json
@@ -34,7 +35,9 @@ class TsarAdapter(Integration):
     @property
     def info(self) -> IntegrationInfo:
         return IntegrationInfo(
-            id="tsar", kind="security", provider="tsar",
+            id="tsar",
+            kind="security",
+            provider="tsar",
             version=self._config.minimum_version,
             capabilities=("audit", "sast", "dast", "sca", "secrets"),
         )
@@ -48,9 +51,12 @@ class TsarAdapter(Integration):
             logger.warning("TSAR binary not found: %s", self._config.binary)
             return False
         try:
-            result = subprocess.run(
-                [binary, "--version"], capture_output=True, text=True,
-                timeout=30, check=False,
+            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
+                [binary, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
             )
         except (OSError, subprocess.SubprocessError) as exc:
             logger.warning("TSAR version check failed: %s", exc)
@@ -62,9 +68,12 @@ class TsarAdapter(Integration):
         if binary is None:
             raise SecurityError("TSAR binary not found")
         try:
-            result = subprocess.run(
-                [binary, "--version"], capture_output=True, text=True,
-                timeout=30, check=False,
+            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
+                [binary, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
             )
         except (OSError, subprocess.SubprocessError) as exc:
             raise SecurityError(f"TSAR version check failed: {exc}") from exc
@@ -79,7 +88,8 @@ class TsarAdapter(Integration):
         binary = self._binary()
         if binary is None:
             return IntegrationResponse(
-                ok=False, reason="TSAR binary not found — security gate is BLOCKED",
+                ok=False,
+                reason="TSAR binary not found — security gate is BLOCKED",
             )
         root = project_root.resolve()
         if not root.is_dir():
@@ -89,22 +99,36 @@ class TsarAdapter(Integration):
         try:
             evidence_dir.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
-            return IntegrationResponse(ok=False, reason=f"cannot prepare TSAR evidence directory: {exc}")
+            return IntegrationResponse(
+                ok=False, reason=f"cannot prepare TSAR evidence directory: {exc}"
+            )
         target = evidence_dir / f"tsar-{commit_sha[:12]}.json"
         command = [
-            binary, "audit", "--project", str(root),
-            "--output", "json", "--commit", commit_sha,
-            "--output-file", str(target),
+            binary,
+            "audit",
+            "--project",
+            str(root),
+            "--output",
+            "json",
+            "--commit",
+            commit_sha,
+            "--output-file",
+            str(target),
         ]
         logger.info("running TSAR audit for commit %s", commit_sha)
         try:
-            result = subprocess.run(
-                command, cwd=root, capture_output=True, text=True,
-                timeout=self._config.timeout_seconds, check=False,
+            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
+                command,
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=self._config.timeout_seconds,
+                check=False,
             )
         except subprocess.TimeoutExpired:
             return IntegrationResponse(
-                ok=False, reason=f"TSAR timed out after {self._config.timeout_seconds}s",
+                ok=False,
+                reason=f"TSAR timed out after {self._config.timeout_seconds}s",
             )
         except OSError as exc:
             return IntegrationResponse(ok=False, reason=f"TSAR failed to start: {exc}")
@@ -130,11 +154,13 @@ class TsarAdapter(Integration):
                     existing_payload = json.loads(target.read_text(encoding="utf-8"))
                 except (OSError, json.JSONDecodeError) as exc:
                     return IntegrationResponse(
-                        ok=False, reason=f"existing TSAR evidence is invalid: {exc}",
+                        ok=False,
+                        reason=f"existing TSAR evidence is invalid: {exc}",
                     )
                 if existing_payload != payload:
                     return IntegrationResponse(
-                        ok=False, reason=f"refusing to overwrite different TSAR evidence: {target}",
+                        ok=False,
+                        reason=f"refusing to overwrite different TSAR evidence: {target}",
                     )
             else:
                 target.write_text(serialized, encoding="utf-8")

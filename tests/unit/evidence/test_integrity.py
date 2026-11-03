@@ -1,4 +1,5 @@
 """Tests for arkhon.evidence.integrity."""
+
 from __future__ import annotations
 
 import json
@@ -8,7 +9,10 @@ import pytest
 
 from arkhon.core.errors import EvidenceError, EvidenceStaleError, EvidenceTamperedError
 from arkhon.evidence.integrity import (
-    sha256_of, verify_artifact, verify_bundle, verify_freshness,
+    sha256_of,
+    verify_artifact,
+    verify_bundle,
+    verify_freshness,
 )
 
 
@@ -21,9 +25,12 @@ def _write(tmp_path: Path, name: str, content: str) -> Path:
 def _bundle(tmp_path: Path) -> tuple[Path, str]:
     artifact = _write(tmp_path, "art.txt", "content")
     data = {
-        "evidence_id": "EVID-TEST-0001", "source": "arkhon",
-        "source_version": "0.1.0.dev1", "commit_sha": "a" * 40,
-        "executed_at": "2026-11-01T00:00:00Z", "status": "PASS",
+        "evidence_id": "EVID-TEST-0001",
+        "source": "arkhon",
+        "source_version": "0.1.0.dev1",
+        "commit_sha": "a" * 40,
+        "executed_at": "2026-11-01T00:00:00Z",
+        "status": "PASS",
         "artifacts": [{"path": "art.txt", "sha256": sha256_of(artifact)}],
     }
     bundle = tmp_path / "bundle.json"
@@ -66,7 +73,9 @@ def test_verify_bundle_ok(tmp_path: Path) -> None:
 def test_verify_bundle_missing(tmp_path: Path) -> None:
     with pytest.raises(EvidenceTamperedError, match="missing"):
         verify_bundle(
-            tmp_path / "nope.json", evidence_root=tmp_path, expected_commit_sha="a" * 40,
+            tmp_path / "nope.json",
+            evidence_root=tmp_path,
+            expected_commit_sha="a" * 40,
         )
 
 
@@ -94,7 +103,8 @@ def test_verify_bundle_rejects_path_traversal(tmp_path: Path) -> None:
 
 def test_freshness_ok() -> None:
     verify_freshness(
-        "2026-11-01T00:00:00Z", max_age_hours=168,
+        "2026-11-01T00:00:00Z",
+        max_age_hours=168,
         now_iso="2026-11-01T01:00:00Z",
     )
 
@@ -102,7 +112,8 @@ def test_freshness_ok() -> None:
 def test_freshness_stale() -> None:
     with pytest.raises(EvidenceStaleError, match="stale"):
         verify_freshness(
-            "2026-10-01T00:00:00Z", max_age_hours=168,
+            "2026-10-01T00:00:00Z",
+            max_age_hours=168,
             now_iso="2026-11-01T00:00:00Z",
         )
 
@@ -115,6 +126,7 @@ def test_freshness_invalid_timestamp() -> None:
 def test_freshness_future_timestamp_rejected() -> None:
     with pytest.raises(EvidenceError, match="future"):
         verify_freshness(
-            "2026-11-02T00:00:00Z", max_age_hours=24,
+            "2026-11-02T00:00:00Z",
+            max_age_hours=24,
             now_iso="2026-11-01T00:00:00Z",
         )

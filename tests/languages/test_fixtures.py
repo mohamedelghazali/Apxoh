@@ -94,7 +94,9 @@ def test_fixture_has_build_file(fixture_name: str, lang: str) -> None:
 
 
 def test_all_nine_fixtures_present() -> None:
-    actual = {p.name for p in FIXTURES_DIR.iterdir() if p.is_dir()} if FIXTURES_DIR.is_dir() else set()
+    actual = (
+        {p.name for p in FIXTURES_DIR.iterdir() if p.is_dir()} if FIXTURES_DIR.is_dir() else set()
+    )
     assert actual >= set(EXPECTED_FIXTURES.keys())
 
 

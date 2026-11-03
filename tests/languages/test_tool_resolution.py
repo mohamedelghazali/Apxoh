@@ -1,4 +1,5 @@
 """Validate tool metadata is explicit and machine-readable."""
+
 from pathlib import Path
 
 import yaml

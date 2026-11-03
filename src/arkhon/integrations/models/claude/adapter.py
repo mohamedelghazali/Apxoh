@@ -58,8 +58,11 @@ class ClaudeAdapter(Integration):
             provider="anthropic",
             version="1.0.0",
             capabilities=(
-                "code-generation", "code-review", "long-context",
-                "instruction-following", "structured-output",
+                "code-generation",
+                "code-review",
+                "long-context",
+                "instruction-following",
+                "structured-output",
             ),
         )
 
@@ -82,7 +85,8 @@ class ClaudeAdapter(Integration):
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             return IntegrationResponse(
-                ok=False, reason="ANTHROPIC_API_KEY not set",
+                ok=False,
+                reason="ANTHROPIC_API_KEY not set",
             )
 
         endpoint = urlsplit(self._config.endpoint)
@@ -116,6 +120,8 @@ class ClaudeAdapter(Integration):
             "messages": [{"role": "user", "content": user_message}],
         }
 
+        # Explicit default SSL context verifies peer certificates.
+        # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
         connection = http.client.HTTPSConnection(
             endpoint.hostname or "",
             endpoint.port or 443,
@@ -157,11 +163,13 @@ class ClaudeAdapter(Integration):
             parsed = json.loads(body)
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             return IntegrationResponse(
-                ok=False, reason=f"invalid JSON response: {exc}",
+                ok=False,
+                reason=f"invalid JSON response: {exc}",
             )
         if not isinstance(parsed, dict):
             return IntegrationResponse(
-                ok=False, reason="invalid response: expected JSON object",
+                ok=False,
+                reason="invalid response: expected JSON object",
             )
 
         text = ""

@@ -3,6 +3,7 @@
 Integrations collect external results. They never make governance or release
 decisions; Apxoh validates every returned artifact and claim.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

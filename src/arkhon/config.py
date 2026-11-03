@@ -3,6 +3,7 @@
 The manifest is split across manifest/*.yaml. This module is the only
 place that knows how to load and combine the files.
 """
+
 from __future__ import annotations
 
 import os
@@ -16,7 +17,12 @@ import yaml
 from arkhon.core.errors import ManifestError
 
 _MANIFEST_FILES = (
-    "system", "products", "integrations", "languages", "standards", "compatibility",
+    "system",
+    "products",
+    "integrations",
+    "languages",
+    "standards",
+    "compatibility",
 )
 
 
@@ -59,6 +65,7 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 @dataclass(frozen=True)
 class Manifest:
     """Combined manifest. Nested dictionaries are not deeply immutable."""
+
     index: dict[str, Any]
     system: dict[str, Any]
     products: dict[str, Any]
@@ -90,9 +97,13 @@ class Manifest:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "index": self.index, "system": self.system, "products": self.products,
-            "integrations": self.integrations, "languages": self.languages,
-            "standards": self.standards, "compatibility": self.compatibility,
+            "index": self.index,
+            "system": self.system,
+            "products": self.products,
+            "integrations": self.integrations,
+            "languages": self.languages,
+            "standards": self.standards,
+            "compatibility": self.compatibility,
         }
 
 

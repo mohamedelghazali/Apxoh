@@ -1,4 +1,5 @@
 """Structural and semantic validation for Apxoh rules."""
+
 from __future__ import annotations
 
 import json
@@ -20,9 +21,11 @@ def validate_against_schema(rule: Rule, schema_path: Path) -> list[RuleValidatio
     try:
         import jsonschema
     except ImportError:
-        return [RuleValidationError(
-            "jsonschema is required for schema validation; install the project dependencies"
-        )]
+        return [
+            RuleValidationError(
+                "jsonschema is required for schema validation; install the project dependencies"
+            )
+        ]
     if not schema_path.is_file():
         return [RuleValidationError(f"rule schema not found: {schema_path}")]
     try:
@@ -35,9 +38,9 @@ def validate_against_schema(rule: Rule, schema_path: Path) -> list[RuleValidatio
     errors: list[RuleValidationError] = []
     for err in validator.iter_errors(rule.raw):
         location = ".".join(str(part) for part in err.absolute_path) or "<root>"
-        errors.append(RuleValidationError(
-            f"{rule.id} [{rule.path.name}]: {location}: {err.message}"
-        ))
+        errors.append(
+            RuleValidationError(f"{rule.id} [{rule.path.name}]: {location}: {err.message}")
+        )
     return errors
 
 
@@ -62,13 +65,15 @@ def validate_semantics(rule: Rule) -> list[RuleValidationError]:
     raw_id = rule.raw.get("id")
     identifier = raw_id if isinstance(raw_id, str) else rule.id
     if expected is not None and not identifier.startswith(f"{expected}-"):
-        errors.append(RuleValidationError(
-            f"{identifier}: rule id must start with '{expected}'- for domain '{domain}'"
-        ))
+        errors.append(
+            RuleValidationError(
+                f"{identifier}: rule id must start with '{expected}'- for domain '{domain}'"
+            )
+        )
     if identifier != rule.id:
-        errors.append(RuleValidationError(
-            f"{rule.id}: Rule.id does not match the document id '{identifier}'"
-        ))
+        errors.append(
+            RuleValidationError(f"{rule.id}: Rule.id does not match the document id '{identifier}'")
+        )
 
     verification = rule.raw.get("verification")
     if not isinstance(verification, dict):
@@ -76,25 +81,21 @@ def validate_semantics(rule: Rule) -> list[RuleValidationError]:
     else:
         methods = verification.get("methods")
         if not isinstance(methods, list) or not methods:
-            errors.append(RuleValidationError(
-                f"{rule.id}: 'verification.methods' must be a non-empty list"
-            ))
+            errors.append(
+                RuleValidationError(f"{rule.id}: 'verification.methods' must be a non-empty list")
+            )
         if verification.get("mode") == "delegated" and not verification.get("delegate_to"):
-            errors.append(RuleValidationError(
-                f"{rule.id}: delegated verification requires 'delegate_to'"
-            ))
+            errors.append(
+                RuleValidationError(f"{rule.id}: delegated verification requires 'delegate_to'")
+            )
 
     acceptance = rule.raw.get("acceptance")
     if not isinstance(acceptance, dict) or not acceptance:
-        errors.append(RuleValidationError(
-            f"{rule.id}: 'acceptance' must be a non-empty mapping"
-        ))
+        errors.append(RuleValidationError(f"{rule.id}: 'acceptance' must be a non-empty mapping"))
     return errors
 
 
-def validate_rule(
-    rule: Rule, schema_path: Path | None = None
-) -> list[RuleValidationError]:
+def validate_rule(rule: Rule, schema_path: Path | None = None) -> list[RuleValidationError]:
     """Run structural validation when a schema path is supplied, then semantics."""
     errors: list[RuleValidationError] = []
     if schema_path is not None:

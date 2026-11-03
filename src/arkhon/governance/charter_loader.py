@@ -1,4 +1,5 @@
 """Load and validate the Apxoh engineering charter."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -69,7 +70,11 @@ def _parse_principles(data: dict[str, Any]) -> tuple[Principle, ...]:
         if not isinstance(item, dict):
             raise GovernanceError(f"charter principle #{index} must be a mapping")
         number, statement = item.get("number", index), item.get("statement", "")
-        if isinstance(number, bool) or not isinstance(number, int) or not isinstance(statement, str):
+        if (
+            isinstance(number, bool)
+            or not isinstance(number, int)
+            or not isinstance(statement, str)
+        ):
             raise GovernanceError(f"charter principle #{index} has invalid fields")
         principles.append(Principle(number=number, statement=statement))
     numbers = [p.number for p in principles]

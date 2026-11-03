@@ -50,9 +50,9 @@ def test_rule_id_matches_domain(rule_path: Path) -> None:
     domain = rule.domain
     if domain in DOMAIN_RULE_PREFIX:
         expected = DOMAIN_RULE_PREFIX[domain]
-        assert rule.id.startswith(expected), (
-            f"{rule_path}: id {rule.id} does not match domain {domain} ({expected})"
-        )
+        assert rule.id.startswith(
+            expected
+        ), f"{rule_path}: id {rule.id} does not match domain {domain} ({expected})"
 
 
 def test_at_least_15_rules_present() -> None:

@@ -11,12 +11,34 @@ from arkhon.language_support.registry import LanguageDefinition, LanguageRegistr
 
 logger = get_logger("language_support.detector")
 
-IGNORED_DIRS: frozenset[str] = frozenset({
-    ".git", ".hg", ".svn", "node_modules", "vendor", "target",
-    "dist", "build", "out", ".venv", "venv", "env", ".env",
-    "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    ".tox", ".nox", ".idea", ".vscode", ".arkhon", "coverage", "htmlcov",
-})
+IGNORED_DIRS: frozenset[str] = frozenset(
+    {
+        ".git",
+        ".hg",
+        ".svn",
+        "node_modules",
+        "vendor",
+        "target",
+        "dist",
+        "build",
+        "out",
+        ".venv",
+        "venv",
+        "env",
+        ".env",
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".tox",
+        ".nox",
+        ".idea",
+        ".vscode",
+        ".arkhon",
+        "coverage",
+        "htmlcov",
+    }
+)
 MAX_FILE_SIZE = 5 * 1024 * 1024
 
 
@@ -102,5 +124,6 @@ def _get_default_registry() -> LanguageRegistry:
     global _default_registry
     if _default_registry is None:
         from arkhon.language_support.registry import load_registry
+
         _default_registry = load_registry()
     return _default_registry

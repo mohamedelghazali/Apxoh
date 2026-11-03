@@ -1,4 +1,5 @@
 """Unit tests for the verification engine and runner contracts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -65,23 +66,25 @@ def engine(project: Path) -> VerificationEngine:
 
 def test_engine_requires_runners(engine: VerificationEngine, project: Path) -> None:
     with pytest.raises(VerificationError, match="no runners"):
-        engine.run(
-            domain="testing", commit_sha="a" * 40, runners=[], project_root=project
-        )
+        engine.run(domain="testing", commit_sha="a" * 40, runners=[], project_root=project)
 
 
 def test_engine_rejects_bad_sha(engine: VerificationEngine, project: Path) -> None:
     with pytest.raises(VerificationError, match="invalid commit SHA"):
         engine.run(
-            domain="testing", commit_sha="not-a-sha",
-            runners=[FakePassRunner()], project_root=project,
+            domain="testing",
+            commit_sha="not-a-sha",
+            runners=[FakePassRunner()],
+            project_root=project,
         )
 
 
 def test_engine_passes(engine: VerificationEngine, project: Path) -> None:
     run = engine.run(
-        domain="testing", commit_sha="a" * 40,
-        runners=[FakePassRunner()], project_root=project,
+        domain="testing",
+        commit_sha="a" * 40,
+        runners=[FakePassRunner()],
+        project_root=project,
     )
     assert run.status == "PASS"
     assert len(run.results) == 1
@@ -89,24 +92,30 @@ def test_engine_passes(engine: VerificationEngine, project: Path) -> None:
 
 def test_engine_fails(engine: VerificationEngine, project: Path) -> None:
     run = engine.run(
-        domain="testing", commit_sha="b" * 40,
-        runners=[FakePassRunner(), FakeFailRunner()], project_root=project,
+        domain="testing",
+        commit_sha="b" * 40,
+        runners=[FakePassRunner(), FakeFailRunner()],
+        project_root=project,
     )
     assert run.status == "FAIL"
 
 
 def test_engine_blocked(engine: VerificationEngine, project: Path) -> None:
     run = engine.run(
-        domain="testing", commit_sha="c" * 40,
-        runners=[FakePassRunner(), FakeBlockedRunner()], project_root=project,
+        domain="testing",
+        commit_sha="c" * 40,
+        runners=[FakePassRunner(), FakeBlockedRunner()],
+        project_root=project,
     )
     assert run.status == "BLOCKED"
 
 
 def test_engine_handles_crashed_runner(engine: VerificationEngine, project: Path) -> None:
     run = engine.run(
-        domain="testing", commit_sha="d" * 40,
-        runners=[FakeCrashedRunner()], project_root=project,
+        domain="testing",
+        commit_sha="d" * 40,
+        runners=[FakeCrashedRunner()],
+        project_root=project,
     )
     assert run.status == "BLOCKED"
     assert "crashed" in run.results[0].reason
@@ -114,8 +123,10 @@ def test_engine_handles_crashed_runner(engine: VerificationEngine, project: Path
 
 def test_engine_writes_evidence(engine: VerificationEngine, project: Path) -> None:
     run = engine.run(
-        domain="testing", commit_sha="e" * 40,
-        runners=[FakePassRunner()], project_root=project,
+        domain="testing",
+        commit_sha="e" * 40,
+        runners=[FakePassRunner()],
+        project_root=project,
     )
     assert run.evidence_id.startswith("EVID-ARKHON-")
     assert list((project / ".arkhon" / "evidence" / "testing").glob("*.json"))

@@ -1,11 +1,12 @@
 """Deterministic verification orchestration and evidence recording."""
+
 from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
 
 from arkhon.core.constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
 from arkhon.core.errors import VerificationError
@@ -39,7 +40,11 @@ class VerificationEngine:
         self._collector = collector
 
     def run(
-        self, *, domain: str, commit_sha: str, runners: Sequence[Runner],
+        self,
+        *,
+        domain: str,
+        commit_sha: str,
+        runners: Sequence[Runner],
         project_root: Path,
     ) -> VerificationRun:
         if not runners:
@@ -57,18 +62,30 @@ class VerificationEngine:
                 results.append(result)
             except Exception as exc:
                 logger.exception("runner %s crashed", runner.name)
-                results.append(RunnerResult(
-                    runner=runner.name, outcome=RunnerOutcome.BLOCKED,
-                    reason=f"runner crashed: {type(exc).__name__}: {exc}", artifacts=[],
-                ))
+                results.append(
+                    RunnerResult(
+                        runner=runner.name,
+                        outcome=RunnerOutcome.BLOCKED,
+                        reason=f"runner crashed: {type(exc).__name__}: {exc}",
+                        artifacts=[],
+                    )
+                )
         status = self._aggregate_status(results)
         evidence_id = self._record_evidence(
-            domain=domain, commit_sha=commit_sha, results=results,
-            status=status, run_id=run_id, project_root=project_root,
+            domain=domain,
+            commit_sha=commit_sha,
+            results=results,
+            status=status,
+            run_id=run_id,
+            project_root=project_root,
         )
         return VerificationRun(
-            run_id=run_id, domain=domain, commit_sha=commit_sha,
-            results=results, status=status, evidence_id=evidence_id,
+            run_id=run_id,
+            domain=domain,
+            commit_sha=commit_sha,
+            results=results,
+            status=status,
+            evidence_id=evidence_id,
         )
 
     @staticmethod
@@ -80,12 +97,20 @@ class VerificationEngine:
         return STATUS_PASS
 
     def _record_evidence(
-        self, *, domain: str, commit_sha: str, results: list[RunnerResult],
-        status: str, run_id: str, project_root: Path,
+        self,
+        *,
+        domain: str,
+        commit_sha: str,
+        results: list[RunnerResult],
+        status: str,
+        run_id: str,
+        project_root: Path,
     ) -> str:
         draft: EvidenceDraft = self._collector.new_evidence(
-            source="arkhon", source_version="0.1.0.dev1",
-            commit_sha=commit_sha, status=status,
+            source="arkhon",
+            source_version="0.1.0.dev1",
+            commit_sha=commit_sha,
+            status=status,
         )
         for result in results:
             for artifact in result.artifacts:
@@ -112,10 +137,14 @@ class VerificationEngine:
                     }
                     for result in results
                 ],
-                "note": "Execution diagnostic only; this record is not proof of a passing verification.",
+                "note": (
+                    "Execution diagnostic only; this record is not proof "
+                    "of a passing verification."
+                ),
             }
             summary_path.write_text(
-                json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8",
+                json.dumps(summary, indent=2, sort_keys=True),
+                encoding="utf-8",
             )
             draft.add_artifact(summary_path)
 

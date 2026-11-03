@@ -1,4 +1,5 @@
 """Runner interface for independent verification tools."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -8,7 +9,7 @@ from pathlib import Path
 
 
 class RunnerOutcome(str, Enum):
-    PASS = "PASS"
+    PASS = "PASS"  # noqa: S105 - verification outcome, not a password
     FAIL = "FAIL"
     BLOCKED = "BLOCKED"
 
@@ -23,6 +24,7 @@ class RunnerResult:
 
 class Runner(ABC):
     """A deterministic runner that reports results and generated artifacts."""
+
     @property
     @abstractmethod
     def name(self) -> str:

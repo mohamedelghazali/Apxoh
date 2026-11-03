@@ -4,11 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from arkhon.rules.loader import Rule
 from arkhon.rules.validator import validate_semantics
-
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RULE_PATH = REPO_ROOT / "rules" / "software-security" / "SE-SEC-GOV-001-tsar-audit-required.yaml"
@@ -16,6 +13,7 @@ RULE_PATH = REPO_ROOT / "rules" / "software-security" / "SE-SEC-GOV-001-tsar-aud
 
 def _load_raw() -> dict:
     import yaml
+
     with RULE_PATH.open("r", encoding="utf-8") as fh:
         return yaml.safe_load(fh)
 

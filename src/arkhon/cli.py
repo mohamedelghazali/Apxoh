@@ -141,8 +141,8 @@ def _commit_sha(project: Path) -> str | None:
         return None
     try:
         # The executable and argument vector are fixed; shell execution is disabled.
-        result = subprocess.run(
-            [git_executable, "rev-parse", "HEAD"],  # noqa: S603
+        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+            [git_executable, "rev-parse", "HEAD"],
             cwd=project,
             capture_output=True,
             text=True,
@@ -241,11 +241,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     fmt = args.format or "json"
     output = Path(args.output) if args.output else project / ".arkhon" / "reports"
     reporter = (
-        JsonReporter()
-        if fmt == "json"
-        else MarkdownReporter()
-        if fmt == "markdown"
-        else None
+        JsonReporter() if fmt == "json" else MarkdownReporter() if fmt == "markdown" else None
     )
     if reporter is None:
         print(f"[FAIL] unknown format: {fmt}", file=sys.stderr)

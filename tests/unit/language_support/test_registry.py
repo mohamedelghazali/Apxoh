@@ -9,7 +9,6 @@ import pytest
 from arkhon.core.errors import ConfigError
 from arkhon.language_support.registry import (
     LanguageDefinition,
-    LanguageRegistry,
     load_registry,
 )
 
@@ -28,8 +27,15 @@ def test_registry_has_nine_languages() -> None:
 def test_registry_ids() -> None:
     reg = load_registry()
     expected = {
-        "python", "javascript", "typescript", "java", "csharp",
-        "cpp", "go", "rust", "ruby",
+        "python",
+        "javascript",
+        "typescript",
+        "java",
+        "csharp",
+        "cpp",
+        "go",
+        "rust",
+        "ruby",
     }
     assert set(reg.ids()) == expected
 

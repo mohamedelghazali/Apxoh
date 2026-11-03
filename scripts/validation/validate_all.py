@@ -3,6 +3,7 @@
 
 Exit codes: 0 success, 1 validation errors, 2 repository/dependency failure.
 """
+
 from __future__ import annotations
 
 import json

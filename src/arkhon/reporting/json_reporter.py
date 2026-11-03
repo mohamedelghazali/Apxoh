@@ -1,9 +1,10 @@
 """JSON report generator."""
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -68,7 +69,7 @@ class JsonReporter:
             final = "PENDING_EVIDENCE"
         else:
             final = "APPROVED"
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         report = {
             "report_id": f"REP-{now.strftime('%Y%m%d%H%M%S')}",
             "project": project_root.name,

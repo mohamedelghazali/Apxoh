@@ -1,4 +1,5 @@
 """Load and validate Apxoh project profiles from projects/<name>/."""
+
 from __future__ import annotations
 
 import re
@@ -55,8 +56,9 @@ def _load_yaml(path: Path, *, required: bool = True) -> dict[str, Any]:
     return data
 
 
-def _validate_profile_data(name: str, profile: dict[str, Any], rules: dict[str, Any],
-                           gates: dict[str, Any]) -> None:
+def _validate_profile_data(
+    name: str, profile: dict[str, Any], rules: dict[str, Any], gates: dict[str, Any]
+) -> None:
     declared = profile.get("name", name)
     if declared != name:
         raise ConfigError(f"profile name mismatch: directory={name!r}, file={declared!r}")
@@ -67,7 +69,9 @@ def _validate_profile_data(name: str, profile: dict[str, Any], rules: dict[str, 
     if not isinstance(domains, list) or not all(isinstance(item, str) and item for item in domains):
         raise ConfigError(f"profile {name!r}: rules.domains must be a list of non-empty strings")
     required = gates.get("required", [])
-    if not isinstance(required, list) or not all(isinstance(item, str) and item for item in required):
+    if not isinstance(required, list) or not all(
+        isinstance(item, str) and item for item in required
+    ):
         raise ConfigError(f"profile {name!r}: gates.required must be a list of non-empty strings")
 
 
@@ -110,8 +114,10 @@ def list_profiles(root: Path | None = None) -> list[str]:
     if not profiles_root.is_dir():
         return []
     return sorted(
-        path.name for path in profiles_root.iterdir()
-        if path.is_dir() and not path.name.startswith("_")
+        path.name
+        for path in profiles_root.iterdir()
+        if path.is_dir()
+        and not path.name.startswith("_")
         and _PROFILE_NAME.fullmatch(path.name)
         and (path / "profile.yaml").is_file()
     )

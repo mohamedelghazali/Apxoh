@@ -1,10 +1,12 @@
 """Load and index Apxoh enforcement policies."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -105,8 +107,7 @@ def _load_policy_file(path: Path, category: str) -> Policy:
     if not isinstance(enabled, bool):
         raise GovernanceError(f"policy 'enabled' must be boolean: {path}")
     # Copy the top-level mapping so callers cannot mutate the loader's source object.
-    return Policy(id=policy_id, category=category, path=path,
-                  raw=MappingProxyType(dict(data)))
+    return Policy(id=policy_id, category=category, path=path, raw=MappingProxyType(dict(data)))
 
 
 def load_policies(root: Path | None = None) -> PolicyRegistry:

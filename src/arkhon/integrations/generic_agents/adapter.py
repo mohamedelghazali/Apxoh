@@ -1,4 +1,5 @@
 """Manual fallback adapter for generic coding agents."""
+
 from __future__ import annotations
 
 from arkhon.integrations.base import Integration, IntegrationInfo, IntegrationResponse
@@ -26,8 +27,11 @@ class GenericAgentAdapter(Integration):
     @property
     def info(self) -> IntegrationInfo:
         return IntegrationInfo(
-            id="generic-agents", kind="generic", provider="manual",
-            version="1.0.0", capabilities=("manual-instructions",),
+            id="generic-agents",
+            kind="generic",
+            provider="manual",
+            version="1.0.0",
+            capabilities=("manual-instructions",),
         )
 
     def health_check(self) -> bool:

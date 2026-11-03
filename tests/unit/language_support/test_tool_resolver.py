@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from arkhon.language_support.tool_resolver import (
     ToolStatus,
     _check_tool,
@@ -21,8 +19,10 @@ def test_check_tool_missing() -> None:
 
 
 def test_check_tool_available() -> None:
-    with patch("shutil.which", return_value="/usr/bin/python3"), \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("shutil.which", return_value="/usr/bin/python3"),
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = "Python 3.11.0\n"
         mock_run.return_value.stderr = ""
@@ -32,8 +32,7 @@ def test_check_tool_available() -> None:
 
 
 def test_check_tool_version_unknown() -> None:
-    with patch("shutil.which", return_value="/usr/bin/weird"), \
-         patch("subprocess.run") as mock_run:
+    with patch("shutil.which", return_value="/usr/bin/weird"), patch("subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         mock_run.return_value.stdout = ""
         mock_run.return_value.stderr = "error"
@@ -44,6 +43,7 @@ def test_check_tool_version_unknown() -> None:
 def test_resolve_tools_aggregates() -> None:
     with patch("arkhon.language_support.tool_resolver._check_tool") as mock_check:
         from arkhon.language_support.tool_resolver import ToolCheck
+
         mock_check.side_effect = [
             ToolCheck(name="a", status=ToolStatus.AVAILABLE, version="1.0"),
             ToolCheck(name="b", status=ToolStatus.MISSING, reason="not found"),
@@ -58,6 +58,7 @@ def test_resolve_tools_aggregates() -> None:
 def test_resolve_tools_all_available() -> None:
     with patch("arkhon.language_support.tool_resolver._check_tool") as mock_check:
         from arkhon.language_support.tool_resolver import ToolCheck
+
         mock_check.side_effect = [
             ToolCheck(name="a", status=ToolStatus.AVAILABLE, version="1.0"),
             ToolCheck(name="b", status=ToolStatus.AVAILABLE, version="2.0"),
@@ -70,6 +71,7 @@ def test_resolve_tools_all_available() -> None:
 def test_get_by_name() -> None:
     with patch("arkhon.language_support.tool_resolver._check_tool") as mock_check:
         from arkhon.language_support.tool_resolver import ToolCheck
+
         mock_check.return_value = ToolCheck(name="ruff", status=ToolStatus.AVAILABLE, version="0.7")
         result = resolve_tools("python", ["ruff"])
     found = result.get("ruff")

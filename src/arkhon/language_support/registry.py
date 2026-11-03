@@ -6,10 +6,11 @@ typed object. Provides lookups by id, extension, and build file.
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Iterator, Mapping
+from typing import Any
 
 import yaml
 
@@ -86,8 +87,10 @@ def _parse_language(raw: dict[str, Any]) -> LanguageDefinition:
 
     tools: dict[str, tuple[str, ...]] = {}
     for key, value in planned.items():
-        if not isinstance(key, str) or not isinstance(value, list) or any(
-            not isinstance(item, str) for item in value
+        if (
+            not isinstance(key, str)
+            or not isinstance(value, list)
+            or any(not isinstance(item, str) for item in value)
         ):
             raise ConfigError(f"language {lang_id}: invalid planned_tools entry {key!r}")
         tools[key] = tuple(value)
@@ -102,7 +105,9 @@ def _parse_language(raw: dict[str, Any]) -> LanguageDefinition:
         family=str(raw.get("family", "unknown")),
         primary_use=string_tuple(raw.get("primary_use", []), "primary_use"),
         status=str(raw.get("status", "unknown")),
-        extensions=tuple(ext.lower() for ext in string_tuple(detection.get("extensions", []), "extensions")),
+        extensions=tuple(
+            ext.lower() for ext in string_tuple(detection.get("extensions", []), "extensions")
+        ),
         build_files=string_tuple(detection.get("build_files", []), "build_files"),
         lock_files=string_tuple(detection.get("lock_files", []), "lock_files"),
         planned_tools=MappingProxyType(tools),
