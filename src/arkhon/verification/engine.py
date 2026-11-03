@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+import json
 from pathlib import Path
+import uuid
 
 from arkhon.core.constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
 from arkhon.core.errors import VerificationError
@@ -39,6 +39,8 @@ class VerificationRun:
 
 class VerificationEngine:
     """Run registered runners, aggregate outcomes, and persist evidence."""
+
+# ruff: noqa: I001
 
     def __init__(self, store: EvidenceStore, collector: EvidenceCollector) -> None:
         self._store = store

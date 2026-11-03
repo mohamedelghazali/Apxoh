@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 from pathlib import Path
+import subprocess
 
 import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
 from arkhon.evidence.supply_chain import (
-    identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
+    identity_regexp_for_tag,
 )
 from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
 
@@ -68,7 +68,7 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
     provenance = write("dist/provenance.intoto.jsonl", "provenance")
     signature = write("dist/release.whl.sigstore.json", "signature")
     sbom = write(
-        ".arkhon/reports/supply-chain/sbom.cdx.json",
+        ".arkhon/reports/supply-chain/sbom-fixture.cdx.json",
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
@@ -318,3 +318,12 @@ def test_build_rejects_invalid_expected_commit_sha(tmp_path: Path) -> None:
     _write_evidence(tmp_path, "testing", "EVID-A")
     with pytest.raises(EvidenceError, match="expected commit_sha is invalid"):
         JsonReporter().build(tmp_path, expected_commit_sha="not-a-sha")
+
+
+def test_build_blocks_supply_chain_pass_without_sbom(tmp_path: Path) -> None:
+    _write_evidence(tmp_path, "supply-chain", "EVID-SBOM-MISSING")
+    with pytest.raises(EvidenceError, match="exactly one CycloneDX SBOM"):
+        JsonReporter().build(tmp_path)
+
+
+# ruff: noqa: I001

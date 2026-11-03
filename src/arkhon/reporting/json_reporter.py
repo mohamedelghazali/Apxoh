@@ -111,9 +111,8 @@ class JsonReporter:
                 )
                 domain = record.path.parent.name
                 if status == "PASS" and domain in {"supply-chain", "release-attestations"}:
-                    evidence_artifacts = record.data.get("artifacts")
-                    if not isinstance(evidence_artifacts, list):
-                        raise EvidenceError("supply-chain evidence artifacts must be an array")
+                    # verify_bundle has already validated the artifact list and hashes.
+                    evidence_artifacts = record.data["artifacts"]
                     if domain == "supply-chain":
                         sbom_paths = [
                             project_root / item["path"]

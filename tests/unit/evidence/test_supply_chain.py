@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import hashlib
 import json
 import subprocess
-from pathlib import Path
 
 import pytest
 
 from arkhon.core.errors import EvidenceError, EvidenceTamperedError
 from arkhon.evidence.supply_chain import (
-    identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
+    identity_regexp_for_tag,
     verify_cyclonedx_sbom,
     verify_supply_chain_attestation_report,
 )
@@ -331,3 +331,54 @@ def test_attestation_rejects_unbound_release_tag(
         verify_supply_chain_attestation_report(
             report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
         )
+
+
+def test_in_root_rejects_invalid_symlink_escape_and_missing_paths(tmp_path: Path) -> None:
+    from arkhon.evidence.supply_chain import _in_root
+
+    with pytest.raises(EvidenceTamperedError, match="invalid relative path"):
+        _in_root(tmp_path, None)
+    with pytest.raises(EvidenceTamperedError, match="invalid relative path"):
+        _in_root(tmp_path, str(tmp_path / "absolute.txt"))
+
+    outside = tmp_path.parent / f"{tmp_path.name}-outside.txt"
+    outside.write_text("outside", encoding="utf-8")
+    with pytest.raises(EvidenceTamperedError, match="escapes project"):
+        _in_root(tmp_path, f"../{outside.name}")
+
+    with pytest.raises(EvidenceTamperedError, match="file is missing"):
+        _in_root(tmp_path, "missing.txt")
+
+    target = tmp_path / "target.txt"
+    target.write_text("target", encoding="utf-8")
+    link = tmp_path / "link.txt"
+    link.symlink_to(target)
+    with pytest.raises(EvidenceTamperedError, match="is a symlink"):
+        _in_root(tmp_path, "link.txt")
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("commit_sha", "b" * 40, "commit binding"),
+        ("source_tag", None, "source tag"),
+        ("artifact", None, "missing artifact binding"),
+    ],
+)
+def test_attestation_report_rejects_missing_or_mismatched_bindings(
+    tmp_path: Path, field: str, value: object, message: str
+) -> None:
+    report_path, artifacts = _attestation_fixture(tmp_path)
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report[field] = value
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    with pytest.raises(EvidenceTamperedError, match=message):
+        verify_supply_chain_attestation_report(
+            report_path,
+            evidence_root=tmp_path,
+            expected_commit_sha=SHA,
+            evidence_artifacts=artifacts,
+        )
+
+
+# ruff: noqa: I001

@@ -51,7 +51,7 @@ jobs:
         id: hash
         run: |
           cd dist
-          echo "hashes=$(sha256sum *.whl *.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "hashes=$(sha256sum *.whl *.tar.gz source-sbom.cdx.json | base64 -w0)" >> "$GITHUB_OUTPUT"
       - name: Upload build outputs for provenance and verification
         uses: actions/upload-artifact@v4
         with:
@@ -113,6 +113,13 @@ jobs:
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
               "$artifact"
           done
+      - name: Verify SLSA provenance for the signed source SBOM
+        run: |
+          set -euo pipefail
+          slsa-verifier verify-artifact dist/source-sbom.cdx.json \
+            --provenance-path "$(find dist -maxdepth 1 -name '*.intoto.jsonl' -print -quit)" \
+            --source-uri github.com/mohamedelghazali/Apxoh \
+            --source-tag "$GITHUB_REF_NAME"
       - name: Configure the release artifact trust inputs
         run: |
           python - <<'PY'

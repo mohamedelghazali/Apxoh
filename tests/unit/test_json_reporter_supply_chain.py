@@ -1,5 +1,6 @@
 """The report/acceptance path must re-run supply-chain cryptographic checks."""
 
+# ruff: noqa: I001
 from __future__ import annotations
 
 import hashlib

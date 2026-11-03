@@ -255,3 +255,30 @@ def test_audit_handles_process_errors(
         if isinstance(error, subprocess.TimeoutExpired)
         else "failed to start" in result.reason
     )
+
+
+@pytest.mark.parametrize(
+    ("level", "summary_key"),
+    [("warning", "medium"), ("note", "low")],
+)
+def test_audit_maps_warning_and_note_severities(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    level: str,
+    summary_key: str,
+) -> None:
+    _run_with_sarif(
+        monkeypatch,
+        _sarif(
+            results=[
+                {
+                    "ruleId": "tsar/secret",
+                    "level": level,
+                    "message": {"text": "informational finding"},
+                }
+            ]
+        ),
+    )
+    result = TsarAdapter().audit(tmp_path, SHA)
+    assert result.ok
+    assert result.payload["summary"][summary_key] == 1
