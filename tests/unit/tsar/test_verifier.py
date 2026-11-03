@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -14,6 +14,7 @@ from arkhon.core.errors import (
 )
 from arkhon.evidence.integrity import sha256_of
 from arkhon.integrations.tsar.verifier import (
+    _maximum_version_tuple,
     FRESHNESS_HOURS,
     REQUIRED_RULE_IDS,
     _check_freshness,
@@ -53,9 +54,7 @@ def test_check_version_invalid_string() -> None:
 
 
 def test_check_freshness_ok() -> None:
-    from datetime import datetime
-
-    now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
+        now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
     _check_freshness("2026-11-02T00:00:00Z", now=now)
 
 
@@ -68,9 +67,7 @@ def test_check_freshness_stale() -> None:
 
 
 def test_check_freshness_boundary() -> None:
-    from datetime import datetime, timedelta
-
-    executed = "2026-11-01T00:00:00Z"
+        executed = "2026-11-01T00:00:00Z"
     executed_dt = datetime(2026, 11, 1, tzinfo=UTC)
 
     just_at_limit = executed_dt + timedelta(hours=FRESHNESS_HOURS)
@@ -208,11 +205,7 @@ def test_parse_payload_rejects_invalid_shapes_and_summary() -> None:
 
 
 def test_verify_rejects_invalid_commit_version_time_and_paths(tmp_path: Path) -> None:
-    from datetime import datetime
-    from arkhon.core.errors import EvidenceStaleError
-    from arkhon.integrations.tsar.verifier import _maximum_version_tuple
-
-    with pytest.raises(SecurityError, match="expected_commit_sha"):
+        with pytest.raises(SecurityError, match="expected_commit_sha"):
         verify_tsar_evidence({}, expected_commit_sha="bad", evidence_root=tmp_path)
     with pytest.raises(SecurityError, match="invalid version bound"):
         _maximum_version_tuple("x.1.x")
