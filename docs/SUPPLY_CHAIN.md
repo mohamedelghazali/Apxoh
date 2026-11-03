@@ -58,7 +58,7 @@ Apxoh targets **SLSA Build Level 3** for release artifacts. A target is not a co
 | Signing | Sigstore-backed provenance | Verify issuer, identity, and signature |
 | Publication | Release-attached provenance | Inspect an actual published release |
 
-The presence of a workflow file alone does not establish that provenance was generated, signed, published, or successfully verified.
+The release workflow now stages signed build outputs in a draft GitHub release before generating provenance. The release remains a draft; it must not be published until the workflow's signature, provenance, and Apxoh evidence-verification job succeeds. The presence of a workflow file alone does not establish that provenance was generated, signed, published, or successfully verified.
 
 ### 3.2 Reproducible Builds
 
@@ -235,7 +235,7 @@ Before a release is published, the release pipeline must enforce the applicable 
 | Changelog | Manual review | Yes |
 | Version consistency | `VERSION` and `pyproject.toml` | Yes |
 
-Any required check that is missing, fails, or cannot be independently verified must block release. A policy table does not prove that the corresponding workflow currently enforces the check.
+Any required check that is missing, fails, or cannot be independently verified must block release. A policy table does not prove that the corresponding workflow currently enforces the check. The automated release workflow deliberately leaves the release in draft state after verification; publishing remains a separate maintainer action after reviewing the successful run and its attached assets.
 
 ---
 
