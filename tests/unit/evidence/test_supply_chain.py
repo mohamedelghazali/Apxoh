@@ -11,9 +11,9 @@ import pytest
 
 from arkhon.core.errors import EvidenceError, EvidenceTamperedError
 from arkhon.evidence.supply_chain import (
-    identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
+    identity_regexp_for_tag,
     verify_cyclonedx_sbom,
     verify_supply_chain_attestation_report,
 )
