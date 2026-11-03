@@ -107,7 +107,7 @@ class ClaudeAdapter(Integration):
         }
 
         connection = http.client.HTTPSConnection(
-            endpoint.hostname,
+            endpoint.hostname or "",
             endpoint.port or 443,
             timeout=self._config.timeout_seconds,
         )
