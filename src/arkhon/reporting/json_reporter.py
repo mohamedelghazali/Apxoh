@@ -13,6 +13,10 @@ from arkhon.core.errors import EvidenceError
 from arkhon.core.logging import get_logger
 from arkhon.evidence.integrity import verify_bundle, verify_freshness
 from arkhon.evidence.store import EvidenceStore
+from arkhon.evidence.supply_chain import (
+    verify_cyclonedx_sbom,
+    verify_supply_chain_attestation_report,
+)
 
 logger = get_logger("reporting.json")
 
@@ -23,6 +27,7 @@ SECTION_MAP = {
     "code-quality": "code_quality",
     "testing": "testing",
     "software-security": "security",
+    "supply-chain": "supply_chain",
     "performance": "performance",
     "reliability": "reliability",
     "observability": "reliability",
@@ -45,6 +50,7 @@ FRESHNESS_HOURS = {
     "database": 168,
     "dependencies": 168,
     "testing": 720,
+    "supply-chain": 168,
 }
 _ALLOWED_STATUSES = {"PASS", "FAIL", "BLOCKED", "NOT_APPLICABLE", "ACCEPTED_RISK"}
 
@@ -103,6 +109,35 @@ class JsonReporter:
                     evidence_root=project_root,
                     expected_commit_sha=commit_sha,
                 )
+                if record.path.parent.name == "supply-chain" and status == "PASS":
+                    evidence_artifacts = record.data.get("artifacts")
+                    if not isinstance(evidence_artifacts, list):
+                        raise EvidenceError("supply-chain evidence artifacts must be an array")
+                    sbom_paths = [
+                        project_root / item["path"]
+                        for item in evidence_artifacts
+                        if isinstance(item, dict)
+                        and isinstance(item.get("path"), str)
+                        and item["path"].endswith(".cdx.json")
+                    ]
+                    attestation_paths = [
+                        project_root / item["path"]
+                        for item in evidence_artifacts
+                        if isinstance(item, dict)
+                        and isinstance(item.get("path"), str)
+                        and item["path"].endswith(".attestation.json")
+                    ]
+                    if len(sbom_paths) != 1 or len(attestation_paths) != 1:
+                        raise EvidenceError(
+                            "PASS supply-chain evidence requires exactly one SBOM and attestation report"
+                        )
+                    verify_cyclonedx_sbom(sbom_paths[0], expected_commit_sha=commit_sha)
+                    verify_supply_chain_attestation_report(
+                        attestation_paths[0],
+                        evidence_root=project_root,
+                        expected_commit_sha=commit_sha,
+                        evidence_artifacts=evidence_artifacts,
+                    )
                 executed_at = _record_timestamp(record)
                 verify_freshness(
                     executed_at.isoformat(),
