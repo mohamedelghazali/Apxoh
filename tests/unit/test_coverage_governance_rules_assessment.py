@@ -6,7 +6,12 @@ import pytest
 import yaml
 
 from arkhon.assessment.decision import decide
-from arkhon.assessment.gates import GateVerdict, RuleOutcome as AssessmentOutcome, evaluate_all_gates, evaluate_gate
+from arkhon.assessment.gates import (
+    GateVerdict,
+    RuleOutcome as AssessmentOutcome,
+    evaluate_all_gates,
+    evaluate_gate,
+)
 from arkhon.assessment.scorer import Score, ScoreBreakdown, score_from_ratios
 from arkhon.core.errors import AssessmentError, GateError, GovernanceError, RuleError
 from arkhon.governance.charter_loader import (
@@ -150,8 +155,12 @@ def test_rule_loader_and_registry_error_paths(tmp_path: Path) -> None:
     (rules / "broken.yaml").write_text("id: ''", encoding="utf-8")
     result = load_rules_dir(rules)
     assert result.errors and not result.rules
-    (rules / "broken.yaml").write_text("id: RULE-1\nmetadata:\n  domain: testing\n", encoding="utf-8")
-    (rules / "duplicate.yml").write_text("id: RULE-1\nmetadata:\n  domain: testing\n", encoding="utf-8")
+    (rules / "broken.yaml").write_text(
+        "id: RULE-1\nmetadata:\n  domain: testing\n", encoding="utf-8"
+    )
+    (rules / "duplicate.yml").write_text(
+        "id: RULE-1\nmetadata:\n  domain: testing\n", encoding="utf-8"
+    )
     assert any("duplicate rule id" in str(error) for error in load_rules_dir(rules).errors)
     with pytest.raises(RuleError, match="rule loading failed"):
         build_registry(rules)
@@ -190,11 +199,13 @@ def test_scoring_and_gate_validation_edges() -> None:
         )})
     with pytest.raises(AssessmentError, match="no gate verdicts"):
         decide(Score(100, 100), {})
-    assert decide(
+    approved = decide(
         Score(100, 100),
         {"security_gate": GateVerdict("security_gate", "PASS"),
          "release_gate": GateVerdict("release_gate", "PASS")},
-    ).decision == "APPROVED"
+    )
+    assert approved.decision == "APPROVED"
+    assert approved.to_dict()["decision"] == "APPROVED"
     with pytest.raises(GateError, match="unknown gate"):
         evaluate_gate("unknown_gate", [])
     with pytest.raises(GateError, match="unknown outcome domains"):
