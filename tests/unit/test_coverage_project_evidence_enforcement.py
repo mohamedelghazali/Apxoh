@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,6 @@ from arkhon.core.errors import ConfigError, EvidenceError, EvidenceTamperedError
 from arkhon.evidence.store import EvidenceStore
 from arkhon.governance.enforcement import EnforcementEngine, RuleOutcome
 from arkhon.projects.loader import (
-    ProjectProfile,
     _load_yaml,
     _validate_profile_data,
     list_profiles,
@@ -41,7 +39,6 @@ def test_project_profile_load_validation_and_listing(tmp_path: Path) -> None:
     assert profile.required_gates == ["testing_gate"]
     assert profile.evidence == {"required": ["report.json"]}
     assert list_profiles(tmp_path) == ["demo"]
-    assert load_profile("bare", tmp_path) if False else True
     (tmp_path / "projects" / "_private").mkdir()
     (tmp_path / "projects" / "UPPER").mkdir()
     (tmp_path / "projects" / "missing-profile").mkdir()
