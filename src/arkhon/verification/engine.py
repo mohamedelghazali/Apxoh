@@ -59,6 +59,29 @@ class VerificationEngine:
                 result = runner.run(project_root)
                 if not isinstance(result, RunnerResult):
                     raise TypeError("runner returned an invalid result object")
+                invalid_reason = ""
+                if not isinstance(result.outcome, RunnerOutcome):
+                    invalid_reason = "runner returned an invalid outcome"
+                elif result.outcome == RunnerOutcome.PASS and not result.artifacts:
+                    invalid_reason = "runner reported PASS without evidence artifacts"
+                else:
+                    for artifact in result.artifacts:
+                        try:
+                            resolved_artifact = Path(artifact).resolve()
+                            resolved_artifact.relative_to(project_root.resolve())
+                        except (OSError, TypeError, ValueError):
+                            invalid_reason = f"runner artifact is outside project root: {artifact}"
+                            break
+                        if not resolved_artifact.is_file():
+                            invalid_reason = f"runner artifact is missing or not a file: {artifact}"
+                            break
+                if invalid_reason:
+                    result = RunnerResult(
+                        runner=runner.name,
+                        outcome=RunnerOutcome.BLOCKED,
+                        reason=invalid_reason,
+                        artifacts=[],
+                    )
                 results.append(result)
             except Exception as exc:
                 logger.exception("runner %s crashed", runner.name)
