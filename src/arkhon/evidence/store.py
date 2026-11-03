@@ -77,7 +77,7 @@ class EvidenceStore:
                 stream.write(payload)
         except FileExistsError:
             if sha256_of(target) != new_hash:
-                raise EvidenceTamperedError(f"concurrent evidence collision: {target}")
+                raise EvidenceTamperedError(f"concurrent evidence collision: {target}") from None
         logger.debug("wrote evidence %s to %s", evidence_id, target)
         return target
 
