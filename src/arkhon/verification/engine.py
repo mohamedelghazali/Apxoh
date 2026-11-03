@@ -98,11 +98,11 @@ class VerificationEngine:
                         artifacts=[],
                     )
                 )
-        if domain == "supply-chain" and all(
+        if domain in {"supply-chain", "release-attestations"} and all(
             result.outcome == RunnerOutcome.PASS for result in results
         ):
             acceptance_failure = self._verify_supply_chain_acceptance(
-                results, project_root=project_root, commit_sha=commit_sha
+                domain, results, project_root=project_root, commit_sha=commit_sha
             )
             if acceptance_failure is not None:
                 results.append(acceptance_failure)
@@ -126,38 +126,53 @@ class VerificationEngine:
 
     @staticmethod
     def _verify_supply_chain_acceptance(
-        results: list[RunnerResult], *, project_root: Path, commit_sha: str
+        domain: str,
+        results: list[RunnerResult],
+        *,
+        project_root: Path,
+        commit_sha: str,
     ) -> RunnerResult | None:
-        """Re-verify SBOM, SLSA provenance, and Sigstore before recording PASS."""
+        """Re-verify SBOM or release attestations before recording PASS."""
         root = project_root.resolve()
         artifacts = [Path(path).resolve() for result in results for path in result.artifacts]
-        sboms = [path for path in artifacts if path.name.startswith("sbom-") and path.name.endswith(".cdx.json")]
-        reports = [path for path in artifacts if path.name.endswith(".attestation.json")]
-        if len(sboms) != 1 or len(reports) != 1:
-            return RunnerResult(
-                runner="supply-chain-evidence-acceptance",
-                outcome=RunnerOutcome.BLOCKED,
-                reason="PASS requires exactly one commit-bound SBOM and one attestation report",
-            )
-        try:
-            evidence_artifacts = [
-                {"path": path.relative_to(root).as_posix(), "sha256": sha256_of(path)}
+        if domain == "supply-chain":
+            sboms = [
+                path
                 for path in artifacts
+                if path.name.startswith("sbom-") and path.name.endswith(".cdx.json")
             ]
-            verify_cyclonedx_sbom(sboms[0], expected_commit_sha=commit_sha)
-            verify_supply_chain_attestation_report(
-                reports[0],
-                evidence_root=root,
-                expected_commit_sha=commit_sha,
-                evidence_artifacts=evidence_artifacts,
-            )
-        except Exception as exc:
-            return RunnerResult(
-                runner="supply-chain-evidence-acceptance",
-                outcome=RunnerOutcome.BLOCKED,
-                reason=f"cryptographic evidence acceptance failed: {type(exc).__name__}: {exc}",
-            )
-        return None
+            if len(sboms) != 1:
+                reason = "PASS requires exactly one commit-bound CycloneDX SBOM"
+            else:
+                try:
+                    verify_cyclonedx_sbom(sboms[0], expected_commit_sha=commit_sha)
+                    return None
+                except Exception as exc:
+                    reason = f"SBOM acceptance failed: {type(exc).__name__}: {exc}"
+        else:
+            reports = [path for path in artifacts if path.name.endswith(".attestation.json")]
+            if len(reports) != 1:
+                reason = "PASS requires exactly one SLSA/Sigstore attestation report"
+            else:
+                try:
+                    evidence_artifacts = [
+                        {"path": path.relative_to(root).as_posix(), "sha256": sha256_of(path)}
+                        for path in artifacts
+                    ]
+                    verify_supply_chain_attestation_report(
+                        reports[0],
+                        evidence_root=root,
+                        expected_commit_sha=commit_sha,
+                        evidence_artifacts=evidence_artifacts,
+                    )
+                    return None
+                except Exception as exc:
+                    reason = f"cryptographic evidence acceptance failed: {type(exc).__name__}: {exc}"
+        return RunnerResult(
+            runner="supply-chain-evidence-acceptance",
+            outcome=RunnerOutcome.BLOCKED,
+            reason=reason,
+        )
 
     @staticmethod
     def _aggregate_status(results: list[RunnerResult]) -> str:
