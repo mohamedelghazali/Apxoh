@@ -38,7 +38,9 @@ class _Connection:
         self.closed = True
 
 
-def _patch_connection(monkeypatch: pytest.MonkeyPatch, module: str, connection: _Connection) -> None:
+def _patch_connection(
+    monkeypatch: pytest.MonkeyPatch, module: str, connection: _Connection
+) -> None:
     monkeypatch.setattr(
         f"{module}.http.client.HTTPSConnection",
         lambda *args, **kwargs: connection,
