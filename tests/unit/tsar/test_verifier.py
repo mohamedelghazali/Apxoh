@@ -219,3 +219,15 @@ def test_verify_rejects_invalid_commit_version_time_and_paths(tmp_path: Path) ->
         verify_tsar_evidence(
             payload, expected_commit_sha="a" * 40, evidence_root=tmp_path
         )
+
+
+def test_verify_honors_custom_required_rule_ids(tmp_path: Path) -> None:
+    payload = _valid_payload(tmp_path)
+    payload["rule_ids"] = ["CUSTOM-SECURITY-RULE"]
+    evidence = verify_tsar_evidence(
+        payload,
+        expected_commit_sha="a" * 40,
+        evidence_root=tmp_path,
+        required_rule_ids=("CUSTOM-SECURITY-RULE",),
+    )
+    assert evidence.rule_ids == ("CUSTOM-SECURITY-RULE",)
