@@ -45,9 +45,7 @@ class FakeConnection:
         body: bytes | None = None,
         headers: dict[str, str] | None = None,
     ) -> None:
-        self._calls.append(
-            {"method": method, "url": url, "body": body, "headers": headers}
-        )
+        self._calls.append({"method": method, "url": url, "body": body, "headers": headers})
         self._request = SimpleNamespace(
             data=body,
             headers=headers or {},

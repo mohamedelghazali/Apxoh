@@ -45,13 +45,24 @@ class ToolResolution:
 
 
 _VERSION_ARGS: dict[str, list[str]] = {
-    "python": ["--version"], "ruff": ["--version"], "mypy": ["--version"],
-    "pytest": ["--version"], "bandit": ["--version"], "eslint": ["--version"],
-    "tsc": ["--version"], "jest": ["--version"], "go": ["version"],
-    "golangci-lint": ["--version"], "cargo": ["--version"],
-    "clippy-driver": ["--version"], "rubocop": ["--version"],
-    "rspec": ["--version"], "checkstyle": ["--version"],
-    "dotnet": ["--version"], "cmake": ["--version"], "clang-tidy": ["--version"],
+    "python": ["--version"],
+    "ruff": ["--version"],
+    "mypy": ["--version"],
+    "pytest": ["--version"],
+    "bandit": ["--version"],
+    "eslint": ["--version"],
+    "tsc": ["--version"],
+    "jest": ["--version"],
+    "go": ["version"],
+    "golangci-lint": ["--version"],
+    "cargo": ["--version"],
+    "clippy-driver": ["--version"],
+    "rubocop": ["--version"],
+    "rspec": ["--version"],
+    "checkstyle": ["--version"],
+    "dotnet": ["--version"],
+    "cmake": ["--version"],
+    "clang-tidy": ["--version"],
 }
 
 
@@ -63,11 +74,17 @@ def _check_tool(name: str) -> ToolCheck:
     args = _VERSION_ARGS.get(name, ["--version"])
     try:
         result = subprocess.run(
-            [path, *args], capture_output=True, text=True, timeout=15, check=False,
+            [path, *args],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
         )
     except (subprocess.TimeoutExpired, OSError) as exc:
         return ToolCheck(
-            name, ToolStatus.VERSION_UNKNOWN, path=path,
+            name,
+            ToolStatus.VERSION_UNKNOWN,
+            path=path,
             reason=f"version check failed: {exc}",
         )
 
@@ -75,7 +92,9 @@ def _check_tool(name: str) -> ToolCheck:
     version = output.strip().splitlines()[0] if output.strip() else ""
     if result.returncode != 0 or not version:
         return ToolCheck(
-            name, ToolStatus.VERSION_UNKNOWN, path=path,
+            name,
+            ToolStatus.VERSION_UNKNOWN,
+            path=path,
             reason=f"version command exited {result.returncode} or returned no version",
         )
     return ToolCheck(name, ToolStatus.AVAILABLE, version=version, path=path)

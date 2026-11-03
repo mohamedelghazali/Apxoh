@@ -1,4 +1,5 @@
 """Tests for the JSON reporter."""
+
 from __future__ import annotations
 
 import json
@@ -11,21 +12,26 @@ from arkhon.reporting.json_reporter import JsonReporter
 
 
 def _write_evidence(
-    project: Path, domain: str, evidence_id: str, status: str = "PASS",
+    project: Path,
+    domain: str,
+    evidence_id: str,
+    status: str = "PASS",
 ) -> Path:
     target_dir = project / ".arkhon" / "evidence" / domain
     target_dir.mkdir(parents=True, exist_ok=True)
     target = target_dir / f"{evidence_id}.json"
     target.write_text(
-        json.dumps({
-            "evidence_id": evidence_id,
-            "source": "arkhon",
-            "source_version": "0.1.0.dev1",
-            "commit_sha": "a" * 40,
-            "executed_at": "2026-11-01T00:00:00Z",
-            "status": status,
-            "artifacts": [{"path": "x", "sha256": "b" * 64}],
-        }),
+        json.dumps(
+            {
+                "evidence_id": evidence_id,
+                "source": "arkhon",
+                "source_version": "0.1.0.dev1",
+                "commit_sha": "a" * 40,
+                "executed_at": "2026-11-01T00:00:00Z",
+                "status": status,
+                "artifacts": [{"path": "x", "sha256": "b" * 64}],
+            }
+        ),
         encoding="utf-8",
     )
     return target

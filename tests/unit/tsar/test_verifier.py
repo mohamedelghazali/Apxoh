@@ -114,9 +114,7 @@ def test_parse_payload_malformed_artifact() -> None:
     with pytest.raises(SecurityError) as exc_info:
         _parse_tsar_payload(payload)
     message = str(exc_info.value).lower()
-    assert "artifact" in message, (
-        f"expected 'artifact' in error message, got: {exc_info.value!r}"
-    )
+    assert "artifact" in message, f"expected 'artifact' in error message, got: {exc_info.value!r}"
 
 
 def _valid_payload(tmp_path: Path, commit_sha: str = "a" * 40) -> dict:
@@ -158,7 +156,9 @@ def test_verify_tampered_artifact(tmp_path: Path) -> None:
     (tmp_path / "scan.json").write_text("TAMPERED", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="hash mismatch"):
         verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path,
+            payload,
+            expected_commit_sha="a" * 40,
+            evidence_root=tmp_path,
         )
 
 
@@ -167,7 +167,9 @@ def test_verify_critical_findings(tmp_path: Path) -> None:
     payload["summary"]["critical"] = 1
     with pytest.raises(SecurityError, match="critical/high"):
         verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path,
+            payload,
+            expected_commit_sha="a" * 40,
+            evidence_root=tmp_path,
         )
 
 
@@ -176,5 +178,7 @@ def test_verify_invalid_status(tmp_path: Path) -> None:
     payload["status"] = "MAYBE"
     with pytest.raises(SecurityError, match="invalid TSAR status"):
         verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path,
+            payload,
+            expected_commit_sha="a" * 40,
+            evidence_root=tmp_path,
         )

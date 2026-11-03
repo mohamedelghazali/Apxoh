@@ -1,4 +1,5 @@
 """Release decision combining score, gates, and accepted risks."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,15 +23,20 @@ class Decision:
 
     def to_dict(self) -> dict[str, object]:
         return {
-            "decision": self.decision, "decision_reason": self.reason,
-            "score": self.score, "level": self.level,
-            "gates": {key: {"gate": key, "status": value}
-                      for key, value in self.gate_statuses.items()},
+            "decision": self.decision,
+            "decision_reason": self.reason,
+            "score": self.score,
+            "level": self.level,
+            "gates": {
+                key: {"gate": key, "status": value} for key, value in self.gate_statuses.items()
+            },
         }
 
 
 def decide(
-    score: Score, gate_verdicts: dict[str, GateVerdict], accepted_risk_count: int = 0,
+    score: Score,
+    gate_verdicts: dict[str, GateVerdict],
+    accepted_risk_count: int = 0,
 ) -> Decision:
     if not gate_verdicts:
         raise AssessmentError("no gate verdicts provided")
@@ -41,40 +47,61 @@ def decide(
         verdict = gate_verdicts.get(gate)
         if verdict is None:
             return Decision(
-                "REJECTED", f"missing critical gate: {gate}", score.total, score.level, statuses,
+                "REJECTED",
+                f"missing critical gate: {gate}",
+                score.total,
+                score.level,
+                statuses,
             )
         if verdict.status == STATUS_FAIL:
             return Decision(
-                "REJECTED", f"{gate}: {verdict.reason or 'failed'}",
-                score.total, score.level, statuses,
+                "REJECTED",
+                f"{gate}: {verdict.reason or 'failed'}",
+                score.total,
+                score.level,
+                statuses,
             )
         if verdict.status == STATUS_BLOCKED:
             return Decision(
-                "PENDING_EVIDENCE", f"{gate}: {verdict.reason or 'blocked'}",
-                score.total, score.level, statuses,
+                "PENDING_EVIDENCE",
+                f"{gate}: {verdict.reason or 'blocked'}",
+                score.total,
+                score.level,
+                statuses,
             )
     for gate, verdict in gate_verdicts.items():
         if verdict.status == STATUS_BLOCKED:
             return Decision(
-                "PENDING_EVIDENCE", f"{gate}: {verdict.reason or 'blocked'}",
-                score.total, score.level, statuses,
+                "PENDING_EVIDENCE",
+                f"{gate}: {verdict.reason or 'blocked'}",
+                score.total,
+                score.level,
+                statuses,
             )
         if verdict.status == STATUS_FAIL:
             return Decision(
-                "REJECTED", f"{gate}: {verdict.reason or 'failed'}",
-                score.total, score.level, statuses,
+                "REJECTED",
+                f"{gate}: {verdict.reason or 'failed'}",
+                score.total,
+                score.level,
+                statuses,
             )
     if score.total < RELEASE_MINIMUM_SCORE:
         return Decision(
             "REJECTED",
             f"score {score.total:.1f} below release minimum {RELEASE_MINIMUM_SCORE}",
-            score.total, score.level, statuses,
+            score.total,
+            score.level,
+            statuses,
         )
     if accepted_risk_count:
         return Decision(
             "APPROVED_WITH_CONDITIONS",
             f"{accepted_risk_count} accepted risk(s) carried forward",
-            score.total, score.level, statuses,
+            score.total,
+            score.level,
+            statuses,
         )
-    return Decision("APPROVED", "all gates pass, score above threshold",
-                    score.total, score.level, statuses)
+    return Decision(
+        "APPROVED", "all gates pass, score above threshold", score.total, score.level, statuses
+    )

@@ -1,4 +1,5 @@
 """Mypy runner — strict static type checking."""
+
 from __future__ import annotations
 
 import shutil
@@ -25,7 +26,8 @@ class MypyRunner(Runner):
         binary = shutil.which("mypy")
         if binary is None:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason="mypy not found on PATH",
             )
         root = project_root.resolve()
@@ -34,17 +36,23 @@ class MypyRunner(Runner):
         command = [binary, "--strict", "--no-incremental", str(target_path)]
         try:
             result = subprocess.run(
-                command, cwd=root, capture_output=True, text=True,
-                timeout=self._timeout, check=False,
+                command,
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=self._timeout,
+                check=False,
             )
         except subprocess.TimeoutExpired:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"mypy timed out after {self._timeout}s",
             )
         except OSError as exc:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"mypy failed to start: {exc}",
             )
         output = (result.stdout or "") + (result.stderr or "")
@@ -55,18 +63,22 @@ class MypyRunner(Runner):
             target.write_text(output, encoding="utf-8")
         except OSError as exc:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"cannot persist mypy evidence: {exc}",
             )
         if result.returncode == 0:
             return RunnerResult(runner=self.name, outcome=RunnerOutcome.PASS, artifacts=[target])
         if result.returncode == 1:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.FAIL,
-                reason="mypy reported type errors", artifacts=[target],
+                runner=self.name,
+                outcome=RunnerOutcome.FAIL,
+                reason="mypy reported type errors",
+                artifacts=[target],
             )
         return RunnerResult(
-            runner=self.name, outcome=RunnerOutcome.BLOCKED,
+            runner=self.name,
+            outcome=RunnerOutcome.BLOCKED,
             reason=f"mypy could not complete (exit={result.returncode})",
             artifacts=[target],
         )

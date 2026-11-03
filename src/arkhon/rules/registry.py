@@ -1,4 +1,5 @@
 """Read-only lookup index for loaded rules."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -12,6 +13,7 @@ from arkhon.rules.loader import Rule, load_rules_dir
 
 class RuleRegistry:
     """Rule index with read-only mapping views."""
+
     __slots__ = ("_by_id", "_by_domain", "_by_enforcement", "_by_severity", "_by_status")
 
     def __init__(self, rules: list[Rule]) -> None:
@@ -30,12 +32,12 @@ class RuleRegistry:
             by_status[rule.status].append(rule)
         self._by_id: Mapping[str, Rule] = MappingProxyType(by_id)
         self._by_domain = MappingProxyType({key: tuple(value) for key, value in by_domain.items()})
-        self._by_enforcement = MappingProxyType({
-            key: tuple(value) for key, value in by_enforcement.items()
-        })
-        self._by_severity = MappingProxyType({
-            key: tuple(value) for key, value in by_severity.items()
-        })
+        self._by_enforcement = MappingProxyType(
+            {key: tuple(value) for key, value in by_enforcement.items()}
+        )
+        self._by_severity = MappingProxyType(
+            {key: tuple(value) for key, value in by_severity.items()}
+        )
         self._by_status = MappingProxyType({key: tuple(value) for key, value in by_status.items()})
 
     def get(self, rule_id: str) -> Rule:

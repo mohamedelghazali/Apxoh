@@ -100,9 +100,7 @@ def test_adapter_does_not_log_secrets(adapter_source: tuple[Path, str]) -> None:
     for match in logging_pattern.finditer(source):
         args = match.group(2).lower()
         if any(word in args for word in ("api_key", "token", "secret", "password")):
-            pytest.fail(
-                f"{path.relative_to(ROOT)} logs a potential secret: {match.group(0)[:80]}"
-            )
+            pytest.fail(f"{path.relative_to(ROOT)} logs a potential secret: {match.group(0)[:80]}")
 
 
 def test_tsar_adapter_present() -> None:

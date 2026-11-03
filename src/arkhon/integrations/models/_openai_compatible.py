@@ -1,4 +1,5 @@
 """Shared transport for OpenAI Chat Completions-compatible APIs."""
+
 from __future__ import annotations
 
 import http.client
@@ -49,10 +50,7 @@ class OpenAICompatibleAdapter(Integration):
         )
 
     def health_check(self) -> bool:
-        return (
-            not self.config.api_key_required
-            or bool(os.environ.get(self.config.api_key_env))
-        )
+        return not self.config.api_key_required or bool(os.environ.get(self.config.api_key_env))
 
     def system_prompt(self) -> str:
         prompt_path = self._prompts_dir / "system.md"
@@ -74,8 +72,7 @@ class OpenAICompatibleAdapter(Integration):
             return "".join(
                 item.get("text", "")
                 for item in value
-                if isinstance(item, dict)
-                and isinstance(item.get("text", ""), str)
+                if isinstance(item, dict) and isinstance(item.get("text", ""), str)
             )
         return ""
 
@@ -116,9 +113,7 @@ class OpenAICompatibleAdapter(Integration):
         messages: list[dict[str, str]] = []
         system = self.system_prompt()
         if system:
-            messages.append(
-                {"role": self.config.system_role, "content": system}
-            )
+            messages.append({"role": self.config.system_role, "content": system})
         messages.append({"role": "user", "content": user_message})
 
         payload: dict[str, Any] = {

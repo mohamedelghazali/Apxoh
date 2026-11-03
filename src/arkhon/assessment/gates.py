@@ -1,4 +1,5 @@
 """Aggregate rule outcomes into non-downgradable gate verdicts."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -23,8 +24,13 @@ GATE_DOMAINS: dict[str, tuple[str, ...]] = {
     "performance_gate": ("performance",),
     "reliability_gate": ("reliability",),
     "release_gate": (
-        "release", "maintenance", "api-integration", "database",
-        "observability", "privacy-compliance", "scalability",
+        "release",
+        "maintenance",
+        "api-integration",
+        "database",
+        "observability",
+        "privacy-compliance",
+        "scalability",
     ),
 }
 
@@ -56,9 +62,11 @@ class GateVerdict:
 
     def to_dict(self) -> dict[str, object]:
         return {
-            "gate": self.gate, "status": self.status,
+            "gate": self.gate,
+            "status": self.status,
             "blocking_failures": self.blocking_failures,
-            "critical_failures": self.critical_failures, "reason": self.reason,
+            "critical_failures": self.critical_failures,
+            "reason": self.reason,
         }
 
 
@@ -90,8 +98,11 @@ def evaluate_gate(gate: str, outcomes: list[RuleOutcome]) -> GateVerdict:
             reasons.append(f"{outcome.rule_id}: fail")
     status = STATUS_FAIL if critical else STATUS_BLOCKED if blocking else STATUS_PASS
     return GateVerdict(
-        gate=gate, status=status, outcomes=list(outcomes),
-        blocking_failures=blocking, critical_failures=critical,
+        gate=gate,
+        status=status,
+        outcomes=list(outcomes),
+        blocking_failures=blocking,
+        critical_failures=critical,
         reason="; ".join(reasons) if reasons else "",
     )
 

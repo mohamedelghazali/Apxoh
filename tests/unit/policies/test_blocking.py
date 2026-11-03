@@ -17,7 +17,8 @@ from arkhon.policies.blocking import (
 
 
 def _policy(
-    policy_id: str, category: str = "blocking",
+    policy_id: str,
+    category: str = "blocking",
     trigger_rules: list[str] | None = None,
     trigger_paths: list[str] | None = None,
     enabled: bool = True,
@@ -41,19 +42,23 @@ def test_no_violations() -> None:
     registry = PolicyRegistry([_policy("p1", trigger_rules=["SE-X-001"])])
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
-        failing_rules=set(), project_root=Path("/tmp"),
+        failing_rules=set(),
+        project_root=Path("/tmp"),
     )
     assert not result.blocks
     assert result.count == 0
 
 
 def test_rule_trigger() -> None:
-    registry = PolicyRegistry([
-        _policy("p1", trigger_rules=["SE-SEC-001"]),
-    ])
+    registry = PolicyRegistry(
+        [
+            _policy("p1", trigger_rules=["SE-SEC-001"]),
+        ]
+    )
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
-        failing_rules={"SE-SEC-001"}, project_root=Path("/tmp"),
+        failing_rules={"SE-SEC-001"},
+        project_root=Path("/tmp"),
     )
     assert result.blocks
     assert result.count == 1
@@ -62,23 +67,29 @@ def test_rule_trigger() -> None:
 
 
 def test_disabled_policy_ignored() -> None:
-    registry = PolicyRegistry([
-        _policy("p1", trigger_rules=["SE-SEC-001"], enabled=False),
-    ])
+    registry = PolicyRegistry(
+        [
+            _policy("p1", trigger_rules=["SE-SEC-001"], enabled=False),
+        ]
+    )
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
-        failing_rules={"SE-SEC-001"}, project_root=Path("/tmp"),
+        failing_rules={"SE-SEC-001"},
+        project_root=Path("/tmp"),
     )
     assert not result.blocks
 
 
 def test_non_blocking_category_ignored() -> None:
-    registry = PolicyRegistry([
-        _policy("p1", category="advisory", trigger_rules=["SE-SEC-001"]),
-    ])
+    registry = PolicyRegistry(
+        [
+            _policy("p1", category="advisory", trigger_rules=["SE-SEC-001"]),
+        ]
+    )
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
-        failing_rules={"SE-SEC-001"}, project_root=Path("/tmp"),
+        failing_rules={"SE-SEC-001"},
+        project_root=Path("/tmp"),
     )
     assert not result.blocks
 
@@ -86,21 +97,26 @@ def test_non_blocking_category_ignored() -> None:
 def test_path_trigger(tmp_path: Path) -> None:
     (tmp_path / "migrations").mkdir()
     (tmp_path / "migrations" / "001.sql").write_text("x", encoding="utf-8")
-    registry = PolicyRegistry([
-        _policy("p1", trigger_paths=["migrations/**"]),
-    ])
+    registry = PolicyRegistry(
+        [
+            _policy("p1", trigger_paths=["migrations/**"]),
+        ]
+    )
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
-        failing_rules=set(), project_root=tmp_path,
+        failing_rules=set(),
+        project_root=tmp_path,
     )
     assert result.blocks
     assert "path:" in result.violations[0].rule_id
 
 
 def test_ensure_no_bypass_raises() -> None:
-    result = BlockingResult(violations=[
-        BlockingViolation(policy_id="p1", rule_id="SE-X-001", reason="x"),
-    ])
+    result = BlockingResult(
+        violations=[
+            BlockingViolation(policy_id="p1", rule_id="SE-X-001", reason="x"),
+        ]
+    )
     with pytest.raises(GovernanceError, match="blocking policies violated"):
         ensure_no_bypass(result)
 

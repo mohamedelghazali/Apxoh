@@ -1,4 +1,5 @@
 """Tests for arkhon.rules.validator."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,8 +22,14 @@ def _make_rule(raw: dict) -> Rule:
 def _valid_raw() -> dict:
     return {
         "id": "SE-REQ-001",
-        "metadata": {"title": "Test rule", "domain": "requirements", "version": "1.0.0",
-                     "status": "active", "severity": "high", "enforcement": "blocking"},
+        "metadata": {
+            "title": "Test rule",
+            "domain": "requirements",
+            "version": "1.0.0",
+            "status": "active",
+            "severity": "high",
+            "enforcement": "blocking",
+        },
         "scope": {"project_types": ["all"]},
         "requirement": {"statement": "The system must do X."},
         "verification": {"mode": "deterministic", "methods": ["schema-validation"]},

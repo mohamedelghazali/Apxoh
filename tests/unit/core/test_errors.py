@@ -1,4 +1,5 @@
 """Tests for the Apxoh error hierarchy."""
+
 from __future__ import annotations
 
 import pytest

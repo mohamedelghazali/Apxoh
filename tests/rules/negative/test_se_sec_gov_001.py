@@ -13,6 +13,7 @@ RULE_PATH = REPO_ROOT / "rules" / "software-security" / "SE-SEC-GOV-001-tsar-aud
 
 def _load_raw() -> dict:
     import yaml
+
     with RULE_PATH.open("r", encoding="utf-8") as fh:
         return yaml.safe_load(fh)
 

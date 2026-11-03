@@ -1,4 +1,5 @@
 """Google Gemini generateContent adapter."""
+
 from __future__ import annotations
 
 import http.client
@@ -86,9 +87,7 @@ class GeminiAdapter(Integration):
             )
 
         payload: dict[str, Any] = {
-            "contents": [
-                {"role": "user", "parts": [{"text": user_message}]}
-            ],
+            "contents": [{"role": "user", "parts": [{"text": user_message}]}],
             "generationConfig": {
                 "maxOutputTokens": self.config.max_tokens,
                 "temperature": self.config.temperature,
@@ -159,8 +158,7 @@ class GeminiAdapter(Integration):
                         text = "".join(
                             part.get("text", "")
                             for part in parts
-                            if isinstance(part, dict)
-                            and isinstance(part.get("text", ""), str)
+                            if isinstance(part, dict) and isinstance(part.get("text", ""), str)
                         )
 
         return IntegrationResponse(

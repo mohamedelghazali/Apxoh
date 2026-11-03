@@ -1,4 +1,5 @@
 """Ruff runner — static analysis through the Ruff CLI."""
+
 from __future__ import annotations
 
 import json
@@ -27,7 +28,8 @@ class RuffRunner(Runner):
         binary = shutil.which("ruff")
         if binary is None:
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason="ruff not found on PATH",
             )
         root = project_root.resolve()
@@ -36,17 +38,23 @@ class RuffRunner(Runner):
             command = [binary, "check", "--output-format=json", "--no-fix", "."]
             try:
                 result = subprocess.run(
-                    command, cwd=root, capture_output=True, text=True,
-                    timeout=self._timeout, check=False,
+                    command,
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    timeout=self._timeout,
+                    check=False,
                 )
             except subprocess.TimeoutExpired:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"ruff timed out after {self._timeout}s",
                 )
             except OSError as exc:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"ruff failed to start: {exc}",
                 )
             try:
@@ -55,7 +63,8 @@ class RuffRunner(Runner):
                     raise ValueError("JSON root is not an array")
             except (json.JSONDecodeError, ValueError) as exc:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"invalid Ruff JSON output: {exc}",
                 )
             target_dir = root / ".arkhon" / "evidence" / "code-quality"
@@ -66,18 +75,24 @@ class RuffRunner(Runner):
                 shutil.copy2(output, target)
             except OSError as exc:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"cannot persist Ruff evidence: {exc}",
                 )
             if result.returncode == 0 and not issues:
-                return RunnerResult(runner=self.name, outcome=RunnerOutcome.PASS, artifacts=[target])
+                return RunnerResult(
+                    runner=self.name, outcome=RunnerOutcome.PASS, artifacts=[target]
+                )
             if result.returncode == 1:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.FAIL,
-                    reason=f"ruff found {len(issues)} issue(s)", artifacts=[target],
+                    runner=self.name,
+                    outcome=RunnerOutcome.FAIL,
+                    reason=f"ruff found {len(issues)} issue(s)",
+                    artifacts=[target],
                 )
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason=f"ruff exited unexpectedly with code {result.returncode}: {result.stderr[:300]}",
                 artifacts=[target],
             )

@@ -1,4 +1,5 @@
 """Model adapter registry and factory."""
+
 from __future__ import annotations
 
 import sys
@@ -62,9 +63,7 @@ def get_model_adapter(model_id: str) -> Integration:
     """Instantiate one registered adapter, rejecting unknown identifiers."""
     if model_id not in _MODEL_MODULES:
         available = ", ".join(list_models())
-        raise KeyError(
-            f"unknown model {model_id!r}; available models: {available}"
-        )
+        raise KeyError(f"unknown model {model_id!r}; available models: {available}")
     # Keep imports static: model identifiers are external input and must never
     # be interpreted as arbitrary Python module paths.
     adapter: Integration

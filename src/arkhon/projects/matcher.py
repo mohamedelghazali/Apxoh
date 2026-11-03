@@ -1,4 +1,5 @@
 """Select an explicit project profile or infer a conservative default."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -46,13 +47,18 @@ def _infer_profile(project_root: Path) -> Match:
         return Match("mobile-application", "found android/ or ios/", False)
     if (project_root / "electron").is_dir() or (project_root / "tauri").is_dir():
         return Match("desktop-application", "found electron/ or tauri/", False)
-    if ((project_root / "k8s").is_dir() or (project_root / "helm").is_dir()
-            or (project_root / "docker-compose.yml").is_file()
-            or (project_root / "docker-compose.yaml").is_file()):
+    if (
+        (project_root / "k8s").is_dir()
+        or (project_root / "helm").is_dir()
+        or (project_root / "docker-compose.yml").is_file()
+        or (project_root / "docker-compose.yaml").is_file()
+    ):
         return Match("distributed-system", "found Kubernetes or Compose markers", False)
-    if ((project_root / "openapi.yaml").is_file()
-            or (project_root / "openapi.yml").is_file()
-            or (project_root / "openapi.json").is_file()):
+    if (
+        (project_root / "openapi.yaml").is_file()
+        or (project_root / "openapi.yml").is_file()
+        or (project_root / "openapi.json").is_file()
+    ):
         return Match("api-service", "found OpenAPI specification", False)
     if (project_root / "public").is_dir() or (project_root / "static").is_dir():
         return Match("web-application", "found public/ or static/", False)

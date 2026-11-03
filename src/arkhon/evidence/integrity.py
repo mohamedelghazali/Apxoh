@@ -1,4 +1,5 @@
 """Evidence integrity and freshness verification."""
+
 from __future__ import annotations
 
 import hashlib
@@ -35,7 +36,10 @@ def verify_artifact(artifact_path: Path, expected_sha256: str) -> None:
 
 
 def verify_bundle(
-    bundle_path: Path, *, evidence_root: Path, expected_commit_sha: str,
+    bundle_path: Path,
+    *,
+    evidence_root: Path,
+    expected_commit_sha: str,
 ) -> None:
     """Verify a bundle's commit binding and every referenced artifact."""
     if not bundle_path.is_file():
@@ -75,7 +79,10 @@ def verify_bundle(
 
 
 def verify_freshness(
-    executed_at: str, *, max_age_hours: int, now_iso: str | None = None,
+    executed_at: str,
+    *,
+    max_age_hours: int,
+    now_iso: str | None = None,
 ) -> None:
     """Raise when evidence is older than the configured maximum age."""
     if max_age_hours < 0:
@@ -99,6 +106,4 @@ def verify_freshness(
     if age < 0:
         raise EvidenceError("evidence timestamp is in the future")
     if age > max_age_hours:
-        raise EvidenceStaleError(
-            f"evidence is stale: {age:.1f}h old, maximum {max_age_hours}h"
-        )
+        raise EvidenceStaleError(f"evidence is stale: {age:.1f}h old, maximum {max_age_hours}h")

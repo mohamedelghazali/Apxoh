@@ -1,4 +1,5 @@
 """Tests for arkhon.rules.loader."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,8 +13,12 @@ from arkhon.rules.loader import Rule, load_rule_file, load_rules_dir
 VALID_RULE = {
     "id": "SE-REQ-001",
     "metadata": {
-        "title": "Test rule", "domain": "requirements", "version": "1.0.0",
-        "status": "active", "severity": "high", "enforcement": "blocking",
+        "title": "Test rule",
+        "domain": "requirements",
+        "version": "1.0.0",
+        "status": "active",
+        "severity": "high",
+        "enforcement": "blocking",
     },
     "scope": {"project_types": ["all"]},
     "requirement": {"statement": "The system must do X."},

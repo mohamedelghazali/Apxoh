@@ -1,4 +1,5 @@
 """GitHub Copilot project-instructions adapter."""
+
 from __future__ import annotations
 
 import hashlib
@@ -41,9 +42,7 @@ class GitHubCopilotAdapter(Integration):
                 ok=False,
                 reason=f"cannot install instructions: {exc}",
             )
-        digest = hashlib.sha256(
-            _INSTRUCTIONS_CONTENT.encode("utf-8")
-        ).hexdigest()
+        digest = hashlib.sha256(_INSTRUCTIONS_CONTENT.encode("utf-8")).hexdigest()
         return IntegrationResponse(
             ok=True,
             payload={"sha256": digest},

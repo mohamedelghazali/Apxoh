@@ -1,4 +1,5 @@
 """Dependency-free rendering for standard engineering quality documents."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,24 +28,42 @@ TEMPLATES = {
     "FINAL-ENGINEERING-ACCEPTANCE": "# Final Engineering Acceptance\n\nDecision: **{final_decision}**\n\nCommit: `{commit_sha}`\n\nReport: `{report_id}`\n",
 }
 
+
 def _context_from_report(report: dict[str, Any]) -> dict[str, str]:
     sections = report.get("sections", {})
-    ctx = {"commit_sha": report.get("commit_sha", ""),
-           "report_id": report.get("report_id", ""),
-           "final_decision": report.get("final_decision", "PENDING_EVIDENCE")}
+    ctx = {
+        "commit_sha": report.get("commit_sha", ""),
+        "report_id": report.get("report_id", ""),
+        "final_decision": report.get("final_decision", "PENDING_EVIDENCE"),
+    }
     for name, section in sections.items():
         ctx[f"status_{name}"] = section.get("status", "NOT_APPLICABLE")
         ctx[f"evidence_{name}"] = str(len(section.get("evidence_ids", [])))
-    for key in ("requirements", "architecture", "code_quality", "testing", "security",
-                "performance", "reliability", "scalability", "dependencies", "deployment",
-                "disaster_recovery", "prr", "compliance", "risk_register"):
+    for key in (
+        "requirements",
+        "architecture",
+        "code_quality",
+        "testing",
+        "security",
+        "performance",
+        "reliability",
+        "scalability",
+        "dependencies",
+        "deployment",
+        "disaster_recovery",
+        "prr",
+        "compliance",
+        "risk_register",
+    ):
         ctx.setdefault(f"status_{key}", "NOT_APPLICABLE")
         ctx.setdefault(f"evidence_{key}", "0")
     return ctx
 
+
 @dataclass
 class EngineeringQualityRenderer:
     """Renders the 16 engineering quality documents from a report."""
+
     def render_all(self, report: dict[str, Any]) -> dict[str, str]:
         ctx = _context_from_report(report)
         rendered = {}

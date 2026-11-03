@@ -1,4 +1,5 @@
 """OpenAI o-series reasoning-model adapter."""
+
 from __future__ import annotations
 
 from arkhon.integrations.models._openai_compatible import (

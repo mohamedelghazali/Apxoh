@@ -3,6 +3,7 @@
 The collector records outputs produced by independent tools, computes integrity
 hashes, and writes evidence bundles in the shape defined by the evidence schema.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -35,6 +36,7 @@ def _utc_now() -> str:
 @dataclass(frozen=True)
 class Artifact:
     """A single file supporting an evidence claim."""
+
     path: Path
     sha256: str
 
@@ -51,6 +53,7 @@ class Artifact:
 @dataclass
 class EvidenceDraft:
     """Mutable draft before evidence is finalized."""
+
     evidence_id: str
     source: EvidenceSource
     source_version: str
@@ -99,6 +102,7 @@ class EvidenceDraft:
 
 class EvidenceCollector:
     """Collect evidence from independent tools into a single bundle."""
+
     def __init__(self, root: Path | None = None) -> None:
         self._root = Path(root or Path.cwd()).resolve()
 
@@ -107,8 +111,12 @@ class EvidenceCollector:
         return self._root
 
     def new_evidence(
-        self, *, source: EvidenceSource, source_version: str,
-        commit_sha: str, status: str,
+        self,
+        *,
+        source: EvidenceSource,
+        source_version: str,
+        commit_sha: str,
+        status: str,
     ) -> EvidenceDraft:
         if source not in {"arkhon", "tsar", "external-tool"}:
             raise EvidenceError(f"invalid evidence source: {source!r}")
@@ -118,6 +126,9 @@ class EvidenceCollector:
             raise EvidenceError("source_version must not be empty")
         evidence_id = f"EVID-{source.upper()}-{uuid.uuid4().hex[:12].upper()}"
         return EvidenceDraft(
-            evidence_id=evidence_id, source=source, source_version=source_version,
-            commit_sha=commit_sha, status=status,
+            evidence_id=evidence_id,
+            source=source,
+            source_version=source_version,
+            commit_sha=commit_sha,
+            status=status,
         )

@@ -1,4 +1,5 @@
 """Deterministic engineering score calculator."""
+
 from __future__ import annotations
 
 import math
@@ -97,8 +98,11 @@ def score_from_ratios(ratios: Mapping[str, float]) -> Score:
 def score_from_outcomes(outcomes_per_domain: Mapping[str, list[str]]) -> Score:
     """Score rule outcomes: PASS=1, ACCEPTED_RISK=.5, N/A=1, FAIL/BLOCKED=0."""
     values = {
-        "PASS": 1.0, "ACCEPTED_RISK": 0.5, "NOT_APPLICABLE": 1.0,
-        "FAIL": 0.0, "BLOCKED": 0.0,
+        "PASS": 1.0,
+        "ACCEPTED_RISK": 0.5,
+        "NOT_APPLICABLE": 1.0,
+        "FAIL": 0.0,
+        "BLOCKED": 0.0,
     }
     unknown_domains = set(outcomes_per_domain) - set(WEIGHTS)
     if unknown_domains:

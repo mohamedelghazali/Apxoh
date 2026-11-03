@@ -1,4 +1,5 @@
 """Alibaba Qwen Coder compatible Chat Completions adapter."""
+
 from __future__ import annotations
 
 from arkhon.integrations.models._openai_compatible import (
@@ -13,10 +14,7 @@ class QwenCoderAdapter(OpenAICompatibleAdapter):
             OpenAICompatibleConfig(
                 id="qwen-coder",
                 provider="alibaba",
-                endpoint=(
-                    "https://dashscope.aliyuncs.com/compatible-mode/v1/"
-                    "chat/completions"
-                ),
+                endpoint=("https://dashscope.aliyuncs.com/compatible-mode/v1/" "chat/completions"),
                 default_model="qwen3-coder-plus",
                 available_models=(
                     "qwen3-coder-plus",

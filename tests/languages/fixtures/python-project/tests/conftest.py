@@ -1,4 +1,5 @@
 """Add the isolated fixture source directory for its local tests."""
+
 from __future__ import annotations
 
 import sys

@@ -1,4 +1,5 @@
 """Pytest runner producing JUnit XML evidence."""
+
 from __future__ import annotations
 
 import shutil
@@ -29,52 +30,73 @@ class PytestRunner(Runner):
         root = project_root.resolve()
         if not root.is_dir() or not (root / "tests").is_dir():
             return RunnerResult(
-                runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                runner=self.name,
+                outcome=RunnerOutcome.BLOCKED,
                 reason="project has no tests/ directory",
             )
         with tempfile.TemporaryDirectory(prefix="apxoh-pytest-") as tmp:
             junit = Path(tmp) / "pytest.xml"
             command = [
-                sys.executable, "-m", "pytest", "tests",
-                "--junit-xml", str(junit), "-q", "--no-header",
-                "-p", "no:cacheprovider",
+                sys.executable,
+                "-m",
+                "pytest",
+                "tests",
+                "--junit-xml",
+                str(junit),
+                "-q",
+                "--no-header",
+                "-p",
+                "no:cacheprovider",
             ]
             try:
                 result = subprocess.run(
-                    command, cwd=root, capture_output=True, text=True,
-                    timeout=self._timeout, check=False,
+                    command,
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    timeout=self._timeout,
+                    check=False,
                 )
             except subprocess.TimeoutExpired:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"pytest timed out after {self._timeout}s",
                 )
             except OSError as exc:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"pytest failed to start: {exc}",
                 )
             if not junit.is_file():
                 detail = (result.stderr or result.stdout).strip()[:300]
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"pytest produced no JUnit XML (exit={result.returncode}): {detail}",
                 )
             try:
                 xml_root = ET.parse(junit).getroot()
-                suites = [xml_root] if xml_root.tag == "testsuite" else list(xml_root.findall("testsuite"))
+                suites = (
+                    [xml_root]
+                    if xml_root.tag == "testsuite"
+                    else list(xml_root.findall("testsuite"))
+                )
                 tests = sum(int(suite.get("tests", "0")) for suite in suites)
                 failures = sum(int(suite.get("failures", "0")) for suite in suites)
                 errors = sum(int(suite.get("errors", "0")) for suite in suites)
                 skipped = sum(int(suite.get("skipped", "0")) for suite in suites)
             except (ET.ParseError, ValueError) as exc:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"invalid JUnit XML: {exc}",
                 )
             if tests == 0:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason="pytest collected no tests",
                 )
             target_dir = root / ".arkhon" / "evidence" / "testing"
@@ -84,12 +106,14 @@ class PytestRunner(Runner):
                 shutil.copy2(junit, target)
             except OSError as exc:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.BLOCKED,
+                    runner=self.name,
+                    outcome=RunnerOutcome.BLOCKED,
                     reason=f"cannot persist pytest evidence: {exc}",
                 )
             if failures or errors or result.returncode != 0:
                 return RunnerResult(
-                    runner=self.name, outcome=RunnerOutcome.FAIL,
+                    runner=self.name,
+                    outcome=RunnerOutcome.FAIL,
                     reason=f"pytest: {failures} failure(s), {errors} error(s), {skipped} skipped",
                     artifacts=[target],
                 )

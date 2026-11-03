@@ -22,15 +22,19 @@ def test_health_check_missing_binary() -> None:
 
 
 def test_health_check_binary_present() -> None:
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value.returncode = 0
         assert TsarAdapter().health_check() is True
 
 
 def test_health_check_version_fails() -> None:
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value.returncode = 1
         assert TsarAdapter().health_check() is False
 
@@ -61,8 +65,10 @@ def test_audit_success(tmp_path: Path) -> None:
         result = type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
         return result
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=_mock_run):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=_mock_run),
+    ):
         result = TsarAdapter().audit(tmp_path, "a" * 40)
 
     assert result.ok
@@ -76,8 +82,10 @@ def test_audit_nonzero_exit(tmp_path: Path) -> None:
         result = type("R", (), {"returncode": 2, "stdout": "", "stderr": "error"})()
         return result
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=_mock_run):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=_mock_run),
+    ):
         result = TsarAdapter().audit(tmp_path, "a" * 40)
 
     assert not result.ok
@@ -91,8 +99,10 @@ def test_audit_invalid_json(tmp_path: Path) -> None:
         result = type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
         return result
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=_mock_run):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=_mock_run),
+    ):
         result = TsarAdapter().audit(tmp_path, "a" * 40)
 
     assert not result.ok
@@ -102,8 +112,10 @@ def test_audit_invalid_json(tmp_path: Path) -> None:
 def test_audit_timeout(tmp_path: Path) -> None:
     import subprocess
 
-    with patch("shutil.which", return_value="/usr/local/bin/tsar"), \
-         patch("subprocess.run", side_effect=subprocess.TimeoutExpired("tsar", 1)):
+    with (
+        patch("shutil.which", return_value="/usr/local/bin/tsar"),
+        patch("subprocess.run", side_effect=subprocess.TimeoutExpired("tsar", 1)),
+    ):
         result = TsarAdapter().audit(tmp_path, "a" * 40)
 
     assert not result.ok

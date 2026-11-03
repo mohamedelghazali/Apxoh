@@ -241,11 +241,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     fmt = args.format or "json"
     output = Path(args.output) if args.output else project / ".arkhon" / "reports"
     reporter = (
-        JsonReporter()
-        if fmt == "json"
-        else MarkdownReporter()
-        if fmt == "markdown"
-        else None
+        JsonReporter() if fmt == "json" else MarkdownReporter() if fmt == "markdown" else None
     )
     if reporter is None:
         print(f"[FAIL] unknown format: {fmt}", file=sys.stderr)

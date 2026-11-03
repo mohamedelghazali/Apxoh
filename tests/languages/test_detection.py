@@ -1,4 +1,5 @@
 """Validate extension declarations used by the deterministic detector."""
+
 from pathlib import Path
 
 import yaml

@@ -1,4 +1,5 @@
 """Load YAML rule documents from a rules directory."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ logger = get_logger("rules.loader")
 @dataclass(frozen=True)
 class Rule:
     """Loaded rule; raw data is a parsed mapping."""
+
     id: str
     path: Path
     raw: dict[str, Any]
@@ -53,6 +55,7 @@ class Rule:
 @dataclass
 class LoadResult:
     """Result of loading a rules directory."""
+
     rules: list[Rule] = field(default_factory=list)
     errors: list[RuleError] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
@@ -110,9 +113,9 @@ def load_rules_dir(directory: Path, *, recursive: bool = True) -> LoadResult:
             result.errors.append(exc)
             continue
         if rule.id in seen:
-            result.errors.append(RuleDuplicateError(
-                f"duplicate rule id '{rule.id}': {path} and {seen[rule.id]}"
-            ))
+            result.errors.append(
+                RuleDuplicateError(f"duplicate rule id '{rule.id}': {path} and {seen[rule.id]}")
+            )
             continue
         seen[rule.id] = path
         result.rules.append(rule)

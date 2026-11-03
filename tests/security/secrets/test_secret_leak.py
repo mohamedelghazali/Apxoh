@@ -25,11 +25,7 @@ def _tracked_files() -> list[Path]:
         capture_output=True,
         check=True,
     )
-    return [
-        REPO_ROOT / item.decode("utf-8")
-        for item in result.stdout.split(b"\0")
-        if item
-    ]
+    return [REPO_ROOT / item.decode("utf-8") for item in result.stdout.split(b"\0") if item]
 
 
 def _scan_file(path: Path) -> list[str]:
@@ -46,7 +42,8 @@ def _scan_file(path: Path) -> list[str]:
 
 def test_no_secret_patterns_in_tracked_python_and_markdown() -> None:
     candidates = [
-        path for path in _tracked_files()
+        path
+        for path in _tracked_files()
         if path.suffix.lower() in {".py", ".md"}
         and (
             "src" in path.relative_to(REPO_ROOT).parts

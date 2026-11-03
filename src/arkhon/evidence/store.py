@@ -1,4 +1,5 @@
 """Append-only JSON evidence storage scoped to a project."""
+
 from __future__ import annotations
 
 import hashlib
@@ -37,6 +38,7 @@ class EvidenceRecord:
 
 class EvidenceStore:
     """Append-only evidence store scoped to a project."""
+
     def __init__(self, root: Path) -> None:
         self._root = Path(root).resolve() / ".arkhon" / "evidence"
 

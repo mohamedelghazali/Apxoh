@@ -1,4 +1,5 @@
 """Tests for arkhon.config."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -35,7 +36,9 @@ def test_manifest_has_three_products() -> None:
     products = load_manifest().products["products"]
     assert len(products) == 3
     assert {item["id"] for item in products} == {
-        "arkhon-core", "arkhon-agent-governance", "arkhon-assurance"
+        "arkhon-core",
+        "arkhon-agent-governance",
+        "arkhon-assurance",
     }
 
 
@@ -64,7 +67,13 @@ def test_manifest_founding_decisions() -> None:
 
 def test_manifest_to_dict() -> None:
     assert set(load_manifest().to_dict()) == {
-        "index", "system", "products", "integrations", "languages", "standards", "compatibility"
+        "index",
+        "system",
+        "products",
+        "integrations",
+        "languages",
+        "standards",
+        "compatibility",
     }
 
 
