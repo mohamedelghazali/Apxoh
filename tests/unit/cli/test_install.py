@@ -42,7 +42,7 @@ def test_global_install_uses_home_scoped_directory(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(Path, "home", classmethod(lambda _cls: tmp_path))
     assert main(["install", "--scope", "global"]) == 0
     assert (tmp_path / ".arkhon" / "agent-pack" / "manifest.json").is_file()
 
