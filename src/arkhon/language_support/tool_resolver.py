@@ -73,7 +73,7 @@ def _check_tool(name: str) -> ToolCheck:
 
     args = _VERSION_ARGS.get(name, ["--version"])
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603 - resolved executable and allow-listed version arguments
             [path, *args],
             capture_output=True,
             text=True,
