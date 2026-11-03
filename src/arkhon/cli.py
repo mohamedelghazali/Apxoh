@@ -30,10 +30,6 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     failures: list[str] = []
     warnings: list[str] = []
     root = _repo_root()
-    if sys.version_info < (3, 11):
-        failures.append(
-            f"Python 3.11+ required, found {sys.version_info.major}.{sys.version_info.minor}"
-        )
     for required in ("VERSION", "manifest/index.yaml", "README.md", "AGENTS.md"):
         if not (root / required).exists():
             failures.append(f"missing required file: {required}")
