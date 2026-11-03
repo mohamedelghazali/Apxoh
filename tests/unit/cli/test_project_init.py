@@ -115,7 +115,16 @@ def test_project_templates_fall_back_to_packaged_resources(
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
     templates = _project_template_root()
     assert (templates / "schemas" / "project.schema.json").is_file()
-    assert {"universal", "web-application", "api-service"} <= set(list_profiles(templates))
+    assert set(list_profiles(templates)) == {
+        "api-service",
+        "desktop-application",
+        "distributed-system",
+        "enterprise",
+        "mobile-application",
+        "safety-critical",
+        "universal",
+        "web-application",
+    }
 
 
 def test_project_init_reports_schema_validation_failure(
