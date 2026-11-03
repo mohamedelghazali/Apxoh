@@ -240,6 +240,10 @@ def test_attestation_runner_executes_both_verifiers_and_writes_report(
 ) -> None:
     _config(tmp_path)
     monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
+    monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
     monkeypatch.setattr(
@@ -273,6 +277,10 @@ def test_attestation_runner_fails_or_blocks_on_verifier_failure(
 ) -> None:
     _config(tmp_path)
     monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
+    monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
     monkeypatch.setattr(
@@ -302,6 +310,10 @@ def test_attestation_runner_reports_write_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _config(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
     monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
@@ -447,6 +459,10 @@ def test_attestation_runner_rejects_symlinked_report(
 ) -> None:
     _config(tmp_path)
     monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
+    monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
     monkeypatch.setattr(
@@ -471,6 +487,10 @@ def test_attestation_runner_blocks_when_report_cannot_be_written(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _config(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
     monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
@@ -542,6 +562,10 @@ def test_attestation_runner_blocks_when_tag_points_to_another_commit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _config(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.supply_chain_runner._tag_commit_sha",
+        lambda _root, _tag: SHA,
+    )
     monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
