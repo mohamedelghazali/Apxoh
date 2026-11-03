@@ -4,8 +4,8 @@ import hashlib
 import json
 import shutil
 import subprocess
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
