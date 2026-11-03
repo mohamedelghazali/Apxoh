@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
-import tempfile
 import subprocess
 import sys
 from pathlib import Path
@@ -196,111 +194,114 @@ def cmd_assess(args: argparse.Namespace) -> int:
 
 
 
-def cmd_project_init(args: argparse.Namespace) -> int:
-    """Create a schema-validated project declaration without overwriting by default."""
-    import jsonschema
-    import yaml
 
+def cmd_status(args: argparse.Namespace) -> int:
+    """Summarize project configuration and persisted verification evidence."""
+    from arkhon.core.errors import ConfigError, EvidenceError
+    from arkhon.evidence.store import EvidenceStore
     from arkhon.language_support.detector import detect_languages
-    from arkhon.projects.loader import list_profiles
+    from arkhon.projects.matcher import match_profile
 
-    project = Path(args.project).expanduser().resolve()
+    project = Path(args.project).resolve()
     if not project.is_dir():
         print(f"[FAIL] not a directory: {project}", file=sys.stderr)
         return 1
-
-    metadata_dir = project / ".arkhon"
-    if metadata_dir.is_symlink():
-        print("[FAIL] refusing symlinked .arkhon directory", file=sys.stderr)
-        return 1
-    target = metadata_dir / "project.yaml"
-    if target.is_symlink():
-        print("[FAIL] refusing symlinked project declaration", file=sys.stderr)
-        return 1
-    if target.exists() and not args.force:
-        print(
-            f"[FAIL] project declaration already exists: {target} (use --force)",
-            file=sys.stderr,
-        )
-        return 1
-
-    available_profiles = list_profiles(_repo_root())
-    if args.profile not in available_profiles:
-        available = ", ".join(available_profiles)
-        print(
-            f"[FAIL] unknown profile {args.profile!r}; available: {available}",
-            file=sys.stderr,
-        )
-        return 1
-
-    name = (args.name or project.name).strip()
-    if not name:
-        print("[FAIL] project name cannot be empty", file=sys.stderr)
-        return 1
-    identifier = args.identifier or re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    if len(identifier) < 2:
-        identifier = f"{identifier or 'project'}-project"
-    if not re.fullmatch(r"[a-z][a-z0-9-]{1,62}", identifier):
-        print(
-            "[FAIL] identifier must match ^[a-z][a-z0-9-]{1,62}$",
-            file=sys.stderr,
-        )
-        return 1
-
     try:
-        detection = detect_languages(project)
-        detected = [item.definition.id for item in detection.detected]
-        declaration = {
-            "project": {
-                "name": name,
-                "identifier": identifier,
-                "type": args.project_type,
-                "profile": args.profile,
-                "risk_level": args.risk_level,
-                "description": args.description or "",
-            },
-            "languages": {
-                "primary": detected[0] if detected else "unknown",
-                "secondary": detected[1:],
-            },
-            "lifecycle": {
-                "current_stage": "development",
-                "current_milestone": 2,
-                "release_channel": "pre-release",
-            },
-            "gates": {
-                "requirements_gate": "required",
-                "testing_gate": "required",
-                "security_gate": "required",
-                "release_gate": "required",
-            },
-        }
-        schema_path = _repo_root() / "schemas" / "project.schema.json"
-        if not schema_path.is_file():
-            raise OSError(f"project schema not found: {schema_path}")
-        schema = json.loads(schema_path.read_text(encoding="utf-8"))
-        jsonschema.validate(instance=declaration, schema=schema)
-        metadata_dir.mkdir(parents=True, exist_ok=True)
-        metadata_dir.resolve().relative_to(project)
-        payload = yaml.safe_dump(declaration, sort_keys=False, allow_unicode=True)
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=metadata_dir,
-            prefix=".project-",
-            suffix=".tmp",
-            delete=False,
-        ) as stream:
-            stream.write(payload)
-            temporary = Path(stream.name)
-        temporary.replace(target)
-    except (OSError, ValueError, jsonschema.ValidationError) as exc:
-        print(f"[FAIL] project initialization failed: {exc}", file=sys.stderr)
+        records = list(EvidenceStore(project).iter_records())
+        profile = match_profile(project)
+        languages = detect_languages(project)
+    except EvidenceError as exc:
+        print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
+        return 1
+    except (ConfigError, OSError, ValueError) as exc:
+        print(f"[FAIL] project status could not be computed: {exc}", file=sys.stderr)
         return 1
 
-    print(f"[OK] project declaration created: {target}")
-    print(f"  Profile: {args.profile}")
-    print(f"  Languages: {', '.join(detected) if detected else 'unknown'}")
+    by_domain: dict[str, dict[str, int]] = {}
+    totals = {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "other": 0}
+    for record in records:
+        domain = record.path.parent.name
+        status = record.status.upper()
+        bucket = by_domain.setdefault(domain, {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "other": 0})
+        key = status if status in {"PASS", "FAIL", "BLOCKED"} else "other"
+        bucket[key] += 1
+        totals[key] += 1
+
+    detected_language_ids = [item.definition.id for item in languages.detected]
+    report = {
+        "project": str(project),
+        "profile": {
+            "name": profile.profile,
+            "reason": profile.reason,
+            "explicit": profile.explicit,
+        },
+        "languages": {
+            "detected": detected_language_ids,
+            "unknown": languages.unknown,
+        },
+        "evidence": {
+            "total": len(records),
+            "counts": totals,
+            "by_domain": by_domain,
+        },
+    }
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print(f"Project: {project}")
+        print(f"Profile: {profile.profile} ({profile.reason})")
+        print("Languages: " + (", ".join(detected_language_ids) or "none"))
+        print(f"Evidence records: {len(records)}")
+        for key, value in totals.items():
+            print(f"  {key}: {value}")
+        if not records:
+            print("  [INFO] no evidence has been recorded yet")
+    return 0
+
+
+def cmd_exceptions_list(args: argparse.Namespace) -> int:
+    """List policy exceptions without granting, extending, or revoking them."""
+    import yaml
+
+    from arkhon.policies.exceptions import load_exceptions
+
+    registry_path = (
+        Path(args.registry).expanduser().resolve()
+        if args.registry
+        else _repo_root() / "system" / "policies" / "exceptions" / "registry.yaml"
+    )
+    try:
+        registry = load_exceptions(registry_path)
+    except (OSError, yaml.YAMLError) as exc:
+        print(f"[FAIL] cannot load exception registry: {exc}", file=sys.stderr)
+        return 1
+
+    items = []
+    for exception in sorted(registry.exceptions, key=lambda item: item.exception_id):
+        state = "expired" if exception.is_expired() else exception.status
+        items.append(
+            {
+                "exception_id": exception.exception_id,
+                "rule_id": exception.rule_id,
+                "owner": exception.owner,
+                "approver": exception.approver,
+                "expires_at": exception.expires_at,
+                "status": state,
+                "active": exception.is_active(),
+            }
+        )
+    if args.json:
+        print(json.dumps({"registry": str(registry_path), "exceptions": items}, indent=2))
+    elif not items:
+        print(f"No exceptions registered in {registry_path}")
+    else:
+        print(f"Exception registry: {registry_path}")
+        for item in items:
+            marker = "ACTIVE" if item["active"] else str(item["status"]).upper()
+            print(
+                f"{item['exception_id']} | {item['rule_id']} | {marker} | "
+                f"expires {item['expires_at']} | owner {item['owner']}"
+            )
     return 0
 
 
@@ -416,6 +417,16 @@ def build_parser() -> argparse.ArgumentParser:
     assess = sub.add_parser("assess", help="Compute engineering score and gate status")
     assess.add_argument("project", nargs="?", default=".")
     assess.set_defaults(func=cmd_assess)
+    status = sub.add_parser("status", help="Summarize project configuration and evidence")
+    status.add_argument("project", nargs="?", default=".")
+    status.add_argument("--json", action="store_true")
+    status.set_defaults(func=cmd_status)
+    exceptions = sub.add_parser("exceptions", help="Inspect governance exceptions")
+    exceptions_sub = exceptions.add_subparsers(dest="exceptions_command")
+    exceptions_list = exceptions_sub.add_parser("list", help="List registered exceptions")
+    exceptions_list.add_argument("--registry")
+    exceptions_list.add_argument("--json", action="store_true")
+    exceptions_list.set_defaults(func=cmd_exceptions_list)
     report = sub.add_parser("report", help="Generate an engineering-quality report")
     report.add_argument("project", nargs="?", default=".")
     report.add_argument("--format", choices=["json", "markdown"], default="json")
