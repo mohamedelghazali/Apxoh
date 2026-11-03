@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -96,9 +97,7 @@ def test_tsar_version_freshness_and_artifact_failure_paths(tmp_path: Path) -> No
     with pytest.raises(SecurityError, match="invalid version bound"):
         _maximum_version_tuple("1.x.2")
     with pytest.raises(EvidenceStaleError, match="future"):
-        _check_freshness("2026-11-04T00:00:00Z", now=__import__("datetime").datetime(
-            2026, 11, 3, tzinfo=__import__("datetime").UTC
-        ))
+        _check_freshness("2026-11-04T00:00:00Z", now=datetime(2026, 11, 3, tzinfo=UTC))
     with pytest.raises(EvidenceStaleError, match="invalid executed_at"):
         _check_freshness(None)  # type: ignore[arg-type]
     with pytest.raises(EvidenceTamperedError, match="missing"):
