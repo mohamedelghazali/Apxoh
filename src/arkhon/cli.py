@@ -218,12 +218,19 @@ def cmd_project_init(args: argparse.Namespace) -> int:
         print("[FAIL] refusing symlinked project declaration", file=sys.stderr)
         return 1
     if target.exists() and not args.force:
-        print(f"[FAIL] project declaration already exists: {target} (use --force)", file=sys.stderr)
+        print(
+            f"[FAIL] project declaration already exists: {target} (use --force)",
+            file=sys.stderr,
+        )
         return 1
 
     available_profiles = list_profiles(_repo_root())
     if args.profile not in available_profiles:
-        print(f"[FAIL] unknown profile {args.profile!r}; available: {', '.join(available_profiles)}", file=sys.stderr)
+        available = ", ".join(available_profiles)
+        print(
+            f"[FAIL] unknown profile {args.profile!r}; available: {available}",
+            file=sys.stderr,
+        )
         return 1
 
     name = (args.name or project.name).strip()
@@ -234,7 +241,10 @@ def cmd_project_init(args: argparse.Namespace) -> int:
     if len(identifier) < 2:
         identifier = f"{identifier or 'project'}-project"
     if not re.fullmatch(r"[a-z][a-z0-9-]{1,62}", identifier):
-        print("[FAIL] identifier must match ^[a-z][a-z0-9-]{1,62}$", file=sys.stderr)
+        print(
+            "[FAIL] identifier must match ^[a-z][a-z0-9-]{1,62}$",
+            file=sys.stderr,
+        )
         return 1
 
     try:
