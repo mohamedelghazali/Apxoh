@@ -287,7 +287,8 @@ class SupplyChainAttestationRunner(Runner):
         overall = RunnerOutcome.PASS
         for label, command in commands:
             try:
-                result = subprocess.run(  # noqa: S603 - executable resolved and fixed argument vector
+                # noqa: S603 - executable is resolved and arguments are fixed.
+                result = subprocess.run(
                     command,
                     cwd=root,
                     capture_output=True,
