@@ -22,6 +22,18 @@ arkhon doctor
 pytest
 ```
 
+## Agent governance pack
+
+```powershell
+# Stage the governance instructions, roles, and skills in a project.
+arkhon install --scope project --project .
+
+# Stage the same pack in the current user's home directory.
+arkhon install --scope global
+```
+
+Installation only stages a managed pack. It does not edit agent/editor settings or claim that an agent has discovered or activated the files. Verify activation separately for each product.
+
 ## Project status and exceptions
 
 ```powershell
