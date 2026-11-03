@@ -198,3 +198,25 @@ def test_install_removes_partial_file_before_restoring_previous_pack(
     assert main(["install", "--project", str(tmp_path), "--force"]) == 1
     assert "installation failed" in capsys.readouterr().err
     assert original.read_text(encoding="utf-8") == "preserve previous pack"
+
+
+def test_install_rejects_resolved_parent_escape(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    real_resolve = Path.resolve
+
+    def escape_parent(path: Path, *args: object, **kwargs: object) -> Path:
+        if path == project / ".arkhon":
+            return outside
+        return real_resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", escape_parent)
+    assert main(["install", "--project", str(project)]) == 1
+    assert "agent pack installation failed" in capsys.readouterr().err
+    assert not (outside / "agent-pack").exists()
