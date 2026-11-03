@@ -161,7 +161,7 @@ class TsarAdapter(Integration):
                         ok=False, reason="TSAR JSON output must be an object"
                     )
 
-                serialized = json.dumps(payload, indent=2, sort_keys=True) + "\\n"
+                serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
                 if target.exists():
                     try:
                         existing_payload = json.loads(target.read_text(encoding="utf-8"))
