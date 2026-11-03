@@ -203,7 +203,7 @@ def test_parse_payload_rejects_invalid_shapes_and_summary() -> None:
 
 
 def test_verify_rejects_invalid_commit_version_time_and_paths(tmp_path: Path) -> None:
-        with pytest.raises(SecurityError, match="expected_commit_sha"):
+    with pytest.raises(SecurityError, match="expected_commit_sha"):
         verify_tsar_evidence({}, expected_commit_sha="bad", evidence_root=tmp_path)
     with pytest.raises(SecurityError, match="invalid version bound"):
         _maximum_version_tuple("x.1.x")
