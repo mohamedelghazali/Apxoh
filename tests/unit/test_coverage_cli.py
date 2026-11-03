@@ -113,3 +113,29 @@ def test_cli_module_entrypoint_exits_with_usage_code(monkeypatch) -> None:
     with pytest.raises(SystemExit) as exc_info:
         runpy.run_path(str(cli_path), run_name="__main__")
     assert exc_info.value.code == 1
+
+
+def test_verify_all_runs_security_domain_and_fails_closed(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
+    seen: list[str] = []
+
+    def fake_run(_self, *, domain, commit_sha, runners, project_root):
+        seen.append(domain)
+        status = "BLOCKED" if domain == "software-security" else "PASS"
+        return SimpleNamespace(
+            run_id=f"RUN-{domain}",
+            domain=domain,
+            commit_sha=commit_sha,
+            status=status,
+            evidence_id=f"EVID-{domain.upper()}",
+            results=[],
+        )
+
+    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    assert main(["verify", str(project), "--domain", "all"]) == 1
+    assert seen == ["testing", "code-quality", "software-security"]
+    assert "Domain:   software-security" in capsys.readouterr().out
