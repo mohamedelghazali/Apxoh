@@ -139,7 +139,10 @@ def _rule(rule_id: str = "TEST-001", raw: dict | None = None, *,
           severity: str = "medium", domain: str = "testing") -> Rule:
     metadata = {"status": status, "enforcement": enforcement,
                 "severity": severity, "domain": domain}
-    return Rule(rule_id, Path("rule.yaml"), raw or {"metadata": metadata})
+    payload = {"metadata": metadata}
+    if raw:
+        payload.update(raw)
+    return Rule(rule_id, Path("rule.yaml"), payload)
 
 
 def test_enforcement_rule_evidence_declarations(tmp_path: Path) -> None:
