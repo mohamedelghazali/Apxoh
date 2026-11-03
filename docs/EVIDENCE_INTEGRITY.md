@@ -245,7 +245,7 @@ The runtime separates source inventory from release authenticity:
 
 The tag-triggered SLSA release workflow builds distributions, generates and signs a CycloneDX SBOM, creates SLSA provenance, verifies signatures, and runs both Apxoh evidence gates. A successful pull-request CI run proves the source SBOM path; it does not by itself prove that a real release tag has completed the OIDC/SLSA/Cosign workflow.
 
-### 6.2 Re-verification
+### 6.3 Re-verification
 
 Evidence may be re-verified at any time. Re-verification must not modify the original signed evidence; it should create a separate verification record with verifier version, timestamp, policy version, and outcome.
 
