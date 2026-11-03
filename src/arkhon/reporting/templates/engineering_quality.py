@@ -12,7 +12,7 @@ logger = get_logger("reporting.templates")
 TEMPLATES = {
     "00-ENGINEERING-CHARTER": (
         "# Engineering Charter\n\n"
-        "Commit: \`{commit_sha}\`\n\n"
+        "Commit: `{commit_sha}`\n\n"
         "Charter version: 1.0\n"
     ),
     "01-REQUIREMENTS-AUDIT": (
@@ -88,8 +88,8 @@ TEMPLATES = {
     "FINAL-ENGINEERING-ACCEPTANCE": (
         "# Final Engineering Acceptance\n\n"
         "Decision: **{final_decision}**\n\n"
-        "Commit: \`{commit_sha}\`\n\n"
-        "Report: \`{report_id}\`\n"
+        "Commit: `{commit_sha}`\n\n"
+        "Report: `{report_id}`\n"
     ),
 }
 
