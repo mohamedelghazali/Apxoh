@@ -11,7 +11,7 @@ def test_tsar_adapter_metadata() -> None:
     info = TsarAdapter().info
     assert info.id == "tsar"
     assert info.kind == "security"
-    assert "audit" in info.capabilities
+    assert "sarif-2.1.0" in info.capabilities
 
 
 def test_missing_tsar_binary_is_unavailable(monkeypatch) -> None:
