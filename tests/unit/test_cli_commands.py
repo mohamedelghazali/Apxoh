@@ -112,12 +112,19 @@ def test_audit_passes_with_committed_tests(
     assert "Evidence:" in output
 
 
-def test_audit_rejects_invalid_project_and_missing_git(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+def test_audit_rejects_invalid_project_and_git_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     assert main(["audit", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
     _git_project(tmp_path)
+
+    def fail_git(*args: object, **kwargs: object) -> None:
+        raise OSError("git unavailable")
+
+    monkeypatch.setattr("arkhon.cli.subprocess.run", fail_git)
     assert main(["audit", str(tmp_path)]) == 1
     assert "cannot resolve commit SHA" in capsys.readouterr().err
 
