@@ -13,8 +13,8 @@ from arkhon.evidence.integrity import sha256_of
 SOURCE_URI = "github.com/mohamedelghazali/Apxoh"
 OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 IDENTITY_REGEXP = (
-    r"^https://github\\.com/mohamedelghazali/Apxoh/"
-    r"\\.github/workflows/slsa-release\\.yml@refs/tags/v.*$"
+    r"^https://github\.com/mohamedelghazali/Apxoh/"
+    r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
 )
 
 
