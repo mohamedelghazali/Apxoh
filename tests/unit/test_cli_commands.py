@@ -234,7 +234,6 @@ def test_verify_supply_chain_domain_uses_real_assurance_runners(
     assert captured == [SyftRunner]
 
 
-
 def test_verify_release_attestations_uses_release_verifier(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

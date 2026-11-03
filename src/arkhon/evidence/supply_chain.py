@@ -27,9 +27,7 @@ def identity_regexp_for_tag(source_tag: str) -> str:
         raise EvidenceTamperedError("supply-chain source tag is not a valid semantic version tag")
     return (
         r"^https://github\.com/mohamedelghazali/Apxoh/"
-        r"\.github/workflows/slsa-release\.yml@refs/tags/"
-        + re.escape(source_tag)
-        + r"$"
+        r"\.github/workflows/slsa-release\.yml@refs/tags/" + re.escape(source_tag) + r"$"
     )
 
 
@@ -98,6 +96,7 @@ def _verify_source_tag_commit(
         raise EvidenceTamperedError("release tag resolved to an invalid commit SHA")
     if actual_commit != expected_commit_sha:
         raise EvidenceTamperedError("release tag commit does not match evidence commit")
+
 
 def verify_supply_chain_attestation_report(
     report_path: Path,

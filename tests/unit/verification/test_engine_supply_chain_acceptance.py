@@ -190,7 +190,6 @@ def test_engine_blocks_when_crypto_verification_fails(
     assert record.data["summary"]["blocked"] == 1
 
 
-
 def test_engine_blocks_invalid_commit_bound_sbom(tmp_path: Path) -> None:
     sbom = tmp_path / f"sbom-{COMMIT[:12]}.cdx.json"
     sbom.write_text("{}", encoding="utf-8")

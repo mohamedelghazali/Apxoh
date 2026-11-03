@@ -296,7 +296,6 @@ def test_attestation_verification_rejects_invalid_crypto(
         )
 
 
-
 @pytest.mark.parametrize(
     ("git_path", "stdout", "raises", "error", "message"),
     [

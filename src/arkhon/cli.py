@@ -241,7 +241,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
         "code-quality": (RuffRunner(), MypyRunner()),
         "software-security": (TsarRunner(),),
         "supply-chain": (SyftRunner(),),
-        "release-attestations": (SupplyChainAttestationRunner(),)
+        "release-attestations": (SupplyChainAttestationRunner(),),
     }
     domains: tuple[str, ...]
     if domain == "all":
