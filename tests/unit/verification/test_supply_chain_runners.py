@@ -436,7 +436,8 @@ def test_syft_runner_blocks_when_sbom_cannot_be_written(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
     monkeypatch.setattr(
-        "arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: "/usr/bin/syft"
+        "arkhon.verification.runners.supply_chain_runner.shutil.which",
+        lambda _name: "/usr/bin/syft",
     )
     monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner.subprocess.run",
