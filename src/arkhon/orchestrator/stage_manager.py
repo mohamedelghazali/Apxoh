@@ -42,9 +42,11 @@ class StageManager:
                 missing.append(f"gate {definition.gate} not evaluated")
             elif not verdict.closes:
                 missing.append(f"gate {definition.gate} is {verdict.status}: {verdict.reason}")
-        if self._state.current == Stage.PROJECT_INIT:
-            if not (self._root / ".arkhon" / "project.yaml").is_file():
-                missing.append("missing .arkhon/project.yaml")
+        if (
+            self._state.current == Stage.PROJECT_INIT
+            and not (self._root / ".arkhon" / "project.yaml").is_file()
+        ):
+            missing.append("missing .arkhon/project.yaml")
         if missing:
             return TransitionCheck(False, "exit criteria not met", missing)
         return TransitionCheck(True, "exit criteria satisfied")
