@@ -212,7 +212,7 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
 
     monkeypatch.setattr(Path, "open", race_open)
     assert store.write("testing", record) == target
-    assert hashlib.sha256(target.read_bytes()).hexdigest()
+    assert hashlib.sha256(target.read_bytes()).hexdigest() == hashlib.sha256(payload).hexdigest()
 
     malformed = store.root / "testing" / "array.json"
     malformed.write_text("[]", encoding="utf-8")
