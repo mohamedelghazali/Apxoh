@@ -94,7 +94,12 @@ def update_changelog(version: str) -> None:
 
 def run_release_check() -> None:
     print("[INFO] running make release-check...")
-    result = subprocess.run(["make", "release-check"], cwd=REPO_ROOT, check=False)
+    make_executable = shutil.which("make")
+    if make_executable is None:
+        fail("make executable not found on PATH")
+    result = subprocess.run(  # noqa: S603 - resolved make executable and fixed arguments
+        [make_executable, "release-check"], cwd=REPO_ROOT, check=False
+    )
     if result.returncode != 0:
         fail("release-check failed")
 
