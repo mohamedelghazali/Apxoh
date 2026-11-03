@@ -147,6 +147,8 @@ def _check_version(version: str, minimum: str, maximum: str) -> None:
 
 
 def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
+    if not isinstance(executed_at, str) or not executed_at.strip():
+        raise EvidenceStaleError(f"invalid executed_at: {executed_at!r}")
     try:
         value = executed_at[:-1] + "+00:00" if executed_at.endswith("Z") else executed_at
         executed = datetime.fromisoformat(value)
