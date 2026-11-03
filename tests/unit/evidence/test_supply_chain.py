@@ -294,3 +294,40 @@ def test_attestation_verification_rejects_invalid_crypto(
         verify_supply_chain_attestation_report(
             report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
         )
+
+
+
+@pytest.mark.parametrize(
+    ("git_path", "stdout", "raises", "error", "message"),
+    [
+        (None, "", False, EvidenceError, "git is required"),
+        ("/usr/bin/git", "", True, EvidenceError, "cannot resolve release tag"),
+        ("/usr/bin/git", "not-a-sha", False, EvidenceTamperedError, "invalid commit SHA"),
+        ("/usr/bin/git", "b" * 40, False, EvidenceTamperedError, "does not match evidence commit"),
+    ],
+)
+def test_attestation_rejects_unbound_release_tag(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    git_path: str | None,
+    stdout: str,
+    raises: bool,
+    error: type[Exception],
+    message: str,
+) -> None:
+    report, artifacts = _attestation_fixture(tmp_path)
+    monkeypatch.setattr(
+        "arkhon.evidence.supply_chain.shutil.which",
+        lambda name: git_path if name == "git" else f"/usr/bin/{name}",
+    )
+
+    def run(command, **kwargs):
+        if raises:
+            raise OSError("git lookup failed")
+        return subprocess.CompletedProcess(command, 0, stdout, "")
+
+    monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
+    with pytest.raises(error, match=message):
+        verify_supply_chain_attestation_report(
+            report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
+        )
