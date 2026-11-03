@@ -167,7 +167,10 @@ class VerificationEngine:
                     )
                     return None
                 except Exception as exc:
-                    reason = f"cryptographic evidence acceptance failed: {type(exc).__name__}: {exc}"
+                    reason = (
+                        f"cryptographic evidence acceptance failed: "
+                        f"{type(exc).__name__}: {exc}"
+                    )
         return RunnerResult(
             runner="supply-chain-evidence-acceptance",
             outcome=RunnerOutcome.BLOCKED,
