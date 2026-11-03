@@ -11,7 +11,7 @@ import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
-from arkhon.evidence.supply_chain import IDENTITY_REGEXP, OIDC_ISSUER, SOURCE_URI
+from arkhon.evidence.supply_chain import OIDC_ISSUER, SOURCE_URI, identity_regexp_for_tag
 from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
 
 
@@ -84,7 +84,8 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
                 "commit_sha": "a" * 40,
                 "source_uri": SOURCE_URI,
                 "oidc_issuer": OIDC_ISSUER,
-                "certificate_identity_regexp": IDENTITY_REGEXP,
+                "source_tag": "v1.2.3",
+                "certificate_identity_regexp": identity_regexp_for_tag("v1.2.3"),
                 "artifact": "dist/release.whl",
                 "artifact_sha256": digest(artifact),
                 "provenance": "dist/provenance.intoto.jsonl",
