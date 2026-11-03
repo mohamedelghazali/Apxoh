@@ -4,7 +4,7 @@ Usage:
     python tools/signing/sign-artifacts.py path/to/artifact [path/to/another-artifact]
 
 Requires:
-    pip install "sigstore==3.5.1"
+    pip install "sigstore==4.5.1"
     An interactive OIDC login or a supported ambient CI identity.
 
 Bundles are written beside each artifact as <artifact>.sigstore.json.
