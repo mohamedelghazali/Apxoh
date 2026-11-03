@@ -34,7 +34,12 @@ def _write_evidence(
                 "commit_sha": commit_sha,
                 "executed_at": executed_at,
                 "status": status,
-                "artifacts": [{"path": "x", "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest()}],
+                "artifacts": [
+                    {
+                        "path": "x",
+                        "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                    }
+                ],
             }
         ),
         encoding="utf-8",
@@ -100,8 +105,8 @@ def test_build_rejects_invalid_commit_and_ignores_unknown_domain(tmp_path: Path)
     report = JsonReporter().build(tmp_path)
     assert report["final_decision"] == "PENDING_EVIDENCE"
     (tmp_path / ".arkhon" / "evidence" / "testing").mkdir(parents=True)
-    (tmp_path / ".arkhon" / "evidence" / "testing" / "bad.json").write_text(
-        json.dumps({"evidence_id": "bad", "commit_sha": "short", "status": "PASS"}),
+    (tmp_path / ".arkhon" / "evidence" / "testing" / "EVID-BAD.json").write_text(
+        json.dumps({"evidence_id": "EVID-BAD", "commit_sha": "short", "status": "PASS"}),
         encoding="utf-8",
     )
     with pytest.raises(EvidenceError, match="valid commit_sha"):
