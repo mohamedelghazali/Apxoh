@@ -226,6 +226,10 @@ def cmd_verify(args: argparse.Namespace) -> int:
     from arkhon.verification.runners.pytest_runner import PytestRunner
     from arkhon.verification.runners.ruff_runner import RuffRunner
     from arkhon.verification.runners.tsar_runner import TsarRunner
+    from arkhon.verification.runners.supply_chain_runner import (
+        SupplyChainAttestationRunner,
+        SyftRunner,
+    )
 
     project = Path(args.project).resolve()
     if not project.is_dir():
@@ -236,6 +240,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
         "testing": (PytestRunner(),),
         "code-quality": (RuffRunner(), MypyRunner()),
         "software-security": (TsarRunner(),),
+        "supply-chain": (SyftRunner(), SupplyChainAttestationRunner()),
     }
     if domain == "all":
         domains = tuple(runners_map)
