@@ -85,8 +85,17 @@ class ClaudeAdapter(Integration):
             )
 
         endpoint = urlsplit(self._config.endpoint)
+        try:
+            endpoint_port = endpoint.port
+        except ValueError:
+            return IntegrationResponse(
+                ok=False,
+                reason="Claude endpoint contains an invalid port",
+            )
         if (
-            endpoint.scheme != "https"
+            endpoint_port == 0
+            or any(ord(char) < 32 for char in endpoint.path)
+            or endpoint.scheme != "https"
             or not endpoint.hostname
             or endpoint.username
             or endpoint.password
