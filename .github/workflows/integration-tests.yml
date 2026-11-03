@@ -19,7 +19,7 @@ jobs:
         lang: [python, javascript, typescript, java, csharp, cpp, go, rust, ruby]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.11", cache: "pip" }
       - run: pip install -e ".[dev]"
 
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.11", cache: "pip" }
       - run: pip install -e ".[dev]"
       - name: Inspect each example
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.11", cache: "pip" }
       - run: pip install -e ".[dev]"
       - name: Contract tests (no TSAR binary needed)
