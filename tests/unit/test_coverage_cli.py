@@ -7,7 +7,6 @@ from argparse import Namespace
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 
 from arkhon.cli import cmd_report, main
 
@@ -85,8 +84,10 @@ def test_cli_audit_rule_load_failure_and_verify_domain_errors(
 def test_cli_report_unknown_format_and_verify_success(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
-    with pytest.raises(Exception):
-        cmd_report(Namespace(project=str(tmp_path), format="unknown", output=None))
+    assert cmd_report(
+        Namespace(project=str(tmp_path), format="unknown", output=None)
+    ) == 1
+    assert "unknown format" in capsys.readouterr().err
     project = tmp_path / "project"
     project.mkdir()
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
