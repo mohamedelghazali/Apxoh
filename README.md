@@ -25,6 +25,11 @@ pytest
 ## Project status and exceptions
 
 ```powershell
+# Create a schema-validated project declaration without overwriting an existing one.
+arkhon project init . --name "Example App"
+```
+
+```powershell
 # Summarize the selected project's profile, detected languages, and evidence.
 arkhon status .
 arkhon status . --json
