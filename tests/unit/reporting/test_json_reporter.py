@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
+from arkhon.evidence.supply_chain import IDENTITY_REGEXP, OIDC_ISSUER, SOURCE_URI
+from arkhon.evidence.store import EvidenceStore
 
 
 def _write_evidence(
@@ -46,6 +49,61 @@ def _write_evidence(
     )
     return target
 
+
+
+def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
+    def write(relative: str, content: str) -> Path:
+        path = project / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def digest(path: Path) -> str:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    artifact = write("dist/release.whl", "wheel")
+    provenance = write("dist/provenance.intoto.jsonl", "provenance")
+    signature = write("dist/release.whl.sigstore.json", "signature")
+    sbom = write(
+        ".arkhon/reports/supply-chain/sbom.cdx.json",
+        json.dumps({
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.6",
+            "components": [],
+            "metadata": {"component": {"properties": [
+                {"name": "arkhon:commit-sha", "value": "a" * 40}
+            ]}},
+        }),
+    )
+    report = write(
+        ".arkhon/reports/supply-chain/release.attestation.json",
+        json.dumps({
+            "schema_version": 1,
+            "commit_sha": "a" * 40,
+            "source_uri": SOURCE_URI,
+            "oidc_issuer": OIDC_ISSUER,
+            "certificate_identity_regexp": IDENTITY_REGEXP,
+            "artifact": "dist/release.whl",
+            "artifact_sha256": digest(artifact),
+            "provenance": "dist/provenance.intoto.jsonl",
+            "provenance_sha256": digest(provenance),
+            "signature_bundle": "dist/release.whl.sigstore.json",
+            "signature_bundle_sha256": digest(signature),
+            "verification": {"slsa": {"verified": True}, "sigstore": {"verified": True}},
+        }),
+    )
+    EvidenceStore(project).write("supply-chain", {
+        "evidence_id": evidence_id,
+        "source": "arkhon",
+        "source_version": "0.1.0.dev1",
+        "commit_sha": "a" * 40,
+        "executed_at": "2026-11-03T00:00:00Z",
+        "status": "PASS",
+        "artifacts": [
+            {"path": item.relative_to(project).as_posix(), "sha256": digest(item)}
+            for item in (sbom, report, artifact, provenance, signature)
+        ],
+    })
 
 def test_build_fails_with_no_evidence(tmp_path: Path) -> None:
     with pytest.raises(EvidenceError, match="no evidence"):
@@ -113,9 +171,22 @@ def test_build_rejects_invalid_commit_and_ignores_unknown_domain(tmp_path: Path)
         JsonReporter().build(tmp_path)
 
 
-def test_build_approves_only_when_every_section_has_verified_evidence(tmp_path: Path) -> None:
+def test_build_approves_only_when_every_section_has_verified_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     for index, domain in enumerate(SECTION_MAP):
-        _write_evidence(tmp_path, domain, f"EVID-ALL-{index}")
+        evidence_id = f"EVID-ALL-{index}"
+        if domain == "supply-chain":
+            _write_supply_chain_evidence(tmp_path, evidence_id)
+        else:
+            _write_evidence(tmp_path, domain, evidence_id)
+    monkeypatch.setattr(
+        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+    )
+    monkeypatch.setattr(
+        "arkhon.evidence.supply_chain.subprocess.run",
+        lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "verified", ""),
+    )
     report = JsonReporter().build(tmp_path)
     assert report["final_decision"] == "APPROVED"
     assert all(section["status"] == "PASS" for section in report["sections"].values())
