@@ -12,6 +12,11 @@ from arkhon.core.constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
 from arkhon.core.errors import VerificationError
 from arkhon.core.logging import get_logger
 from arkhon.evidence.collector import EvidenceCollector, EvidenceDraft
+from arkhon.evidence.integrity import sha256_of
+from arkhon.evidence.supply_chain import (
+    verify_cyclonedx_sbom,
+    verify_supply_chain_attestation_report,
+)
 from arkhon.evidence.store import EvidenceStore
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
@@ -93,6 +98,14 @@ class VerificationEngine:
                         artifacts=[],
                     )
                 )
+        if domain == "supply-chain" and all(
+            result.outcome == RunnerOutcome.PASS for result in results
+        ):
+            acceptance_failure = self._verify_supply_chain_acceptance(
+                results, project_root=project_root, commit_sha=commit_sha
+            )
+            if acceptance_failure is not None:
+                results.append(acceptance_failure)
         status = self._aggregate_status(results)
         evidence_id = self._record_evidence(
             domain=domain,
@@ -110,6 +123,41 @@ class VerificationEngine:
             status=status,
             evidence_id=evidence_id,
         )
+
+    @staticmethod
+    def _verify_supply_chain_acceptance(
+        results: list[RunnerResult], *, project_root: Path, commit_sha: str
+    ) -> RunnerResult | None:
+        """Re-verify SBOM, SLSA provenance, and Sigstore before recording PASS."""
+        root = project_root.resolve()
+        artifacts = [Path(path).resolve() for result in results for path in result.artifacts]
+        sboms = [path for path in artifacts if path.name.startswith("sbom-") and path.name.endswith(".cdx.json")]
+        reports = [path for path in artifacts if path.name.endswith(".attestation.json")]
+        if len(sboms) != 1 or len(reports) != 1:
+            return RunnerResult(
+                runner="supply-chain-evidence-acceptance",
+                outcome=RunnerOutcome.BLOCKED,
+                reason="PASS requires exactly one commit-bound SBOM and one attestation report",
+            )
+        try:
+            evidence_artifacts = [
+                {"path": path.relative_to(root).as_posix(), "sha256": sha256_of(path)}
+                for path in artifacts
+            ]
+            verify_cyclonedx_sbom(sboms[0], expected_commit_sha=commit_sha)
+            verify_supply_chain_attestation_report(
+                reports[0],
+                evidence_root=root,
+                expected_commit_sha=commit_sha,
+                evidence_artifacts=evidence_artifacts,
+            )
+        except Exception as exc:
+            return RunnerResult(
+                runner="supply-chain-evidence-acceptance",
+                outcome=RunnerOutcome.BLOCKED,
+                reason=f"cryptographic evidence acceptance failed: {type(exc).__name__}: {exc}",
+            )
+        return None
 
     @staticmethod
     def _aggregate_status(results: list[RunnerResult]) -> str:
