@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,6 +18,19 @@ IDENTITY_REGEXP = (
     r"^https://github\.com/mohamedelghazali/Apxoh/"
     r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
 )
+_TAG_RE = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
+
+
+def identity_regexp_for_tag(source_tag: str) -> str:
+    """Return an exact GitHub Actions certificate identity for a release tag."""
+    if not _TAG_RE.fullmatch(source_tag):
+        raise EvidenceTamperedError("supply-chain source tag is not a valid semantic version tag")
+    return (
+        r"^https://github\.com/mohamedelghazali/Apxoh/"
+        r"\.github/workflows/slsa-release\.yml@refs/tags/"
+        + re.escape(source_tag)
+        + r"$"
+    )
 
 
 def _in_root(root: Path, value: object) -> Path:
@@ -77,10 +91,14 @@ def verify_supply_chain_attestation_report(
         raise EvidenceTamperedError("attestation report schema is invalid")
     if report.get("commit_sha") != expected_commit_sha:
         raise EvidenceTamperedError("attestation report commit binding mismatch")
+    source_tag = report.get("source_tag")
+    if not isinstance(source_tag, str):
+        raise EvidenceTamperedError("attestation report is missing its source tag")
+    identity_regexp = identity_regexp_for_tag(source_tag)
     if (
         report.get("source_uri") != SOURCE_URI
         or report.get("oidc_issuer") != OIDC_ISSUER
-        or report.get("certificate_identity_regexp") != IDENTITY_REGEXP
+        or report.get("certificate_identity_regexp") != identity_regexp
     ):
         raise EvidenceTamperedError("attestation report trust identity does not match policy")
     verification = report.get("verification")
@@ -132,6 +150,8 @@ def verify_supply_chain_attestation_report(
             str(resolved["provenance"]),
             "--source-uri",
             SOURCE_URI,
+            "--source-tag",
+            source_tag,
         ],
         [
             cosign,
@@ -139,7 +159,7 @@ def verify_supply_chain_attestation_report(
             "--bundle",
             str(resolved["signature_bundle"]),
             "--certificate-identity-regexp",
-            IDENTITY_REGEXP,
+            identity_regexp,
             "--certificate-oidc-issuer",
             OIDC_ISSUER,
             str(resolved["artifact"]),
