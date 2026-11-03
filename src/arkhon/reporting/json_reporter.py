@@ -127,7 +127,8 @@ class JsonReporter:
                     ]
                     if len(sbom_paths) != 1 or len(attestation_paths) != 1:
                         raise EvidenceError(
-                            "PASS supply-chain evidence requires one SBOM and one attestation report"
+                            "PASS supply-chain evidence requires exactly one SBOM "
+                            "and attestation report"
                         )
                     verify_cyclonedx_sbom(sbom_paths[0], expected_commit_sha=commit_sha)
                     verify_supply_chain_attestation_report(
