@@ -28,7 +28,7 @@ SECTION_MAP = {
     "testing": "testing",
     "software-security": "security",
     "supply-chain": "supply_chain",
-    "release-attestations": "supply_chain",
+    "release-attestations": "final_acceptance",
     "performance": "performance",
     "reliability": "reliability",
     "observability": "reliability",
