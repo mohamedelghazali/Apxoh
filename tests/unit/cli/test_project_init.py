@@ -138,3 +138,49 @@ def test_project_init_reports_schema_validation_failure(
     monkeypatch.setattr("jsonschema.validate", reject_schema)
     assert main(["project", "init", str(tmp_path)]) == 1
     assert "forced schema failure" in capsys.readouterr().err
+
+
+def test_project_init_refuses_symlinked_metadata_directory(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    try:
+        (project / ".arkhon").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlink creation is unavailable on this runner")
+    assert main(["project", "init", str(project)]) == 1
+    assert "symlinked .arkhon directory" in capsys.readouterr().err
+    assert not (outside / "project.yaml").exists()
+
+
+def test_project_init_refuses_symlinked_declaration(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    metadata = project / ".arkhon"
+    metadata.mkdir()
+    outside = tmp_path / "outside.yaml"
+    outside.write_text("preserve: true\n", encoding="utf-8")
+    try:
+        (metadata / "project.yaml").symlink_to(outside)
+    except OSError:
+        pytest.skip("symlink creation is unavailable on this runner")
+    assert main(["project", "init", str(project)]) == 1
+    assert "symlinked project declaration" in capsys.readouterr().err
+    assert outside.read_text(encoding="utf-8") == "preserve: true\n"
+
+
+def test_project_init_normalizes_single_character_identifier(
+    tmp_path: Path,
+) -> None:
+    project = tmp_path / "A"
+    project.mkdir()
+    assert main(["project", "init", str(project), "--name", "A"]) == 0
+    data = yaml.safe_load(
+        (project / ".arkhon" / "project.yaml").read_text(encoding="utf-8")
+    )
+    assert data["project"]["identifier"] == "a-project"

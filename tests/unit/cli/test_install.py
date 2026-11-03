@@ -146,3 +146,56 @@ def test_install_restores_previous_pack_if_atomic_swap_fails(
     assert main(["install", "--project", str(tmp_path), "--force"]) == 1
     assert "installation failed" in capsys.readouterr().err
     assert original.read_text(encoding="utf-8") == "preserve old pack"
+
+
+def test_install_finally_retries_backup_restore_after_rename_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["install", "--project", str(tmp_path)]) == 0
+    target = tmp_path / ".arkhon" / "agent-pack"
+    original = (target / "AGENTS.md").read_text(encoding="utf-8")
+    real_rename = Path.rename
+    failed_backup_restore = False
+
+    def fail_backup_restore_once(path: Path, destination: Path) -> Path:
+        nonlocal failed_backup_restore
+        if (
+            path.name.startswith(".agent-pack-backup-")
+            and destination == target
+            and not failed_backup_restore
+        ):
+            failed_backup_restore = True
+            raise OSError("simulated first backup restore failure")
+        return real_rename(path, destination)
+
+    def fail_staging_and_restore_once(path: Path, destination: Path) -> Path:
+        if path.name.startswith(".agent-pack-staging-") and destination == target:
+            raise OSError("simulated staging swap failure")
+        return fail_backup_restore_once(path, destination)
+
+    monkeypatch.setattr(Path, "rename", fail_staging_and_restore_once)
+    assert main(["install", "--project", str(tmp_path), "--force"]) == 1
+    assert "installation failed" in capsys.readouterr().err
+    assert failed_backup_restore
+    assert (target / "AGENTS.md").read_text(encoding="utf-8") == original
+    assert not list(target.parent.glob(".agent-pack-backup-*"))
+
+
+def test_install_finally_removes_backup_when_target_reappears(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["install", "--project", str(tmp_path)]) == 0
+    target = tmp_path / ".arkhon" / "agent-pack"
+    real_rename = Path.rename
+
+    def recreate_target_then_fail(path: Path, destination: Path) -> Path:
+        if path.name.startswith(".agent-pack-staging-") and destination == target:
+            target.mkdir()
+            raise OSError("simulated target recreation during failed swap")
+        return real_rename(path, destination)
+
+    monkeypatch.setattr(Path, "rename", recreate_target_then_fail)
+    assert main(["install", "--project", str(tmp_path), "--force"]) == 1
+    assert "installation failed" in capsys.readouterr().err
+    assert target.is_dir()
+    assert not list(target.parent.glob(".agent-pack-backup-*"))
