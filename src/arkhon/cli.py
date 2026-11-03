@@ -234,6 +234,9 @@ def cmd_report(args: argparse.Namespace) -> int:
     if not project.is_dir():
         print(f"[FAIL] not a directory: {project}", file=sys.stderr)
         return 1
+    commit_sha = _commit_sha(project)
+    if commit_sha is None:
+        return 1
     fmt = args.format or "json"
     output = Path(args.output) if args.output else project / ".arkhon" / "reports"
     reporter = (
@@ -242,7 +245,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     if reporter is None:
         print(f"[FAIL] unknown format: {fmt}", file=sys.stderr)
         return 1
-    path = reporter.write(project, output)
+    path = reporter.write(project, output, expected_commit_sha=commit_sha)
     print(f"[OK] report written to {path}")
     return 0
 
