@@ -23,7 +23,7 @@ SHA = "a" * 40
 def _bom() -> dict:
     return {
         "bomFormat": "CycloneDX",
-        "specVersion": "1.6",
+        "specVersion": "1.7",
         "version": 1,
         "metadata": {"tools": {"components": [{"name": "syft", "version": "1.0.0"}]}},
         "components": [{"type": "library", "name": "demo", "version": "1.0"}],
