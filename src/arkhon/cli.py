@@ -152,52 +152,17 @@ def _commit_sha(project: Path) -> str | None:
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
-    from arkhon.assessment.decision import decide
-    from arkhon.assessment.gates import evaluate_all_gates
-    from arkhon.assessment.scorer import score_from_outcomes
-    from arkhon.config import get_manifest
-    from arkhon.evidence.collector import EvidenceCollector
-    from arkhon.evidence.store import EvidenceStore
     from arkhon.rules.loader import load_rules_dir
-    from arkhon.rules.registry import RuleRegistry
-    from arkhon.verification.engine import VerificationEngine
-    from arkhon.verification.runners.pytest_runner import PytestRunner
 
-    project = Path(args.project).resolve()
-    if not project.is_dir():
-        print(f"[FAIL] not a directory: {project}", file=sys.stderr)
-        return 1
-    domain = args.domain or "testing"
     rules_result = load_rules_dir(_repo_root() / "rules")
     if not rules_result.ok:
         print(f"[FAIL] rule load errors: {len(rules_result.errors)}", file=sys.stderr)
         for error in rules_result.errors:
             print(f"  - {error}", file=sys.stderr)
         return 1
-    registry = RuleRegistry(rules_result.rules)
-    _ = get_manifest()
-    commit_sha = _commit_sha(project)
-    if commit_sha is None:
-        return 1
-    engine = VerificationEngine(
-        store=EvidenceStore(project),
-        collector=EvidenceCollector(root=project),
-    )
-    run = engine.run(
-        domain=domain,
-        commit_sha=commit_sha,
-        runners=[PytestRunner()],
-        project_root=project,
-    )
-    print(f"Run ID:   {run.run_id}")
-    print(f"Domain:   {run.domain}")
-    print(f"Commit:   {run.commit_sha[:12]}")
-    print(f"Status:   {run.status}")
-    print(f"Evidence: {run.evidence_id}")
-    for result in run.results:
-        print(f"  [{result.runner}] {result.outcome.value} {result.reason}")
-    _ = (decide, evaluate_all_gates, score_from_outcomes, registry)
-    return 0 if run.status == "PASS" else 1
+    # Keep audit and verify on the same runner map so a domain can never be
+    # reported as PASS by an unrelated verification tool.
+    return cmd_verify(args)
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
@@ -223,7 +188,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
     print("Gates:")
     for gate, verdict in verdicts.items():
         print(f"  {gate}: {verdict.status}")
-    return 0
+    return 0 if verdicts and all(v.status == "PASS" for v in verdicts.values()) else 1
 
 
 def cmd_report(args: argparse.Namespace) -> int:
@@ -269,10 +234,12 @@ def cmd_verify(args: argparse.Namespace) -> int:
         "testing": (PytestRunner(),),
         "code-quality": (RuffRunner(), MypyRunner()),
         "software-security": (TsarRunner(),),
-        "all": (PytestRunner(), RuffRunner(), MypyRunner()),
     }
-    runners = runners_map.get(domain)
-    if not runners:
+    if domain == "all":
+        domains = tuple(runners_map)
+    elif domain in runners_map:
+        domains = (domain,)
+    else:
         print(f"[FAIL] unknown domain: {domain}", file=sys.stderr)
         return 1
     commit_sha = _commit_sha(project)
@@ -282,18 +249,23 @@ def cmd_verify(args: argparse.Namespace) -> int:
         store=EvidenceStore(project),
         collector=EvidenceCollector(root=project),
     )
-    run = engine.run(
-        domain=domain,
-        commit_sha=commit_sha,
-        runners=runners,
-        project_root=project,
-    )
-    print(f"Run:      {run.run_id}")
-    print(f"Status:   {run.status}")
-    print(f"Evidence: {run.evidence_id}")
-    for result in run.results:
-        print(f"  [{result.runner}] {result.outcome.value}")
-    return 0 if run.status == "PASS" else 1
+    runs = []
+    for selected_domain in domains:
+        run = engine.run(
+            domain=selected_domain,
+            commit_sha=commit_sha,
+            runners=runners_map[selected_domain],
+            project_root=project,
+        )
+        runs.append(run)
+        print(f"Run:      {run.run_id}")
+        print(f"Domain:   {run.domain}")
+        print(f"Commit:   {run.commit_sha[:12]}")
+        print(f"Status:   {run.status}")
+        print(f"Evidence: {run.evidence_id}")
+        for result in run.results:
+            print(f"  [{result.runner}] {result.outcome.value}")
+    return 0 if runs and all(run.status == "PASS" for run in runs) else 1
 
 
 def build_parser() -> argparse.ArgumentParser:
