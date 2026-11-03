@@ -51,7 +51,7 @@ class TsarAdapter(Integration):
             logger.warning("TSAR binary not found: %s", self._config.binary)
             return False
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
                 [binary, "--version"],
                 capture_output=True,
                 text=True,
@@ -68,7 +68,7 @@ class TsarAdapter(Integration):
         if binary is None:
             raise SecurityError("TSAR binary not found")
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
                 [binary, "--version"],
                 capture_output=True,
                 text=True,
@@ -117,7 +117,7 @@ class TsarAdapter(Integration):
         ]
         logger.info("running TSAR audit for commit %s", commit_sha)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which; fixed argument vectors
                 command,
                 cwd=root,
                 capture_output=True,
