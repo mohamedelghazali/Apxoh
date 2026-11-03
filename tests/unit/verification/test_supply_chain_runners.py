@@ -219,7 +219,14 @@ def test_attestation_runner_blocks_without_config_or_tools(
     [
         "not json",
         "[]",
-        json.dumps({"artifact": "../escape", "provenance": "x", "signature_bundle": "y", "source_tag": "v1.2.3"}),
+        json.dumps(
+            {
+                "artifact": "../escape",
+                "provenance": "x",
+                "signature_bundle": "y",
+                "source_tag": "v1.2.3",
+            }
+        ),
     ],
 )
 def test_attestation_runner_rejects_invalid_config_and_paths(
@@ -405,7 +412,8 @@ def test_syft_runner_rejects_symlinked_sbom_output(
         "arkhon.verification.runners.supply_chain_runner._commit_sha", lambda _root: SHA
     )
     monkeypatch.setattr(
-        "arkhon.verification.runners.supply_chain_runner.shutil.which", lambda _name: "/usr/bin/syft"
+        "arkhon.verification.runners.supply_chain_runner.shutil.which",
+        lambda _name: "/usr/bin/syft",
     )
     monkeypatch.setattr(
         "arkhon.verification.runners.supply_chain_runner.subprocess.run",
