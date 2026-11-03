@@ -119,7 +119,6 @@ def verify_supply_chain_attestation_report(
     if not isinstance(source_tag, str):
         raise EvidenceTamperedError("attestation report is missing its source tag")
     identity_regexp = identity_regexp_for_tag(source_tag)
-    _verify_source_tag_commit(evidence_root, source_tag, expected_commit_sha)
     if (
         report.get("source_uri") != SOURCE_URI
         or report.get("oidc_issuer") != OIDC_ISSUER
@@ -159,6 +158,8 @@ def verify_supply_chain_attestation_report(
         resolved[path_key] = candidate
     if report_path.resolve() not in {_in_root(evidence_root, path) for path in registered}:
         raise EvidenceTamperedError("attestation report is not itself bound by the evidence record")
+
+    _verify_source_tag_commit(evidence_root, source_tag, expected_commit_sha)
 
     slsa = shutil.which("slsa-verifier")
     cosign = shutil.which("cosign")
