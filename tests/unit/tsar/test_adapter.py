@@ -9,7 +9,6 @@ from unittest.mock import patch
 import pytest
 
 from arkhon.core.errors import SecurityError
-
 from arkhon.integrations.tsar.adapter import TsarAdapter, TsarConfig
 
 
