@@ -109,7 +109,7 @@ jobs:
           for artifact in dist/*.whl dist/*.tar.gz dist/source-sbom.cdx.json; do
             cosign verify-blob \
               --bundle "${artifact}.sigstore.json" \
-              --certificate-identity-regexp '^https://github\\.com/mohamedelghazali/Apxoh/\\.github/workflows/slsa-release\\.yml@refs/tags/v.*$' \
+              --certificate-identity-regexp '^https://github[.]com/mohamedelghazali/Apxoh/[.]github/workflows/slsa-release[.]yml@refs/tags/v.*$' \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
               "$artifact"
           done
