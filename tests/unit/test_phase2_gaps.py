@@ -10,7 +10,7 @@ import pytest
 from arkhon.assessment.decision import decide
 from arkhon.assessment.gates import GateVerdict
 from arkhon.assessment.scorer import Score
-from arkhon.core.errors import ConfigError, EvidenceError, EvidenceTamperedError, GovernanceError
+from arkhon.core.errors import AssessmentError, ConfigError, EvidenceError, EvidenceTamperedError, GovernanceError
 from arkhon.core.logging import JsonFormatter, configure_logging, get_logger
 from arkhon.evidence.store import EvidenceStore
 from arkhon.governance.charter_loader import Principle, _parse_principles, load_charter
@@ -38,19 +38,19 @@ def verdict(name: str, status: str, reason: str = "") -> GateVerdict:
     ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS")}, 80, 1, "APPROVED_WITH_CONDITIONS"),
     ({"security_gate": verdict("security_gate", "PASS"), "release_gate": verdict("release_gate", "PASS")}, 100, 0, "APPROVED"),
 ])
-def test_decision_paths(gates: dict, points: float, risks: int, expected: str) -> None:
+def test_decision_paths(gates: dict[str, GateVerdict], points: float, risks: int, expected: str) -> None:
     assert decide(score(points), gates, risks).decision == expected
 
 
 def test_decision_rejects_missing_inputs() -> None:
-    with pytest.raises(GovernanceError):
+    with pytest.raises(AssessmentError):
         decide(score(), {})
-    with pytest.raises(GovernanceError):
+    with pytest.raises(AssessmentError):
         decide(score(), {"security_gate": verdict("security_gate", "PASS"),
                          "release_gate": verdict("release_gate", "PASS")}, -1)
 
 
-def principles() -> dict:
+def principles() -> dict[str, list[dict[str, object]]]:
     return {"principles": [{"number": n, "statement": f"Principle {n}"} for n in range(1, 13)]}
 
 
@@ -173,7 +173,8 @@ def test_evidence_store_integrity_iteration_and_latest(tmp_path: Path) -> None:
     assert store.write("testing", data) == path
     assert store.read("testing", "EVID-1").status == "PASS"
     assert len(list(store.iter_records())) == 1
-    assert store.latest_for_commit("testing", "a" * 40).evidence_id == "EVID-1"
+    latest = store.latest_for_commit("testing", "a" * 40)
+    assert latest is not None and latest.evidence_id == "EVID-1"
     assert store.latest_for_commit("testing", "b" * 40) is None
     with pytest.raises(EvidenceTamperedError):
         store.write("testing", {**data, "status": "FAIL"})
@@ -207,7 +208,7 @@ def test_logging_json_extras_exceptions_and_configuration() -> None:
         import sys
         record = logging.LogRecord("arkhon.test", logging.ERROR, __file__, 1, "message", (),
                                    sys.exc_info())
-    record.arkhon_extra = {"component": "test"}
+    setattr(record, "arkhon_extra", {"component": "test"})
     payload = json.loads(JsonFormatter().format(record))
     assert payload["extra"]["component"] == "test"
     assert "RuntimeError" in payload["exception"]
