@@ -55,19 +55,6 @@ class TsarAdapter(Integration):
     def _binary(self) -> str | None:
         return shutil.which(self._config.binary)
 
-    def _version_from_sarif(self, payload: dict[str, Any]) -> str:
-        runs = payload.get("runs")
-        if not isinstance(runs, list) or not runs or not isinstance(runs[0], dict):
-            raise SecurityError("TSAR SARIF must contain at least one run")
-        tool = runs[0].get("tool")
-        driver = tool.get("driver") if isinstance(tool, dict) else None
-        if not isinstance(driver, dict) or driver.get("name") != "TSAR":
-            raise SecurityError("SARIF driver identity is not TSAR")
-        version = driver.get("version")
-        if not isinstance(version, str) or not version:
-            raise SecurityError("TSAR SARIF is missing scanner version")
-        return version
-
     def health_check(self) -> bool:
         binary = self._binary()
         if binary is None:
