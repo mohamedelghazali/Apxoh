@@ -122,6 +122,7 @@ def test_report_reverifies_sbom_provenance_and_signature(
     monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
     report = JsonReporter().build(tmp_path, expected_commit_sha=SHA)
     assert report["sections"]["supply_chain"]["status"] == "PASS"
+    assert report["sections"]["final_acceptance"]["status"] == "PASS"
     assert len(calls) == 2
     assert calls[0][1] == "verify-artifact"
     assert calls[1][1] == "verify-blob"
