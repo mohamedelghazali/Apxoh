@@ -137,7 +137,10 @@ class VerificationEngine:
                     }
                     for result in results
                 ],
-                "note": "Execution diagnostic only; this record is not proof of a passing verification.",
+                "note": (
+                    "Execution diagnostic only; this record is not proof "
+                    "of a passing verification."
+                ),
             }
             summary_path.write_text(
                 json.dumps(summary, indent=2, sort_keys=True),
