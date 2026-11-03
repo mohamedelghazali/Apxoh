@@ -67,16 +67,17 @@ def get_model_adapter(model_id: str) -> Integration:
         )
     # Keep imports static: model identifiers are external input and must never
     # be interpreted as arbitrary Python module paths.
+    adapter: Integration
     if model_id == "claude":
         from arkhon.integrations.models.claude.adapter import ClaudeAdapter
 
         adapter = ClaudeAdapter()
     elif model_id == "openai-o":
-        from arkhon.integrations.models.openai_o.adapter import OpenAIOAdapter
+        from arkhon.integrations._model_impl.openai_o.adapter import OpenAIOAdapter
 
         adapter = OpenAIOAdapter()
     elif model_id == "deepseek-coder":
-        from arkhon.integrations.models.deepseek_coder.adapter import (
+        from arkhon.integrations._model_impl.deepseek_coder.adapter import (
             DeepSeekCoderAdapter,
         )
 
@@ -90,11 +91,11 @@ def get_model_adapter(model_id: str) -> Integration:
 
         adapter = GeminiAdapter()
     elif model_id == "code-llama":
-        from arkhon.integrations.models.code_llama.adapter import CodeLlamaAdapter
+        from arkhon.integrations._model_impl.code_llama.adapter import CodeLlamaAdapter
 
         adapter = CodeLlamaAdapter()
     elif model_id == "qwen-coder":
-        from arkhon.integrations.models.qwen_coder.adapter import QwenCoderAdapter
+        from arkhon.integrations._model_impl.qwen_coder.adapter import QwenCoderAdapter
 
         adapter = QwenCoderAdapter()
     else:
