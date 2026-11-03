@@ -188,7 +188,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
     print("Gates:")
     for gate, verdict in verdicts.items():
         print(f"  {gate}: {verdict.status}")
-    return 0 if verdicts and all(v.status == "PASS" for v in verdicts.values()) else 1
+    if not outcomes_per_domain:
+        print("[BLOCKED] rule-level assessment outcomes are not available")
+    return 1
 
 
 def cmd_report(args: argparse.Namespace) -> int:
