@@ -59,6 +59,7 @@ class EvidenceDraft:
     source_version: str
     commit_sha: str
     status: str
+    root: Path | None = None
     artifacts: list[Artifact] = field(default_factory=list)
     summary: dict[str, int] = field(default_factory=dict)
     rule_ids: list[str] = field(default_factory=list)
@@ -87,7 +88,7 @@ class EvidenceDraft:
             "commit_sha": self.commit_sha,
             "executed_at": _utc_now(),
             "status": self.status,
-            "artifacts": [artifact.to_dict() for artifact in self.artifacts],
+            "artifacts": [artifact.to_dict(root=self.root) for artifact in self.artifacts],
         }
         if self.summary:
             payload["summary"] = self.summary
@@ -131,4 +132,5 @@ class EvidenceCollector:
             source_version=source_version,
             commit_sha=commit_sha,
             status=status,
+            root=self._root,
         )

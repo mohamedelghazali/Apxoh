@@ -25,6 +25,11 @@ REQUIRED_RULE_IDS = (
     "TSAR-SEC-ASVS-V2",
 )
 FRESHNESS_HOURS = 168
+
+
+class TsarFindingsError(SecurityError):
+    """Verified TSAR evidence contains unresolved critical or high findings."""
+
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _SEMVER_RE = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?")
@@ -166,10 +171,12 @@ def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
         raise EvidenceStaleError(f"TSAR evidence is stale: {age:.1f}h, maximum {FRESHNESS_HOURS}h")
 
 
-def _check_required_rules(rule_ids: tuple[str, ...]) -> None:
-    """Ensure every required TSAR rule ID is present in the evidence."""
+def _check_required_rules(
+    rule_ids: tuple[str, ...], required_rule_ids: tuple[str, ...] = REQUIRED_RULE_IDS
+) -> None:
+    """Ensure every policy-required TSAR rule ID is present in the evidence."""
     present = set(rule_ids)
-    missing = [rule_id for rule_id in REQUIRED_RULE_IDS if rule_id not in present]
+    missing = [rule_id for rule_id in required_rule_ids if rule_id not in present]
     if missing:
         raise SecurityError(f"TSAR evidence missing required rule_ids: {missing}")
 
@@ -219,7 +226,7 @@ def verify_tsar_evidence(
         )
     _check_version(evidence.tsar_version, minimum_version, maximum_version)
     _check_freshness(evidence.executed_at, now=now)
-    _check_required_rules(evidence.rule_ids)
+    _check_required_rules(evidence.rule_ids, required_rule_ids)
     _check_artifacts(evidence.artifacts, evidence_root)
 
     if evidence.status not in {"PASS", "FAIL", "BLOCKED"}:
@@ -227,7 +234,7 @@ def verify_tsar_evidence(
     critical = evidence.summary.get("critical", 0)
     high = evidence.summary.get("high", 0)
     if critical or high:
-        raise SecurityError(
+        raise TsarFindingsError(
             f"TSAR reports unresolved critical/high findings: critical={critical}, high={high}"
         )
     logger.info("TSAR evidence %s verified", evidence.evidence_id)

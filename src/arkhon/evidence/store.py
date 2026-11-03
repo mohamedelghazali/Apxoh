@@ -40,7 +40,16 @@ class EvidenceStore:
     """Append-only evidence store scoped to a project."""
 
     def __init__(self, root: Path) -> None:
-        self._root = Path(root).resolve() / ".arkhon" / "evidence"
+        self._project_root = Path(root).resolve()
+        self._root = self._project_root / ".arkhon" / "evidence"
+
+    def _resolved_root(self) -> Path:
+        root = self._root.resolve()
+        try:
+            root.relative_to(self._project_root)
+        except ValueError as exc:
+            raise EvidenceError("evidence root escapes project root") from exc
+        return root
 
     @property
     def root(self) -> Path:
@@ -49,7 +58,13 @@ class EvidenceStore:
     def _domain_dir(self, domain: str) -> Path:
         if not isinstance(domain, str) or not domain or not _SAFE_ID.fullmatch(domain):
             raise EvidenceError(f"invalid domain: {domain!r}")
-        return self._root / domain
+        root = self._resolved_root()
+        candidate = (self._root / domain).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError as exc:
+            raise EvidenceError(f"evidence domain escapes evidence root: {domain!r}") from exc
+        return candidate
 
     @staticmethod
     def _validate_id(evidence_id: object) -> str:
@@ -63,7 +78,10 @@ class EvidenceStore:
         evidence_id = self._validate_id(evidence.get("evidence_id"))
         target_dir = self._domain_dir(domain)
         target_dir.mkdir(parents=True, exist_ok=True)
+        target_dir = self._domain_dir(domain)
         target = target_dir / f"{evidence_id}.json"
+        if target.is_symlink():
+            raise EvidenceTamperedError(f"refusing symlinked evidence record: {target}")
         payload = json.dumps(evidence, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
         new_hash = hashlib.sha256(payload).hexdigest()
         if target.exists():
@@ -84,7 +102,10 @@ class EvidenceStore:
 
     def read(self, domain: str, evidence_id: str) -> EvidenceRecord:
         safe_id = self._validate_id(evidence_id)
-        path = self._domain_dir(domain) / f"{safe_id}.json"
+        domain_root = self._domain_dir(domain)
+        path = domain_root / f"{safe_id}.json"
+        if path.is_symlink():
+            raise EvidenceTamperedError(f"evidence record is a symlink: {path}")
         if not path.is_file():
             raise EvidenceError(f"evidence not found: {safe_id}")
         try:
@@ -97,19 +118,28 @@ class EvidenceStore:
         return EvidenceRecord(path=path, data=data)
 
     def iter_records(self, domain: str | None = None) -> Iterator[EvidenceRecord]:
-        roots = [self._root] if domain is None else [self._domain_dir(domain)]
+        roots = [self._resolved_root()] if domain is None else [self._domain_dir(domain)]
         for base in roots:
             if not base.is_dir():
                 continue
             for path in sorted(base.rglob("*.json")):
+                if path.is_symlink():
+                    raise EvidenceTamperedError(f"evidence record is a symlink: {path}")
+                resolved_path = path.resolve()
                 try:
-                    with path.open("r", encoding="utf-8") as stream:
+                    resolved_path.relative_to(base.resolve())
+                except ValueError as exc:
+                    raise EvidenceTamperedError(
+                        f"evidence record escapes evidence root: {path}"
+                    ) from exc
+                try:
+                    with resolved_path.open("r", encoding="utf-8") as stream:
                         data = json.load(stream)
                 except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                     raise EvidenceTamperedError(f"evidence record is unreadable: {path}") from exc
                 if not isinstance(data, dict):
                     raise EvidenceTamperedError(f"evidence record is not an object: {path}")
-                yield EvidenceRecord(path=path, data=data)
+                yield EvidenceRecord(path=resolved_path, data=data)
 
     def latest_for_commit(self, domain: str, commit_sha: str) -> EvidenceRecord | None:
         latest: EvidenceRecord | None = None
