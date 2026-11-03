@@ -9,6 +9,7 @@ import pytest
 import yaml
 
 from arkhon.cli import _commit_sha, main
+from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
 
 
@@ -97,11 +98,13 @@ def test_report_rejects_missing_project_and_missing_evidence(
 ) -> None:
     assert main(["report", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
-    with pytest.raises(Exception, match="no evidence"):
+    with pytest.raises(EvidenceError, match="no evidence"):
         main(["report", str(tmp_path)])
 
 
-def test_audit_passes_with_committed_tests(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_audit_passes_with_committed_tests(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     _git_project(tmp_path, with_tests=True)
     assert main(["audit", str(tmp_path), "--domain", "testing"]) == 0
     output = capsys.readouterr().out
