@@ -65,10 +65,10 @@ def test_configure_logging_rejects_bad_values_and_installs_json_handler(
             self.handlers = []
             self.level = logging.INFO
 
-        def setLevel(self, level: str) -> None:
+        def setLevel(self, level: str) -> None:  # noqa: N802
             self.level = level
 
-        def addHandler(self, handler: logging.Handler) -> None:
+        def addHandler(self, handler: logging.Handler) -> None:  # noqa: N802
             self.handlers.append(handler)
 
     fake_root = FakeRoot()
