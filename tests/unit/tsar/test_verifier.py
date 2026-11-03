@@ -189,7 +189,7 @@ def test_parse_payload_rejects_invalid_shapes_and_summary() -> None:
     payload = {
         "evidence_id": "E1", "tsar_version": "1.2.0", "commit_sha": "a" * 40,
         "executed_at": "2026-11-01T00:00:00Z", "status": "PASS",
-        "rule_ids": list(REQUIRED_RULE_IDS), "summary": {"critical": True},
+        "rule_ids": list(REQUIRED_RULE_IDS), "findings": [], "summary": {"critical": True},
         "artifacts": [{"path": "a", "sha256": "a" * 64}],
     }
     with pytest.raises(SecurityError, match="summary counts"):
