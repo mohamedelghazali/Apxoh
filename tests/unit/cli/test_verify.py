@@ -26,7 +26,9 @@ def _init_project(tmp_path: Path, *, with_tests: bool = False) -> None:
         (tmp_path / "tests" / "test_sample.py").write_text(
             "def test_sample():\n    assert 1 + 1 == 2\n", encoding="utf-8")
     def git_run(args: list[str]) -> None:
-        subprocess.run([git, *args], cwd=tmp_path, check=True)
+        subprocess.run(  # noqa: S603 - resolved git executable; fixed test arguments
+            [git, *args], cwd=tmp_path, check=True
+        )
     git_run(["init", "-q"])
     git_run(["config", "user.email", "test@example.com"])
     git_run(["config", "user.name", "Test"])
