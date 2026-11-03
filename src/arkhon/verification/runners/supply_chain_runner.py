@@ -63,13 +63,17 @@ def _tag_commit_sha(project_root: Path, source_tag: str) -> str | None:
 
 
 def _safe_directory(root: Path, path: Path) -> Path | None:
+    """Create a directory only after proving its resolved path stays in root."""
     try:
+        resolved_root = root.resolve()
+        resolved_before = path.resolve()
+        resolved_before.relative_to(resolved_root)
         path.mkdir(parents=True, exist_ok=True)
-        resolved = path.resolve()
-        resolved.relative_to(root.resolve())
+        resolved_after = path.resolve()
+        resolved_after.relative_to(resolved_root)
     except (OSError, ValueError):
         return None
-    return resolved
+    return resolved_after
 
 
 def _safe_file(root: Path, value: object) -> Path | None:
