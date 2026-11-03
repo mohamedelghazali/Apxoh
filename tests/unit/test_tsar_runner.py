@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from arkhon.core.errors import SecurityError
 from arkhon.evidence.integrity import sha256_of
 from arkhon.integrations.tsar.adapter import TsarAdapter
 from arkhon.integrations.tsar.verifier import REQUIRED_RULE_IDS
