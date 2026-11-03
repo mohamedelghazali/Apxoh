@@ -9,7 +9,6 @@ import pytest
 from arkhon.core.errors import ConfigError
 from arkhon.language_support.registry import (
     LanguageDefinition,
-    LanguageRegistry,
     load_registry,
 )
 

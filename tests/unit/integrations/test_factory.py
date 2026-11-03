@@ -5,19 +5,12 @@ from __future__ import annotations
 import pytest
 
 from arkhon.integrations.models import (
-
     get_model_adapter,
-
     list_models,
-
 )
-
 from arkhon.integrations.platforms import (
-
     get_platform_adapter,
-
     list_platforms,
-
 )
 
 EXPECTED_MODELS = {

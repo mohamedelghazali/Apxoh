@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
-from typing import Mapping
 
 from arkhon.core.errors import RuleError, RuleNotFoundError
 from arkhon.rules.loader import Rule, load_rules_dir

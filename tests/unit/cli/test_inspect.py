@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-
 from pathlib import Path
 
 import pytest
 
 from arkhon.cli import main
+
 
 def test_inspect_not_a_directory(
 

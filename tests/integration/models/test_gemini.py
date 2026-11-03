@@ -5,16 +5,12 @@ from __future__ import annotations
 import pytest
 
 from arkhon.integrations.models.gemini.adapter import GeminiAdapter
-
 from tests.fixtures.mock_http import (
-
     make_http_error,
-
     make_json_response,
-
     patch_urlopen,
-
 )
+
 
 def test_info() -> None:
 

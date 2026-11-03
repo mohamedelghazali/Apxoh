@@ -4,7 +4,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from arkhon.core.constants import (
-    ALL_ENFORCEMENT, ALL_RULE_DOMAINS, ALL_SEVERITIES, ALL_RULE_STATUSES,
+    ALL_ENFORCEMENT,
+    ALL_RULE_DOMAINS,
+    ALL_RULE_STATUSES,
+    ALL_SEVERITIES,
     DOMAIN_RULE_PREFIX,
 )
 from arkhon.rules.loader import Rule

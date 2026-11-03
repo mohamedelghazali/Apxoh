@@ -4,7 +4,10 @@ from __future__ import annotations
 import pytest
 
 from arkhon.assessment.gates import (
-    GATE_DOMAINS, RuleOutcome, evaluate_all_gates, evaluate_gate,
+    GATE_DOMAINS,
+    RuleOutcome,
+    evaluate_all_gates,
+    evaluate_gate,
 )
 from arkhon.core.errors import GateError
 

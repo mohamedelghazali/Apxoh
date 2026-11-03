@@ -9,13 +9,10 @@ Model-specific behavior lives in the per-model test files.
 from __future__ import annotations
 
 import ast
-
 import re
-
 from pathlib import Path
 
 import pytest
-
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]

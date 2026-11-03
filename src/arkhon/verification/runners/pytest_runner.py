@@ -5,8 +5,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import defusedxml.ElementTree as ET
 from pathlib import Path
+
+import defusedxml.ElementTree as ET
 
 from arkhon.core.logging import get_logger
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult

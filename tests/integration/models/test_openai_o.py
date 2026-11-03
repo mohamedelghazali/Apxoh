@@ -14,19 +14,14 @@ from __future__ import annotations
 
 import json
 
-from unittest.mock import patch
-
 import pytest
 
 from arkhon.integrations.models.openai_o.adapter import OpenAIOAdapter
-
 from tests.fixtures.mock_http import (
-
     make_json_response,
-
     patch_urlopen,
-
 )
+
 
 def test_info() -> None:
 

@@ -7,14 +7,11 @@ from pathlib import Path
 import pytest
 
 from arkhon.integrations.base import (
-
     Integration,
-
     IntegrationInfo,
-
     IntegrationResponse,
-
 )
+
 
 def test_integration_info_is_frozen() -> None:
 

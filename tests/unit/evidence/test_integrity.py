@@ -8,7 +8,10 @@ import pytest
 
 from arkhon.core.errors import EvidenceError, EvidenceStaleError, EvidenceTamperedError
 from arkhon.evidence.integrity import (
-    sha256_of, verify_artifact, verify_bundle, verify_freshness,
+    sha256_of,
+    verify_artifact,
+    verify_bundle,
+    verify_freshness,
 )
 
 

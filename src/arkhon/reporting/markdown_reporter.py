@@ -1,8 +1,10 @@
 """Markdown report generator."""
 from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
 from arkhon.core.logging import get_logger
 from arkhon.reporting.json_reporter import JsonReporter
 

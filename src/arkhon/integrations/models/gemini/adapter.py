@@ -4,8 +4,8 @@ from __future__ import annotations
 import http.client
 import json
 import os
-import ssl
 import re
+import ssl
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any

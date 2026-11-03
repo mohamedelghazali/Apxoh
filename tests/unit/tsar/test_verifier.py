@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from pathlib import Path
 
 import pytest
@@ -52,25 +53,25 @@ def test_check_version_invalid_string() -> None:
 
 
 def test_check_freshness_ok() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 2, 12, 0, 0, tzinfo=UTC)
     _check_freshness("2026-11-02T00:00:00Z", now=now)
 
 
 def test_check_freshness_stale() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 11, 20, 0, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 20, 0, 0, 0, tzinfo=UTC)
     with pytest.raises(EvidenceStaleError):
         _check_freshness("2026-11-01T00:00:00Z", now=now)
 
 
 def test_check_freshness_boundary() -> None:
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     executed = "2026-11-01T00:00:00Z"
-    executed_dt = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    executed_dt = datetime(2026, 11, 1, tzinfo=UTC)
 
     just_at_limit = executed_dt + timedelta(hours=FRESHNESS_HOURS)
     _check_freshness(executed, now=just_at_limit)

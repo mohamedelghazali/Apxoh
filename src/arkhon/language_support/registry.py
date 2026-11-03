@@ -6,10 +6,11 @@ typed object. Provides lookups by id, extension, and build file.
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Iterator, Mapping
+from typing import Any
 
 import yaml
 

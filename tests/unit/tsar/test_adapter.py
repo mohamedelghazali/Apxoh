@@ -6,8 +6,6 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from arkhon.integrations.tsar.adapter import TsarAdapter, TsarConfig
 
 

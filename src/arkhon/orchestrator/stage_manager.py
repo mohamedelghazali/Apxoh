@@ -1,7 +1,9 @@
 """Stage manager for lifecycle transitions."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
+
 from arkhon.assessment.gates import GateVerdict
 from arkhon.core.logging import get_logger
 from arkhon.orchestrator.lifecycle import LifecycleState, Stage, stage_definition

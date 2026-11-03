@@ -4,9 +4,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from arkhon.core.errors import EvidenceError, EvidenceTamperedError
 from arkhon.core.logging import get_logger

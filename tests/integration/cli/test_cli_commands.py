@@ -1,9 +1,13 @@
 """Integration tests for Apxoh CLI commands."""
 from __future__ import annotations
+
 import json
 from pathlib import Path
+
 import pytest
+
 from arkhon.cli import main
+
 
 def test_version_default(capsys:pytest.CaptureFixture[str])->None:
     assert main(["version"])==0

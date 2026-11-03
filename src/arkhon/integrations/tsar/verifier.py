@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -154,10 +154,10 @@ def _check_freshness(executed_at: str, *, now: datetime | None = None) -> None:
         raise EvidenceStaleError(f"invalid executed_at: {executed_at!r}") from exc
     if executed.tzinfo is None:
         raise EvidenceStaleError("executed_at must include a timezone")
-    now_dt = now or datetime.now(timezone.utc)
+    now_dt = now or datetime.now(UTC)
     if now_dt.tzinfo is None:
         raise ValueError("now must be timezone-aware")
-    age = (now_dt - executed.astimezone(timezone.utc)).total_seconds() / 3600
+    age = (now_dt - executed.astimezone(UTC)).total_seconds() / 3600
     if age < 0:
         raise EvidenceStaleError("TSAR evidence timestamp is in the future")
     if age > FRESHNESS_HOURS:

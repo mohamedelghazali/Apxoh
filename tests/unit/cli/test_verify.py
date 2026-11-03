@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-
 from pathlib import Path
 
 import pytest
 
 from arkhon.cli import main
+
 
 def _init_project(tmp_path: Path) -> None:
 
@@ -34,7 +34,7 @@ def _init_project(tmp_path: Path) -> None:
 
     subprocess.run(
 
-        ["git", "config", "user.email", "test\@example.com"],
+        ["git", "config", "user.email", r"test\@example.com"],
 
         cwd=tmp_path, check=True,
 

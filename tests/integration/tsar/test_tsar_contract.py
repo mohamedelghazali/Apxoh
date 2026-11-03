@@ -1,7 +1,7 @@
 """TSAR contract tests; no installed TSAR binary is required."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -48,7 +48,7 @@ def test_contract_requires_security_gate() -> None:
 def _valid_payload(tmp_path: Path, commit_sha: str) -> dict:
     artifact = tmp_path / "scan.json"
     artifact.write_text('{"scan": "complete"}', encoding="utf-8")
-    executed = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    executed = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     return {
         "evidence_id": "EVID-TSAR-ABC123", "tsar_version": "1.2.3",
         "commit_sha": commit_sha, "executed_at": executed, "status": "PASS",
@@ -96,7 +96,7 @@ def test_verifier_rejects_stale_evidence(tmp_path: Path) -> None:
 
 def test_verifier_rejects_future_timestamp(tmp_path: Path) -> None:
     payload = _valid_payload(tmp_path, "a" * 40)
-    payload["executed_at"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    payload["executed_at"] = (datetime.now(UTC) + timedelta(days=1)).isoformat()
     with pytest.raises(EvidenceStaleError, match="future"):
         verify_tsar_evidence(payload, expected_commit_sha="a" * 40, evidence_root=tmp_path)
 

@@ -10,9 +10,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from arkhon.core.constants import (
-    ENFORCEMENT_BLOCKING, ENFORCEMENT_CRITICAL, ENFORCEMENT_REQUIRED,
-    SEVERITY_CRITICAL, SEVERITY_HIGH, STATUS_BLOCKED, STATUS_FAIL,
-    STATUS_NOT_APPLICABLE, STATUS_PASS,
+    ENFORCEMENT_BLOCKING,
+    ENFORCEMENT_CRITICAL,
+    ENFORCEMENT_REQUIRED,
+    SEVERITY_CRITICAL,
+    SEVERITY_HIGH,
+    STATUS_BLOCKED,
+    STATUS_FAIL,
+    STATUS_NOT_APPLICABLE,
+    STATUS_PASS,
 )
 from arkhon.core.errors import GovernanceError
 from arkhon.core.logging import get_logger

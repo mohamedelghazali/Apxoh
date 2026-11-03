@@ -1,10 +1,21 @@
 """Tests for lifecycle and stage manager."""
 from __future__ import annotations
+
 from pathlib import Path
+
 import pytest
+
 from arkhon.assessment.gates import GateVerdict, RuleOutcome, evaluate_gate
-from arkhon.orchestrator.lifecycle import STAGE_ORDER,LifecycleState,Stage,next_stage,previous_stage,stage_definition
+from arkhon.orchestrator.lifecycle import (
+    STAGE_ORDER,
+    LifecycleState,
+    Stage,
+    next_stage,
+    previous_stage,
+    stage_definition,
+)
 from arkhon.orchestrator.stage_manager import StageManager
+
 
 def test_stage_order_has_10_stages()->None:
     assert len(STAGE_ORDER)==10

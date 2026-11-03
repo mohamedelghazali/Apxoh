@@ -4,8 +4,10 @@ The lifecycle is the ordered set of stages a governed project passes
 through. Each stage has entry criteria, exit criteria, and a gate.
 """
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
+
 
 class Stage(str, Enum):
     PROJECT_INIT = "project-initialization"

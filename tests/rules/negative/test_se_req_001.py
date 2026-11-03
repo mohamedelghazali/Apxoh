@@ -4,11 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from arkhon.rules.validator import validate_semantics
 from arkhon.rules.loader import Rule
-
+from arkhon.rules.validator import validate_semantics
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RULE_PATH = REPO_ROOT / "languages" / "python" / "rules" / "SE-REQ-001-verifiable-requirements.yaml"

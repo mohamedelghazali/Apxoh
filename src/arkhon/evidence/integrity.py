@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -88,13 +88,13 @@ def verify_freshness(
 
     try:
         executed = parse(executed_at)
-        now = parse(now_iso) if now_iso else datetime.now(timezone.utc)
+        now = parse(now_iso) if now_iso else datetime.now(UTC)
     except (TypeError, ValueError) as exc:
         raise EvidenceError(f"invalid timestamp: {exc}") from exc
     if executed.tzinfo is None:
-        executed = executed.replace(tzinfo=timezone.utc)
+        executed = executed.replace(tzinfo=UTC)
     if now.tzinfo is None:
-        now = now.replace(tzinfo=timezone.utc)
+        now = now.replace(tzinfo=UTC)
     age = (now - executed).total_seconds() / 3600.0
     if age < 0:
         raise EvidenceError("evidence timestamp is in the future")

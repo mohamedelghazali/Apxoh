@@ -4,8 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from arkhon.core.constants import (
-    ENFORCEMENT_BLOCKING, ENFORCEMENT_CRITICAL, ENFORCEMENT_REQUIRED,
-    STATUS_BLOCKED, STATUS_FAIL, STATUS_NOT_APPLICABLE, STATUS_PASS,
+    ENFORCEMENT_BLOCKING,
+    ENFORCEMENT_CRITICAL,
+    ENFORCEMENT_REQUIRED,
+    STATUS_BLOCKED,
+    STATUS_FAIL,
+    STATUS_NOT_APPLICABLE,
+    STATUS_PASS,
 )
 from arkhon.core.errors import GateError
 

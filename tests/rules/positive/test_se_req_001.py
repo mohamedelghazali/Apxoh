@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
 from arkhon.rules.loader import load_rule_file
 from arkhon.rules.validator import validate_rule
 

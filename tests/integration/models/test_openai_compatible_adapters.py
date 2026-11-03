@@ -9,19 +9,12 @@ from __future__ import annotations
 import pytest
 
 from arkhon.integrations.models.code_llama.adapter import CodeLlamaAdapter
-
 from arkhon.integrations.models.deepseek_coder.adapter import (
-
     DeepSeekCoderAdapter,
-
 )
-
 from arkhon.integrations.models.gpt.adapter import GptAdapter
-
 from arkhon.integrations.models.kimi.adapter import KimiAdapter
-
 from arkhon.integrations.models.qwen_coder.adapter import QwenCoderAdapter
-
 from tests.fixtures.mock_http import make_json_response, patch_urlopen
 
 ADAPTER_CASES = [

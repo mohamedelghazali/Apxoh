@@ -29,7 +29,7 @@ class FakeConnection:
 
     def __init__(
         self,
-        response: "FakeResponse | Callable[..., FakeResponse] | Exception",
+        response: FakeResponse | Callable[..., FakeResponse] | Exception,
         calls: list[dict[str, Any]],
         timeout: int | float | None = None,
     ) -> None:

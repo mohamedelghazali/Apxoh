@@ -16,16 +16,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 import yaml
 
 from arkhon.integrations.platforms.github_copilot.adapter import (
-
     INSTRUCTIONS_REL_PATH,
-
     GitHubCopilotAdapter,
-
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]

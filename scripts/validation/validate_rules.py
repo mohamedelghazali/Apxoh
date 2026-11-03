@@ -1,6 +1,9 @@
 """Validate YAML rule files for syntax."""
 from pathlib import Path
+
 import yaml
+
+
 def main() -> int:
     files=list(Path("rules").rglob("*.yaml"))
     for path in files: yaml.safe_load(path.read_text(encoding="utf-8"))

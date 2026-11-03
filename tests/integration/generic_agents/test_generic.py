@@ -6,6 +6,7 @@ from pathlib import Path
 
 from arkhon.integrations.generic_agents.adapter import GenericAgentAdapter
 
+
 def test_info() -> None:
 
     info = GenericAgentAdapter().info

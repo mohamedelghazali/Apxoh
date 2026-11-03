@@ -4,7 +4,10 @@ from __future__ import annotations
 import pytest
 
 from arkhon.assessment.scorer import (
-    TOTAL_WEIGHT, WEIGHTS, score_from_outcomes, score_from_ratios,
+    TOTAL_WEIGHT,
+    WEIGHTS,
+    score_from_outcomes,
+    score_from_ratios,
 )
 from arkhon.core.errors import AssessmentError
 
@@ -23,7 +26,7 @@ def test_weights_match_charter() -> None:
         "security": 20, "performance": 10, "reliability": 10, "scalability": 10,
         "documentation_deployment_maintenance": 10,
     }
-    assert WEIGHTS == expected
+    assert expected == WEIGHTS
 
 
 def test_full_pass_scores_100() -> None:

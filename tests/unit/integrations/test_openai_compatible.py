@@ -2,29 +2,20 @@
 
 from __future__ import annotations
 
-import os
-
 import urllib.error
 
 import pytest
 
 from arkhon.integrations.models._openai_compatible import (
-
     OpenAICompatibleAdapter,
-
     OpenAICompatibleConfig,
-
 )
-
 from tests.fixtures.mock_http import (
-
     make_http_error,
-
     make_json_response,
-
     patch_urlopen,
-
 )
+
 
 def _config(api_key_required: bool = True) -> OpenAICompatibleConfig:
 

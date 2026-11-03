@@ -8,6 +8,7 @@ Updates VERSION, pyproject.toml, src/arkhon/__init__.py, and CHANGELOG.md.
 It does not commit, tag, or push.
 """
 from __future__ import annotations
+
 import argparse
 import re
 import subprocess

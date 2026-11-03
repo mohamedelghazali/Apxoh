@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +29,7 @@ class Exception:
     status: str = "active"
 
     def is_expired(self, *, now: datetime | None = None) -> bool:
-        now_dt = now or datetime.now(timezone.utc)
+        now_dt = now or datetime.now(UTC)
         expires = _parse_iso(self.expires_at)
         return now_dt > expires
 
@@ -42,7 +42,7 @@ def _parse_iso(s: str) -> datetime:
         s = s[:-1] + "+00:00"
     dt = datetime.fromisoformat(s)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
