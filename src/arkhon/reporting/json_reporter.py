@@ -100,7 +100,7 @@ class JsonReporter:
                     f"report is for {commit_sha}"
                 )
             status = record.data.get("status")
-            if status not in _ALLOWED_STATUSES:
+            if not isinstance(status, str) or status not in _ALLOWED_STATUSES:
                 raise EvidenceError(f"evidence {record.evidence_id} has invalid status: {status!r}")
             try:
                 verify_bundle(
