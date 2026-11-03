@@ -51,7 +51,7 @@ def test_cli_assess_counts_only_pass_evidence_and_verify_missing_project(
     store.write("testing", {"evidence_id": "EVID-ASSESS-PASS", "status": "PASS"})
     store.write("testing", {"evidence_id": "EVID-ASSESS-FAIL", "status": "FAIL"})
     store.write("unknown-domain", {"evidence_id": "EVID-ASSESS-OTHER", "status": "PASS"})
-    assert main(["assess", str(tmp_path)]) == 0
+    assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
     assert "Score:" in output
     assert main(["verify", str(tmp_path / "missing"), "--domain", "testing"]) == 1
