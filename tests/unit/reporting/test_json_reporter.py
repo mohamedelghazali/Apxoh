@@ -68,7 +68,7 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
     provenance = write("dist/provenance.intoto.jsonl", "provenance")
     signature = write("dist/release.whl.sigstore.json", "signature")
     sbom = write(
-        ".arkhon/reports/supply-chain/sbom.cdx.json",
+        ".arkhon/reports/supply-chain/sbom-fixture.cdx.json",
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
