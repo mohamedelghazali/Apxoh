@@ -163,3 +163,12 @@ def test_exceptions_list_rejects_non_iterable_exceptions(
     registry.write_text("exceptions: 42\n", encoding="utf-8")
     assert main(["exceptions", "list", "--registry", str(registry)]) == 1
     assert "cannot load exception registry" in capsys.readouterr().err
+
+
+def test_status_text_reports_empty_evidence(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["status", str(tmp_path)]) == 0
+    output = capsys.readouterr().out
+    assert "Evidence records: 0" in output
+    assert "[INFO] no evidence has been recorded yet" in output
