@@ -117,7 +117,9 @@ def verdict(name: str, status: str, reason: str = "") -> GateVerdict:
         ),
     ],
 )
-def test_decision_paths(gates: dict[str, GateVerdict], points: float, risks: int, expected: str) -> None:
+def test_decision_paths(
+    gates: dict[str, GateVerdict], points: float, risks: int, expected: str
+) -> None:
     assert decide(score(points), gates, risks).decision == expected
 
 
@@ -449,7 +451,9 @@ def test_ruff_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
 
-def test_ruff_runner_timeout_and_start_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ruff_runner_timeout_and_start_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
     )
@@ -483,7 +487,9 @@ def test_mypy_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
 
-def test_mypy_runner_timeout_and_start_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_mypy_runner_timeout_and_start_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
     )
