@@ -83,7 +83,7 @@ def _verify_source_tag_commit(
     if git is None:
         raise EvidenceError("git is required to verify release-tag commit binding")
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
             [git, "rev-parse", f"refs/tags/{source_tag}^{{commit}}"],
             cwd=evidence_root,
             capture_output=True,
