@@ -204,7 +204,6 @@ def test_audit_rejects_different_existing_evidence(tmp_path: Path, monkeypatch) 
 
 
 def test_audit_handles_start_and_directory_errors(tmp_path: Path, monkeypatch) -> None:
-    import subprocess
     from pathlib import Path as PathType
 
     monkeypatch.setattr(
