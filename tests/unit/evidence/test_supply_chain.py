@@ -11,7 +11,7 @@ import pytest
 
 from arkhon.core.errors import EvidenceError, EvidenceTamperedError
 from arkhon.evidence.supply_chain import (
-    IDENTITY_REGEXP,
+    identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
     verify_cyclonedx_sbom,
@@ -58,7 +58,8 @@ def _attestation_fixture(root: Path) -> tuple[Path, list[dict]]:
         "commit_sha": SHA,
         "source_uri": SOURCE_URI,
         "oidc_issuer": OIDC_ISSUER,
-        "certificate_identity_regexp": IDENTITY_REGEXP,
+        "source_tag": "v1.2.3",
+        "certificate_identity_regexp": identity_regexp_for_tag("v1.2.3"),
         "artifact": "dist/release.whl",
         "artifact_sha256": _sha(files["artifact"]),
         "provenance": "dist/provenance.intoto.jsonl",
@@ -151,7 +152,9 @@ def test_attestation_reverification_accepts_and_runs_both_tools(
     )
     assert len(calls) == 2
     assert calls[0][1] == "verify-artifact"
+    assert calls[0][calls[0].index("--source-tag") + 1] == "v1.2.3"
     assert calls[1][1] == "verify-blob"
+    assert "v1\\.2\\.3" in calls[1][calls[1].index("--certificate-identity-regexp") + 1]
 
 
 def test_attestation_report_rejects_unreadable_or_wrong_schema(tmp_path: Path) -> None:
