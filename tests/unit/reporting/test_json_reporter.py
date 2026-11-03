@@ -209,7 +209,9 @@ def test_build_approves_only_when_every_section_has_verified_evidence(
     )
     monkeypatch.setattr(
         "arkhon.evidence.supply_chain.subprocess.run",
-        lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "verified", ""),
+        lambda command, **kwargs: subprocess.CompletedProcess(
+            command, 0, "a" * 40 if command[1] == "rev-parse" else "verified", ""
+        ),
     )
     report = JsonReporter().build(tmp_path)
     assert report["final_decision"] == "APPROVED"
