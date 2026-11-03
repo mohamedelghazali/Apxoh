@@ -9,6 +9,7 @@ provider:
   maximum_version_exclusive: "2.0.0"
   role: "Delegated secret scanning and static security review"
   required_for:
+    - security_gate
     - secret_scanning
     - static_security_review
 consumer:
