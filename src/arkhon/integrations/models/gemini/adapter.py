@@ -97,7 +97,8 @@ class GeminiAdapter(Integration):
         if system:
             payload["systemInstruction"] = {"parts": [{"text": system}]}
 
-        # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected -- explicit default SSL context verifies certificates
+        # Explicit default SSL context verifies peer certificates.
+        # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
         connection = http.client.HTTPSConnection(
             parsed_endpoint.hostname or "",
             parsed_endpoint.port or 443,
