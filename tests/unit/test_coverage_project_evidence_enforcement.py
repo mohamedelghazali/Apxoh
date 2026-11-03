@@ -187,3 +187,34 @@ def test_enforcement_gate_counts_critical_blocking_and_inactive(tmp_path: Path) 
     assert verdict.critical_failures == 1
     assert verdict.blocking_failures == 1
     assert len(verdict.outcomes) == 2
+
+
+def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = EvidenceStore(tmp_path)
+    record = {
+        "evidence_id": "E-RACE",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+    }
+    target = store.root / "testing" / "E-RACE.json"
+    import hashlib
+
+    payload = json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    original_open = Path.open
+
+    def race_open(path: Path, mode: str = "r", *args, **kwargs):
+        if path == target and mode == "xb":
+            target.write_bytes(payload)
+            raise FileExistsError(target)
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", race_open)
+    assert store.write("testing", record) == target
+    assert hashlib.sha256(target.read_bytes()).hexdigest()
+
+    malformed = store.root / "testing" / "array.json"
+    malformed.write_text("[]", encoding="utf-8")
+    with pytest.raises(EvidenceTamperedError, match="not an object"):
+        list(store.iter_records("testing"))
