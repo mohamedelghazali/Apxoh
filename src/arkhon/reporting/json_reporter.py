@@ -49,26 +49,51 @@ FRESHNESS_HOURS = {
 _ALLOWED_STATUSES = {"PASS", "FAIL", "BLOCKED", "NOT_APPLICABLE", "ACCEPTED_RISK"}
 
 
+def _record_timestamp(record: Any) -> datetime:
+    value = record.data.get("executed_at")
+    if not isinstance(value, str):
+        raise EvidenceError(f"evidence {record.evidence_id} has invalid executed_at")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise EvidenceError(f"evidence {record.evidence_id} has invalid executed_at") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise EvidenceError(f"evidence {record.evidence_id} executed_at must include a timezone")
+    return parsed.astimezone(UTC)
+
+
 @dataclass
 class JsonReporter:
     """Writes a JSON report aggregating all evidence."""
 
-    def build(self, project_root: Path) -> dict[str, Any]:
+    def build(
+        self, project_root: Path, expected_commit_sha: str | None = None
+    ) -> dict[str, Any]:
         store = EvidenceStore(project_root)
-        records = list(store.iter_records())
-        if not records:
+        all_records = list(store.iter_records())
+        if not all_records:
             raise EvidenceError(f"no evidence found under {store.root}")
-        commit_sha = records[0].data.get("commit_sha", "")
-        if not isinstance(commit_sha, str) or not re.fullmatch(r"[0-9a-f]{40}", commit_sha):
-            raise EvidenceError("evidence missing valid commit_sha")
-
-        # Validate every record before trusting its status in an assessment.
-        for record in records:
+        for record in all_records:
             record_commit = record.data.get("commit_sha")
             if not isinstance(record_commit, str) or not re.fullmatch(
                 r"[0-9a-f]{40}", record_commit
             ):
                 raise EvidenceError(f"evidence {record.evidence_id} has invalid commit_sha")
+
+        if expected_commit_sha is not None:
+            if not re.fullmatch(r"[0-9a-f]{40}", expected_commit_sha):
+                raise EvidenceError("expected commit_sha is invalid")
+            commit_sha = expected_commit_sha
+        else:
+            latest_record = max(all_records, key=_record_timestamp)
+            commit_sha = latest_record.data["commit_sha"]
+        records = [record for record in all_records if record.data["commit_sha"] == commit_sha]
+        if not records:
+            raise EvidenceError(f"no evidence found for commit {commit_sha}")
+
+        # Validate every selected record before trusting its status in an assessment.
+        for record in records:
+            record_commit = record.data.get("commit_sha")
             if record_commit != commit_sha:
                 raise EvidenceError(
                     f"evidence commit mismatch: {record.evidence_id} is for {record_commit}, "
@@ -138,8 +163,13 @@ class JsonReporter:
         logger.debug("built report with %d evidence records", len(records))
         return report
 
-    def write(self, project_root: Path, output_dir: Path) -> Path:
-        report = self.build(project_root)
+    def write(
+        self,
+        project_root: Path,
+        output_dir: Path,
+        expected_commit_sha: str | None = None,
+    ) -> Path:
+        report = self.build(project_root, expected_commit_sha=expected_commit_sha)
         output_dir.mkdir(parents=True, exist_ok=True)
         target = output_dir / "report.json"
         target.write_text(json.dumps(report, indent=2), encoding="utf-8")
