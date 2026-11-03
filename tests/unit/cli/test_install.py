@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from arkhon.cli import main
-from arkhon.cli import _agent_pack_source
 
 
 def test_project_install_stages_pack_and_manifest(
