@@ -14,12 +14,12 @@ from arkhon.core.errors import (
 )
 from arkhon.evidence.integrity import sha256_of
 from arkhon.integrations.tsar.verifier import (
-    _maximum_version_tuple,
     FRESHNESS_HOURS,
     REQUIRED_RULE_IDS,
     _check_freshness,
     _check_required_rules,
     _check_version,
+    _maximum_version_tuple,
     _parse_tsar_payload,
     verify_tsar_evidence,
 )
