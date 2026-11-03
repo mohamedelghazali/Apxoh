@@ -1,7 +1,7 @@
 # TSAR Integration Guide
 
-**Contract version:** 1.0.0  
-**Implementation status:** Initial adapter and verifier implementation; end-to-end compatibility with a released TSAR CLI is not yet certified.  
+**Contract version:** 1.1.0  
+**Implementation status:** Adapter targets the released TSAR 1.1.x `scan --format sarif` CLI. CI runs a real scanner integration test; this does not imply crypto, dependency, or ASVS coverage.  
 **Last reviewed:** 2026-11-02
 
 ---
@@ -28,15 +28,15 @@ If TSAR is unavailable, its version is incompatible, required evidence is missin
 - A TSAR executable is installed and available on PATH.
 - The installed TSAR release is within the contract range: >=1.1.0 and <2.0.0.
 - The project is a Git checkout with a full 40-character commit SHA.
-- The TSAR CLI supports the documented audit invocation and writes a JSON object to stdout.
+- The TSAR CLI supports `tsar scan <path> --format sarif --output <file>` and writes SARIF 2.1.0.
 
-The CLI invocation and JSON payload are integration assumptions until tested against a real supported TSAR release. A local unit test of the verifier does not prove CLI compatibility.
+The CLI invocation is exercised against the pinned TSAR source revision in the dedicated GitHub Actions end-to-end job. Unit tests alone are not treated as proof of CLI compatibility.
 
 ## 4. Verification sequence
 
 1. Resolve the project commit from Git.
-2. Invoke TSAR with the project root and commit.
-3. Parse stdout as a JSON object.
+2. Invoke TSAR with the project root using its supported `scan` command.
+3. Parse the generated SARIF 2.1.0 file and verify the driver identity and version.
 4. Persist the raw response under .arkhon/evidence/security/.
 5. Validate required fields, commit binding, semantic version, timezone-aware timestamp, freshness, required rule IDs, artifact paths, and SHA-256 hashes.
 6. Reject unresolved critical or high findings.
@@ -63,7 +63,7 @@ The verifier rejects artifact paths that escape the project evidence root and re
 
 integrations/tsar/evidence-mapping.yaml maps TSAR rule identifiers to Apxoh rule identifiers. The mapping preserves the original TSAR finding; it does not imply that Apxoh independently re-ran the scanner rule.
 
-A TSAR finding without a mapping must not silently disappear from governance evaluation. The configured behavior is BLOCKED until the mapping is resolved or an explicit policy is approved.
+A TSAR finding without a mapping must not silently disappear from governance evaluation. The original SARIF rule ID and finding are retained. Apxoh does not invent a mapping for rules absent from its verified mapping registry.
 
 The mapping identifiers are proposed integration data and must be checked against the actual TSAR rule catalogue and Apxoh rule registry before production use.
 
@@ -73,17 +73,21 @@ The default maximum age is 168 hours. Evidence older than this window is BLOCKED
 
 A project may tighten this limit. The verifier must not silently accept a project-specific value greater than the contract maximum. Project-level configuration is not yet wired into this initial verifier; the current constant is 168 hours.
 
-## 8. What TSAR does not prove
+## 8. Coverage boundary
+
+The current TSAR 1.1.x CLI executes secret scanning and static security review. Its SARIF output does not prove cryptographic inventory, dependency vulnerability scanning, authentication/authorization testing, or ASVS compliance. Those controls require separate tools and evidence. The synthetic `TSAR-SCAN-EXECUTED` marker records only that the scanner ran; it is not a claim that every security domain was tested.
+
+## 9. What TSAR does not prove
 
 A successful TSAR scan does not prove the absence of all vulnerabilities or defects. It does not establish architectural soundness, performance, reliability, business correctness, or compliance beyond the tested rule set and scope.
 
-## 9. CI and test coverage
+## 10. CI and test coverage
 
 tests/integration/tsar/test_tsar_contract.py exercises the contract and verifier without requiring the TSAR executable. It is not an end-to-end test of the external CLI.
 
-A separate integration job is still required to install a supported TSAR release, execute a real scan, validate the payload, and retain the resulting evidence. Do not describe that job as active until its workflow exists and a successful run is recorded.
+The `tsar-e2e` workflow job installs the pinned TSAR source checkout, runs the actual CLI against a clean Git fixture, and asserts a verified PASS outcome. Its run must pass before claiming operational compatibility.
 
-## 10. Source files
+## 11. Source files
 
 - integrations/tsar/contract.yaml — desired integration contract
 - integrations/tsar/evidence-mapping.yaml — proposed rule mapping
