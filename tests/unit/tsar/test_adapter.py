@@ -224,5 +224,7 @@ def test_audit_handles_start_and_directory_errors(tmp_path: Path, monkeypatch) -
             raise OSError("read only")
         return original_mkdir(path, *args, **kwargs)
     monkeypatch.setattr(PathType, "mkdir", mkdir)
-    result = TsarAdapter().audit(tmp_path / "other", "b" * 40)
+    project = tmp_path / "other"
+    project.mkdir()
+    result = TsarAdapter().audit(project, "b" * 40)
     assert not result.ok and "cannot prepare" in result.reason
