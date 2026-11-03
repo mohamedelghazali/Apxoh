@@ -10,7 +10,7 @@
 
 Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
 
-The latest `main` commit at this update is `420d8efa5a2c3b7522b61aa9ba3f3f5bda72679c` (merged PRs #57 and #58). At the latest inspection, its commit had 44 check runs: 3 completed successfully and 41 queued. No completed check had failed, but the remaining checks had not run, so full CI success is not claimed.
+The latest `main` commit at this update is `0af8de0710679beac28368298cb301523493df10` (merged PR #61, following #57–#60). The PR-head validation completed successfully for the unit, integration, security, schema, infrastructure, agent/model integration, TSAR, orchestrator, compliance, release-validation, and supply-chain workflows. The Installation Test matrix passed its wheel smoke test, offline check, and all completed OS/Python combinations; the macOS/Python 3.13 job was cancelled and has been re-queued for verification. Full installation-matrix success is therefore still pending.
 
 ---
 
@@ -123,7 +123,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Read back the effective settings and verify that required checks are enforced
 - [ ] First signed release with independently verified provenance
 
-**Status:** Workflow definitions are present. The latest main commit had 44 check runs at the time of inspection: 3 completed successfully and 41 remained queued, with no completed failures. The GitHub branch API reports `main` as `protected: false`, and the repository rulesets endpoint returns an empty list. Branch protection is absent and must be configured before this milestone can close. Do not bypass checks or mark this milestone complete until both CI results and repository enforcement settings are confirmed.
+**Status:** Workflow definitions are present. On the latest validated PR head (merged as `0af8de0710679beac28368298cb301523493df10`), all reported workflows except the Installation Test rerun have completed successfully. The installation matrix's only cancelled combination (macOS/Python 3.13) has been re-queued; its result is pending. The repository rulesets endpoint currently returns an empty list. Direct branch-protection inspection was denied by the connected GitHub integration, so effective protection settings remain unverified. Do not bypass checks or mark this milestone complete until the installation rerun and repository enforcement settings are confirmed.
 
 ---
 
