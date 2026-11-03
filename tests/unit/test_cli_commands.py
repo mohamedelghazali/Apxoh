@@ -207,3 +207,31 @@ def test_report_returns_failure_when_commit_cannot_be_resolved(
     project.mkdir()
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: None)
     assert main(["report", str(project)]) == 1
+
+
+def test_verify_supply_chain_domain_uses_real_assurance_runners(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from arkhon.verification.runners.supply_chain_runner import (
+        SupplyChainAttestationRunner,
+        SyftRunner,
+    )
+
+    _git_project(tmp_path)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    captured: list[type] = []
+
+    def fake_run(_self, *, runners, **_kwargs):
+        captured.extend(type(runner) for runner in runners)
+        return SimpleNamespace(
+            run_id="RUN-SUPPLY-CHAIN",
+            domain="supply-chain",
+            commit_sha="a" * 40,
+            status="BLOCKED",
+            evidence_id="EVID-SUPPLY-CHAIN",
+            results=[],
+        )
+
+    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    assert main(["verify", str(tmp_path), "--domain", "supply-chain"]) == 1
+    assert captured == [SyftRunner, SupplyChainAttestationRunner]

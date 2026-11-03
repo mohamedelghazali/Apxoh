@@ -1,7 +1,7 @@
 # Apxoh Supply Chain Security Policy
 
 **Version:** 1.0
-**Status:** Policy baseline — release controls and attestations require operational verification
+**Status:** Operational controls implemented; release-specific SLSA/Sigstore evidence is verified per tagged release
 **Owner:** Security Lead (TBD)
 **Last reviewed:** 2026-11-01
 **Review cadence:** Every release, and after any supply chain incident

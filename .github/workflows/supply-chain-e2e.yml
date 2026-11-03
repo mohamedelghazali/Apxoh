@@ -1,0 +1,54 @@
+name: Supply-chain assurance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syft-sbom:
+    name: Real Syft SBOM generation and commit binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+      - name: Install pinned Syft
+        run: |
+          go install github.com/anchore/syft/cmd/syft@v1.56.0
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+      - name: Install Apxoh
+        run: python -m pip install -e ".[dev]"
+      - name: Generate and validate SBOM through the Apxoh runner
+        run: |
+          python - <<'PY'
+          import subprocess
+          from pathlib import Path
+          from arkhon.evidence.supply_chain import verify_cyclonedx_sbom
+          from arkhon.verification.runners.base import RunnerOutcome
+          from arkhon.verification.runners.supply_chain_runner import SyftRunner
+
+          root = Path.cwd()
+          commit = subprocess.run(
+              ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+          ).stdout.strip()
+          result = SyftRunner().run(root)
+          print(f"Syft outcome: {result.outcome.value}")
+          print(f"Reason: {result.reason}")
+          if result.outcome is not RunnerOutcome.PASS or len(result.artifacts) != 1:
+              raise SystemExit("Syft did not produce a validated SBOM")
+          verify_cyclonedx_sbom(result.artifacts[0], expected_commit_sha=commit)
+          print(f"Validated CycloneDX SBOM: {result.artifacts[0]}")
+          PY

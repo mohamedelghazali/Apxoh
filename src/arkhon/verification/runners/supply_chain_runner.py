@@ -16,8 +16,8 @@ logger = get_logger("verification.runners.supply_chain")
 _SOURCE_URI = "github.com/mohamedelghazali/Apxoh"
 _OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 _IDENTITY_REGEXP = (
-    r"^https://github\\.com/mohamedelghazali/Apxoh/"
-    r"\\.github/workflows/slsa-release\\.yml@refs/tags/v.*$"
+    r"^https://github\.com/mohamedelghazali/Apxoh/"
+    r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
 )
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 
@@ -39,6 +39,16 @@ def _commit_sha(project_root: Path) -> str | None:
         return None
     value = result.stdout.strip()
     return value if _COMMIT_RE.fullmatch(value) else None
+
+
+def _safe_directory(root: Path, path: Path) -> Path | None:
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        resolved = path.resolve()
+        resolved.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved
 
 
 def _safe_file(root: Path, value: object) -> Path | None:
@@ -130,11 +140,14 @@ class SyftRunner(Runner):
         ]
         properties.append({"name": "arkhon:commit-sha", "value": commit})
         properties.append({"name": "arkhon:generator", "value": "Apxoh SyftRunner"})
-        output_dir = root / ".arkhon" / "reports" / "supply-chain"
+        output_dir = _safe_directory(root, root / ".arkhon" / "reports" / "supply-chain")
+        if output_dir is None:
+            return RunnerResult(self.name, RunnerOutcome.BLOCKED, "SBOM output directory escapes project root")
+        output = output_dir / f"sbom-{commit[:12]}.cdx.json"
+        if output.is_symlink():
+            return RunnerResult(self.name, RunnerOutcome.BLOCKED, "refusing symlinked SBOM output")
         try:
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output = output_dir / f"sbom-{commit[:12]}.cdx.json"
-            output.write_text(json.dumps(bom, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+            output.write_text(json.dumps(bom, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         except OSError as exc:
             return RunnerResult(self.name, RunnerOutcome.BLOCKED, f"cannot persist SBOM: {exc}")
         return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[output])
@@ -160,8 +173,8 @@ class SupplyChainAttestationRunner(Runner):
             return RunnerResult(
                 self.name, RunnerOutcome.BLOCKED, "cannot resolve a full Git commit SHA"
             )
-        config_path = root / self.CONFIG_PATH
-        if config_path.is_symlink() or not config_path.is_file():
+        config_path = _safe_file(root, self.CONFIG_PATH)
+        if config_path is None:
             return RunnerResult(
                 self.name,
                 RunnerOutcome.BLOCKED,
@@ -233,8 +246,16 @@ class SupplyChainAttestationRunner(Runner):
             except (OSError, subprocess.SubprocessError) as exc:
                 outcomes[label] = {"verified": False, "error": f"{type(exc).__name__}: {exc}"}
                 overall = RunnerOutcome.BLOCKED
-        report_dir = root / ".arkhon" / "reports" / "supply-chain"
+        report_dir = _safe_directory(root, root / ".arkhon" / "reports" / "supply-chain")
+        if report_dir is None:
+            return RunnerResult(
+                self.name, RunnerOutcome.BLOCKED, "attestation report directory escapes project root"
+            )
         report_path = report_dir / f"attestation-{commit[:12]}.attestation.json"
+        if report_path.is_symlink():
+            return RunnerResult(
+                self.name, RunnerOutcome.BLOCKED, "refusing symlinked attestation report"
+            )
         report = {
             "schema_version": 1,
             "commit_sha": commit,
@@ -250,9 +271,8 @@ class SupplyChainAttestationRunner(Runner):
             "verification": outcomes,
         }
         try:
-            report_dir.mkdir(parents=True, exist_ok=True)
             report_path.write_text(
-                json.dumps(report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
         except OSError as exc:
             return RunnerResult(

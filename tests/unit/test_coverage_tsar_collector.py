@@ -67,6 +67,7 @@ def _payload(root: Path) -> dict:
         "executed_at": "2026-11-03T00:00:00Z",
         "status": "PASS",
         "rule_ids": list(REQUIRED_RULE_IDS),
+        "findings": [],
         "summary": {"critical": 0, "high": 0},
         "artifacts": [{"path": "scan.json", "sha256": sha256_of(artifact)}],
     }
