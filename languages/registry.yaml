@@ -6,8 +6,8 @@ languages:
     name: Python
     family: dynamic-typed
     primary_use: [application-development, automation, data-analysis]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: python/language-profile.yaml
     profile_path: languages/python/language-profile.yaml
     rules_path: languages/python/rules
@@ -24,8 +24,8 @@ languages:
     name: JavaScript
     family: dynamic-typed
     primary_use: [web-development, server-side-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: javascript/language-profile.yaml
     profile_path: languages/javascript/language-profile.yaml
     rules_path: languages/javascript/rules
@@ -42,8 +42,8 @@ languages:
     name: TypeScript
     family: static-typed
     primary_use: [web-development, server-side-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: typescript/language-profile.yaml
     profile_path: languages/typescript/language-profile.yaml
     rules_path: languages/typescript/rules
@@ -60,8 +60,8 @@ languages:
     name: Java
     family: static-typed-jvm
     primary_use: [enterprise-development, backend-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: java/language-profile.yaml
     profile_path: languages/java/language-profile.yaml
     rules_path: languages/java/rules
@@ -78,8 +78,8 @@ languages:
     name: C#
     family: static-typed-dotnet
     primary_use: [enterprise-development, desktop-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: csharp/language-profile.yaml
     profile_path: languages/csharp/language-profile.yaml
     rules_path: languages/csharp/rules
@@ -96,8 +96,8 @@ languages:
     name: C++
     family: static-typed-native
     primary_use: [systems-development, performance-critical-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: cpp/language-profile.yaml
     profile_path: languages/cpp/language-profile.yaml
     rules_path: languages/cpp/rules
@@ -114,8 +114,8 @@ languages:
     name: Go
     family: static-typed
     primary_use: [backend-development, systems-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: go/language-profile.yaml
     profile_path: languages/go/language-profile.yaml
     rules_path: languages/go/rules
@@ -132,8 +132,8 @@ languages:
     name: Rust
     family: static-typed-systems
     primary_use: [systems-development, security-sensitive-development]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: rust/language-profile.yaml
     profile_path: languages/rust/language-profile.yaml
     rules_path: languages/rust/rules
@@ -150,8 +150,8 @@ languages:
     name: Ruby
     family: dynamic-typed
     primary_use: [web-development, automation]
-    status: planned
-    milestone: 0
+    status: active
+    milestone: 2
     profile: ruby/language-profile.yaml
     profile_path: languages/ruby/language-profile.yaml
     rules_path: languages/ruby/rules
