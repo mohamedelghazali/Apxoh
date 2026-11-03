@@ -11,6 +11,7 @@ from typing import Any
 
 from arkhon.core.logging import get_logger
 from arkhon.evidence.integrity import sha256_of
+from arkhon.evidence.supply_chain import identity_regexp_for_tag
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
 logger = get_logger("verification.runners.supply_chain")
@@ -21,6 +22,7 @@ _IDENTITY_REGEXP = (
     r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
 )
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+_TAG_RE = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
 
 
 def _commit_sha(project_root: Path) -> str | None:
@@ -41,6 +43,26 @@ def _commit_sha(project_root: Path) -> str | None:
     value = result.stdout.strip()
     return value if _COMMIT_RE.fullmatch(value) else None
 
+def _tag_commit_sha(project_root: Path, source_tag: str) -> str | None:
+    """Resolve a release tag to a commit without invoking a shell."""
+    if not _TAG_RE.fullmatch(source_tag):
+        return None
+    git = shutil.which("git")
+    if git is None:
+        return None
+    try:
+        result = subprocess.run(
+            [git, "rev-parse", f"refs/tags/{source_tag}^{{commit}}"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    value = result.stdout.strip()
+    return value if _COMMIT_RE.fullmatch(value) else None
 
 def _safe_directory(root: Path, path: Path) -> Path | None:
     try:
@@ -199,6 +221,20 @@ class SupplyChainAttestationRunner(Runner):
             return RunnerResult(
                 self.name, RunnerOutcome.BLOCKED, "attestation config must be an object"
             )
+        source_tag = config.get("source_tag")
+        if not isinstance(source_tag, str) or not _TAG_RE.fullmatch(source_tag):
+            return RunnerResult(
+                self.name,
+                RunnerOutcome.BLOCKED,
+                "attestation config must contain a semantic source_tag such as v1.2.3",
+            )
+        if _tag_commit_sha(root, source_tag) != commit:
+            return RunnerResult(
+                self.name,
+                RunnerOutcome.BLOCKED,
+                f"release tag {source_tag} does not resolve to the checked-out commit",
+            )
+        identity_regexp = identity_regexp_for_tag(source_tag)
         artifact = _safe_file(root, config.get("artifact"))
         provenance = _safe_file(root, config.get("provenance"))
         signature = _safe_file(root, config.get("signature_bundle"))
@@ -230,6 +266,8 @@ class SupplyChainAttestationRunner(Runner):
                     str(provenance),
                     "--source-uri",
                     _SOURCE_URI,
+                    "--source-tag",
+                    source_tag,
                 ],
             ),
             (
@@ -240,7 +278,7 @@ class SupplyChainAttestationRunner(Runner):
                     "--bundle",
                     str(signature),
                     "--certificate-identity-regexp",
-                    _IDENTITY_REGEXP,
+                    identity_regexp,
                     "--certificate-oidc-issuer",
                     _OIDC_ISSUER,
                     str(artifact),
@@ -286,8 +324,9 @@ class SupplyChainAttestationRunner(Runner):
             "schema_version": 1,
             "commit_sha": commit,
             "source_uri": _SOURCE_URI,
+            "source_tag": source_tag,
             "oidc_issuer": _OIDC_ISSUER,
-            "certificate_identity_regexp": _IDENTITY_REGEXP,
+            "certificate_identity_regexp": identity_regexp,
             "artifact": artifact.relative_to(root).as_posix(),
             "artifact_sha256": sha256_of(artifact),
             "provenance": provenance.relative_to(root).as_posix(),
