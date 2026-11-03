@@ -197,7 +197,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
 
 def cmd_status(args: argparse.Namespace) -> int:
     """Summarize project configuration and persisted verification evidence."""
-    from arkhon.core.errors import EvidenceError
+    from arkhon.core.errors import ConfigError, EvidenceError
     from arkhon.evidence.store import EvidenceStore
     from arkhon.language_support.detector import detect_languages
     from arkhon.projects.matcher import match_profile
@@ -213,7 +213,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     except EvidenceError as exc:
         print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
         return 1
-    except Exception as exc:
+    except (ConfigError, OSError, ValueError) as exc:
         print(f"[FAIL] project status could not be computed: {exc}", file=sys.stderr)
         return 1
 
@@ -227,6 +227,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         bucket[key] += 1
         totals[key] += 1
 
+    detected_language_ids = [item.definition.id for item in languages.detected]
     report = {
         "project": str(project),
         "profile": {
@@ -235,7 +236,7 @@ def cmd_status(args: argparse.Namespace) -> int:
             "explicit": profile.explicit,
         },
         "languages": {
-            "detected": [item.definition.id for item in languages.detected],
+            "detected": detected_language_ids,
             "unknown": languages.unknown,
         },
         "evidence": {
@@ -249,7 +250,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     else:
         print(f"Project: {project}")
         print(f"Profile: {profile.profile} ({profile.reason})")
-        print("Languages: " + (", ".join(report["languages"]["detected"]) or "none"))
+        print("Languages: " + (", ".join(detected_language_ids) or "none"))
         print(f"Evidence records: {len(records)}")
         for key, value in totals.items():
             print(f"  {key}: {value}")
