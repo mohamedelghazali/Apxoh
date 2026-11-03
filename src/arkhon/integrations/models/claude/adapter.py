@@ -14,8 +14,8 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlsplit
 from typing import Any
+from urllib.parse import urlsplit
 
 from arkhon.core.errors import ArkhonError
 from arkhon.core.logging import get_logger
