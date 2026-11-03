@@ -55,7 +55,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-arkhon = ["py.typed"]
+arkhon = ["py.typed", "resources/agent_pack/*", "resources/agent_pack/**/*"]
 
 [tool.ruff]
 line-length = 100

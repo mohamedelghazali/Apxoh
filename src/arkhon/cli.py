@@ -306,6 +306,100 @@ def cmd_exceptions_list(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def _agent_pack_source() -> Path:
+    return Path(__file__).resolve().parent / "resources" / "agent_pack"
+
+
+def cmd_install(args: argparse.Namespace) -> int:
+    """Stage the general governance pack without changing agent-specific settings."""
+    scope = args.scope
+    if scope == "project":
+        base = Path(args.project).expanduser().resolve()
+        if not base.is_dir():
+            print(f"[FAIL] not a directory: {base}", file=sys.stderr)
+            return 1
+    else:
+        base = Path.home().resolve()
+
+    parent = base / ".arkhon"
+    if parent.is_symlink():
+        print(f"[FAIL] refusing symlinked install directory: {parent}", file=sys.stderr)
+        return 1
+
+    staging: Path | None = None
+    backup: Path | None = None
+    try:
+        parent.mkdir(parents=True, exist_ok=True)
+        resolved_parent = parent.resolve()
+        resolved_parent.relative_to(base)
+        target = resolved_parent / "agent-pack"
+        if target.is_symlink():
+            raise ValueError(f"refusing symlinked agent pack: {target}")
+        if target.exists() and not args.force:
+            print(
+                f"[FAIL] agent pack already exists: {target} (use --force)",
+                file=sys.stderr,
+            )
+            return 1
+
+        source = _agent_pack_source()
+        if not source.is_dir():
+            raise OSError(f"packaged agent resources not found: {source}")
+        files = sorted(
+            item.relative_to(source).as_posix()
+            for item in source.rglob("*")
+            if item.is_file()
+        )
+        if not files:
+            raise OSError(f"agent resource pack is empty: {source}")
+
+        staging = Path(tempfile.mkdtemp(prefix=".agent-pack-staging-", dir=resolved_parent))
+        shutil.copytree(source, staging, dirs_exist_ok=True)
+        manifest = {
+            "format_version": 1,
+            "arkhon_version": __version__,
+            "scope": scope,
+            "activation": "manual",
+            "files": files,
+        }
+        (staging / "manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+        if target.exists():
+            backup = Path(tempfile.mkdtemp(prefix=".agent-pack-backup-", dir=resolved_parent))
+            backup.rmdir()
+            target.rename(backup)
+        try:
+            staging.rename(target)
+            staging = None
+        except OSError:
+            if backup is not None and backup.exists() and not target.exists():
+                backup.rename(target)
+                backup = None
+            raise
+        if backup is not None:
+            shutil.rmtree(backup, ignore_errors=True)
+            backup = None
+    except (OSError, ValueError) as exc:
+        print(f"[FAIL] agent pack installation failed: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        if staging is not None and staging.exists():
+            shutil.rmtree(staging, ignore_errors=True)
+        if backup is not None and backup.exists():
+            if not target.exists():
+                backup.rename(target)
+            else:
+                shutil.rmtree(backup, ignore_errors=True)
+
+    print(f"[OK] governance pack staged: {target}")
+    print("  Agent-specific settings were not changed; activation must be verified per product.")
+    return 0
+
+
 def cmd_project_init(args: argparse.Namespace) -> int:
     """Create a schema-validated project declaration without overwriting by default."""
     import jsonschema
