@@ -16,6 +16,7 @@ from arkhon.evidence.integrity import sha256_of
 
 logger = get_logger("evidence.store")
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+_EVIDENCE_ID = re.compile(r"^EVID-[A-Z0-9-]+$")
 
 
 @dataclass(frozen=True)
@@ -68,7 +69,7 @@ class EvidenceStore:
 
     @staticmethod
     def _validate_id(evidence_id: object) -> str:
-        if not isinstance(evidence_id, str) or not _SAFE_ID.fullmatch(evidence_id):
+        if not isinstance(evidence_id, str) or not _EVIDENCE_ID.fullmatch(evidence_id):
             raise EvidenceError("invalid or missing evidence_id")
         return evidence_id
 
@@ -115,6 +116,8 @@ class EvidenceStore:
             raise EvidenceTamperedError(f"evidence record is unreadable: {path}") from exc
         if not isinstance(data, dict):
             raise EvidenceTamperedError(f"evidence record is not an object: {path}")
+        if data.get("evidence_id") != safe_id:
+            raise EvidenceTamperedError(f"evidence ID does not match filename: {path}")
         return EvidenceRecord(path=path, data=data)
 
     def iter_records(self, domain: str | None = None) -> Iterator[EvidenceRecord]:
@@ -123,6 +126,10 @@ class EvidenceStore:
             if not base.is_dir():
                 continue
             for path in sorted(base.rglob("*.json")):
+                if not path.stem.startswith("EVID-"):
+                    continue
+                if not _EVIDENCE_ID.fullmatch(path.stem):
+                    raise EvidenceTamperedError(f"invalid evidence record filename: {path}")
                 if path.is_symlink():
                     raise EvidenceTamperedError(f"evidence record is a symlink: {path}")
                 resolved_path = path.resolve()
@@ -139,6 +146,10 @@ class EvidenceStore:
                     raise EvidenceTamperedError(f"evidence record is unreadable: {path}") from exc
                 if not isinstance(data, dict):
                     raise EvidenceTamperedError(f"evidence record is not an object: {path}")
+                if data.get("evidence_id") != path.stem:
+                    raise EvidenceTamperedError(
+                        f"evidence ID does not match filename: {path}"
+                    )
                 yield EvidenceRecord(path=resolved_path, data=data)
 
     def latest_for_commit(self, domain: str, commit_sha: str) -> EvidenceRecord | None:
