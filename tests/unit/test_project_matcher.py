@@ -5,7 +5,12 @@ from pathlib import Path
 import pytest
 
 from arkhon.core.errors import ConfigError
-from arkhon.projects.matcher import Match, _read_declared_profile, match_profile, validate_profile_name
+from arkhon.projects.matcher import (
+    Match,
+    _read_declared_profile,
+    match_profile,
+    validate_profile_name,
+)
 
 
 def test_match_profile_explicit_and_default(tmp_path: Path) -> None:
