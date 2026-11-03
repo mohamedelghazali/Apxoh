@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import urllib.error
+from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +15,7 @@ from arkhon.integrations.models._openai_compatible import (
 from tests.fixtures.mock_http import (
     make_http_error,
     make_json_response,
+    make_raw_response,
     patch_urlopen,
 )
 
@@ -165,11 +168,6 @@ def test_send_does_not_leak_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert "sk-very-secret-key" not in result.reason
 
-
-from dataclasses import replace
-from pathlib import Path
-
-from tests.fixtures.mock_http import make_raw_response
 
 
 @pytest.mark.parametrize(
