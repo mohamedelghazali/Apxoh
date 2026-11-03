@@ -95,6 +95,8 @@ def test_cli_report_unknown_format_and_verify_success(
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     run = SimpleNamespace(
         run_id="RUN-1",
+        domain="testing",
+        commit_sha="a" * 40,
         status="PASS",
         evidence_id="EVID-1",
         results=[SimpleNamespace(runner="pytest", outcome=SimpleNamespace(value="PASS"))],
