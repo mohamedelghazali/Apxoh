@@ -282,7 +282,7 @@ def test_evidence_store_rejects_non_mapping_and_corrupt_records(tmp_path: Path) 
         store.read("testing", "missing")
     folder = store.root / "testing"
     folder.mkdir(parents=True)
-    (folder / "array.json").write_text("[]", encoding="utf-8")
+    (folder / "EVID-ARRAY.json").write_text("[]", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError):
         list(store.iter_records("testing"))
 

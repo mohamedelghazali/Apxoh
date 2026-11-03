@@ -91,14 +91,9 @@ class JsonReporter:
         if not records:
             raise EvidenceError(f"no evidence found for commit {commit_sha}")
 
-        # Validate every selected record before trusting its status in an assessment.
+        # Records were selected by the exact commit SHA above; validate their status
+        # and integrity before trusting them in an assessment.
         for record in records:
-            record_commit = record.data.get("commit_sha")
-            if record_commit != commit_sha:
-                raise EvidenceError(
-                    f"evidence commit mismatch: {record.evidence_id} is for {record_commit}, "
-                    f"report is for {commit_sha}"
-                )
             status = record.data.get("status")
             if not isinstance(status, str) or status not in _ALLOWED_STATUSES:
                 raise EvidenceError(f"evidence {record.evidence_id} has invalid status: {status!r}")
@@ -108,8 +103,9 @@ class JsonReporter:
                     evidence_root=project_root,
                     expected_commit_sha=commit_sha,
                 )
+                executed_at = _record_timestamp(record)
                 verify_freshness(
-                    record.data.get("executed_at"),
+                    executed_at.isoformat(),
                     max_age_hours=FRESHNESS_HOURS.get(record.path.parent.name, 720),
                 )
             except EvidenceError as exc:

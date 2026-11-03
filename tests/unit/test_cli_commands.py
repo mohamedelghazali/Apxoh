@@ -4,8 +4,8 @@ import hashlib
 import json
 import shutil
 import subprocess
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -198,3 +198,12 @@ def test_audit_security_domain_uses_tsar_runner(
     monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
     assert main(["audit", str(tmp_path), "--domain", "software-security"]) == 1
     assert captured == [TsarRunner]
+
+
+def test_report_returns_failure_when_commit_cannot_be_resolved(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: None)
+    assert main(["report", str(project)]) == 1

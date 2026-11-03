@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -48,7 +49,12 @@ def test_inspect_on_project(capsys: pytest.CaptureFixture[str], tmp_path: Path) 
     assert data["profile"]["name"]
 
 
-def test_report_writes_json(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+def test_report_writes_json(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    artifact = tmp_path / "x"
+    artifact.write_text("report artifact", encoding="utf-8")
     evidence = tmp_path / ".arkhon" / "evidence" / "testing"
     evidence.mkdir(parents=True)
     (evidence / "EVID-A.json").write_text(
@@ -60,7 +66,12 @@ def test_report_writes_json(capsys: pytest.CaptureFixture[str], tmp_path: Path) 
                 "commit_sha": "a" * 40,
                 "executed_at": "2026-11-01T00:00:00Z",
                 "status": "PASS",
-                "artifacts": [{"path": "x", "sha256": "b" * 64}],
+                "artifacts": [
+                    {
+                        "path": "x",
+                        "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                    }
+                ],
             }
         ),
         encoding="utf-8",
