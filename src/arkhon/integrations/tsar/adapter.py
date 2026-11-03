@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import re
+from importlib.metadata import PackageNotFoundError, version as package_version
 import shutil
 import subprocess
 import tempfile
@@ -83,27 +84,34 @@ class TsarAdapter(Integration):
         except (OSError, subprocess.SubprocessError) as exc:
             logger.warning("TSAR CLI health check failed: %s", exc)
             return False
-        return result.returncode == 0 and "scan" in (result.stdout + result.stderr).lower()
+        if result.returncode != 0 or "scan" not in (result.stdout + result.stderr).lower():
+            return False
+        try:
+            version = self.version()
+            from arkhon.integrations.tsar.verifier import _check_version
+
+            _check_version(
+                version,
+                self._config.minimum_version,
+                self._config.maximum_version_exclusive,
+            )
+        except SecurityError:
+            return False
+        return True
 
     def version(self) -> str:
-        binary = self._binary()
-        if binary is None:
+        if self._binary() is None:
             raise SecurityError("TSAR binary not found")
         try:
-            result = subprocess.run(  # noqa: S603 - resolved executable and fixed arguments
-                [binary, "scan", "--help"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-        except (OSError, subprocess.SubprocessError) as exc:
-            raise SecurityError(f"TSAR CLI health check failed: {exc}") from exc
-        if result.returncode != 0 or "scan" not in (result.stdout + result.stderr).lower():
-            raise SecurityError("TSAR scan command is unavailable")
-        raise SecurityError(
-            "TSAR version is only authoritative in SARIF scan output; run a scan to verify it"
-        )
+            value = package_version("tsar-cli")
+        except PackageNotFoundError as exc:
+            raise SecurityError("TSAR distribution metadata is unavailable") from exc
+        if not re.fullmatch(
+            r"(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:[-+][0-9A-Za-z.-]+)?",
+            value,
+        ):
+            raise SecurityError(f"invalid TSAR package version: {value!r}")
+        return value
 
     @staticmethod
     def _parse_sarif(output_path: Path) -> tuple[dict[str, Any], str]:
