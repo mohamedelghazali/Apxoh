@@ -66,7 +66,12 @@ def test_report_writes_json(
                 "commit_sha": "a" * 40,
                 "executed_at": "2026-11-01T00:00:00Z",
                 "status": "PASS",
-                "artifacts": [{"path": "x", "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest()}],
+                "artifacts": [
+                    {
+                        "path": "x",
+                        "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                    }
+                ],
             }
         ),
         encoding="utf-8",
