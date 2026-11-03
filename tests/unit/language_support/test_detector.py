@@ -84,6 +84,20 @@ def test_case_insensitive_extensions(tmp_path: Path) -> None:
     assert result.detected[0].definition.id == "python"
 
 
+
+@pytest.mark.parametrize("max_samples", [True, -1, 1.5, "2"])
+def test_invalid_sample_limit(tmp_path: Path, max_samples: object) -> None:
+    with pytest.raises(ValueError, match="max_samples"):
+        detect_languages(tmp_path, max_samples=max_samples)  # type: ignore[arg-type]
+
+
+def test_zero_sample_limit_preserves_detection_without_samples(tmp_path: Path) -> None:
+    _write(tmp_path, "src/main.py")
+    result = detect_languages(tmp_path, max_samples=0)
+    assert result.detected[0].definition.id == "python"
+    assert result.detected[0].sample_files == []
+
+
 def test_not_a_directory(tmp_path: Path) -> None:
     f = tmp_path / "not-a-dir"
     f.write_text("x", encoding="utf-8")

@@ -84,7 +84,7 @@ def detect_languages(
     root = root.resolve()
     if not root.is_dir():
         raise NotADirectoryError(f"not a directory: {root}")
-    if isinstance(max_samples, bool) or max_samples < 0:
+    if isinstance(max_samples, bool) or not isinstance(max_samples, int) or max_samples < 0:
         raise ValueError("max_samples must be a non-negative integer")
 
     reg = registry or _get_default_registry()
