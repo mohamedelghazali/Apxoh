@@ -26,6 +26,8 @@ jobs:
         run: ruff check --fix src tests scripts || true
       - name: Format Python files
         run: ruff format src tests scripts
+      - name: Report remaining Ruff findings
+        run: ruff check src tests scripts || true
       - name: Commit safe fixes
         shell: bash
         run: |
