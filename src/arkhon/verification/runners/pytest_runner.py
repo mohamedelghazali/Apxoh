@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-import defusedxml.ElementTree as ET
+import defusedxml.ElementTree as element_tree
 
 from arkhon.core.logging import get_logger
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
@@ -49,7 +49,7 @@ class PytestRunner(Runner):
                 "no:cacheprovider",
             ]
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # noqa: S603 - current Python interpreter and fixed pytest arguments
                     command,
                     cwd=root,
                     capture_output=True,
@@ -77,7 +77,7 @@ class PytestRunner(Runner):
                     reason=f"pytest produced no JUnit XML (exit={result.returncode}): {detail}",
                 )
             try:
-                xml_root = ET.parse(junit).getroot()
+                xml_root = element_tree.parse(junit).getroot()
                 suites = (
                     [xml_root]
                     if xml_root.tag == "testsuite"
