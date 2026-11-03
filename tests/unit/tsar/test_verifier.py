@@ -234,3 +234,10 @@ def test_verify_honors_custom_required_rule_ids(tmp_path: Path) -> None:
         required_rule_ids=("CUSTOM-SECURITY-RULE",),
     )
     assert evidence.rule_ids == ("CUSTOM-SECURITY-RULE",)
+
+
+def test_parse_payload_rejects_non_array_findings(tmp_path: Path) -> None:
+    payload = _valid_payload(tmp_path)
+    payload["findings"] = "not-an-array"
+    with pytest.raises(SecurityError, match="findings must be an array"):
+        _parse_tsar_payload(payload)
