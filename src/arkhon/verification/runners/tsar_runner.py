@@ -9,7 +9,7 @@ from pathlib import Path
 
 from arkhon.core.logging import get_logger
 from arkhon.integrations.tsar.adapter import TsarAdapter, TsarConfig
-from arkhon.integrations.tsar.verifier import verify_tsar_evidence
+from arkhon.integrations.tsar.verifier import TsarFindingsError, verify_tsar_evidence
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
 logger = get_logger("verification.runners.tsar")
@@ -67,6 +67,14 @@ class TsarRunner(Runner):
                 response.payload,
                 expected_commit_sha=commit_sha,
                 evidence_root=project_root,
+            )
+        except TsarFindingsError as exc:
+            logger.warning("TSAR reported unresolved high-severity findings: %s", exc)
+            return RunnerResult(
+                runner=self.name,
+                outcome=RunnerOutcome.FAIL,
+                reason=str(exc),
+                artifacts=response.artifacts,
             )
         except Exception as exc:
             logger.warning("TSAR evidence verification failed: %s", exc)
