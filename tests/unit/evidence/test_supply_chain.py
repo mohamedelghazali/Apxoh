@@ -176,6 +176,7 @@ def test_attestation_report_rejects_unreadable_or_wrong_schema(tmp_path: Path) -
     [
         ("commit_sha", "b" * 40, "commit binding"),
         ("source_uri", "github.com/attacker/repo", "trust identity"),
+        ("source_tag", "not-a-release-tag", "source tag"),
         ("oidc_issuer", "https://attacker.invalid", "trust identity"),
         ("certificate_identity_regexp", ".*", "trust identity"),
         (
