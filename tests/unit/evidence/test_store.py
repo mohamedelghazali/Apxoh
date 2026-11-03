@@ -1,0 +1,68 @@
+"""Security tests for the append-only evidence store."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from arkhon.core.errors import EvidenceError, EvidenceTamperedError
+from arkhon.evidence.store import EvidenceStore
+
+
+def _record(evidence_id: str = "EVID-TEST-0001") -> dict[str, str]:
+    return {
+        "evidence_id": evidence_id,
+        "source": "arkhon",
+        "source_version": "0.1.0.dev1",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+    }
+
+
+def _symlink_or_skip(link: Path, target: Path, *, target_is_directory: bool = False) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=target_is_directory)
+    except (OSError, NotImplementedError) as exc:
+        pytest.skip(f"symlinks unavailable in this environment: {exc}")
+
+
+def test_write_rejects_domain_symlink_escape(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    outside = tmp_path / "outside"
+    project.mkdir()
+    outside.mkdir()
+    evidence_root = project / ".arkhon" / "evidence"
+    evidence_root.mkdir(parents=True)
+    _symlink_or_skip(evidence_root / "security", outside, target_is_directory=True)
+
+    store = EvidenceStore(project)
+    with pytest.raises(EvidenceError, match="domain escapes evidence root"):
+        store.write("security", _record())
+    assert list(outside.iterdir()) == []
+
+
+def test_write_rejects_evidence_root_symlink_escape(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    outside = tmp_path / "outside"
+    project.mkdir()
+    outside.mkdir()
+    _symlink_or_skip(project / ".arkhon", outside, target_is_directory=True)
+
+    store = EvidenceStore(project)
+    with pytest.raises(EvidenceError, match="evidence root escapes project root"):
+        store.write("security", _record())
+    assert list(outside.iterdir()) == []
+
+
+def test_read_rejects_symlinked_record(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    outside = tmp_path / "outside.json"
+    project.mkdir()
+    outside.write_text('{"evidence_id":"EVID-OUTSIDE"}', encoding="utf-8")
+    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir.mkdir(parents=True)
+    _symlink_or_skip(evidence_dir / "EVID-TEST-0001.json", outside)
+
+    with pytest.raises(EvidenceTamperedError, match="record is a symlink"):
+        EvidenceStore(project).read("security", "EVID-TEST-0001")
