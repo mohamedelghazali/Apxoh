@@ -172,3 +172,28 @@ def test_doctor_reports_success_and_missing_files(
     (tmp_path / "AGENTS.md").unlink()
     assert main(["doctor"]) == 1
     assert "missing required file" in capsys.readouterr().out
+
+
+def test_audit_security_domain_uses_tsar_runner(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from arkhon.verification.runners.tsar_runner import TsarRunner
+
+    _git_project(tmp_path)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    captured: list[type] = []
+
+    def fake_run(_self, *, runners, **_kwargs):
+        captured.extend(type(runner) for runner in runners)
+        return SimpleNamespace(
+            run_id="RUN-SECURITY",
+            domain="software-security",
+            commit_sha="a" * 40,
+            status="BLOCKED",
+            evidence_id="EVID-SECURITY",
+            results=[],
+        )
+
+    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    assert main(["audit", str(tmp_path), "--domain", "software-security"]) == 1
+    assert captured == [TsarRunner]
