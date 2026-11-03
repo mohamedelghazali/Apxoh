@@ -330,6 +330,7 @@ def cmd_install(args: argparse.Namespace) -> int:
     staging: Path | None = None
     backup: Path | None = None
     try:
+        parent.resolve().relative_to(base)
         parent.mkdir(parents=True, exist_ok=True)
         resolved_parent = parent.resolve()
         resolved_parent.relative_to(base)
