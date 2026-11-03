@@ -12,7 +12,7 @@ import pytest
 
 from arkhon.core.errors import EvidenceError
 from arkhon.evidence.store import EvidenceStore
-from arkhon.evidence.supply_chain import IDENTITY_REGEXP, OIDC_ISSUER, SOURCE_URI
+from arkhon.evidence.supply_chain import OIDC_ISSUER, SOURCE_URI, identity_regexp_for_tag
 from arkhon.reporting.json_reporter import JsonReporter
 
 SHA = "a" * 40
@@ -33,13 +33,13 @@ def _accepted_supply_chain_record(root: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(value, encoding="utf-8")
         paths[name] = path
-    sbom = root / ".arkhon" / "reports" / "supply-chain" / "sbom.cdx.json"
+    sbom = root / ".arkhon" / "reports" / "supply-chain" / f"sbom-{SHA[:12]}.cdx.json"
     sbom.parent.mkdir(parents=True, exist_ok=True)
     sbom.write_text(
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
-                "specVersion": "1.6",
+                "specVersion": "1.7",
                 "components": [],
                 "metadata": {
                     "component": {
@@ -60,7 +60,8 @@ def _accepted_supply_chain_record(root: Path) -> None:
                 "commit_sha": SHA,
                 "source_uri": SOURCE_URI,
                 "oidc_issuer": OIDC_ISSUER,
-                "certificate_identity_regexp": IDENTITY_REGEXP,
+                "source_tag": "v1.2.3",
+                "certificate_identity_regexp": identity_regexp_for_tag("v1.2.3"),
                 "artifact": "dist/app.whl",
                 "artifact_sha256": _hash(paths["dist/app.whl"]),
                 "provenance": "dist/provenance.intoto.jsonl",
@@ -72,7 +73,6 @@ def _accepted_supply_chain_record(root: Path) -> None:
         ),
         encoding="utf-8",
     )
-    artifacts = [sbom, report, *paths.values()]
     EvidenceStore(root).write(
         "supply-chain",
         {
@@ -82,9 +82,21 @@ def _accepted_supply_chain_record(root: Path) -> None:
             "commit_sha": SHA,
             "executed_at": datetime.now(UTC).isoformat(),
             "status": "PASS",
+            "artifacts": [{"path": sbom.relative_to(root).as_posix(), "sha256": _hash(sbom)}],
+        },
+    )
+    EvidenceStore(root).write(
+        "release-attestations",
+        {
+            "evidence_id": "EVID-RELEASE-ATTEST",
+            "source": "arkhon",
+            "source_version": "0.1.0",
+            "commit_sha": SHA,
+            "executed_at": datetime.now(UTC).isoformat(),
+            "status": "PASS",
             "artifacts": [
                 {"path": path.relative_to(root).as_posix(), "sha256": _hash(path)}
-                for path in artifacts
+                for path in [report, *paths.values()]
             ],
         },
     )
@@ -111,8 +123,8 @@ def test_report_reverifies_sbom_provenance_and_signature(
     assert calls[1][1] == "verify-blob"
 
 
-def test_report_never_accepts_pass_without_attestation_report(tmp_path: Path) -> None:
-    artifact = tmp_path / "sbom.cdx.json"
+def test_report_accepts_commit_bound_sbom_without_release_attestation(tmp_path: Path) -> None:
+    artifact = tmp_path / f"sbom-{SHA[:12]}.cdx.json"
     artifact.write_text(
         json.dumps(
             {
@@ -138,5 +150,24 @@ def test_report_never_accepts_pass_without_attestation_report(tmp_path: Path) ->
             "artifacts": [{"path": artifact.name, "sha256": _hash(artifact)}],
         },
     )
-    with pytest.raises(EvidenceError, match="exactly one SBOM and attestation"):
+    report = JsonReporter().build(tmp_path, expected_commit_sha=SHA)
+    assert report["sections"]["supply_chain"]["status"] == "PASS"
+
+
+def test_report_never_accepts_release_attestation_pass_without_report(tmp_path: Path) -> None:
+    artifact = tmp_path / "release.whl"
+    artifact.write_text("wheel", encoding="utf-8")
+    EvidenceStore(tmp_path).write(
+        "release-attestations",
+        {
+            "evidence_id": "EVID-RELEASE-NO-ATTEST",
+            "source": "arkhon",
+            "source_version": "0.1.0",
+            "commit_sha": SHA,
+            "executed_at": datetime.now(UTC).isoformat(),
+            "status": "PASS",
+            "artifacts": [{"path": artifact.name, "sha256": _hash(artifact)}],
+        },
+    )
+    with pytest.raises(EvidenceError, match="exactly one attestation report"):
         JsonReporter().build(tmp_path, expected_commit_sha=SHA)
