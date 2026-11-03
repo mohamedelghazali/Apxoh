@@ -1,5 +1,6 @@
 """Supply-chain evidence is cryptographically checked before the engine records PASS."""
 
+# ruff: noqa: I001
 from __future__ import annotations
 
 import hashlib
