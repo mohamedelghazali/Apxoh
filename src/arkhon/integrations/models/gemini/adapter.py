@@ -4,6 +4,7 @@ from __future__ import annotations
 import http.client
 import json
 import os
+import ssl
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -101,6 +102,7 @@ class GeminiAdapter(Integration):
             parsed_endpoint.hostname or "",
             parsed_endpoint.port or 443,
             timeout=self.config.timeout_seconds,
+            context=ssl.create_default_context(),
         )
         try:
             connection.request(

@@ -12,6 +12,7 @@ from __future__ import annotations
 import http.client
 import json
 import os
+import ssl
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -119,6 +120,7 @@ class ClaudeAdapter(Integration):
             endpoint.hostname or "",
             endpoint.port or 443,
             timeout=self._config.timeout_seconds,
+            context=ssl.create_default_context(),
         )
         try:
             connection.request(
