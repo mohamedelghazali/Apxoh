@@ -164,3 +164,62 @@ def test_send_does_not_leak_key(monkeypatch: pytest.MonkeyPatch) -> None:
         result = adapter.send("hi")
 
     assert "sk-very-secret-key" not in result.reason
+
+
+from dataclasses import replace
+from pathlib import Path
+
+from tests.fixtures.mock_http import make_raw_response
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "http://example.com/v1",
+        "https://user:pass@example.com/v1",
+        "https://example.com/v1?token=x",
+        "https://example.com/v1#fragment",
+        "https:///missing-host",
+        "https://example.com:bad/v1",
+        "https://example.com:0/v1",
+        "ftp://example.com/v1",
+    ],
+)
+def test_endpoint_rejects_unsafe_urls(endpoint: str) -> None:
+    adapter = OpenAICompatibleAdapter(replace(_config(), endpoint=endpoint))
+    assert not adapter._endpoint_is_allowed()
+
+
+def test_endpoint_allows_https_and_loopback_http() -> None:
+    assert OpenAICompatibleAdapter(_config())._endpoint_is_allowed()
+    local = replace(_config(), endpoint="http://127.0.0.1:8080/v1")
+    assert OpenAICompatibleAdapter(local)._endpoint_is_allowed()
+    localhost = replace(_config(), endpoint="http://localhost/v1")
+    assert OpenAICompatibleAdapter(localhost)._endpoint_is_allowed()
+
+
+def test_response_text_variants() -> None:
+    assert OpenAICompatibleAdapter._response_text("text") == "text"
+    assert OpenAICompatibleAdapter._response_text([
+        {"text": "one"}, {"text": "two"}, {"image": "ignored"}, "ignored"
+    ]) == "onetwo"
+    assert OpenAICompatibleAdapter._response_text({"text": "ignored"}) == ""
+    assert OpenAICompatibleAdapter._response_text(None) == ""
+
+
+def test_prompt_files_and_non_object_response(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    adapter = OpenAICompatibleAdapter(_config())
+    adapter._prompts_dir = tmp_path
+    assert adapter.system_prompt() == ""
+    assert adapter.governance_injection() == ""
+    (tmp_path / "system.md").write_text("system", encoding="utf-8")
+    (tmp_path / "governance-injection.md").write_text("governance", encoding="utf-8")
+    assert adapter.system_prompt() == "system"
+    assert adapter.governance_injection() == "governance"
+    monkeypatch.setenv("TEST_API_KEY", "sk-test")
+    with patch_urlopen(make_raw_response("[]", status=200)):
+        result = adapter.send("hi")
+    assert not result.ok
+    assert "expected JSON object" in result.reason
