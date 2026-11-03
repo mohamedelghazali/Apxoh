@@ -187,3 +187,34 @@ def test_engine_blocks_when_crypto_verification_fails(
     assert run.status == "BLOCKED"
     assert record.status == "BLOCKED"
     assert record.data["summary"]["blocked"] == 1
+
+
+
+def test_engine_blocks_invalid_commit_bound_sbom(tmp_path: Path) -> None:
+    sbom = tmp_path / f"sbom-{COMMIT[:12]}.cdx.json"
+    sbom.write_text("{}", encoding="utf-8")
+    run = _engine(tmp_path).run(
+        domain="supply-chain",
+        commit_sha=COMMIT,
+        runners=[FixtureRunner([sbom])],
+        project_root=tmp_path,
+    )
+    record = EvidenceStore(tmp_path).read("supply-chain", run.evidence_id)
+    assert run.status == "BLOCKED"
+    assert record.status == "BLOCKED"
+    assert "SBOM acceptance failed" in run.results[-1].reason
+
+
+def test_engine_blocks_release_attestation_pass_without_report(tmp_path: Path) -> None:
+    artifact = tmp_path / "release.whl"
+    artifact.write_text("wheel", encoding="utf-8")
+    run = _engine(tmp_path).run(
+        domain="release-attestations",
+        commit_sha=COMMIT,
+        runners=[FixtureRunner([artifact])],
+        project_root=tmp_path,
+    )
+    record = EvidenceStore(tmp_path).read("release-attestations", run.evidence_id)
+    assert run.status == "BLOCKED"
+    assert record.status == "BLOCKED"
+    assert "exactly one SLSA/Sigstore attestation report" in run.results[-1].reason
