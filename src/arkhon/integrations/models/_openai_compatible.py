@@ -134,7 +134,7 @@ class OpenAICompatibleAdapter(Integration):
             else http.client.HTTPConnection
         )
         connection = connection_type(
-            endpoint.hostname,
+            endpoint.hostname or "",
             endpoint.port,
             timeout=self.config.timeout_seconds,
         )
