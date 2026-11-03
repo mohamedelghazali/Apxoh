@@ -143,7 +143,10 @@ class TsarAdapter(Integration):
                 if result.returncode != 0:
                     return IntegrationResponse(
                         ok=False,
-                        reason=f"TSAR exited with {result.returncode}: {result.stderr.strip()[:300]}",
+                        reason=(
+                            f"TSAR exited with {result.returncode}: "
+                            f"{result.stderr.strip()[:300]}"
+                        ),
                     )
                 output_text = (
                     output_path.read_text(encoding="utf-8")
