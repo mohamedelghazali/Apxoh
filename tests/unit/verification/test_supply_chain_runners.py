@@ -148,7 +148,7 @@ def test_syft_runner_handles_process_and_filesystem_errors(
             raise OSError("read-only")
         return original(path, *args, **kwargs)
     monkeypatch.setattr(Path, "mkdir", fail)
-    assert "cannot persist SBOM" in SyftRunner().run(tmp_path).reason
+    assert "output directory escapes" in SyftRunner().run(tmp_path).reason
 
 
 def test_attestation_runner_blocks_without_config_or_tools(
@@ -241,4 +241,4 @@ def test_attestation_runner_reports_write_failure(
             raise OSError("read-only")
         return original(path, *args, **kwargs)
     monkeypatch.setattr(Path, "mkdir", fail)
-    assert "cannot persist attestation report" in SupplyChainAttestationRunner().run(tmp_path).reason
+    assert "report directory escapes" in SupplyChainAttestationRunner().run(tmp_path).reason
