@@ -37,7 +37,7 @@ class RuffRunner(Runner):
             output = Path(tmp) / "ruff.json"
             command = [binary, "check", "--output-format=json", "--no-fix", "."]
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; fixed arguments
                     command,
                     cwd=root,
                     capture_output=True,
