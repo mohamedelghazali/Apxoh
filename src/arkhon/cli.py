@@ -381,19 +381,19 @@ def cmd_install(args: argparse.Namespace) -> int:
                 backup = None
             raise
         if backup is not None:
-            shutil.rmtree(backup)
+            shutil.rmtree(backup, ignore_errors=True)
             backup = None
     except (OSError, ValueError) as exc:
         print(f"[FAIL] agent pack installation failed: {exc}", file=sys.stderr)
         return 1
     finally:
         if staging is not None and staging.exists():
-            shutil.rmtree(staging)
+            shutil.rmtree(staging, ignore_errors=True)
         if backup is not None and backup.exists():
             if not target.exists():
                 backup.rename(target)
             else:
-                shutil.rmtree(backup)
+                shutil.rmtree(backup, ignore_errors=True)
 
     print(f"[OK] governance pack staged: {target}")
     print("  Agent-specific settings were not changed; activation must be verified per product.")
