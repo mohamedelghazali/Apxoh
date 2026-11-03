@@ -19,6 +19,16 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _project_template_root() -> Path:
+    """Locate project schemas and profiles in a checkout or installed wheel."""
+    repository_root = _repo_root()
+    if (repository_root / "schemas" / "project.schema.json").is_file() and (
+        repository_root / "projects"
+    ).is_dir():
+        return repository_root
+    return Path(__file__).resolve().parent / "resources" / "project_templates"
+
+
 def cmd_version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
         payload = {"name": "Apxoh", "identifier": "arkhon", "version": __version__}
@@ -428,7 +438,8 @@ def cmd_project_init(args: argparse.Namespace) -> int:
         )
         return 1
 
-    available_profiles = list_profiles(_repo_root())
+    templates_root = _project_template_root()
+    available_profiles = list_profiles(templates_root)
     if args.profile not in available_profiles:
         available = ", ".join(available_profiles)
         print(
@@ -479,7 +490,7 @@ def cmd_project_init(args: argparse.Namespace) -> int:
                 "release_gate": "required",
             },
         }
-        schema_path = _repo_root() / "schemas" / "project.schema.json"
+        schema_path = templates_root / "schemas" / "project.schema.json"
         if not schema_path.is_file():
             raise OSError(f"project schema not found: {schema_path}")
         schema = json.loads(schema_path.read_text(encoding="utf-8"))

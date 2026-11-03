@@ -1,0 +1,20 @@
+# Required release gates for the universal baseline.
+profile: universal
+
+required:
+  - requirements_gate
+  - testing_gate
+  - security_gate
+  - release_gate
+
+optional:
+  - architecture_gate
+  - implementation_gate
+  - performance_gate
+  - reliability_gate
+
+critical:
+  - security_gate
+  - release_gate
+
+missing_evidence: BLOCKED

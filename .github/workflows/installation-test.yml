@@ -58,6 +58,11 @@ jobs:
           pip install dist/*.whl
           arkhon version
           arkhon doctor || true
+          project_dir="$(mktemp -d)"
+          arkhon project init "$project_dir" --name "Wheel Smoke Test"
+          test -f "$project_dir/.arkhon/project.yaml"
+          arkhon install --scope project --project "$project_dir"
+          test -f "$project_dir/.arkhon/agent-pack/manifest.json"
 
   offline-check:
     name: Offline check (no network after install)
