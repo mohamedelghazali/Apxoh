@@ -244,3 +244,20 @@ def test_lifecycle_invalid_stage_and_rewind_edges() -> None:
     state.current = Stage.POST_RELEASE
     with pytest.raises(ValueError, match="no next stage"):
         state.advance()
+
+
+def test_policy_loader_rejects_yaml_syntax_errors(tmp_path: Path) -> None:
+    bad = tmp_path / "malformed-policy.yaml"
+    bad.write_text("[", encoding="utf-8")
+    with pytest.raises(GovernanceError, match="cannot load policy"):
+        _load_policy_file(bad, "blocking")
+
+
+def test_charter_rejects_blank_principle_statement(tmp_path: Path) -> None:
+    principles = [
+        {"number": index, "statement": f"Principle {index}"}
+        for index in range(1, 13)
+    ]
+    principles[0]["statement"] = " "
+    with pytest.raises(GovernanceError, match="empty statement"):
+        _parse_principles({"principles": principles})
