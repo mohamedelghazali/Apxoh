@@ -153,15 +153,23 @@ class ClaudeAdapter(Integration):
 
         try:
             parsed = json.loads(body)
-        except json.JSONDecodeError as exc:
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             return IntegrationResponse(
                 ok=False, reason=f"invalid JSON response: {exc}",
             )
+        if not isinstance(parsed, dict):
+            return IntegrationResponse(
+                ok=False, reason="invalid response: expected JSON object",
+            )
 
         text = ""
-        for block in parsed.get("content", []):
-            if block.get("type") == "text":
-                text += block.get("text", "")
+        content = parsed.get("content", [])
+        if isinstance(content, list):
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    value = block.get("text", "")
+                    if isinstance(value, str):
+                        text += value
 
         return IntegrationResponse(
             ok=True,
