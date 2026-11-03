@@ -68,7 +68,7 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
-                "specVersion": "1.6",
+                "specVersion": "1.7",
                 "components": [],
                 "metadata": {
                     "component": {"properties": [{"name": "arkhon:commit-sha", "value": "a" * 40}]}
