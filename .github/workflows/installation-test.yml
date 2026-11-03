@@ -64,7 +64,15 @@ jobs:
           test -f "$fixture/.arkhon/agent-pack/AGENTS.md"
           test -f "$fixture/.arkhon/agent-pack/SECURITY_AGENTS.md"
           test -f "$fixture/.arkhon/agent-pack/skills/arkhon-governance/SKILL.md"
-          python -c "import json, pathlib; p=pathlib.Path('$fixture/.arkhon/agent-pack/manifest.json'); d=json.loads(p.read_text()); assert d['activation']=='manual' and len(d['files']) == 20"
+          python - <<PY
+          import json
+          from pathlib import Path
+
+          manifest = Path("$fixture/.arkhon/agent-pack/manifest.json")
+          data = json.loads(manifest.read_text(encoding="utf-8"))
+          assert data["activation"] == "manual"
+          assert len(data["files"]) == 20
+          PY
 
   offline-check:
     name: Offline check (no network after install)
