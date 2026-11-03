@@ -16,8 +16,8 @@ logger = get_logger("verification.runners.supply_chain")
 _SOURCE_URI = "github.com/mohamedelghazali/Apxoh"
 _OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 _IDENTITY_REGEXP = (
-    r"^https://github\\.com/mohamedelghazali/Apxoh/"
-    r"\\.github/workflows/slsa-release\\.yml@refs/tags/v.*$"
+    r"^https://github\.com/mohamedelghazali/Apxoh/"
+    r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
 )
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 
@@ -134,7 +134,7 @@ class SyftRunner(Runner):
         try:
             output_dir.mkdir(parents=True, exist_ok=True)
             output = output_dir / f"sbom-{commit[:12]}.cdx.json"
-            output.write_text(json.dumps(bom, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+            output.write_text(json.dumps(bom, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         except OSError as exc:
             return RunnerResult(self.name, RunnerOutcome.BLOCKED, f"cannot persist SBOM: {exc}")
         return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[output])
@@ -252,7 +252,7 @@ class SupplyChainAttestationRunner(Runner):
         try:
             report_dir.mkdir(parents=True, exist_ok=True)
             report_path.write_text(
-                json.dumps(report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
         except OSError as exc:
             return RunnerResult(
