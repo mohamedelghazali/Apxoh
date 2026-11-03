@@ -242,6 +242,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
         "software-security": (TsarRunner(),),
         "supply-chain": (SyftRunner(), SupplyChainAttestationRunner()),
     }
+    domains: tuple[str, ...]
     if domain == "all":
         # Release supply-chain verification requires release artifacts and is
         # an explicit gate, not a local source-only default.
