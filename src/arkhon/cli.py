@@ -141,8 +141,8 @@ def _commit_sha(project: Path) -> str | None:
         return None
     try:
         # The executable and argument vector are fixed; shell execution is disabled.
-        result = subprocess.run(
-            [git_executable, "rev-parse", "HEAD"],  # noqa: S603
+        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+            [git_executable, "rev-parse", "HEAD"],
             cwd=project,
             capture_output=True,
             text=True,
