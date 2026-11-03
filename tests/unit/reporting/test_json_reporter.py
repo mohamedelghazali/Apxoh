@@ -105,9 +105,21 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
             "commit_sha": "a" * 40,
             "executed_at": "2026-11-03T00:00:00Z",
             "status": "PASS",
+            "artifacts": [{"path": sbom.relative_to(project).as_posix(), "sha256": digest(sbom)}],
+        },
+    )
+    EvidenceStore(project).write(
+        "release-attestations",
+        {
+            "evidence_id": f"{evidence_id}-ATTEST",
+            "source": "arkhon",
+            "source_version": "0.1.0.dev1",
+            "commit_sha": "a" * 40,
+            "executed_at": "2026-11-03T00:00:00Z",
+            "status": "PASS",
             "artifacts": [
                 {"path": item.relative_to(project).as_posix(), "sha256": digest(item)}
-                for item in (sbom, report, artifact, provenance, signature)
+                for item in (report, artifact, provenance, signature)
             ],
         },
     )
@@ -186,7 +198,7 @@ def test_build_approves_only_when_every_section_has_verified_evidence(
         evidence_id = f"EVID-ALL-{index}"
         if domain == "supply-chain":
             _write_supply_chain_evidence(tmp_path, evidence_id)
-        else:
+        elif domain != "release-attestations":
             _write_evidence(tmp_path, domain, evidence_id)
     monkeypatch.setattr(
         "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
