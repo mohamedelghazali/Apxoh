@@ -324,3 +324,6 @@ def test_build_blocks_supply_chain_pass_without_sbom(tmp_path: Path) -> None:
     _write_evidence(tmp_path, "supply-chain", "EVID-SBOM-MISSING")
     with pytest.raises(EvidenceError, match="exactly one CycloneDX SBOM"):
         JsonReporter().build(tmp_path)
+
+
+# ruff: noqa: I001
