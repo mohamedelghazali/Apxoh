@@ -6,6 +6,7 @@ import json
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Callable, Iterator
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -29,9 +30,12 @@ class FakeConnection:
         self,
         response: "FakeResponse | Callable[..., FakeResponse] | Exception",
         calls: list[dict[str, Any]],
+        timeout: int | float | None = None,
     ) -> None:
         self._response = response
         self._calls = calls
+        self._timeout = timeout
+        self._request: Any = None
 
     def request(
         self,
@@ -43,12 +47,18 @@ class FakeConnection:
         self._calls.append(
             {"method": method, "url": url, "body": body, "headers": headers}
         )
+        self._request = SimpleNamespace(
+            data=body,
+            headers=headers or {},
+            method=method,
+            full_url=url,
+        )
 
     def getresponse(self) -> FakeResponse:
         if isinstance(self._response, Exception):
             raise self._response
         if callable(self._response):
-            return self._response()
+            return self._response(request=self._request, timeout=self._timeout)
         return self._response
 
     def close(self) -> None:
@@ -85,8 +95,8 @@ def patch_urlopen(
     """Patch HTTP and HTTPS connection constructors for adapter tests."""
     calls: list[dict[str, Any]] = []
 
-    def _connection(*_args: Any, **_kwargs: Any) -> FakeConnection:
-        return FakeConnection(response, calls)
+    def _connection(*_args: Any, **kwargs: Any) -> FakeConnection:
+        return FakeConnection(response, calls, timeout=kwargs.get("timeout"))
 
     with (
         patch("http.client.HTTPSConnection", side_effect=_connection),
