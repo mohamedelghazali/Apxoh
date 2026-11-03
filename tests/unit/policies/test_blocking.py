@@ -123,3 +123,30 @@ def test_ensure_no_bypass_raises() -> None:
 
 def test_ensure_no_bypass_passes() -> None:
     ensure_no_bypass(BlockingResult())
+
+
+def test_invalid_trigger_rules_are_ignored_and_nonblocking_violation_does_not_block(
+    tmp_path: Path,
+) -> None:
+    invalid = Policy(
+        id="invalid",
+        category="blocking",
+        path=Path("invalid.yaml"),
+        raw={"trigger_rules": "not-a-list", "trigger_paths": []},
+    )
+    registry = PolicyRegistry([invalid])
+    result = BlockingPolicyEvaluator(registry).evaluate(
+        failing_rules={"SE-X-001"}, project_root=tmp_path
+    )
+    assert result.count == 0
+    nonblocking = BlockingResult(
+        violations=[
+            BlockingViolation(
+                policy_id="advisory",
+                rule_id="SE-X-001",
+                reason="informational",
+                blocking=False,
+            )
+        ]
+    )
+    assert not nonblocking.blocks
