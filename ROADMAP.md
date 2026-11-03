@@ -10,7 +10,7 @@
 
 Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
 
-The latest `main` commit at this update is `8da1c6da5a7105f804a8b8abecbc59dc1fedddc1`. Its GitHub Actions checks were queued when inspected; no successful result is claimed. The repository had no open pull requests or issues at that inspection time.
+The latest `main` commit at this update is `420d8efa5a2c3b7522b61aa9ba3f3f5bda72679c` (merged PRs #57 and #58). At the latest inspection, its commit had 44 check runs: 3 completed successfully and 41 queued. No completed check had failed, but the remaining checks had not run, so full CI success is not claimed.
 
 ---
 
@@ -104,12 +104,13 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] JSON and Markdown reporting
 - [x] CLI: version, doctor, validate, inspect, audit, assess, report, verify
 - [x] CLI: install, status, exceptions list
-- [x] `arkhon project init` with schema validation
+- [x] `arkhon project init` with schema validation and packaged fallback resources (8 profiles + schema)
+- [x] Wheel smoke-test workflow for project initialization and agent-pack installation (execution pending)
 - [x] CLI parser registration and unit tests for the added commands
 - [ ] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
 - [ ] Complete rule-outcome assessment integration; the current assessment command fails closed when rule-level outcomes are unavailable
 
-**Status:** The listed commands are implemented and registered. Runtime/package validation remains pending the queued CI jobs. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
+**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are now included in the wheel, and the installation workflow exercises them from an installed wheel. Runtime/package validation on the current main commit remains pending the queued wheel job. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
 
 ### Milestone 6 — Self-Governance & CI 🔄
 
@@ -122,7 +123,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Read back the effective settings and verify that required checks are enforced
 - [ ] First signed release with independently verified provenance
 
-**Status:** Workflow definitions are present. The latest main commit had 53 check runs queued at the time of inspection, with no completed success/failure evidence. The GitHub branch API reports `main` as `protected: false`, and the repository rulesets endpoint returns an empty list. Branch protection is absent and must be configured before this milestone can close. Do not bypass checks or mark this milestone complete until both CI results and repository enforcement settings are confirmed.
+**Status:** Workflow definitions are present. The latest main commit had 44 check runs at the time of inspection: 3 completed successfully and 41 remained queued, with no completed failures. The GitHub branch API reports `main` as `protected: false`, and the repository rulesets endpoint returns an empty list. Branch protection is absent and must be configured before this milestone can close. Do not bypass checks or mark this milestone complete until both CI results and repository enforcement settings are confirmed.
 
 ---
 
