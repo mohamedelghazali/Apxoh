@@ -76,7 +76,9 @@ def get_model_adapter(model_id: str) -> Integration:
 
         adapter = OpenAIOAdapter()
     elif model_id == "deepseek-coder":
-        from arkhon.integrations.models.deepseek_coder.adapter import (\n            DeepSeekCoderAdapter,\n        )
+        from arkhon.integrations.models.deepseek_coder.adapter import (
+            DeepSeekCoderAdapter,
+        )
 
         adapter = DeepSeekCoderAdapter()
     elif model_id == "gpt":
