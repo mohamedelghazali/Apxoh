@@ -101,7 +101,7 @@ def test_iter_records_rejects_resolved_path_escape(
     project.mkdir()
     evidence_dir = project / ".arkhon" / "evidence" / "security"
     evidence_dir.mkdir(parents=True)
-    record = evidence_dir / "record.json"
+    record = evidence_dir / "EVID-TEST.json"
     record.write_text('{"evidence_id":"EVID-TEST"}', encoding="utf-8")
     outside = tmp_path / "outside.json"
     original_resolve = Path.resolve
