@@ -10,12 +10,9 @@ from arkhon.assessment.gates import GateVerdict
 from arkhon.assessment.scorer import Score
 from arkhon.cli import main
 from arkhon.core.errors import (
-    AssessmentError,
     EvidenceError,
     EvidenceTamperedError,
     GateError,
-    GovernanceError,
-    SecurityError,
 )
 from arkhon.core.logging import TextFormatter
 from arkhon.evidence.collector import Artifact, EvidenceDraft
