@@ -40,6 +40,8 @@ class VerificationRun:
 class VerificationEngine:
     """Run registered runners, aggregate outcomes, and persist evidence."""
 
+# ruff: noqa: I001
+
     def __init__(self, store: EvidenceStore, collector: EvidenceCollector) -> None:
         self._store = store
         self._collector = collector
