@@ -89,7 +89,7 @@ class GeminiAdapter(Integration):
             payload["systemInstruction"] = {"parts": [{"text": system}]}
 
         connection = http.client.HTTPSConnection(
-            parsed_endpoint.hostname,
+            parsed_endpoint.hostname or "",
             parsed_endpoint.port or 443,
             timeout=self.config.timeout_seconds,
         )
