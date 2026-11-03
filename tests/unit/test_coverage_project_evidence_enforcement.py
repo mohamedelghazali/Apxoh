@@ -131,7 +131,7 @@ def test_evidence_store_read_iteration_and_latest_error_paths(tmp_path: Path, mo
         list(store.iter_records("testing"))
     corrupt.write_text("[]", encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="not an object"):
-        store.read("testing", "bad")
+        store.read("testing", "EVID-BAD")
 
 
 def _rule(rule_id: str = "TEST-001", raw: dict | None = None, *,
