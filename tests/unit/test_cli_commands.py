@@ -72,8 +72,11 @@ def test_assess_reports_score_and_gates(
 
 
 def test_report_writes_json_and_markdown(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
     store = EvidenceStore(tmp_path)
     artifact = tmp_path / "report-evidence.txt"
     artifact.write_text("verified report evidence", encoding="utf-8")
