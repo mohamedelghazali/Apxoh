@@ -66,3 +66,51 @@ def test_read_rejects_symlinked_record(tmp_path: Path) -> None:
 
     with pytest.raises(EvidenceTamperedError, match="record is a symlink"):
         EvidenceStore(project).read("security", "EVID-TEST-0001")
+
+
+def test_write_rejects_symlinked_record(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside.json"
+    outside.write_text('{"evidence_id":"EVID-OUTSIDE"}', encoding="utf-8")
+    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir.mkdir(parents=True)
+    _symlink_or_skip(evidence_dir / "EVID-TEST-0001.json", outside)
+
+    with pytest.raises(EvidenceTamperedError, match="refusing symlinked"):
+        EvidenceStore(project).write("security", _record())
+
+
+def test_iter_records_rejects_symlinked_record(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside.json"
+    outside.write_text('{"evidence_id":"EVID-OUTSIDE"}', encoding="utf-8")
+    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir.mkdir(parents=True)
+    _symlink_or_skip(evidence_dir / "EVID-TEST-0001.json", outside)
+
+    with pytest.raises(EvidenceTamperedError, match="record is a symlink"):
+        list(EvidenceStore(project).iter_records("security"))
+
+
+def test_iter_records_rejects_resolved_path_escape(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir.mkdir(parents=True)
+    record = evidence_dir / "record.json"
+    record.write_text('{"evidence_id":"EVID-TEST"}', encoding="utf-8")
+    outside = tmp_path / "outside.json"
+    original_resolve = Path.resolve
+
+    def redirected_resolve(path: Path, *args: object, **kwargs: object) -> Path:
+        if path == record:
+            return outside
+        return original_resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", redirected_resolve)
+    with pytest.raises(EvidenceTamperedError, match="escapes evidence root"):
+        list(EvidenceStore(project).iter_records("security"))
