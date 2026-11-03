@@ -129,7 +129,12 @@ class ClaudeAdapter(Integration):
                     ok=False,
                     reason=f"HTTP {response.status}: {body[:200]}",
                 )
-        except (OSError, http.client.HTTPException, TimeoutError) as exc:
+        except TimeoutError:
+            return IntegrationResponse(
+                ok=False,
+                reason=f"timeout after {self._config.timeout_seconds}s",
+            )
+        except (OSError, http.client.HTTPException) as exc:
             return IntegrationResponse(
                 ok=False,
                 reason=f"network error: {exc}",
