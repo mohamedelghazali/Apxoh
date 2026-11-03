@@ -1,4 +1,4 @@
-"""Tests for the \`arkhon verify\` command."""
+"""Tests for the arkhon verify command."""
 
 from __future__ import annotations
 
