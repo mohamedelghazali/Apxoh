@@ -120,6 +120,7 @@ class ClaudeAdapter(Integration):
             "messages": [{"role": "user", "content": user_message}],
         }
 
+        # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected -- explicit default SSL context verifies certificates
         connection = http.client.HTTPSConnection(
             endpoint.hostname or "",
             endpoint.port or 443,
