@@ -117,6 +117,7 @@ jobs:
         run: |
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
 
           wheel = sorted(Path("dist").glob("*.whl"))[0]
@@ -124,6 +125,7 @@ jobs:
           config = {
               "artifact": wheel.as_posix(),
               "provenance": provenance.as_posix(),
+              "source_tag": os.environ["GITHUB_REF_NAME"],
               "signature_bundle": Path(str(wheel) + ".sigstore.json").as_posix(),
           }
           path = Path(".arkhon/supply-chain.json")
