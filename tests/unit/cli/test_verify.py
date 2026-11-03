@@ -91,8 +91,6 @@ def test_verify_code_quality_domain(
 
     out = capsys.readouterr().out
 
-    # rc may be 0 or 1 depending on whether tools are installed
-
     assert "Status:" in out
 
 
