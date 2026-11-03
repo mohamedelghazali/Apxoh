@@ -59,9 +59,37 @@ jobs:
           path: dist/
           if-no-files-found: error
 
+  publish-draft:
+    name: Attach signed artifacts to a draft GitHub release
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download signed build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Create or populate the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/*
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* \
+              --draft \
+              --verify-tag \
+              --title "$GITHUB_REF_NAME" \
+              --notes "Automated pre-publication release. Artifacts remain draft until provenance and Apxoh evidence verification succeed."
+          fi
+
   provenance:
     name: Generate SLSA provenance
-    needs: [build]
+    needs: [build, publish-draft]
     permissions:
       actions: read
       id-token: write

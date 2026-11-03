@@ -144,3 +144,22 @@ def test_exceptions_list_rejects_invalid_yaml(
     registry.write_text("exceptions: [", encoding="utf-8")
     assert main(["exceptions", "list", "--registry", str(registry)]) == 1
     assert "cannot load exception registry" in capsys.readouterr().err
+
+
+
+def test_exceptions_list_rejects_non_mapping_registry(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry = tmp_path / "invalid-shape.yaml"
+    registry.write_text("- not-a-mapping\n", encoding="utf-8")
+    assert main(["exceptions", "list", "--registry", str(registry)]) == 1
+    assert "cannot load exception registry" in capsys.readouterr().err
+
+
+def test_exceptions_list_rejects_non_iterable_exceptions(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry = tmp_path / "invalid-exceptions.yaml"
+    registry.write_text("exceptions: 42\n", encoding="utf-8")
+    assert main(["exceptions", "list", "--registry", str(registry)]) == 1
+    assert "cannot load exception registry" in capsys.readouterr().err
