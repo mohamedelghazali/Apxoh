@@ -58,7 +58,7 @@ def test_rule_trigger() -> None:
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
         failing_rules={"SE-SEC-001"},
-        project_root=Path("/tmp"),
+        project_root=Path.cwd(),
     )
     assert result.blocks
     assert result.count == 1
@@ -75,7 +75,7 @@ def test_disabled_policy_ignored() -> None:
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
         failing_rules={"SE-SEC-001"},
-        project_root=Path("/tmp"),
+        project_root=Path.cwd(),
     )
     assert not result.blocks
 
@@ -89,7 +89,7 @@ def test_non_blocking_category_ignored() -> None:
     evaluator = BlockingPolicyEvaluator(registry)
     result = evaluator.evaluate(
         failing_rules={"SE-SEC-001"},
-        project_root=Path("/tmp"),
+        project_root=Path.cwd(),
     )
     assert not result.blocks
 
