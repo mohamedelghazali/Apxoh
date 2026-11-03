@@ -22,6 +22,20 @@ arkhon doctor
 pytest
 ```
 
+## Project status and exceptions
+
+```powershell
+# Summarize the selected project's profile, detected languages, and evidence.
+arkhon status .
+arkhon status . --json
+
+# Inspect the repository's exception registry without changing approvals.
+arkhon exceptions list
+arkhon exceptions list --json
+```
+
+The status command verifies evidence-store integrity before reporting counts. Exception inspection is read-only; approval, extension, and revocation remain governed operations and are not performed by this listing command.
+
 ## Trust model
 
 Missing required tools or evidence are BLOCKED, not PASS. CI success alone is not proof of product quality. Standards mappings are informative and do not establish certification. TSAR is an optional, separately versioned integration; ARKHON remains independently usable. Consult COMPATIBILITY.md before relying on any integration.
