@@ -2,7 +2,7 @@ name: One-time Ruff formatting
 
 on:
   push:
-    branches: [fix/phase3-assurance-format-2026-11-03]
+    branches: [fix/phase3-assurance-format-2026-11-03, fix/phase-3-supply-chain-ci-and-gates-2026-11-03]
 
 permissions:
   contents: write
