@@ -185,7 +185,10 @@ class TsarAdapter(Integration):
                 if result.returncode not in {0, 1}:
                     return IntegrationResponse(
                         ok=False,
-                        reason=f"TSAR exited with {result.returncode}: {result.stderr.strip()[:300]}",
+                        reason=(
+                            f"TSAR exited with {result.returncode}: "
+                            f"{result.stderr.strip()[:300]}"
+                        ),
                     )
                 if not output_path.is_file():
                     return IntegrationResponse(
