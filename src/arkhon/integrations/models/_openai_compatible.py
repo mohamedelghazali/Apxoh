@@ -85,6 +85,12 @@ class OpenAICompatibleAdapter(Integration):
             return False
         if not parsed.hostname:
             return False
+        try:
+            port = parsed.port
+        except ValueError:
+            return False
+        if port == 0 or any(ord(char) < 32 for char in parsed.path):
+            return False
         if parsed.scheme == "https":
             return True
         return parsed.scheme == "http" and parsed.hostname in {
