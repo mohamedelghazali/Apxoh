@@ -32,10 +32,10 @@ from arkhon.governance.policy_loader import (
 )
 from arkhon.policies.advisory import AdvisoryPolicyEvaluator
 from arkhon.projects.loader import _load_yaml, list_profiles, load_profile
+from arkhon.verification.runners.base import RunnerOutcome
+from arkhon.verification.runners.mypy_runner import MypyRunner
 from arkhon.verification.runners.pytest_runner import PytestRunner
 from arkhon.verification.runners.ruff_runner import RuffRunner
-from arkhon.verification.runners.mypy_runner import MypyRunner
-from arkhon.verification.runners.base import RunnerOutcome
 
 
 def score(value: float = 90) -> Score:
