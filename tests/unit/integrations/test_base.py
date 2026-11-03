@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 from pathlib import Path
 
 import pytest
@@ -22,7 +24,7 @@ def test_integration_info_is_frozen() -> None:
         capabilities=("code",),
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         info.id = "changed"  # type: ignore[misc]
 
 
