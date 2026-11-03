@@ -117,15 +117,17 @@ def test_report_reverifies_sbom_provenance_and_signature(
 
     def run(command, **kwargs):
         calls.append(command)
-        return subprocess.CompletedProcess(command, 0, "verified", "")
+        output = SHA if command[1] == "rev-parse" else "verified"
+        return subprocess.CompletedProcess(command, 0, output, "")
 
     monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
     report = JsonReporter().build(tmp_path, expected_commit_sha=SHA)
     assert report["sections"]["supply_chain"]["status"] == "PASS"
     assert report["sections"]["final_acceptance"]["status"] == "PASS"
-    assert len(calls) == 2
-    assert calls[0][1] == "verify-artifact"
-    assert calls[1][1] == "verify-blob"
+    assert len(calls) == 3
+    assert calls[0][1] == "rev-parse"
+    assert calls[1][1] == "verify-artifact"
+    assert calls[2][1] == "verify-blob"
 
 
 def test_report_accepts_commit_bound_sbom_without_release_attestation(tmp_path: Path) -> None:
