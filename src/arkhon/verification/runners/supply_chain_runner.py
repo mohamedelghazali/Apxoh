@@ -48,7 +48,7 @@ def _tag_commit_sha(project_root: Path, source_tag: str) -> str | None:
     if git is None:
         return None
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
             [git, "rev-parse", f"refs/tags/{source_tag}^{{commit}}"],
             cwd=project_root,
             capture_output=True,
