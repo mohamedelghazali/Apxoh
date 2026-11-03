@@ -159,10 +159,13 @@ def test_install_finally_retries_backup_restore_after_rename_failure(
 
     def fail_backup_restore_once(path: Path, destination: Path) -> Path:
         nonlocal failed_backup_restore
-        if path.name.startswith(".agent-pack-backup-") and destination == target:
-            if not failed_backup_restore:
-                failed_backup_restore = True
-                raise OSError("simulated first backup restore failure")
+        if (
+            path.name.startswith(".agent-pack-backup-")
+            and destination == target
+            and not failed_backup_restore
+        ):
+            failed_backup_restore = True
+            raise OSError("simulated first backup restore failure")
         return real_rename(path, destination)
 
     def fail_staging_and_restore_once(path: Path, destination: Path) -> Path:
