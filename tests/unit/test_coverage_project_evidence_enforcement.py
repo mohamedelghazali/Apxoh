@@ -115,7 +115,7 @@ def test_evidence_store_read_iteration_and_latest_error_paths(tmp_path: Path, mo
              "executed_at": "2026-01-01T00:00:00Z"}
     target = store.write("testing", first)
     assert store.write("testing", first) == target
-    assert store.read("testing", "EVID-1").evidence_id == "E1"
+    assert store.read("testing", "EVID-1").evidence_id == "EVID-1"
     second = {"evidence_id": "EVID-2", "commit_sha": "a" * 40, "status": "PASS",
               "executed_at": "2026-02-01T00:00:00Z"}
     store.write("testing", second)
