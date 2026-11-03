@@ -58,6 +58,8 @@ class EvidenceStore:
         return evidence_id
 
     def write(self, domain: str, evidence: dict[str, Any]) -> Path:
+        if not isinstance(evidence, dict):
+            raise EvidenceError("evidence record must be a mapping")
         evidence_id = self._validate_id(evidence.get("evidence_id"))
         target_dir = self._domain_dir(domain)
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -71,7 +73,6 @@ class EvidenceStore:
                 )
             logger.debug("evidence already present: %s", target)
             return target
-        # Exclusive creation prevents silently replacing a concurrently-created record.
         try:
             with target.open("xb") as stream:
                 stream.write(payload)

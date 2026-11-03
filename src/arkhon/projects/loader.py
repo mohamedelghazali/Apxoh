@@ -77,7 +77,7 @@ def _validate_profile_data(
 
 def load_profile(name: str, root: Path | None = None) -> ProjectProfile:
     """Load a profile by safe directory name; reject traversal and malformed data."""
-    if not _PROFILE_NAME.fullmatch(name):
+    if not isinstance(name, str) or not _PROFILE_NAME.fullmatch(name):
         raise ConfigError(f"invalid profile name: {name!r}")
     repo_root = (root or find_repo_root()).resolve()
     profiles_root = (repo_root / "projects").resolve()
@@ -92,7 +92,6 @@ def load_profile(name: str, root: Path | None = None) -> ProjectProfile:
     rules_data = _load_yaml(base / "rules.yaml", required=False)
     gates_data = _load_yaml(base / "gates.yaml", required=False)
     _validate_profile_data(name, profile_data, rules_data, gates_data)
-
     evidence = profile_data.get("evidence", {})
     if not isinstance(evidence, dict):
         raise ConfigError(f"profile {name!r}: evidence must be a mapping")
