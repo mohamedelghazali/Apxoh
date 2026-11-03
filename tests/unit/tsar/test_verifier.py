@@ -123,6 +123,7 @@ def _valid_payload(tmp_path: Path, commit_sha: str = "a" * 40) -> dict:
         "executed_at": "2026-11-01T00:00:00Z",
         "status": "PASS",
         "rule_ids": list(REQUIRED_RULE_IDS),
+        "findings": [],
         "summary": {"critical": 0, "high": 0, "medium": 2, "low": 3},
         "artifacts": [{"path": "scan.json", "sha256": sha256_of(artifact)}],
     }
