@@ -219,6 +219,7 @@ def test_attestation_runner_blocks_without_config_or_tools(
     [
         "not json",
         "[]",
+        json.dumps({"source_tag": "not-a-semver-tag"}),
         json.dumps(
             {
                 "artifact": "../escape",
