@@ -190,3 +190,31 @@ def test_build_rejects_naive_execution_timestamp(tmp_path: Path) -> None:
     )
     with pytest.raises(EvidenceError, match="must include a timezone"):
         JsonReporter().build(tmp_path)
+
+
+def test_build_rejects_non_string_evidence_status(tmp_path: Path) -> None:
+    target = _write_evidence(tmp_path, "testing", "EVID-STATUS-TYPE")
+    data = json.loads(target.read_text(encoding="utf-8"))
+    data["status"] = []
+    target.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(EvidenceError, match="invalid status"):
+        JsonReporter().build(tmp_path)
+
+
+@pytest.mark.parametrize("timestamp", ["not-a-timestamp", None])
+def test_build_rejects_invalid_execution_timestamp(
+    tmp_path: Path, timestamp: str | None
+) -> None:
+    _write_evidence(tmp_path, "testing", "EVID-BAD-TIME")
+    target = tmp_path / ".arkhon" / "evidence" / "testing" / "EVID-BAD-TIME.json"
+    data = json.loads(target.read_text(encoding="utf-8"))
+    data["executed_at"] = timestamp
+    target.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(EvidenceError, match="invalid executed_at"):
+        JsonReporter().build(tmp_path)
+
+
+def test_build_rejects_invalid_expected_commit_sha(tmp_path: Path) -> None:
+    _write_evidence(tmp_path, "testing", "EVID-A")
+    with pytest.raises(EvidenceError, match="expected commit_sha is invalid"):
+        JsonReporter().build(tmp_path, expected_commit_sha="not-a-sha")
