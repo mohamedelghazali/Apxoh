@@ -379,3 +379,6 @@ def test_attestation_report_rejects_missing_or_mismatched_bindings(
             expected_commit_sha=SHA,
             evidence_artifacts=artifacts,
         )
+
+
+# ruff: noqa: I001
