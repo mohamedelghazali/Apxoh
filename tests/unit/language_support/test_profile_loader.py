@@ -68,7 +68,7 @@ def test_loads_profile_for_registered_language(tmp_path: Path) -> None:
 
 
 def test_loads_all_repository_language_profiles() -> None:
-    root = Path(__file__).resolve().parents[2]
+    root = Path(__file__).resolve().parents[3]
     registry = load_registry(root)
     for language in registry:
         profile = load_language_profile(language.id, root, registry=registry)
@@ -76,7 +76,7 @@ def test_loads_all_repository_language_profiles() -> None:
         assert profile.status == "active"
 
 
-@pytest.mark.parametrize("language_id", ["../python", "", "A", "a/" , None])
+@pytest.mark.parametrize("language_id", ["../python", "", "A", "a/", None])
 def test_rejects_invalid_language_id(language_id: object, tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="invalid language id"):
         load_language_profile(language_id, tmp_path)  # type: ignore[arg-type]
