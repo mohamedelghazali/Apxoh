@@ -97,13 +97,34 @@ def test_project_init_fails_when_schema_is_unavailable(
     profile = tmp_path / "projects" / "universal" / "profile.yaml"
     profile.parent.mkdir(parents=True)
     profile.write_text("name: universal\n", encoding="utf-8")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
+    monkeypatch.setattr("arkhon.cli._project_template_root", lambda: tmp_path)
     assert main(["project", "init", str(tmp_path / "project")]) == 1
     assert "not a directory" in capsys.readouterr().err
     project = tmp_path / "project"
     project.mkdir()
     assert main(["project", "init", str(project)]) == 1
     assert "schema not found" in capsys.readouterr().err
+
+
+def test_project_templates_fall_back_to_packaged_resources(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from arkhon.cli import _project_template_root
+    from arkhon.projects.loader import list_profiles
+
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
+    templates = _project_template_root()
+    assert (templates / "schemas" / "project.schema.json").is_file()
+    assert set(list_profiles(templates)) == {
+        "api-service",
+        "desktop-application",
+        "distributed-system",
+        "enterprise",
+        "mobile-application",
+        "safety-critical",
+        "universal",
+        "web-application",
+    }
 
 
 def test_project_init_reports_schema_validation_failure(
