@@ -12,6 +12,7 @@ from arkhon.cli import main
 from arkhon.core.errors import (
     EvidenceError,
     EvidenceTamperedError,
+    SecurityError,
     GateError,
 )
 from arkhon.core.logging import TextFormatter
@@ -25,6 +26,7 @@ from arkhon.rules.loader import Rule
 from arkhon.rules.registry import RuleRegistry
 from arkhon.verification.engine import VerificationRun
 from arkhon.language_support.detector import DetectionResult
+from arkhon.integrations.tsar.verifier import _maximum_version_tuple
 
 
 def test_gate_invalid_status_and_closes_property() -> None:
@@ -171,3 +173,8 @@ def test_rule_version_default_and_verification_run_failure_property(tmp_path: Pa
         status="BLOCKED",
     )
     assert run.has_failures is True
+
+
+def test_tsar_version_bound_requires_three_components() -> None:
+    with pytest.raises(SecurityError, match="invalid version bound"):
+        _maximum_version_tuple("1.2")
