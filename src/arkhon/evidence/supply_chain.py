@@ -75,6 +75,30 @@ def verify_cyclonedx_sbom(path: Path, *, expected_commit_sha: str) -> None:
         raise EvidenceTamperedError("SBOM components must be an array")
 
 
+def _verify_source_tag_commit(
+    evidence_root: Path, source_tag: str, expected_commit_sha: str
+) -> None:
+    """Require the signed release tag to resolve to the evidence commit."""
+    git = shutil.which("git")
+    if git is None:
+        raise EvidenceError("git is required to verify release-tag commit binding")
+    try:
+        result = subprocess.run(
+            [git, "rev-parse", f"refs/tags/{source_tag}^{{commit}}"],
+            cwd=evidence_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise EvidenceError(f"cannot resolve release tag {source_tag}: {exc}") from exc
+    actual_commit = result.stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", actual_commit):
+        raise EvidenceTamperedError("release tag resolved to an invalid commit SHA")
+    if actual_commit != expected_commit_sha:
+        raise EvidenceTamperedError("release tag commit does not match evidence commit")
+
 def verify_supply_chain_attestation_report(
     report_path: Path,
     *,
@@ -95,6 +119,7 @@ def verify_supply_chain_attestation_report(
     if not isinstance(source_tag, str):
         raise EvidenceTamperedError("attestation report is missing its source tag")
     identity_regexp = identity_regexp_for_tag(source_tag)
+    _verify_source_tag_commit(evidence_root, source_tag, expected_commit_sha)
     if (
         report.get("source_uri") != SOURCE_URI
         or report.get("oidc_issuer") != OIDC_ISSUER
