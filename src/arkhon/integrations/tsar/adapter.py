@@ -3,17 +3,19 @@
 TSAR output is untrusted SARIF. Apxoh accepts it only after validating the
 SARIF envelope, scanner identity/version, commit binding, and artifact hash.
 """
+
 from __future__ import annotations
 
 import json
 import re
-from importlib.metadata import PackageNotFoundError, version as package_version
 import shutil
 import subprocess
 import tempfile
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Any
 
@@ -183,7 +185,10 @@ class TsarAdapter(Integration):
                 if result.returncode not in {0, 1}:
                     return IntegrationResponse(
                         ok=False,
-                        reason=f"TSAR exited with {result.returncode}: {result.stderr.strip()[:300]}",
+                        reason=(
+                            f"TSAR exited with {result.returncode}: "
+                            f"{result.stderr.strip()[:300]}"
+                        ),
                     )
                 if not output_path.is_file():
                     return IntegrationResponse(

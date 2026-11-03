@@ -147,9 +147,7 @@ class EvidenceStore:
                 if not isinstance(data, dict):
                     raise EvidenceTamperedError(f"evidence record is not an object: {path}")
                 if data.get("evidence_id") != path.stem:
-                    raise EvidenceTamperedError(
-                        f"evidence ID does not match filename: {path}"
-                    )
+                    raise EvidenceTamperedError(f"evidence ID does not match filename: {path}")
                 yield EvidenceRecord(path=resolved_path, data=data)
 
     def latest_for_commit(self, domain: str, commit_sha: str) -> EvidenceRecord | None:

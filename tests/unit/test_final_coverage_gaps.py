@@ -102,8 +102,10 @@ def test_enforcement_gate_continues_pass_and_counts_high_severity_block(
         path=tmp_path / "pass.yaml",
         raw={
             "metadata": {
-                "domain": "testing", "status": "active",
-                "severity": "low", "enforcement": "advisory",
+                "domain": "testing",
+                "status": "active",
+                "severity": "low",
+                "enforcement": "advisory",
             },
             "evidence": {"required": []},
         },
@@ -113,8 +115,10 @@ def test_enforcement_gate_continues_pass_and_counts_high_severity_block(
         path=tmp_path / "high.yaml",
         raw={
             "metadata": {
-                "domain": "testing", "status": "active",
-                "severity": "high", "enforcement": "advisory",
+                "domain": "testing",
+                "status": "active",
+                "severity": "high",
+                "enforcement": "advisory",
             },
             "evidence": {"required": ["missing.json"]},
         },

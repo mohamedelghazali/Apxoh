@@ -127,8 +127,14 @@ def test_decision_rejects_missing_inputs() -> None:
     with pytest.raises(AssessmentError):
         decide(score(), {})
     with pytest.raises(AssessmentError):
-        decide(score(), {"security_gate": verdict("security_gate", "PASS"),
-                         "release_gate": verdict("release_gate", "PASS")}, -1)
+        decide(
+            score(),
+            {
+                "security_gate": verdict("security_gate", "PASS"),
+                "release_gate": verdict("release_gate", "PASS"),
+            },
+            -1,
+        )
 
 
 def principles() -> dict[str, Any]:
@@ -152,8 +158,10 @@ def test_charter_validation_and_loading(tmp_path: Path) -> None:
     base.mkdir(parents=True)
     (base / "ENGINEERING_CHARTER.md").write_text("# Charter", encoding="utf-8")
     import yaml
+
     (base / "PRINCIPLES.yaml").write_text(
-        yaml.safe_dump({"version": "1.2.3", **principles()}), encoding="utf-8")
+        yaml.safe_dump({"version": "1.2.3", **principles()}), encoding="utf-8"
+    )
     charter = load_charter(tmp_path)
     assert charter.count == 12 and charter.version == "1.2.3"
     with pytest.raises(GovernanceError):
@@ -164,7 +172,8 @@ def test_profile_loader_validates_and_lists(tmp_path: Path) -> None:
     base = tmp_path / "projects" / "universal"
     base.mkdir(parents=True)
     (base / "profile.yaml").write_text(
-        "name: universal\ndescription: General\nrisk_level: low\nevidence: {}\n", encoding="utf-8")
+        "name: universal\ndescription: General\nrisk_level: low\nevidence: {}\n", encoding="utf-8"
+    )
     (base / "rules.yaml").write_text("domains: [testing, security]\n", encoding="utf-8")
     (base / "gates.yaml").write_text("required: [security_gate]\n", encoding="utf-8")
     (tmp_path / "projects" / "_private").mkdir()
@@ -201,20 +210,33 @@ def test_profile_loader_rejects_invalid_yaml_and_profile(tmp_path: Path) -> None
 def test_advisory_evaluator_filters_and_matches(tmp_path: Path) -> None:
     def policy(pid: str, enabled: bool, raw: dict[str, Any]) -> Policy:
         return Policy(pid, "advisory", Path(pid + ".yaml"), {"enabled": enabled, **raw})
-    registry = PolicyRegistry([
-        policy("A1", True, {"trigger_rules": ["R1"], "message": "Improve"}),
-        policy("A2", False, {"trigger_rules": ["R1"]}),
-        policy("A3", True, {"trigger_rules": "invalid"}),
-    ])
+
+    registry = PolicyRegistry(
+        [
+            policy("A1", True, {"trigger_rules": ["R1"], "message": "Improve"}),
+            policy("A2", False, {"trigger_rules": ["R1"]}),
+            policy("A3", True, {"trigger_rules": "invalid"}),
+        ]
+    )
     result = AdvisoryPolicyEvaluator(registry).evaluate(failing_rules={"R1"}, project_root=tmp_path)
     assert result.count == 1
     assert result.notes[0].message == "Improve"
 
 
-def rule(rule_id: str, evidence: object, status: str = "active",
-         enforcement: str = "blocking", severity: str = "low") -> SimpleNamespace:
-    return SimpleNamespace(id=rule_id, raw={"evidence": evidence}, status=status,
-                           enforcement=enforcement, severity=severity)
+def rule(
+    rule_id: str,
+    evidence: object,
+    status: str = "active",
+    enforcement: str = "blocking",
+    severity: str = "low",
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        id=rule_id,
+        raw={"evidence": evidence},
+        status=status,
+        enforcement=enforcement,
+        severity=severity,
+    )
 
 
 def test_enforcement_evidence_validation_and_path_safety(tmp_path: Path) -> None:
@@ -229,17 +251,18 @@ def test_enforcement_evidence_validation_and_path_safety(tmp_path: Path) -> None
     assert engine.evaluate_rule(rule("R4", {"required": ["missing"]}), root).status == "BLOCKED"
     assert "escapes" in engine.evaluate_rule(rule("R5", {"required": ["../escape"]}), root).reason
     assert (
-        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status
-        == "PASS"
+        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status == "PASS"
     )
     assert engine.evaluate_rule(rule("R7", {"required": [{"type": ""}]}), root).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R8", {"required": [None]}), root).status == "BLOCKED"
 
 
 def test_enforcement_gate_ignores_inactive_and_aggregates(tmp_path: Path) -> None:
-    rules = [rule("R1", {"required": ["missing"]}, enforcement="blocking"),
-             rule("R2", {"required": ["missing"]}, enforcement="critical"),
-             rule("R3", {}, status="disabled")]
+    rules = [
+        rule("R1", {"required": ["missing"]}, enforcement="blocking"),
+        rule("R2", {"required": ["missing"]}, enforcement="critical"),
+        rule("R3", {}, status="disabled"),
+    ]
     registry = SimpleNamespace(by_domain=lambda _domain: rules)
     result = EnforcementEngine(registry).evaluate_gate("security", ("security",), tmp_path)
     assert result.status == "FAIL"
@@ -251,8 +274,12 @@ def test_enforcement_gate_ignores_inactive_and_aggregates(tmp_path: Path) -> Non
 
 def test_evidence_store_integrity_iteration_and_latest(tmp_path: Path) -> None:
     store = EvidenceStore(tmp_path)
-    data = {"evidence_id": "EVID-1", "commit_sha": "a" * 40, "status": "PASS",
-            "executed_at": "2026-11-01T00:00:00Z"}
+    data = {
+        "evidence_id": "EVID-1",
+        "commit_sha": "a" * 40,
+        "status": "PASS",
+        "executed_at": "2026-11-01T00:00:00Z",
+    }
     path = store.write("testing", data)
     assert store.write("testing", data) == path
     assert store.read("testing", "EVID-1").status == "PASS"
@@ -292,8 +319,10 @@ def test_logging_json_extras_exceptions_and_configuration() -> None:
         raise RuntimeError("expected")
     except RuntimeError:
         import sys
-        record = logging.LogRecord("arkhon.test", logging.ERROR, __file__, 1, "message", (),
-                                   sys.exc_info())
+
+        record = logging.LogRecord(
+            "arkhon.test", logging.ERROR, __file__, 1, "message", (), sys.exc_info()
+        )
     record.arkhon_extra = {"component": "test"}
     payload = json.loads(JsonFormatter().format(record))
     assert payload["extra"]["component"] == "test"
@@ -310,19 +339,22 @@ def test_logging_json_extras_exceptions_and_configuration() -> None:
 
 def test_policy_registry_properties_and_validation(tmp_path: Path) -> None:
     policy = Policy(
-        "P1", "advisory", tmp_path / "p.yaml",
+        "P1",
+        "advisory",
+        tmp_path / "p.yaml",
         {"title": "Title", "description": "Description", "enabled": True},
     )
     assert policy.title == "Title"
     assert policy.description == "Description"
     assert policy.enabled
-    assert not Policy("P2", "advisory", tmp_path / "p2.yaml",
-                      {"enabled": 1}).enabled
-    registry = PolicyRegistry([
-        policy,
-        Policy("P3", "blocking", tmp_path / "p3.yaml", {"enabled": False}),
-        Policy("P4", "exceptions", tmp_path / "p4.yaml", {}),
-    ])
+    assert not Policy("P2", "advisory", tmp_path / "p2.yaml", {"enabled": 1}).enabled
+    registry = PolicyRegistry(
+        [
+            policy,
+            Policy("P3", "blocking", tmp_path / "p3.yaml", {"enabled": False}),
+            Policy("P4", "exceptions", tmp_path / "p4.yaml", {}),
+        ]
+    )
     assert registry.get("P1") == policy
     assert registry.blocking() == []
     assert registry.advisory() == [policy]
@@ -370,9 +402,7 @@ def test_policy_loader_reads_yaml_variants_and_fails_closed(tmp_path: Path) -> N
         ("id: P1\nenabled: yes-maybe", "enabled"),
     ],
 )
-def test_policy_file_rejects_malformed_yaml(
-    tmp_path: Path, content: str, message: str
-) -> None:
+def test_policy_file_rejects_malformed_yaml(tmp_path: Path, content: str, message: str) -> None:
     path = tmp_path / "policy.yaml"
     path.write_text(content, encoding="utf-8")
     with pytest.raises(GovernanceError, match=message):
@@ -383,27 +413,25 @@ def test_pytest_runner_handles_timeout_start_failure_and_empty_xml(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     (tmp_path / "tests").mkdir()
+
     def timeout(*args: object, **kwargs: object) -> None:
         raise subprocess.TimeoutExpired("pytest", 1)
-    monkeypatch.setattr(
-        "arkhon.verification.runners.pytest_runner.subprocess.run", timeout
-    )
+
+    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", timeout)
     assert PytestRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
     def start_error(*args: object, **kwargs: object) -> None:
         raise OSError("cannot start")
-    monkeypatch.setattr(
-        "arkhon.verification.runners.pytest_runner.subprocess.run", start_error
-    )
+
+    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", start_error)
     assert "failed to start" in PytestRunner().run(tmp_path).reason
 
     def empty_xml(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         junit = Path(command[command.index("--junit-xml") + 1])
         junit.write_text('<testsuite tests="0"/>', encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, "", "")
-    monkeypatch.setattr(
-        "arkhon.verification.runners.pytest_runner.subprocess.run", empty_xml
-    )
+
+    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", empty_xml)
     assert "collected no tests" in PytestRunner().run(tmp_path).reason
 
 
@@ -416,18 +444,18 @@ def test_pytest_runner_handles_missing_xml_and_copy_failure(
         lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "", ""),
     )
     assert "no JUnit XML" in PytestRunner().run(tmp_path).reason
+
     def with_xml(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         junit = Path(command[command.index("--junit-xml") + 1])
         junit.write_text('<testsuite tests="1"/>', encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, "", "")
-    monkeypatch.setattr(
-        "arkhon.verification.runners.pytest_runner.subprocess.run", with_xml
-    )
+
+    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", with_xml)
+
     def copy_error(*args: object, **kwargs: object) -> None:
         raise OSError("disk full")
-    monkeypatch.setattr(
-        "arkhon.verification.runners.pytest_runner.shutil.copy2", copy_error
-    )
+
+    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.shutil.copy2", copy_error)
     assert "cannot persist" in PytestRunner().run(tmp_path).reason
 
 
@@ -437,16 +465,22 @@ def test_ruff_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(
         "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
     )
+
     def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 0, "[]", "")
+
     monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", run)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.PASS
+
     def issue(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 1, '[{"code":"E501"}]', "")
+
     monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", issue)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.FAIL
+
     def invalid(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 0, "{}", "")
+
     monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", invalid)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
@@ -457,12 +491,16 @@ def test_ruff_runner_timeout_and_start_error(
     monkeypatch.setattr(
         "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
     )
+
     def timeout(*args: object, **kwargs: object) -> None:
         raise subprocess.TimeoutExpired("ruff", 1)
+
     monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", timeout)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+
     def start_error(*args: object, **kwargs: object) -> None:
         raise OSError("no executable")
+
     monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", start_error)
     assert "failed to start" in RuffRunner().run(tmp_path).reason
 
@@ -473,16 +511,22 @@ def test_mypy_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(
         "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
     )
+
     def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 0, "Success", "")
+
     monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", run)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.PASS
+
     def fail(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 1, "type error", "")
+
     monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", fail)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.FAIL
+
     def blocked(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 2, "", "crashed")
+
     monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", blocked)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
@@ -493,11 +537,15 @@ def test_mypy_runner_timeout_and_start_error(
     monkeypatch.setattr(
         "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
     )
+
     def timeout(*args: object, **kwargs: object) -> None:
         raise subprocess.TimeoutExpired("mypy", 1)
+
     monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", timeout)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+
     def start_error(*args: object, **kwargs: object) -> None:
         raise OSError("no executable")
+
     monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", start_error)
     assert "failed to start" in MypyRunner().run(tmp_path).reason

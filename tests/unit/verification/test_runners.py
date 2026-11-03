@@ -220,7 +220,8 @@ class FakeInvalidOutcomeRunner(Runner):
 
     def run(self, project_root: Path) -> RunnerResult:
         return RunnerResult(
-            self.name, "PASS"  # type: ignore[arg-type]
+            self.name,
+            "PASS",  # type: ignore[arg-type]
         )
 
 
@@ -237,9 +238,7 @@ def test_engine_blocks_pass_with_missing_artifact(
     assert "missing or not a file" in run.results[0].reason
 
 
-def test_engine_blocks_invalid_runner_outcome(
-    engine: VerificationEngine, project: Path
-) -> None:
+def test_engine_blocks_invalid_runner_outcome(engine: VerificationEngine, project: Path) -> None:
     run = engine.run(
         domain="testing",
         commit_sha="4" * 40,

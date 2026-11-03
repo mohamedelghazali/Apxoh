@@ -38,13 +38,14 @@ def _charter_yaml(root: Path) -> Path:
     (folder / "ENGINEERING_CHARTER.md").write_text("# Charter", encoding="utf-8")
     path = folder / "PRINCIPLES.yaml"
     path.write_text(
-        yaml.safe_dump({
-            "version": "1.0.0",
-            "principles": [
-                {"number": index, "statement": f"Principle {index}"}
-                for index in range(1, 13)
-            ],
-        }),
+        yaml.safe_dump(
+            {
+                "version": "1.0.0",
+                "principles": [
+                    {"number": index, "statement": f"Principle {index}"} for index in range(1, 13)
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     return path
@@ -83,21 +84,19 @@ def test_charter_load_and_validation_edges(tmp_path: Path) -> None:
     valid[0] = "bad"
     with pytest.raises(GovernanceError, match="must be a mapping"):
         _parse_principles({"principles": valid})
-    valid = [
-        {"number": index, "statement": f"Principle {index}"}
-        for index in range(1, 13)
-    ]
+    valid = [{"number": index, "statement": f"Principle {index}"} for index in range(1, 13)]
     valid[0]["number"] = 2
     with pytest.raises(GovernanceError, match="unique and ordered"):
         _parse_principles({"principles": valid})
     path.write_text(
-        yaml.safe_dump({
-            "version": "",
-            "principles": [
-                {"number": index, "statement": f"Principle {index}"}
-                for index in range(1, 13)
-            ],
-        }),
+        yaml.safe_dump(
+            {
+                "version": "",
+                "principles": [
+                    {"number": index, "statement": f"Principle {index}"} for index in range(1, 13)
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     with pytest.raises(GovernanceError, match="version"):
@@ -106,10 +105,13 @@ def test_charter_load_and_validation_edges(tmp_path: Path) -> None:
     charter_dir = missing_markdown / "system" / "charter"
     charter_dir.mkdir(parents=True)
     (charter_dir / "PRINCIPLES.yaml").write_text(
-        yaml.safe_dump({"principles": [
-            {"number": index, "statement": f"Principle {index}"}
-            for index in range(1, 13)
-        ]}),
+        yaml.safe_dump(
+            {
+                "principles": [
+                    {"number": index, "statement": f"Principle {index}"} for index in range(1, 13)
+                ]
+            }
+        ),
         encoding="utf-8",
     )
     with pytest.raises(GovernanceError, match="markdown missing"):
@@ -130,9 +132,7 @@ def test_policy_loader_registry_and_fail_closed(tmp_path: Path) -> None:
     (base / "blocking" / "a.yaml").write_text(
         "id: BLOCK-1\ntitle: Blocker\nenabled: true\n", encoding="utf-8"
     )
-    (base / "advisory" / "b.yml").write_text(
-        "id: ADV-1\nenabled: false\n", encoding="utf-8"
-    )
+    (base / "advisory" / "b.yml").write_text("id: ADV-1\nenabled: false\n", encoding="utf-8")
     (base / "exceptions" / "c.yaml").write_text("id: EX-1\n", encoding="utf-8")
     registry = load_policies(tmp_path)
     assert len(registry) == 3
@@ -146,10 +146,12 @@ def test_policy_loader_registry_and_fail_closed(tmp_path: Path) -> None:
     with pytest.raises(GovernanceError, match="unknown policy category"):
         PolicyRegistry([Policy("x", "other", Path("x"), {})])
     with pytest.raises(GovernanceError, match="duplicate policy"):
-        PolicyRegistry([
-            Policy("x", "blocking", Path("x"), {}),
-            Policy("x", "advisory", Path("y"), {}),
-        ])
+        PolicyRegistry(
+            [
+                Policy("x", "blocking", Path("x"), {}),
+                Policy("x", "advisory", Path("y"), {}),
+            ]
+        )
     bad = tmp_path / "bad.yaml"
     bad.write_text("[]", encoding="utf-8")
     with pytest.raises(GovernanceError, match="mapping"):
@@ -208,23 +210,48 @@ def test_scoring_and_gate_validation_edges() -> None:
     with pytest.raises(AssessmentError, match="not in"):
         ScoreBreakdown("x", 2, 1)
     with pytest.raises(AssessmentError, match="numeric"):
-        score_from_ratios({**{k: 0.5 for k in (
-            "requirements", "architecture_and_code_quality", "testing", "security",
-            "performance", "reliability", "scalability",
-            "documentation_deployment_maintenance",
-        )}, "testing": "not-a-number"})
+        score_from_ratios(
+            {
+                **{
+                    k: 0.5
+                    for k in (
+                        "requirements",
+                        "architecture_and_code_quality",
+                        "testing",
+                        "security",
+                        "performance",
+                        "reliability",
+                        "scalability",
+                        "documentation_deployment_maintenance",
+                    )
+                },
+                "testing": "not-a-number",
+            }
+        )
     with pytest.raises(AssessmentError, match="finite"):
-        score_from_ratios({k: float("inf") if k == "security" else 0.5 for k in (
-            "requirements", "architecture_and_code_quality", "testing", "security",
-            "performance", "reliability", "scalability",
-            "documentation_deployment_maintenance",
-        )})
+        score_from_ratios(
+            {
+                k: float("inf") if k == "security" else 0.5
+                for k in (
+                    "requirements",
+                    "architecture_and_code_quality",
+                    "testing",
+                    "security",
+                    "performance",
+                    "reliability",
+                    "scalability",
+                    "documentation_deployment_maintenance",
+                )
+            }
+        )
     with pytest.raises(AssessmentError, match="no gate verdicts"):
         decide(Score(100, 100), {})
     approved = decide(
         Score(100, 100),
-        {"security_gate": GateVerdict("security_gate", "PASS"),
-         "release_gate": GateVerdict("release_gate", "PASS")},
+        {
+            "security_gate": GateVerdict("security_gate", "PASS"),
+            "release_gate": GateVerdict("release_gate", "PASS"),
+        },
     )
     assert approved.decision == "APPROVED"
     assert approved.to_dict()["decision"] == "APPROVED"
@@ -255,10 +282,7 @@ def test_policy_loader_rejects_yaml_syntax_errors(tmp_path: Path) -> None:
 
 
 def test_charter_rejects_blank_principle_statement(tmp_path: Path) -> None:
-    principles = [
-        {"number": index, "statement": f"Principle {index}"}
-        for index in range(1, 13)
-    ]
+    principles = [{"number": index, "statement": f"Principle {index}"} for index in range(1, 13)]
     principles[0]["statement"] = " "
     with pytest.raises(GovernanceError, match="empty statement"):
         _parse_principles({"principles": principles})

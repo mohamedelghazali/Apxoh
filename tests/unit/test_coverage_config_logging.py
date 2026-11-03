@@ -60,6 +60,7 @@ def test_configure_logging_rejects_bad_values_and_installs_json_handler(
         configure_logging("not-a-level")
     with pytest.raises(ValueError, match="unknown logging format"):
         configure_logging("info", "xml")
+
     class FakeRoot:
         def __init__(self) -> None:
             self.handlers = []

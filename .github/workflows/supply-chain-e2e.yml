@@ -24,7 +24,7 @@ jobs:
           cache: pip
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.26.8"
       - name: Install pinned Syft
         run: |
           go install github.com/anchore/syft/cmd/syft@v1.56.0

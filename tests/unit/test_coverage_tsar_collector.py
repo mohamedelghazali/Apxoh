@@ -115,6 +115,4 @@ def test_tsar_version_freshness_and_artifact_failure_paths(tmp_path: Path) -> No
     payload = _payload(tmp_path)
     payload["commit_sha"] = "bad"
     with pytest.raises(SecurityError, match="malformed"):
-        verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path
-        )
+        verify_tsar_evidence(payload, expected_commit_sha="a" * 40, evidence_root=tmp_path)

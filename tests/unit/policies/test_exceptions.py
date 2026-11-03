@@ -143,23 +143,25 @@ def test_load_exceptions_skips_malformed_records_and_handles_empty_registry(
 ) -> None:
     path = tmp_path / "registry.yaml"
     path.write_text(
-        yaml.safe_dump({
-            "exceptions": [
-                "not-a-mapping",
-                {"exception_id": "missing-required-fields"},
-                {
-                    "exception_id": "EXC-BAD-DATE",
-                    "rule_id": "SE-TST-001",
-                    "scope": {},
-                    "rationale": "rationale",
-                    "owner": "owner",
-                    "approver": "approver",
-                    "approved_at": "not-a-date",
-                    "expires_at": "not-a-date",
-                    "compensating_control": "control",
-                },
-            ]
-        }),
+        yaml.safe_dump(
+            {
+                "exceptions": [
+                    "not-a-mapping",
+                    {"exception_id": "missing-required-fields"},
+                    {
+                        "exception_id": "EXC-BAD-DATE",
+                        "rule_id": "SE-TST-001",
+                        "scope": {},
+                        "rationale": "rationale",
+                        "owner": "owner",
+                        "approver": "approver",
+                        "approved_at": "not-a-date",
+                        "expires_at": "not-a-date",
+                        "compensating_control": "control",
+                    },
+                ]
+            }
+        ),
         encoding="utf-8",
     )
     assert load_exceptions(path).exceptions == []

@@ -35,10 +35,12 @@ def test_cli_inspect_text_json_and_invalid_project(tmp_path: Path, capsys, monke
 def test_cli_validate_and_import_failure(monkeypatch, capsys) -> None:
     assert main(["validate"]) in {0, 1}
     original_import = builtins.__import__
+
     def fail_validate(name, *args, **kwargs):
         if name == "scripts.validation.validate_all":
             raise ImportError("validation module absent")
         return original_import(name, *args, **kwargs)
+
     monkeypatch.setattr(builtins, "__import__", fail_validate)
     assert main(["validate"]) == 1
     assert "not available" in capsys.readouterr().err
@@ -83,12 +85,8 @@ def test_cli_audit_rule_load_failure_and_verify_domain_errors(
     assert main(["verify", str(project), "--domain", "testing"]) == 1
 
 
-def test_cli_report_unknown_format_and_verify_success(
-    tmp_path: Path, monkeypatch, capsys
-) -> None:
-    assert cmd_report(
-        Namespace(project=str(tmp_path), format="unknown", output=None)
-    ) == 1
+def test_cli_report_unknown_format_and_verify_success(tmp_path: Path, monkeypatch, capsys) -> None:
+    assert cmd_report(Namespace(project=str(tmp_path), format="unknown", output=None)) == 1
     assert "unknown format" in capsys.readouterr().err
     project = tmp_path / "project"
     project.mkdir()
@@ -101,9 +99,7 @@ def test_cli_report_unknown_format_and_verify_success(
         evidence_id="EVID-1",
         results=[SimpleNamespace(runner="pytest", outcome=SimpleNamespace(value="PASS"))],
     )
-    monkeypatch.setattr(
-        "arkhon.verification.engine.VerificationEngine.run", lambda *a, **k: run
-    )
+    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", lambda *a, **k: run)
     assert main(["verify", str(project), "--domain", "testing"]) == 0
     output = capsys.readouterr().out
     assert "RUN-1" in output and "EVID-1" in output

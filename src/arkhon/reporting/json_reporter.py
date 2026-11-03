@@ -72,9 +72,7 @@ def _record_timestamp(record: Any) -> datetime:
 class JsonReporter:
     """Writes a JSON report aggregating all evidence."""
 
-    def build(
-        self, project_root: Path, expected_commit_sha: str | None = None
-    ) -> dict[str, Any]:
+    def build(self, project_root: Path, expected_commit_sha: str | None = None) -> dict[str, Any]:
         store = EvidenceStore(project_root)
         all_records = list(store.iter_records())
         if not all_records:
@@ -129,7 +127,8 @@ class JsonReporter:
                     ]
                     if len(sbom_paths) != 1 or len(attestation_paths) != 1:
                         raise EvidenceError(
-                            "PASS supply-chain evidence requires exactly one SBOM and attestation report"
+                            "PASS supply-chain evidence requires exactly one SBOM "
+                            "and attestation report"
                         )
                     verify_cyclonedx_sbom(sbom_paths[0], expected_commit_sha=commit_sha)
                     verify_supply_chain_attestation_report(

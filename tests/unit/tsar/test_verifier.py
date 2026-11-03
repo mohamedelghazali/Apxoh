@@ -123,6 +123,7 @@ def _valid_payload(tmp_path: Path, commit_sha: str = "a" * 40) -> dict:
         "executed_at": "2026-11-01T00:00:00Z",
         "status": "PASS",
         "rule_ids": list(REQUIRED_RULE_IDS),
+        "findings": [],
         "summary": {"critical": 0, "high": 0, "medium": 2, "low": 3},
         "artifacts": [{"path": "scan.json", "sha256": sha256_of(artifact)}],
     }
@@ -187,9 +188,14 @@ def test_parse_payload_rejects_invalid_shapes_and_summary() -> None:
     with pytest.raises(SecurityError, match="object"):
         _parse_tsar_payload([])  # type: ignore[arg-type]
     payload = {
-        "evidence_id": "E1", "tsar_version": "1.2.0", "commit_sha": "a" * 40,
-        "executed_at": "2026-11-01T00:00:00Z", "status": "PASS",
-        "rule_ids": list(REQUIRED_RULE_IDS), "findings": [], "summary": {"critical": True},
+        "evidence_id": "E1",
+        "tsar_version": "1.2.0",
+        "commit_sha": "a" * 40,
+        "executed_at": "2026-11-01T00:00:00Z",
+        "status": "PASS",
+        "rule_ids": list(REQUIRED_RULE_IDS),
+        "findings": [],
+        "summary": {"critical": True},
         "artifacts": [{"path": "a", "sha256": "a" * 64}],
     }
     with pytest.raises(SecurityError, match="summary counts"):
@@ -211,15 +217,11 @@ def test_verify_rejects_invalid_commit_version_time_and_paths(tmp_path: Path) ->
     with pytest.raises(EvidenceStaleError, match="timezone"):
         _check_freshness("2026-11-01T00:00:00")
     with pytest.raises(ValueError, match="timezone-aware"):
-        _check_freshness(
-            "2026-11-01T00:00:00Z", now=datetime(2026, 11, 2)
-        )
+        _check_freshness("2026-11-01T00:00:00Z", now=datetime(2026, 11, 2))
     payload = _valid_payload(tmp_path)
     payload["artifacts"][0]["path"] = "../outside.json"
     with pytest.raises(EvidenceTamperedError, match="escapes"):
-        verify_tsar_evidence(
-            payload, expected_commit_sha="a" * 40, evidence_root=tmp_path
-        )
+        verify_tsar_evidence(payload, expected_commit_sha="a" * 40, evidence_root=tmp_path)
 
 
 def test_verify_honors_custom_required_rule_ids(tmp_path: Path) -> None:

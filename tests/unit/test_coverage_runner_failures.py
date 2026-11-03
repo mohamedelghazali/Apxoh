@@ -24,6 +24,7 @@ def _pytest_run(monkeypatch, tmp_path: Path, *, xml: str | None, code: int = 0):
             target = Path(command[command.index("--junit-xml") + 1])
             target.write_text(xml, encoding="utf-8")
         return _completed(command, code, "", "")
+
     monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", run)
     return PytestRunner().run(tmp_path)
 
@@ -50,15 +51,12 @@ def test_pytest_runner_timeout_start_and_missing_xml(tmp_path: Path, monkeypatch
     assert "no JUnit XML" in PytestRunner().run(tmp_path).reason
 
 
-def test_pytest_runner_xml_validation_persistence_and_outcomes(
-    tmp_path: Path, monkeypatch
-) -> None:
-    assert "invalid JUnit XML" in _pytest_run(
-        monkeypatch, tmp_path, xml="<broken"
-    ).reason
-    assert "collected no tests" in _pytest_run(
-        monkeypatch, tmp_path, xml='<testsuite tests="0"/>'
-    ).reason
+def test_pytest_runner_xml_validation_persistence_and_outcomes(tmp_path: Path, monkeypatch) -> None:
+    assert "invalid JUnit XML" in _pytest_run(monkeypatch, tmp_path, xml="<broken").reason
+    assert (
+        "collected no tests"
+        in _pytest_run(monkeypatch, tmp_path, xml='<testsuite tests="0"/>').reason
+    )
     monkeypatch.setattr(
         "arkhon.verification.runners.pytest_runner.shutil.copy2",
         lambda *a, **k: (_ for _ in ()).throw(OSError("disk full")),
@@ -70,7 +68,8 @@ def test_pytest_runner_xml_validation_persistence_and_outcomes(
     assert "cannot persist" in result.reason
     monkeypatch.undo()
     failed = _pytest_run(
-        monkeypatch, tmp_path,
+        monkeypatch,
+        tmp_path,
         xml='<testsuite tests="1" failures="1" errors="0" skipped="0"/>',
         code=1,
     )
