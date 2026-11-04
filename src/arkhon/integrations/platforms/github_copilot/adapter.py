@@ -2,6 +2,7 @@
 
 Installing this file does not prove that Copilot loaded it or follows it.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -53,10 +54,15 @@ class GitHubCopilotAdapter(Integration):
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
             if target.parent.is_symlink() or target.is_symlink():
-                return IntegrationResponse(ok=False, reason="refusing to write through a symlink")
+                return IntegrationResponse(
+                    ok=False, reason="refusing to write through a symlink"
+                )
             if target.exists():
                 if not target.is_file():
-                    return IntegrationResponse(\n                        ok=False, reason="instructions target is not a regular file"\n                    )
+                    return IntegrationResponse(
+                        ok=False,
+                        reason="instructions target is not a regular file",
+                    )
                 if target.read_bytes() != expected:
                     return IntegrationResponse(
                         ok=False,
@@ -73,13 +79,21 @@ class GitHubCopilotAdapter(Integration):
                         reason="instructions target appeared concurrently with different content",
                     )
             except OSError as exc:
-                return IntegrationResponse(\n                    ok=False, reason=f"cannot verify instructions file: {exc}"\n                )
+                return IntegrationResponse(
+                    ok=False, reason=f"cannot verify instructions file: {exc}"
+                )
         except OSError as exc:
-            return IntegrationResponse(ok=False, reason=f"cannot install instructions: {exc}")
+            return IntegrationResponse(
+                ok=False, reason=f"cannot install instructions: {exc}"
+            )
         digest = hashlib.sha256(expected).hexdigest()
         return IntegrationResponse(
             ok=True,
-            payload={"sha256": digest, "installed": True, "external_activation": "unverified"},
+            payload={
+                "sha256": digest,
+                "installed": True,
+                "external_activation": "unverified",
+            },
             artifacts=[target],
         )
 
@@ -88,14 +102,21 @@ class GitHubCopilotAdapter(Integration):
         if error:
             return IntegrationResponse(ok=False, reason=error)
         if not target.is_file():
-            return IntegrationResponse(ok=False, reason=f"instructions file missing: {target}")
+            return IntegrationResponse(
+                ok=False, reason=f"instructions file missing: {target}"
+            )
         try:
             actual = target.read_bytes()
         except OSError as exc:
-            return IntegrationResponse(ok=False, reason=f"cannot read instructions file: {exc}")
+            return IntegrationResponse(
+                ok=False, reason=f"cannot read instructions file: {exc}"
+            )
         expected = _INSTRUCTIONS_CONTENT.encode("utf-8")
         if actual != expected:
-            return IntegrationResponse(\n                ok=False, reason="instructions file does not match expected content"\n            )
+            return IntegrationResponse(
+                ok=False,
+                reason="instructions file does not match expected content",
+            )
         digest = hashlib.sha256(actual).hexdigest()
         return IntegrationResponse(
             ok=True,
