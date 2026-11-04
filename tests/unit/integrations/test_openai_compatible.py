@@ -180,6 +180,7 @@ def test_send_does_not_leak_key(monkeypatch: pytest.MonkeyPatch) -> None:
         "https:///missing-host",
         "https://example.com:bad/v1",
         "https://example.com:0/v1",
+        "https://example.com:8443/v1",
         "ftp://example.com/v1",
     ],
 )
@@ -194,10 +195,14 @@ def test_endpoint_allows_https_and_loopback_http() -> None:
         _config(api_key_required=False), endpoint="http://127.0.0.1:8080/v1"
     )
     assert OpenAICompatibleAdapter(local)._endpoint_is_allowed()
+    ipv6_loopback = replace(
+        _config(api_key_required=False), endpoint="http://[::1]:8080/v1"
+    )
+    assert OpenAICompatibleAdapter(ipv6_loopback)._endpoint_is_allowed()
     localhost = replace(
         _config(api_key_required=False), endpoint="http://localhost/v1"
     )
-    assert OpenAICompatibleAdapter(localhost)._endpoint_is_allowed()
+    assert not OpenAICompatibleAdapter(localhost)._endpoint_is_allowed()
 
 
 def test_response_text_variants() -> None:
