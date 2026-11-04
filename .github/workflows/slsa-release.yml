@@ -118,7 +118,15 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
     with:
       base64-subjects: ${{ needs.build.outputs.hashes }}
+      # Build the generator from source: the reusable workflow's release asset
+      # is not guaranteed to be available for the detected workflow ref.
+      compile-generator: true
+      # Upload provenance to the same tag/release created by publish-draft.
       upload-assets: true
+      upload-tag-name: ${{ github.ref_name }}
+      provenance-name: multiple.intoto.jsonl
+      # Keep the release private as a draft until the verify job succeeds.
+      draft-release: "true"
 
   verify:
     name: Verify release provenance, signatures, and Apxoh evidence acceptance
