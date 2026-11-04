@@ -54,6 +54,25 @@ def test_install_creates_file(copilot_project: Path) -> None:
     assert target.stat().st_size > 0
 
 
+
+def test_install_is_idempotent(copilot_project: Path) -> None:
+    adapter = GitHubCopilotAdapter()
+    first = adapter.install(copilot_project)
+    second = adapter.install(copilot_project)
+    assert first.ok and second.ok
+    assert first.payload["sha256"] == second.payload["sha256"]
+
+
+def test_install_preserves_existing_user_content(copilot_project: Path) -> None:
+    target = copilot_project / INSTRUCTIONS_REL_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    original = "# User instructions\\n"
+    target.write_text(original, encoding="utf-8")
+    result = GitHubCopilotAdapter().install(copilot_project)
+    assert not result.ok
+    assert "refusing to overwrite" in result.reason
+    assert target.read_text(encoding="utf-8") == original
+
 def test_verify_passes_after_install(copilot_project: Path) -> None:
     adapter = GitHubCopilotAdapter()
 

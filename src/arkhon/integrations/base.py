@@ -43,7 +43,7 @@ class Integration(ABC):
 
     @abstractmethod
     def health_check(self) -> bool:
-        """Return whether the integration is reachable and configured."""
+        """Return local adapter readiness only; never imply provider behavior."""
 
     def __repr__(self) -> str:
         info = self.info

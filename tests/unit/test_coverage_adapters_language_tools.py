@@ -12,7 +12,7 @@ from arkhon.language_support.registry import _parse_language
 from arkhon.language_support.tool_resolver import ToolStatus, _check_tool, resolve_tools
 
 
-def test_github_copilot_install_verify_and_write_failure(tmp_path: Path, monkeypatch) -> None:
+def test_github_copilot_install_verify_and_preserve_user_changes(tmp_path: Path) -> None:
     adapter = GitHubCopilotAdapter()
     assert adapter.health_check()
     assert not adapter.verify(tmp_path).ok
@@ -20,14 +20,12 @@ def test_github_copilot_install_verify_and_write_failure(tmp_path: Path, monkeyp
     assert installed.ok
     assert adapter.verify(tmp_path).ok
     target = tmp_path / ".github" / "copilot-instructions.md"
-    target.write_text("tampered", encoding="utf-8")
+    target.write_text("user-owned instructions", encoding="utf-8")
     assert "does not match" in adapter.verify(tmp_path).reason
-    monkeypatch.setattr(
-        Path,
-        "write_text",
-        lambda *a, **k: (_ for _ in ()).throw(OSError("read only")),
-    )
-    assert "cannot install" in adapter.install(tmp_path).reason
+    result = adapter.install(tmp_path)
+    assert not result.ok
+    assert "refusing to overwrite user content" in result.reason
+    assert target.read_text(encoding="utf-8") == "user-owned instructions"
 
 
 def test_language_detector_skip_and_sample_validation(tmp_path: Path, monkeypatch) -> None:

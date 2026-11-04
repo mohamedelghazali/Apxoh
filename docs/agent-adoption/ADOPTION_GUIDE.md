@@ -1,8 +1,8 @@
 # Apxoh Agent Adoption Guide
 
-**Version:** 1.0  
-**Status:** Adoption specification; implementation and integration claims require verification  
-**Last updated:** 2026-11-01
+**Version:** 1.1  
+**Status:** Adoption specification; external behavioral adoption remains unverified  
+**Last updated:** 2026-11-04
 
 ---
 
@@ -34,30 +34,27 @@ The `doctor` command checks installation prerequisites; a successful doctor run 
 
 ### 3.1 Models
 
-The intended integration layout may provide:
-
-- `integrations/models/<model>/config.yaml` — endpoint, model name, and authentication configuration.
-- `integrations/models/<model>/prompts/system.md` — system instructions.
-- `integrations/models/<model>/prompts/governance-injection.md` — task-context template.
-- `integrations/models/<model>/skill-bindings.yaml` — skill-to-domain bindings.
-
-These paths and capabilities must be checked against the actual repository tree before use. Do not infer that a provider integration exists because it is listed in documentation.
+Model runtime adapters and their prompt resources are packaged under `src/arkhon/integrations/models/<model>/`. Registry paths must point to these runtime adapters. Provider connectivity and model behavior must be tested separately for an exact model/version and configuration.
 
 Adoption procedure, where the integration exists:
 
-1. Install the integration directory in the agent platform.
-2. Configure the endpoint and credentials using the platform's secret-management mechanism.
-3. Load the system instructions according to platform capabilities.
-4. Apply the governance context template to tasks.
-5. Run the supported Apxoh verification procedure and retain its evidence.
+1. Configure endpoint and credentials using the provider's secret-management mechanism.
+2. Load the system instructions according to platform capabilities.
+3. Apply the governance context template to tasks.
+4. Run the supported Apxoh verification procedure and retain its evidence.
+5. Record the exact model identifier, provider/API version, configuration fingerprint (never credentials), commit SHA, and test result.
+
+Never store API keys or tokens in repository configuration, prompts, logs, or evidence artifacts.
 
 ### 3.2 Platforms (GitHub Copilot)
 
-Platform-level configuration does not by itself prove model behavior. Apxoh may report only the highest level supported by an implemented and repeatable check. Do not claim level 4 or level 5 until the corresponding verifier and evidence are present.
+The Copilot adapter installs `.github/copilot-instructions.md` and verifies its content hash. Installation preserves existing non-Apxoh instructions rather than overwriting them. Its successful local health check means only that adapter resources are present; it does not establish that Copilot loaded, activated, or obeyed the file.
+
+Platform-level configuration does not by itself prove model behavior. Do not claim level 4 or level 5 until the corresponding verifier and evidence are present.
 
 ### 3.3 Generic Agents
 
-Generic instructions can support installation, discovery, or activation. A generic agent must not be described as behaviorally verified without a platform-independent test harness and independently checked results.
+Generic instructions can support manual setup. Each generic-agent adapter directory is a scaffold that requires user consent and product-specific validation. Generic setup must not be described as behaviorally verified without a platform-specific test harness and independently checked results.
 
 ## 4. What the Agent Must Do
 
@@ -95,8 +92,8 @@ Apxoh is designed to provide independent verification, structured remediation fe
 - `docs/agent-adoption/COMPATIBILITY_MATRIX.md`
 - `AGENTS.md`
 - `SECURITY_AGENTS.md`
-- `integrations/models/<model>/README.md` (if present)
-- `integrations/platforms/<platform>/README.md` (if present)
+- `src/arkhon/integrations/models/<model>/README.md` (if present)
+- `integrations/platforms/github-copilot/README.md`
 
 ---
 

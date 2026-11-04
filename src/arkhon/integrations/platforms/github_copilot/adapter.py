@@ -1,5 +1,7 @@
-"""GitHub Copilot project-instructions adapter."""
+"""GitHub Copilot project-instructions adapter.
 
+Installing this file does not prove that Copilot loaded it or follows it.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -30,42 +32,73 @@ class GitHubCopilotAdapter(Integration):
         )
 
     def health_check(self) -> bool:
+        """Check local adapter resources, not external Copilot availability."""
         return bool(_INSTRUCTIONS_CONTENT.strip())
 
+    @staticmethod
+    def _target(project: Path) -> tuple[Path, str | None]:
+        root = Path(project).resolve()
+        target = root / INSTRUCTIONS_REL_PATH
+        if target.parent.is_symlink():
+            return target, "refusing to write through a symlinked .github directory"
+        if target.is_symlink():
+            return target, "refusing to overwrite a symlinked instructions file"
+        return target, None
+
     def install(self, project: Path) -> IntegrationResponse:
-        target = Path(project) / INSTRUCTIONS_REL_PATH
+        target, error = self._target(project)
+        if error:
+            return IntegrationResponse(ok=False, reason=error)
+        expected = _INSTRUCTIONS_CONTENT.encode("utf-8")
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(_INSTRUCTIONS_CONTENT, encoding="utf-8")
+            if target.parent.is_symlink() or target.is_symlink():
+                return IntegrationResponse(ok=False, reason="refusing to write through a symlink")
+            if target.exists():
+                if not target.is_file():
+                    return IntegrationResponse(\n                        ok=False, reason="instructions target is not a regular file"\n                    )
+                if target.read_bytes() != expected:
+                    return IntegrationResponse(
+                        ok=False,
+                        reason="existing instructions differ; refusing to overwrite user content",
+                    )
+            else:
+                with target.open("xb") as stream:
+                    stream.write(expected)
+        except FileExistsError:
+            try:
+                if target.is_symlink() or target.read_bytes() != expected:
+                    return IntegrationResponse(
+                        ok=False,
+                        reason="instructions target appeared concurrently with different content",
+                    )
+            except OSError as exc:
+                return IntegrationResponse(\n                    ok=False, reason=f"cannot verify instructions file: {exc}"\n                )
         except OSError as exc:
-            return IntegrationResponse(
-                ok=False,
-                reason=f"cannot install instructions: {exc}",
-            )
-        digest = hashlib.sha256(_INSTRUCTIONS_CONTENT.encode("utf-8")).hexdigest()
+            return IntegrationResponse(ok=False, reason=f"cannot install instructions: {exc}")
+        digest = hashlib.sha256(expected).hexdigest()
         return IntegrationResponse(
             ok=True,
-            payload={"sha256": digest},
+            payload={"sha256": digest, "installed": True, "external_activation": "unverified"},
             artifacts=[target],
         )
 
     def verify(self, project: Path) -> IntegrationResponse:
-        target = Path(project) / INSTRUCTIONS_REL_PATH
+        target, error = self._target(project)
+        if error:
+            return IntegrationResponse(ok=False, reason=error)
         if not target.is_file():
-            return IntegrationResponse(
-                ok=False,
-                reason=f"instructions file missing: {target}",
-            )
-        actual = target.read_bytes()
+            return IntegrationResponse(ok=False, reason=f"instructions file missing: {target}")
+        try:
+            actual = target.read_bytes()
+        except OSError as exc:
+            return IntegrationResponse(ok=False, reason=f"cannot read instructions file: {exc}")
         expected = _INSTRUCTIONS_CONTENT.encode("utf-8")
         if actual != expected:
-            return IntegrationResponse(
-                ok=False,
-                reason="instructions file does not match expected content",
-            )
+            return IntegrationResponse(\n                ok=False, reason="instructions file does not match expected content"\n            )
         digest = hashlib.sha256(actual).hexdigest()
         return IntegrationResponse(
             ok=True,
-            payload={"sha256": digest},
+            payload={"sha256": digest, "external_activation": "unverified"},
             artifacts=[target],
         )
