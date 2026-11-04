@@ -10,7 +10,7 @@
 
 Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
 
-The validation baseline for this update is `77b2edd1b7761674b63de33317cac2a6371ff2e7` (PR #75 merge). On this main commit, CI, agent integrations, integration tests, model integrations, TSAR end-to-end, release validation, schema validation, infrastructure validation, and supply-chain assurance completed successfully. The 9 language-fixture jobs, Python 3.11/3.12/3.13 unit-test jobs, TSAR end-to-end, and real Syft SBOM generation/commit binding all passed. The Installation Test workflow passed its Ubuntu and Windows clean-install jobs, wheel smoke test, and offline check; the three macOS/Python jobs (3.11, 3.12, 3.13) remain queued in run `41856416497`. Do not treat queued jobs as passed.
+The current main commit is `539430637c797de9ea4abfb737186fbececf95d8` (PR #76 merge). On this commit, CI, agent integrations, integration tests, model integrations, TSAR end-to-end, release validation, schema validation, infrastructure validation, and supply-chain assurance completed successfully. The 9 language-fixture jobs, Python 3.11/3.12/3.13 unit-test jobs, real TSAR CLI end-to-end, and real Syft SBOM generation/commit binding all passed. Installation Test run `41860305066` passed its Ubuntu and Windows clean-install jobs, wheel smoke test, and offline check; the three macOS/Python jobs (3.11, 3.12, 3.13) remain queued. Do not treat queued jobs as passed.
 
 ---
 
@@ -67,7 +67,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] CI execution and review of all 9 language fixture jobs
 - [ ] Broader language-specific rule catalog and semantic verification
 
-**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7` (Integration Tests run `41856416410`). The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
+**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current main commit `539430637c797de9ea4abfb737186fbececf95d8` (Integration Tests run `41860304793`). The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
 
 ### Milestone 3 — Verification & Evidence 🔄
 
@@ -82,7 +82,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] First signed release with independently verified provenance
 - [ ] End-to-end release-attestation evidence accepted from an actual tagged release
 
-**Status:** Core and supply-chain implementations are present. On current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7`, the real TSAR CLI end-to-end workflow passed (run `41856416275`) and real Syft SBOM generation with commit binding passed (run `41856416408`). First signed release and acceptance of release-attestation evidence from an actual tagged release remain open.
+**Status:** Core and supply-chain implementations are present. On current main commit `539430637c797de9ea4abfb737186fbececf95d8`, the real TSAR CLI end-to-end workflow passed (run `41860304634`) and real Syft SBOM generation with commit binding passed (run `41860304591`). First signed release and acceptance of release-attestation evidence from an actual tagged release remain open.
 
 ### Milestone 4 — AI Agent Adoption 🔄
 
@@ -96,7 +96,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Complete platform-specific integration validation, including GitHub Copilot
 - [x] Successful CI execution of agent integration checks
 
-**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow passed on current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7` (run `41856416155`), including package installation, source compilation, and the full pytest suite. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
+**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow passed on current main commit `539430637c797de9ea4abfb737186fbececf95d8` (run `41860304665`), including package installation, source compilation, and the full pytest suite. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
 
 ### Milestone 5 — Orchestrator & Full CLI 🔄
 
@@ -110,7 +110,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
 - [ ] Complete rule-outcome assessment integration; the current assessment command fails closed when rule-level outcomes are unavailable
 
-**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7`, the wheel build/install smoke test passed (Installation Test run `41856416497`), the CI clean-install jobs passed on Python 3.11/3.12/3.13, and Ubuntu/Windows clean-install jobs passed. The three macOS clean-install jobs remain queued, so the full cross-platform installation gate is not yet closed. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
+**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current main commit `539430637c797de9ea4abfb737186fbececf95d8`, the wheel build/install smoke test passed (Installation Test run `41860305066`), the CI clean-install jobs passed on Python 3.11/3.12/3.13, and Ubuntu/Windows clean-install jobs passed. The three macOS clean-install jobs remain queued, so the full cross-platform installation gate is not yet closed. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
 
 ### Milestone 6 — Self-Governance & CI 🔄
 
@@ -123,7 +123,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Read back the effective settings and verify that required checks are enforced
 - [ ] First signed release with independently verified provenance
 
-**Status:** Current-main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7` has successful CI (run `41856416100`), unit tests (run `41856416335`), integration tests (run `41856416410`), agent integrations (run `41856416155`), TSAR end-to-end (run `41856416275`), release validation (run `41856416322`), schema validation (run `41856416397`), infrastructure validation (run `41856416608`), and supply-chain assurance (run `41856416408`). Installation Test run `41856416497` has passed 8 of 11 jobs; its three macOS/Python jobs remain queued. Keep the current-main installation gate open until those jobs finish. Branch enforcement and signed-release gates also remain open until independently verified.
+**Status:** Current-main commit `539430637c797de9ea4abfb737186fbececf95d8` has successful CI (run `41860304657`), unit tests (run `41860304447`), integration tests (run `41860304793`), agent integrations (run `41860304665`), TSAR end-to-end (run `41860304634`), release validation (run `41860305078`), schema validation (run `41860305221`), infrastructure validation (run `41860305175`), and supply-chain assurance (run `41860304591`). Installation Test run `41860305066` has passed 8 of 11 jobs; its three macOS/Python jobs remain queued. Keep the current-main installation gate open until those jobs finish. Branch enforcement and signed-release gates also remain open until independently verified.
 
 ---
 
