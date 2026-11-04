@@ -228,3 +228,36 @@ def test_gemini_rejects_invalid_response_json(monkeypatch: pytest.MonkeyPatch, b
         _Connection(_Response(body)),
     )
     assert not GeminiAdapter().send("prompt").ok
+
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://attacker.example/v1/messages",
+        "https://api.anthropic.com.attacker.example/v1/messages",
+    ],
+)
+def test_claude_rejects_non_provider_https_hosts(
+    endpoint: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
+    result = ClaudeAdapter(ClaudeConfig(endpoint=endpoint)).send("hello")
+    assert not result.ok
+    assert "approved Anthropic API host" in result.reason
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://attacker.example/v1beta/models",
+        "https://generativelanguage.googleapis.com.attacker.example/v1beta/models",
+    ],
+)
+def test_gemini_rejects_non_provider_https_hosts(
+    endpoint: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GOOGLE_API_KEY", "secret")
+    result = GeminiAdapter(GeminiConfig(endpoint=endpoint)).send("hello")
+    assert not result.ok
+    assert "approved Google API host" in result.reason
