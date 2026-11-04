@@ -202,7 +202,9 @@ def test_install_handles_concurrent_matching_file(
     target = copilot_project / INSTRUCTIONS_REL_PATH
     original_open = Path.open
 
-    def create_then_raise(\n        self: Path, mode: str = "r", *args: object, **kwargs: object\n    ):
+    def create_then_raise(
+        self: Path, mode: str = "r", *args: Any, **kwargs: Any
+    ) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(_INSTRUCTIONS_CONTENT.encode("utf-8"))
