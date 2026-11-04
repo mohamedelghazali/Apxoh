@@ -10,7 +10,7 @@
 
 Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
 
-The latest `main` commit at this update is `0dee396a81ec0a039024c20021111c4f42f529e9` (PR #62 merged after PR #61). PR #62 completed all 56 reported checks successfully. The Installation Test workflow run #613 also completed successfully: all 11 jobs passed, including clean installs on Windows, macOS, and Ubuntu with Python 3.11–3.13, the wheel install smoke test, and the offline check. These results validate the PR heads; a separate workflow run on the resulting merge commit has not yet been observed.
+The latest `main` commit at this update is `a596fb6afb18597437558fe3a658b9bd40c0cfb5` (PR #63 merged after PR #62). The merge commit reports 55/55 successful checks. PR #63's head completed 56/56 checks; the Installation Test matrix completed 11/11 jobs, including clean installs on Windows, macOS, and Ubuntu with Python 3.11–3.13, wheel smoke test, and offline check.
 
 ---
 
@@ -96,7 +96,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Complete platform-specific integration validation, including GitHub Copilot
 - [ ] Successful CI execution of agent integration checks
 
-**Status:** The resource pack and installer are implemented. Integration scaffolding and contract tests do not establish that every third-party agent actually loads or obeys the instructions. The generic-agent adapter is explicitly marked manual; behavioral adoption remains open.
+**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
 
 ### Milestone 5 — Orchestrator & Full CLI 🔄
 
