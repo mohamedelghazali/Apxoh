@@ -121,12 +121,7 @@ jobs:
             if [[ -n "$existing_asset_id" ]]; then
               gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets/$existing_asset_id" >/dev/null
             fi
-            curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST \\
-  -H "Authorization: Bearer $GH_TOKEN" \\
-  -H "Accept: application/vnd.github+json" \\
-  -H "Content-Type: application/octet-stream" \\
-  --data-binary "@$artifact" \\
-  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$asset_name" >/dev/null
+          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" --data-binary "@$artifact" "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$asset_name" >/dev/null
           done
 
   provenance:
@@ -171,12 +166,7 @@ jobs:
           if [[ -n "$existing_asset_id" ]]; then
             gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets/$existing_asset_id" >/dev/null
           fi
-          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST \\
-  -H "Authorization: Bearer $GH_TOKEN" \\
-  -H "Accept: application/vnd.github+json" \\
-  -H "Content-Type: application/octet-stream" \\
-  --data-binary "@dist/$PROVENANCE_NAME" \\
-  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$PROVENANCE_NAME" >/dev/null
+          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" --data-binary "@dist/$PROVENANCE_NAME" "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$PROVENANCE_NAME" >/dev/null
 
   verify:
     name: Verify release provenance, signatures, and Apxoh evidence acceptance
