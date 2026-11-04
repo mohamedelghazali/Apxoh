@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from arkhon import __version__
 from arkhon.core.errors import EvidenceError
 from arkhon.core.logging import get_logger
 from arkhon.evidence.integrity import verify_bundle, verify_freshness
@@ -195,7 +196,7 @@ class JsonReporter:
             "project": project_root.name,
             "commit_sha": commit_sha,
             "generated_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "apxoh_version": "0.1.0.dev1",
+            "apxoh_version": __version__,
             "sections": sections,
             "final_decision": final,
         }

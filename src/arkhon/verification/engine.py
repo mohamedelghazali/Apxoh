@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import uuid
 
+from arkhon import __version__
 from arkhon.core.constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
 from arkhon.core.errors import VerificationError
 from arkhon.core.logging import get_logger
@@ -199,7 +200,7 @@ class VerificationEngine:
     ) -> str:
         draft: EvidenceDraft = self._collector.new_evidence(
             source="arkhon",
-            source_version="0.1.0.dev1",
+            source_version=__version__,
             commit_sha=commit_sha,
             status=status,
         )
