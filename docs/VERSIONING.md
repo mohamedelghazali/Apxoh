@@ -44,10 +44,10 @@ MAJOR.MINOR.PATCH[-pre-release][+build]
 Before `1.0.0`, Apxoh uses **development-stage pre-release versions**:
 
 ```
-0.1.0-dev.1     ← current
+0.1.0-dev.1
 0.1.0-dev.2
 0.1.0-rc.1
-0.1.0
+0.1.0     ← current official release
 ```
 
 Breaking changes are allowed at any pre-1.0 version. From `1.0.0`, semantic versioning applies strictly.
@@ -58,9 +58,9 @@ Breaking changes are allowed at any pre-1.0 version. From `1.0.0`, semantic vers
 
 ### 3.1 Engine (`arkhon` package)
 
-- **File:** `VERSION` (plain text, canonical PEP 440 form, e.g., `0.1.0.dev1`)
-- **File:** `pyproject.toml` (`version = "0.1.0.dev1"`, PEP 440)
-- **File:** `src/arkhon/__init__.py` (`__version__ = "0.1.0.dev1"`)
+- **File:** `VERSION` (plain text, canonical PEP 440 form, e.g., `0.1.0`)
+- **File:** `pyproject.toml` (`version = "0.1.0"`, PEP 440)
+- **File:** `src/arkhon/__init__.py` (`__version__ = "0.1.0"`)
 - **Rule:** `VERSION`, `pyproject.toml`, and `__version__` use the same canonical PEP 440 value. The manifest keeps its SemVer-style display version. Enforced by release checks.
 
 ### 3.2 Manifest
@@ -111,7 +111,7 @@ Security fixes override the cadence and can ship at any time (patch version).
 
 ## 5. Release Process
 
-### 5.1 Pre-Release Checklist
+### 5.1 Release Checklist
 
 Before tagging a release:
 
