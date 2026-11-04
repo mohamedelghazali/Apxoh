@@ -74,7 +74,7 @@ class GeminiAdapter(Integration):
             endpoint_port == 0
             or any(ord(char) < 32 for char in parsed_endpoint.path)
             or parsed_endpoint.scheme != "https"
-            or not parsed_endpoint.hostname
+            or parsed_endpoint.hostname.lower().rstrip(".") != "generativelanguage.googleapis.com"
             or parsed_endpoint.username
             or parsed_endpoint.password
             or parsed_endpoint.query
@@ -83,7 +83,7 @@ class GeminiAdapter(Integration):
         ):
             return IntegrationResponse(
                 ok=False,
-                reason="Gemini endpoint must be valid HTTPS and model must be a safe identifier",
+                reason="Gemini endpoint must be HTTPS to the approved Google API host and model must be a safe identifier",
             )
 
         payload: dict[str, Any] = {
