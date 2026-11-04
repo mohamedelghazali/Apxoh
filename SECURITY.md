@@ -36,7 +36,7 @@ The following are target service levels, not guaranteed resolution deadlines.
 | Medium | 5 days | 90 days |
 | Low | 10 days | Next planned release |
 
-Full process: see `docs/VULNERABILITY_RESPONSE.md` (draft; collaborative authoring pending).
+Full process: see `docs/VULNERABILITY_RESPONSE.md` (response baseline; operational ownership and service readiness are not yet established).
 
 ## Scope
 
