@@ -110,7 +110,10 @@ class ClaudeAdapter(Integration):
         ):
             return IntegrationResponse(
                 ok=False,
-                reason="Claude endpoint must use HTTPS port 443 on the approved Anthropic API host without credentials or query",
+                reason=(
+                    "Claude endpoint must use HTTPS port 443 on the approved "
+                    "Anthropic API host without credentials or query"
+                ),
             )
 
         payload: dict[str, Any] = {
