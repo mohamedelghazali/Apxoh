@@ -31,6 +31,7 @@ def _config(api_key_required: bool = True) -> OpenAICompatibleConfig:
         temperature=0.0,
         timeout_seconds=10,
         api_key_env="TEST_API_KEY",
+        allowed_hosts=("example.com",),
         api_key_required=api_key_required,
     )
 
@@ -189,9 +190,13 @@ def test_endpoint_rejects_unsafe_urls(endpoint: str) -> None:
 
 def test_endpoint_allows_https_and_loopback_http() -> None:
     assert OpenAICompatibleAdapter(_config())._endpoint_is_allowed()
-    local = replace(_config(), endpoint="http://127.0.0.1:8080/v1")
+    local = replace(
+        _config(api_key_required=False), endpoint="http://127.0.0.1:8080/v1"
+    )
     assert OpenAICompatibleAdapter(local)._endpoint_is_allowed()
-    localhost = replace(_config(), endpoint="http://localhost/v1")
+    localhost = replace(
+        _config(api_key_required=False), endpoint="http://localhost/v1"
+    )
     assert OpenAICompatibleAdapter(localhost)._endpoint_is_allowed()
 
 
@@ -223,3 +228,22 @@ def test_prompt_files_and_non_object_response(
         result = adapter.send("hi")
     assert not result.ok
     assert "expected JSON object" in result.reason
+
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://attacker.example/v1/chat/completions",
+        "https://api.openai.com.attacker.example/v1/chat/completions",
+        "https://example.com.evil.invalid/v1/chat/completions",
+    ],
+)
+def test_endpoint_rejects_unlisted_https_hosts(endpoint: str) -> None:
+    adapter = OpenAICompatibleAdapter(replace(_config(), endpoint=endpoint))
+    assert not adapter._endpoint_is_allowed()
+
+
+def test_loopback_http_is_rejected_when_api_key_is_required() -> None:
+    config = replace(_config(), endpoint="http://127.0.0.1:8080/v1")
+    assert not OpenAICompatibleAdapter(config)._endpoint_is_allowed()
