@@ -10,7 +10,7 @@
 
 Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
 
-The validation baseline for this update is `d9bc9b27eb45669a858d925fe6c0aae080ad81cb` (PR #74). On this main commit, CI, agent integrations, integration tests, model integrations, TSAR end-to-end, release validation, schema validation, and supply-chain assurance completed successfully. The Installation Test matrix has passed its Ubuntu and Windows jobs, wheel smoke test, and offline check; three macOS/Python jobs were still queued at the time of this update. Do not treat queued jobs as passed.
+The validation baseline for this update is `77b2edd1b7761674b63de33317cac2a6371ff2e7` (PR #75 merge). On this main commit, CI, agent integrations, integration tests, model integrations, TSAR end-to-end, release validation, schema validation, infrastructure validation, and supply-chain assurance completed successfully. The 9 language-fixture jobs, Python 3.11/3.12/3.13 unit-test jobs, TSAR end-to-end, and real Syft SBOM generation/commit binding all passed. The Installation Test workflow passed its Ubuntu and Windows clean-install jobs, wheel smoke test, and offline check; the three macOS/Python jobs (3.11, 3.12, 3.13) remain queued in run `41856416497`. Do not treat queued jobs as passed.
 
 ---
 
@@ -64,10 +64,10 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] Language profiles and per-language tool, testing, and security metadata for all 9 registered languages
 - [x] Initial rule catalog (20 rules across 14 domains: 17 global and 3 Python-specific)
 - [x] Language detector, registry, profile-loader, tool-resolution tests, and 9 language fixtures
-- [ ] CI execution and review of all 9 language fixture jobs
+- [x] CI execution and review of all 9 language fixture jobs
 - [ ] Broader language-specific rule catalog and semantic verification
 
-**Status:** Implementation and test fixtures are present for all 9 declared languages. Completion of the fixture/CI gate is pending successful execution against the current main commit. The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
+**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7` (Integration Tests run `41856416410`). The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
 
 ### Milestone 3 — Verification & Evidence 🔄
 
@@ -77,12 +77,12 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] Commit-bound CycloneDX SBOM acceptance and evidence persistence
 - [x] SLSA/Sigstore release-attestation verification runner and release workflow
 - [x] TSAR adapter, verifier, contract tests, and real-CLI end-to-end workflow definition
-- [ ] Successful real TSAR end-to-end workflow execution on main
-- [ ] Successful Syft SBOM end-to-end workflow execution on main
+- [x] Successful real TSAR end-to-end workflow execution on main
+- [x] Successful Syft SBOM end-to-end workflow execution on main
 - [ ] First signed release with independently verified provenance
 - [ ] End-to-end release-attestation evidence accepted from an actual tagged release
 
-**Status:** Core and supply-chain implementations are present, including executable CI workflow definitions. The external-tool and release gates are not considered complete until their jobs run successfully and their generated evidence is verified. A source-code implementation or workflow file alone does not close these gates.
+**Status:** Core and supply-chain implementations are present. On current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7`, the real TSAR CLI end-to-end workflow passed (run `41856416275`) and real Syft SBOM generation with commit binding passed (run `41856416408`). First signed release and acceptance of release-attestation evidence from an actual tagged release remain open.
 
 ### Milestone 4 — AI Agent Adoption 🔄
 
@@ -96,7 +96,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Complete platform-specific integration validation, including GitHub Copilot
 - [x] Successful CI execution of agent integration checks
 
-**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow passed on main commit `d9bc9b27eb45669a858d925fe6c0aae080ad81cb` (run `41855226651`), including package installation, source compilation, and the full pytest suite. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
+**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow passed on current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7` (run `41856416155`), including package installation, source compilation, and the full pytest suite. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
 
 ### Milestone 5 — Orchestrator & Full CLI 🔄
 
@@ -105,12 +105,12 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] CLI: version, doctor, validate, inspect, audit, assess, report, verify
 - [x] CLI: install, status, exceptions list
 - [x] `arkhon project init` with schema validation and packaged fallback resources (8 profiles + schema)
-- [x] Wheel smoke-test workflow for project initialization and agent-pack installation (execution pending)
+- [x] Wheel smoke-test workflow for project initialization and agent-pack installation (passed on current main)
 - [x] CLI parser registration and unit tests for the added commands
 - [ ] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
 - [ ] Complete rule-outcome assessment integration; the current assessment command fails closed when rule-level outcomes are unavailable
 
-**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are now included in the wheel, and the installation workflow exercises them from an installed wheel. Runtime/package validation on the current main commit remains pending the queued wheel job. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
+**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7`, the wheel build/install smoke test passed (Installation Test run `41856416497`), the CI clean-install jobs passed on Python 3.11/3.12/3.13, and Ubuntu/Windows clean-install jobs passed. The three macOS clean-install jobs remain queued, so the full cross-platform installation gate is not yet closed. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
 
 ### Milestone 6 — Self-Governance & CI 🔄
 
@@ -118,12 +118,12 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] .github/CODEOWNERS
 - [x] .github/dependabot.yml
 - [x] CI, integration, installation, security, schema, infrastructure, TSAR, supply-chain, and scorecard workflow definitions
-- [ ] Current-main CI, unit, integration, installation, security, TSAR, and supply-chain workflows completed successfully
+- [ ] Current-main CI, unit, integration, installation, TSAR, and supply-chain workflows completed successfully
 - [ ] Enable branch protection or a ruleset for main and require the CI/security status checks
 - [ ] Read back the effective settings and verify that required checks are enforced
 - [ ] First signed release with independently verified provenance
 
-**Status:** PR #62's full validation completed with 56/56 checks successful. Installation Test run #613 completed with 11/11 jobs successful, including the previously cancelled macOS/Python 3.13 combination, wheel smoke test, and offline check. A separate CI run on the resulting `main` merge commit has not yet been observed, so the current-main verification checkbox remains open. The repository rulesets endpoint returns an empty list; effective branch-protection settings remain unverified because direct inspection was denied by the connected GitHub integration. Keep the enforcement and signed-release gates open until independently verified.
+**Status:** Current-main commit `77b2edd1b7761674b63de33317cac2a6371ff2e7` has successful CI (run `41856416100`), unit tests (run `41856416335`), integration tests (run `41856416410`), agent integrations (run `41856416155`), TSAR end-to-end (run `41856416275`), release validation (run `41856416322`), schema validation (run `41856416397`), infrastructure validation (run `41856416608`), and supply-chain assurance (run `41856416408`). Installation Test run `41856416497` has passed 8 of 11 jobs; its three macOS/Python jobs remain queued. Keep the current-main installation gate open until those jobs finish. Branch enforcement and signed-release gates also remain open until independently verified.
 
 ---
 
