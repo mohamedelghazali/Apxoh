@@ -247,7 +247,7 @@ def test_install_handles_unreadable_concurrent_file(
     original_open = Path.open
     original_read_bytes = Path.read_bytes
 
-    def create_then_raise(self, mode="r", *args, **kwargs):
+    def create_then_raise(\n        self: Path, mode: str = "r", *args: Any, **kwargs: Any\n    ) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(b"user content")
