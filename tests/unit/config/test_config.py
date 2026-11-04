@@ -29,7 +29,7 @@ def test_load_manifest_returns_all_sections() -> None:
     assert isinstance(manifest, Manifest)
     assert manifest.name == "Apxoh"
     assert manifest.identifier == "arkhon"
-    assert manifest.version == "0.1.0-dev.1"
+    assert manifest.version == "0.1.0"
 
 
 def test_manifest_has_three_products() -> None:

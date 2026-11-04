@@ -15,9 +15,9 @@ languages:
   notes: "Apxoh itself is Python-only. Multi-language support exists in the governed projects, not in Apxoh."
 
 lifecycle:
-  current_stage: "development"
+  current_stage: "production"
   current_milestone: 0
-  release_channel: "pre-release"
+  release_channel: "stable"
 
 stakeholders:
   maintainer: "mohamedelghazali"
@@ -63,4 +63,4 @@ security:
 
 metadata:
   created: "2026-11-01"
-  last_reviewed: "2026-11-01"
+  last_reviewed: "2026-11-04"

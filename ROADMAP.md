@@ -1,14 +1,14 @@
 # Apxoh Roadmap
 
 **Version:** 1.3  
-**Status:** Active — pre-release  
+**Status:** Active — official release 0.1.0  
 **Last updated:** 2026-11-04
 
 ---
 
 ## Current Status
 
-Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
+ARKHON 0.1.0 is the current official package release. Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed. The remaining milestone items describe follow-on capability expansion and independently verifiable operational evidence; they are not alternate package-version labels.
 
 The current main commit is `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` (PR #82 merge, 2026-11-04). All 17 workflow runs returned for this exact commit completed successfully, including CI, unit tests, integration tests, installation, security, agent/model integrations, TSAR integration and end-to-end, release validation, schema validation, infrastructure validation, supply-chain assurance, OSSF Scorecard, compliance references, orchestrator, and self-test. This is repository CI evidence, not proof of third-party agent behavior or a signed release. The `main` branch API reports `protected: false`; no repository rulesets, tags, or published releases were found at review time.
 

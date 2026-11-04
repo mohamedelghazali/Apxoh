@@ -6,7 +6,7 @@
 manifest_version: "1.0.0"
 system_name: "Apxoh"
 system_identifier: "arkhon"
-generated_at: "2026-11-01T00:00:00Z"
+generated_at: "2026-11-04T19:38:27Z"
 
 files:
   system: "system.yaml"

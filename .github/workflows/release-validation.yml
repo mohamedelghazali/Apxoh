@@ -28,12 +28,35 @@ jobs:
           import os
           import re
           import tomllib
+          import yaml
           pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
           project_version = pyproject["project"]["version"]
           version_file = Path("VERSION").read_text(encoding="utf-8").strip()
           normalize = lambda value: re.sub(r"[-_]", ".", value).lower()
           if normalize(project_version) != normalize(version_file):
               raise SystemExit(f"VERSION ({version_file}) != pyproject ({project_version})")
+          init_source = Path("src/arkhon/__init__.py").read_text(encoding="utf-8")
+          init_match = re.search(r'(?m)^__version__ = [\"\']([^\"\']+)[\"\']          tag = os.environ.get("GITHUB_REF", "")
+          if tag.startswith("refs/tags/v"):
+              tag_version = tag.rsplit("/", 1)[-1][1:]
+              if normalize(tag_version) != normalize(project_version):
+                  raise SystemExit(f"tag ({tag_version}) != package ({project_version})")
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          if not re.search(r"(?m)^##\s+\S+", changelog):
+              raise SystemExit("CHANGELOG.md has no version heading")
+          print(f"Release metadata consistent: {project_version}")
+          PY
+      - run: python scripts/validation/validate_all.py
+      - run: python -m pytest -q
+, init_source)
+          if not init_match or normalize(init_match.group(1)) != normalize(project_version):
+              raise SystemExit("src/arkhon/__init__.py version does not match pyproject.toml")
+          manifest = yaml.safe_load(Path("manifest/system.yaml").read_text(encoding="utf-8"))
+          system = manifest.get("system", {}) if isinstance(manifest, dict) else {}
+          if normalize(str(system.get("version", ""))) != normalize(project_version):
+              raise SystemExit("manifest/system.yaml version does not match pyproject.toml")
+          if system.get("status") != "stable":
+              raise SystemExit("manifest/system.yaml status must be stable for a stable package release")
           tag = os.environ.get("GITHUB_REF", "")
           if tag.startswith("refs/tags/v"):
               tag_version = tag.rsplit("/", 1)[-1][1:]
