@@ -1,4 +1,4 @@
-"""Tests for the GitHub Copilot platform adapter.
+"""Tests for the GitHub Copilot platform copilot_adapter.
 
 Copilot cannot be tested end-to-end (Apxoh cannot call it). Tests
 
@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 import yaml
 
-from arkhon.integrations.platforms.github_copilot import adapter
+from arkhon.integrations.platforms.github_copilot import adapter as copilot_adapter
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -28,7 +28,7 @@ PLATFORM_DIR = REPO_ROOT / "integrations" / "platforms" / "github-copilot"
 
 
 def test_info() -> None:
-    info = adapter.GitHubCopilotAdapter().info
+    info = copilot_adapter.GitHubCopilotAdapter().info
 
     assert info.id == "github-copilot"
 
@@ -36,17 +36,17 @@ def test_info() -> None:
 
 
 def test_health_check_with_prompt() -> None:
-    assert adapter.GitHubCopilotAdapter().health_check() is True
+    assert copilot_adapter.GitHubCopilotAdapter().health_check() is True
 
 
 def test_install_creates_file(copilot_project: Path) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
+    adapter = copilot_adapter.GitHubCopilotAdapter()
 
-    result = adapter.install(copilot_project)
+    result = copilot_adapter.install(copilot_project)
 
     assert result.ok
 
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
 
     assert target.is_file()
 
@@ -55,29 +55,29 @@ def test_install_creates_file(copilot_project: Path) -> None:
 
 
 def test_install_is_idempotent(copilot_project: Path) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
-    first = adapter.install(copilot_project)
-    second = adapter.install(copilot_project)
+    adapter = copilot_adapter.GitHubCopilotAdapter()
+    first = copilot_adapter.install(copilot_project)
+    second = copilot_adapter.install(copilot_project)
     assert first.ok and second.ok
     assert first.payload["sha256"] == second.payload["sha256"]
 
 
 def test_install_preserves_existing_user_content(copilot_project: Path) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
     original = "# User instructions\\n"
     target.write_text(original, encoding="utf-8")
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
     assert not result.ok
     assert "refusing to overwrite" in result.reason
     assert target.read_text(encoding="utf-8") == original
 
 def test_verify_passes_after_install(copilot_project: Path) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
+    adapter = copilot_adapter.GitHubCopilotAdapter()
 
-    adapter.install(copilot_project)
+    copilot_adapter.install(copilot_project)
 
-    result = adapter.verify(copilot_project)
+    result = copilot_adapter.verify(copilot_project)
 
     assert result.ok
 
@@ -85,7 +85,7 @@ def test_verify_passes_after_install(copilot_project: Path) -> None:
 
 
 def test_verify_fails_without_file(copilot_project: Path) -> None:
-    result = adapter.GitHubCopilotAdapter().verify(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().verify(copilot_project)
 
     assert not result.ok
 
@@ -93,15 +93,15 @@ def test_verify_fails_without_file(copilot_project: Path) -> None:
 
 
 def test_verify_fails_on_tampered_file(copilot_project: Path) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
+    adapter = copilot_adapter.GitHubCopilotAdapter()
 
-    adapter.install(copilot_project)
+    copilot_adapter.install(copilot_project)
 
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
 
     target.write_text("tampered", encoding="utf-8")
 
-    result = adapter.verify(copilot_project)
+    result = copilot_adapter.verify(copilot_project)
 
     assert not result.ok
 
@@ -133,12 +133,12 @@ def test_max_verification_is_configured() -> None:
 def test_install_rejects_symlinked_github_directory(
     copilot_project: Path, tmp_path: Path
 ) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
+    adapter = copilot_adapter.GitHubCopilotAdapter()
     external = tmp_path / "external"
     external.mkdir()
     (copilot_project / ".github").symlink_to(external, target_is_directory=True)
 
-    result = adapter.install(copilot_project)
+    result = copilot_adapter.install(copilot_project)
 
     assert not result.ok
     assert "symlinked .github" in result.reason
@@ -148,7 +148,7 @@ def test_install_rejects_symlinked_github_directory(
 def test_install_rejects_symlink_created_during_directory_creation(
     copilot_project: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     external = tmp_path / "external"
     external.mkdir()
     original_mkdir = Path.mkdir
@@ -163,7 +163,7 @@ def test_install_rejects_symlink_created_during_directory_creation(
 
     monkeypatch.setattr(Path, "mkdir", replace_directory_with_symlink)
 
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
 
     assert not result.ok
     assert "refusing to write through a symlink" in result.reason
@@ -173,14 +173,14 @@ def test_install_rejects_symlink_created_during_directory_creation(
 def test_install_rejects_symlinked_instructions_file(
     copilot_project: Path, tmp_path: Path
 ) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    adapter = copilot_adapter.GitHubCopilotAdapter()
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
     external = tmp_path / "user-instructions.md"
     external.write_text("user content", encoding="utf-8")
     target.symlink_to(external)
 
-    result = adapter.install(copilot_project)
+    result = copilot_adapter.install(copilot_project)
 
     assert not result.ok
     assert "symlinked instructions" in result.reason
@@ -188,11 +188,11 @@ def test_install_rejects_symlinked_instructions_file(
 
 
 def test_install_rejects_non_file_target(copilot_project: Path) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
     target.mkdir()
 
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
 
     assert not result.ok
     assert "not a regular file" in result.reason
@@ -210,7 +210,7 @@ def test_install_reports_filesystem_error(
 
     monkeypatch.setattr(Path, "mkdir", fail_mkdir)
 
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
 
     assert not result.ok
     assert "simulated mkdir failure" in result.reason
@@ -219,7 +219,7 @@ def test_install_reports_filesystem_error(
 def test_install_handles_concurrent_matching_file(
     copilot_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_open = Path.open
 
     def create_then_raise(
@@ -227,13 +227,13 @@ def test_install_handles_concurrent_matching_file(
     ) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
-                stream.write(adapter._INSTRUCTIONS_CONTENT.encode("utf-8"))
+                stream.write(copilot_adapter._INSTRUCTIONS_CONTENT.encode("utf-8"))
             raise FileExistsError("simulated concurrent creation")
         return original_open(self, mode, *args, **kwargs)
 
     monkeypatch.setattr(Path, "open", create_then_raise)
 
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
 
     assert result.ok
 
@@ -241,7 +241,7 @@ def test_install_handles_concurrent_matching_file(
 def test_install_handles_concurrent_different_file(
     copilot_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_open = Path.open
 
     def create_then_raise(
@@ -255,7 +255,7 @@ def test_install_handles_concurrent_different_file(
 
     monkeypatch.setattr(Path, "open", create_then_raise)
 
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
 
     assert not result.ok
     assert "appeared concurrently" in result.reason
@@ -265,7 +265,7 @@ def test_install_handles_concurrent_different_file(
 def test_install_handles_unreadable_concurrent_file(
     copilot_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_open = Path.open
     original_read_bytes = Path.read_bytes
 
@@ -286,7 +286,7 @@ def test_install_handles_unreadable_concurrent_file(
     monkeypatch.setattr(Path, "open", create_then_raise)
     monkeypatch.setattr(Path, "read_bytes", fail_read)
 
-    result = adapter.GitHubCopilotAdapter().install(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().install(copilot_project)
 
     assert not result.ok
     assert "cannot verify instructions file" in result.reason
@@ -295,13 +295,13 @@ def test_install_handles_unreadable_concurrent_file(
 def test_verify_rejects_symlinked_instructions_file(
     copilot_project: Path, tmp_path: Path
 ) -> None:
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
     external = tmp_path / "instructions.md"
     external.write_text("user content", encoding="utf-8")
     target.symlink_to(external)
 
-    result = adapter.GitHubCopilotAdapter().verify(copilot_project)
+    result = copilot_adapter.GitHubCopilotAdapter().verify(copilot_project)
 
     assert not result.ok
     assert "symlinked instructions" in result.reason
@@ -310,9 +310,9 @@ def test_verify_rejects_symlinked_instructions_file(
 def test_verify_reports_read_error(
     copilot_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    adapter = adapter.GitHubCopilotAdapter()
-    adapter.install(copilot_project)
-    target = copilot_project / adapter.INSTRUCTIONS_REL_PATH
+    adapter = copilot_adapter.GitHubCopilotAdapter()
+    copilot_adapter.install(copilot_project)
+    target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_read_bytes = Path.read_bytes
 
     def fail_read(self: Path) -> bytes:
@@ -322,7 +322,7 @@ def test_verify_reports_read_error(
 
     monkeypatch.setattr(Path, "read_bytes", fail_read)
 
-    result = adapter.verify(copilot_project)
+    result = copilot_adapter.verify(copilot_project)
 
     assert not result.ok
     assert "cannot read instructions file" in result.reason
