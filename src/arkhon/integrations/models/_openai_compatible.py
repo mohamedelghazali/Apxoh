@@ -91,11 +91,15 @@ class OpenAICompatibleAdapter(Integration):
             return False
         hostname = parsed.hostname.lower().rstrip(".")
         if parsed.scheme == "https":
-            return bool(self.config.allowed_hosts) and hostname in self.config.allowed_hosts
+            return (
+                port in {None, 443}
+                and bool(self.config.allowed_hosts)
+                and hostname in self.config.allowed_hosts
+            )
         return (
             parsed.scheme == "http"
             and not self.config.api_key_required
-            and hostname in {"127.0.0.1", "localhost", "::1"}
+            and hostname in {"127.0.0.1", "::1"}
         )
 
     def send(self, user_message: str) -> IntegrationResponse:
