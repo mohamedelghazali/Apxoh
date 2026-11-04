@@ -47,7 +47,7 @@ jobs:
         run: >-
           docker run --rm
           --volume "${{ github.workspace }}:/src"
-          semgrep/semgrep:1.183.0
+          semgrep/semgrep@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0
           semgrep scan --config auto --error --sarif --output /src/semgrep.sarif /src/src
       - name: Upload Bandit report
         if: always() && hashFiles('bandit.json') != ''
