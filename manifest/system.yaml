@@ -7,8 +7,8 @@ system:
   cyrillic_reference: "АРХОН"
   latin_reference: "ARKHON"
   description: "Software Engineering Governance & Assurance System"
-  version: "0.1.0-dev.1"
-  status: "pre-release"
+  version: "0.1.0"
+  status: "stable"
   milestone: 0
 
 identity:
@@ -17,7 +17,7 @@ identity:
   license_url: "https://www.apache.org/licenses/LICENSE-2.0"
   maintainer: "mohamedelghazali"
   created: "2026-11-01"
-  last_updated: "2026-11-01"
+  last_updated: "2026-11-04"
 
 founding_decisions:
   relation_to_tsar: "separate"
