@@ -21,6 +21,7 @@ class OpenAIOAdapter(OpenAICompatibleAdapter):
                 temperature=None,
                 timeout_seconds=180,
                 api_key_env="OPENAI_API_KEY",
+                allowed_hosts=("api.openai.com",),
                 system_role="developer",
                 max_output_field="max_completion_tokens",
             )
