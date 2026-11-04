@@ -101,7 +101,7 @@ class ClaudeAdapter(Integration):
             endpoint_port == 0
             or any(ord(char) < 32 for char in endpoint.path)
             or endpoint.scheme != "https"
-            or not endpoint.hostname
+            or endpoint.hostname.lower().rstrip(".") != "api.anthropic.com"
             or endpoint.username
             or endpoint.password
             or endpoint.query
@@ -109,7 +109,7 @@ class ClaudeAdapter(Integration):
         ):
             return IntegrationResponse(
                 ok=False,
-                reason="Claude endpoint must be a valid HTTPS URL without credentials or query",
+                reason="Claude endpoint must be HTTPS to the approved Anthropic API host without credentials or query",
             )
 
         payload: dict[str, Any] = {
