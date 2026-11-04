@@ -6,7 +6,7 @@ integrations:
     - id: claude
       name: "Claude"
       provider: anthropic
-      integration_path: "integrations/models/claude/"
+      integration_path: "src/arkhon/integrations/models/claude/"
       status: supported
       tier: 1
       milestone: 4
@@ -16,7 +16,7 @@ integrations:
     - id: openai-o
       name: "OpenAI o"
       provider: openai
-      integration_path: "integrations/models/openai-o/"
+      integration_path: "src/arkhon/integrations/models/openai-o/"
       status: supported
       tier: 1
       milestone: 4
@@ -26,7 +26,7 @@ integrations:
     - id: deepseek-coder
       name: "DeepSeek-Coder"
       provider: deepseek
-      integration_path: "integrations/models/deepseek-coder/"
+      integration_path: "src/arkhon/integrations/models/deepseek-coder/"
       status: supported
       tier: 2
       milestone: 4
@@ -36,7 +36,7 @@ integrations:
     - id: gpt
       name: "GPT"
       provider: openai
-      integration_path: "integrations/models/gpt/"
+      integration_path: "src/arkhon/integrations/models/gpt/"
       status: supported
       tier: 1
       milestone: 4
@@ -46,7 +46,7 @@ integrations:
     - id: gemini
       name: "Gemini"
       provider: google
-      integration_path: "integrations/models/gemini/"
+      integration_path: "src/arkhon/integrations/models/gemini/"
       status: supported
       tier: 1
       milestone: 4
@@ -56,7 +56,7 @@ integrations:
     - id: code-llama
       name: "Code Llama"
       provider: meta
-      integration_path: "integrations/models/code-llama/"
+      integration_path: "src/arkhon/integrations/models/code-llama/"
       status: supported
       tier: 2
       milestone: 4
@@ -66,7 +66,7 @@ integrations:
     - id: qwen-coder
       name: "Qwen-Coder"
       provider: alibaba
-      integration_path: "integrations/models/qwen-coder/"
+      integration_path: "src/arkhon/integrations/models/qwen-coder/"
       status: supported
       tier: 2
       milestone: 4
@@ -76,7 +76,7 @@ integrations:
     - id: kimi
       name: "Kimi"
       provider: moonshot
-      integration_path: "integrations/models/kimi/"
+      integration_path: "src/arkhon/integrations/models/kimi/"
       status: supported
       tier: 1
       milestone: 4
@@ -88,7 +88,8 @@ integrations:
       name: "GitHub Copilot"
       provider: github-microsoft
       integration_path: "integrations/platforms/github-copilot/"
-      status: supported
+      runtime_adapter: "src/arkhon/integrations/platforms/github_copilot/adapter.py"
+      status: scaffolded
       milestone: 4
       underlying_models: [gpt, openai-o, claude]
       max_verification_level: configured
@@ -115,7 +116,7 @@ integrations:
       name: "Generic Agents"
       role: fallback
       integration_path: "integrations/generic-agents/"
-      status: supported
+      status: manual
       milestone: 4
 
 verification_levels:
