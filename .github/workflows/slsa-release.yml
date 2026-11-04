@@ -84,6 +84,8 @@ jobs:
     permissions:
       actions: read
       contents: write
+    outputs:
+      release_id: ${{ steps.release.outputs.release_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -93,20 +95,34 @@ jobs:
         with:
           name: dist
           path: dist
-      - name: Create or populate the draft release
+      - name: Select or create the draft release
+        id: release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist/*
-          else
-            gh release create "$GITHUB_REF_NAME" dist/* \
-              --draft \
-              --verify-tag \
-              --title "$GITHUB_REF_NAME" \
+          release_id="$(gh api --paginate --jq '.[] | select(.tag_name == env.GITHUB_REF_NAME and .draft == true) | .id' "repos/$GITHUB_REPOSITORY/releases?per_page=100" | sed -n '1p')"
+          if [[ -z "$release_id" ]]; then
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "$GITHUB_REF_NAME" \
               --notes "Official ARKHON release artifacts. Keep this release as a draft until provenance, signatures, and release-evidence verification succeed."
+            release_id="$(gh api --paginate --jq '.[] | select(.tag_name == env.GITHUB_REF_NAME and .draft == true) | .id' "repos/$GITHUB_REPOSITORY/releases?per_page=100" | sed -n '1p')"
           fi
+          test -n "$release_id" || { echo "Could not resolve draft release ID for $GITHUB_REF_NAME" >&2; exit 1; }
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+      - name: Upload signed artifacts to that draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          for artifact in dist/*; do
+            asset_name="$(basename "$artifact")"
+            existing_asset_id="$(ASSET_NAME="$asset_name" gh api --paginate --jq '.[] | select(.name == env.ASSET_NAME) | .id' "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" | sed -n '1p')"
+            if [[ -n "$existing_asset_id" ]]; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets/$existing_asset_id" >/dev/null
+            fi
+            gh api --method POST --header "Content-Type: application/octet-stream" --input "$artifact" "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$asset_name" >/dev/null
+          done
 
   provenance:
     name: Generate SLSA provenance
@@ -114,25 +130,50 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: write
+      contents: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
     with:
       base64-subjects: ${{ needs.build.outputs.hashes }}
-      # Build the generator from source: the reusable workflow's release asset
-      # is not guaranteed to be available for the detected workflow ref.
+      # Build the generator from source instead of relying on a prebuilt binary.
       compile-generator: true
-      # Upload provenance to the same tag/release created by publish-draft.
-      upload-assets: true
-      upload-tag-name: ${{ github.ref_name }}
+      # Keep generation separate from release upload to avoid duplicate drafts.
+      upload-assets: false
       provenance-name: multiple.intoto.jsonl
-      # Keep the release private as a draft until the verify job succeeds.
-      draft-release: "true"
+
+  attach-provenance:
+    name: Attach SLSA provenance to the canonical draft release
+    needs: [publish-draft, provenance]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download generated SLSA provenance artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ needs.provenance.outputs.provenance-name }}
+          path: dist
+      - name: Upload provenance to the exact draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.publish-draft.outputs.release_id }}
+          PROVENANCE_NAME: ${{ needs.provenance.outputs.provenance-name }}
+        run: |
+          set -euo pipefail
+          test -n "$RELEASE_ID"
+          test -f "dist/$PROVENANCE_NAME"
+          existing_asset_id="$(ASSET_NAME="$PROVENANCE_NAME" gh api --paginate --jq '.[] | select(.name == env.ASSET_NAME) | .id' "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" | sed -n '1p')"
+          if [[ -n "$existing_asset_id" ]]; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets/$existing_asset_id" >/dev/null
+          fi
+          gh api --method POST --header "Content-Type: application/octet-stream" --input "dist/$PROVENANCE_NAME" "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$PROVENANCE_NAME" >/dev/null
 
   verify:
     name: Verify release provenance, signatures, and Apxoh evidence acceptance
-    needs: [build, provenance]
+    needs: [build, provenance, attach-provenance]
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -143,10 +184,11 @@ jobs:
         with:
           name: dist
           path: dist
-      - name: Download generated SLSA provenance from the release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release download "$GITHUB_REF_NAME" --pattern '*.intoto.jsonl' --dir dist
+      - name: Download generated SLSA provenance from this workflow run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ needs.provenance.outputs.provenance-name }}
+          path: dist
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.11"
