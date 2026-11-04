@@ -21,9 +21,9 @@ import pytest
 import yaml
 
 from arkhon.integrations.platforms.github_copilot.adapter import (
-    _INSTRUCTIONS_CONTENT,
     GitHubCopilotAdapter,
     INSTRUCTIONS_REL_PATH,
+    _INSTRUCTIONS_CONTENT,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
