@@ -157,12 +157,12 @@ def test_gemini_key_health_endpoint_and_prompts(
 @pytest.mark.parametrize(
     ("config", "message"),
     [
-        (GeminiConfig(endpoint="http://example.com"), "valid HTTPS"),
-        (GeminiConfig(endpoint="https://user:pass@example.com"), "valid HTTPS"),
+        (GeminiConfig(endpoint="http://example.com"), "approved Google API host"),
+        (GeminiConfig(endpoint="https://user:pass@example.com"), "approved Google API host"),
         (GeminiConfig(endpoint="https://example.com:bad"), "invalid port"),
-        (GeminiConfig(endpoint="https://example.com:0"), "valid HTTPS"),
+        (GeminiConfig(endpoint="https://example.com:0"), "approved Google API host"),
         (GeminiConfig(endpoint="https://generativelanguage.googleapis.com:8443"), "port 443"),
-        (GeminiConfig(model="../unsafe"), "valid HTTPS"),
+        (GeminiConfig(model="../unsafe"), "approved Google API host"),
     ],
 )
 def test_gemini_rejects_unsafe_configuration(
