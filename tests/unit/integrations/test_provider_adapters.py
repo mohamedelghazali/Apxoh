@@ -73,6 +73,7 @@ def test_claude_key_health_endpoint_and_prompt_paths(
         "https://example.com/v1?token=x",
         "https://example.com:invalid/v1",
         "https://example.com:0/v1",
+        "https://api.anthropic.com:8443/v1/messages",
     ],
 )
 def test_claude_rejects_unsafe_endpoints(endpoint: str, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -160,6 +161,7 @@ def test_gemini_key_health_endpoint_and_prompts(
         (GeminiConfig(endpoint="https://user:pass@example.com"), "valid HTTPS"),
         (GeminiConfig(endpoint="https://example.com:bad"), "invalid port"),
         (GeminiConfig(endpoint="https://example.com:0"), "valid HTTPS"),
+        (GeminiConfig(endpoint="https://generativelanguage.googleapis.com:8443"), "port 443"),
         (GeminiConfig(model="../unsafe"), "valid HTTPS"),
     ],
 )
