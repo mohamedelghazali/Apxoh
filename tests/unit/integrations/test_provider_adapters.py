@@ -73,6 +73,7 @@ def test_claude_key_health_endpoint_and_prompt_paths(
         "https://example.com/v1?token=x",
         "https://example.com:invalid/v1",
         "https://example.com:0/v1",
+        "https://api.anthropic.com:8443/v1/messages",
     ],
 )
 def test_claude_rejects_unsafe_endpoints(endpoint: str, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -156,11 +157,12 @@ def test_gemini_key_health_endpoint_and_prompts(
 @pytest.mark.parametrize(
     ("config", "message"),
     [
-        (GeminiConfig(endpoint="http://example.com"), "valid HTTPS"),
-        (GeminiConfig(endpoint="https://user:pass@example.com"), "valid HTTPS"),
+        (GeminiConfig(endpoint="http://example.com"), "approved Google API host"),
+        (GeminiConfig(endpoint="https://user:pass@example.com"), "approved Google API host"),
         (GeminiConfig(endpoint="https://example.com:bad"), "invalid port"),
-        (GeminiConfig(endpoint="https://example.com:0"), "valid HTTPS"),
-        (GeminiConfig(model="../unsafe"), "valid HTTPS"),
+        (GeminiConfig(endpoint="https://example.com:0"), "approved Google API host"),
+        (GeminiConfig(endpoint="https://generativelanguage.googleapis.com:8443"), "port 443"),
+        (GeminiConfig(model="../unsafe"), "approved Google API host"),
     ],
 )
 def test_gemini_rejects_unsafe_configuration(
@@ -228,3 +230,36 @@ def test_gemini_rejects_invalid_response_json(monkeypatch: pytest.MonkeyPatch, b
         _Connection(_Response(body)),
     )
     assert not GeminiAdapter().send("prompt").ok
+
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://attacker.example/v1/messages",
+        "https://api.anthropic.com.attacker.example/v1/messages",
+    ],
+)
+def test_claude_rejects_non_provider_https_hosts(
+    endpoint: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
+    result = ClaudeAdapter(ClaudeConfig(endpoint=endpoint)).send("hello")
+    assert not result.ok
+    assert "approved Anthropic API host" in result.reason
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://attacker.example/v1beta/models",
+        "https://generativelanguage.googleapis.com.attacker.example/v1beta/models",
+    ],
+)
+def test_gemini_rejects_non_provider_https_hosts(
+    endpoint: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GOOGLE_API_KEY", "secret")
+    result = GeminiAdapter(GeminiConfig(endpoint=endpoint)).send("hello")
+    assert not result.ok
+    assert "approved Google API host" in result.reason

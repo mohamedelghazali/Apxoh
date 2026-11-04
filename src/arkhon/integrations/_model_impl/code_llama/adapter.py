@@ -25,6 +25,7 @@ class CodeLlamaAdapter(OpenAICompatibleAdapter):
                 temperature=0.0,
                 timeout_seconds=180,
                 api_key_env="CODE_LLAMA_API_KEY",
+                allowed_hosts=(),
                 api_key_required=False,
             )
         )

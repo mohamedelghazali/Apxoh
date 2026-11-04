@@ -21,5 +21,6 @@ class DeepSeekCoderAdapter(OpenAICompatibleAdapter):
                 temperature=0.0,
                 timeout_seconds=120,
                 api_key_env="DEEPSEEK_API_KEY",
+                allowed_hosts=("api.deepseek.com",),
             )
         )

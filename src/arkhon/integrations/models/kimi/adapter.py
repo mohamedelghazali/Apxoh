@@ -21,5 +21,6 @@ class KimiAdapter(OpenAICompatibleAdapter):
                 temperature=0.0,
                 timeout_seconds=180,
                 api_key_env="MOONSHOT_API_KEY",
+                allowed_hosts=("api.moonshot.ai",),
             )
         )

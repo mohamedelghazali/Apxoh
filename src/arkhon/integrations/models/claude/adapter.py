@@ -97,11 +97,12 @@ class ClaudeAdapter(Integration):
                 ok=False,
                 reason="Claude endpoint contains an invalid port",
             )
+        endpoint_host = endpoint.hostname
         if (
-            endpoint_port == 0
+            endpoint_port not in {None, 443}
             or any(ord(char) < 32 for char in endpoint.path)
             or endpoint.scheme != "https"
-            or not endpoint.hostname
+            or not endpoint_host or endpoint_host.lower().rstrip(".") != "api.anthropic.com"
             or endpoint.username
             or endpoint.password
             or endpoint.query
@@ -109,7 +110,10 @@ class ClaudeAdapter(Integration):
         ):
             return IntegrationResponse(
                 ok=False,
-                reason="Claude endpoint must be a valid HTTPS URL without credentials or query",
+                reason=(
+                    "Claude endpoint must use HTTPS port 443 on the approved "
+                    "Anthropic API host without credentials or query"
+                ),
             )
 
         payload: dict[str, Any] = {
