@@ -56,7 +56,7 @@ class GitHubCopilotAdapter(Integration):
                 return IntegrationResponse(ok=False, reason="refusing to write through a symlink")
             if target.exists():
                 if not target.is_file():
-                    return IntegrationResponse(ok=False, reason="instructions target is not a regular file")
+                    return IntegrationResponse(\n                        ok=False, reason="instructions target is not a regular file"\n                    )
                 if target.read_bytes() != expected:
                     return IntegrationResponse(
                         ok=False,
@@ -73,7 +73,7 @@ class GitHubCopilotAdapter(Integration):
                         reason="instructions target appeared concurrently with different content",
                     )
             except OSError as exc:
-                return IntegrationResponse(ok=False, reason=f"cannot verify instructions file: {exc}")
+                return IntegrationResponse(\n                    ok=False, reason=f"cannot verify instructions file: {exc}"\n                )
         except OSError as exc:
             return IntegrationResponse(ok=False, reason=f"cannot install instructions: {exc}")
         digest = hashlib.sha256(expected).hexdigest()
@@ -95,7 +95,7 @@ class GitHubCopilotAdapter(Integration):
             return IntegrationResponse(ok=False, reason=f"cannot read instructions file: {exc}")
         expected = _INSTRUCTIONS_CONTENT.encode("utf-8")
         if actual != expected:
-            return IntegrationResponse(ok=False, reason="instructions file does not match expected content")
+            return IntegrationResponse(\n                ok=False, reason="instructions file does not match expected content"\n            )
         digest = hashlib.sha256(actual).hexdigest()
         return IntegrationResponse(
             ok=True,
