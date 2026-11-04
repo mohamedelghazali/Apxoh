@@ -10,7 +10,7 @@
 
 ARKHON 0.1.0 is the current official package release. Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed. The remaining milestone items describe follow-on capability expansion and independently verifiable operational evidence; they are not alternate package-version labels.
 
-The current main commit is `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` (PR #82 merge, 2026-11-04). All 17 workflow runs returned for this exact commit completed successfully, including CI, unit tests, integration tests, installation, security, agent/model integrations, TSAR integration and end-to-end, release validation, schema validation, infrastructure validation, supply-chain assurance, OSSF Scorecard, compliance references, orchestrator, and self-test. This is repository CI evidence, not proof of third-party agent behavior or a signed release. The `main` branch API reports `protected: false`; no repository rulesets, tags, or published releases were found at review time.
+The current main commit is `a919f1d515ebe85cbdfc38401ed86cec04899bda` (PR #85 merge, 2026-11-04). Validation is running on this commit. The initial `repository-infrastructure` run identified a YAML parsing error in the release-validation workflow; a corrective change is being prepared before the release tag is created. Earlier successful workflow results on commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` remain historical evidence and are not attributed to the newer commit. The `main` branch API reports `protected: false`; no repository rulesets, tags, or published releases were found at this review.
 
 ---
 
