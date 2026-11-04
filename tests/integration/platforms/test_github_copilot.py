@@ -18,13 +18,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 import yaml
 
 from arkhon.integrations.platforms.github_copilot.adapter import (
-    INSTRUCTIONS_REL_PATH,
-    GitHubCopilotAdapter,
     _INSTRUCTIONS_CONTENT,
+    GitHubCopilotAdapter,
+    INSTRUCTIONS_REL_PATH,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -147,6 +146,31 @@ def test_install_rejects_symlinked_github_directory(
 
     assert not result.ok
     assert "symlinked .github" in result.reason
+    assert list(external.iterdir()) == []
+
+
+def test_install_rejects_symlink_created_during_directory_creation(
+    copilot_project: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = copilot_project / INSTRUCTIONS_REL_PATH
+    external = tmp_path / "external"
+    external.mkdir()
+    original_mkdir = Path.mkdir
+
+    def replace_directory_with_symlink(
+        self: Path, *args: Any, **kwargs: Any
+    ) -> None:
+        if self == target.parent:
+            self.symlink_to(external, target_is_directory=True)
+            return
+        original_mkdir(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "mkdir", replace_directory_with_symlink)
+
+    result = GitHubCopilotAdapter().install(copilot_project)
+
+    assert not result.ok
+    assert "refusing to write through a symlink" in result.reason
     assert list(external.iterdir()) == []
 
 
