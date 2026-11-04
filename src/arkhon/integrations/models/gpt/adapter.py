@@ -25,5 +25,6 @@ class GptAdapter(OpenAICompatibleAdapter):
                 temperature=0.0,
                 timeout_seconds=120,
                 api_key_env="OPENAI_API_KEY",
+                allowed_hosts=("api.openai.com",),
             )
         )
