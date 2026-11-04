@@ -24,5 +24,6 @@ class QwenCoderAdapter(OpenAICompatibleAdapter):
                 temperature=0.0,
                 timeout_seconds=120,
                 api_key_env="DASHSCOPE_API_KEY",
+                allowed_hosts=("dashscope.aliyuncs.com",),
             )
         )
