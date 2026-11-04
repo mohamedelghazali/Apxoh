@@ -70,11 +70,12 @@ class GeminiAdapter(Integration):
                 ok=False,
                 reason="Gemini endpoint contains an invalid port",
             )
+        endpoint_host = parsed_endpoint.hostname
         if (
             endpoint_port not in {None, 443}
             or any(ord(char) < 32 for char in parsed_endpoint.path)
             or parsed_endpoint.scheme != "https"
-            or parsed_endpoint.hostname.lower().rstrip(".") != "generativelanguage.googleapis.com"
+            or not endpoint_host or endpoint_host.lower().rstrip(".") != "generativelanguage.googleapis.com"
             or parsed_endpoint.username
             or parsed_endpoint.password
             or parsed_endpoint.query
