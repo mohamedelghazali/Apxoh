@@ -24,6 +24,7 @@ class OpenAICompatibleConfig:
     temperature: float | None
     timeout_seconds: int
     api_key_env: str
+    allowed_hosts: tuple[str, ...] = ()
     api_key_required: bool = True
     system_role: str = "system"
     max_output_field: str = "max_tokens"
@@ -88,13 +89,14 @@ class OpenAICompatibleAdapter(Integration):
             return False
         if port == 0 or any(ord(char) < 32 for char in parsed.path):
             return False
+        hostname = parsed.hostname.lower().rstrip(".")
         if parsed.scheme == "https":
-            return True
-        return parsed.scheme == "http" and parsed.hostname in {
-            "127.0.0.1",
-            "localhost",
-            "::1",
-        }
+            return bool(self.config.allowed_hosts) and hostname in self.config.allowed_hosts
+        return (
+            parsed.scheme == "http"
+            and not self.config.api_key_required
+            and hostname in {"127.0.0.1", "localhost", "::1"}
+        )
 
     def send(self, user_message: str) -> IntegrationResponse:
         if not self._endpoint_is_allowed():
