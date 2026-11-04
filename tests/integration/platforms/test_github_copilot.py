@@ -15,6 +15,7 @@ verify:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -134,7 +135,9 @@ def test_max_verification_is_configured() -> None:
     assert data["verification_level"]["max_reachable"] == "configured"
 
 
-def test_install_rejects_symlinked_github_directory(copilot_project: Path, tmp_path: Path) -> None:
+def test_install_rejects_symlinked_github_directory(
+    copilot_project: Path, tmp_path: Path
+) -> None:
     adapter = GitHubCopilotAdapter()
     external = tmp_path / "external"
     external.mkdir()
@@ -147,7 +150,9 @@ def test_install_rejects_symlinked_github_directory(copilot_project: Path, tmp_p
     assert list(external.iterdir()) == []
 
 
-def test_install_rejects_symlinked_instructions_file(copilot_project: Path, tmp_path: Path) -> None:
+def test_install_rejects_symlinked_instructions_file(
+    copilot_project: Path, tmp_path: Path
+) -> None:
     adapter = GitHubCopilotAdapter()
     target = copilot_project / INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
@@ -217,7 +222,9 @@ def test_install_handles_concurrent_different_file(
     target = copilot_project / INSTRUCTIONS_REL_PATH
     original_open = Path.open
 
-    def create_then_raise(self, mode="r", *args, **kwargs):
+    def create_then_raise(
+        self: Path, mode: str = "r", *args: Any, **kwargs: Any
+    ) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(b"user content")
@@ -240,7 +247,9 @@ def test_install_handles_unreadable_concurrent_file(
     original_open = Path.open
     original_read_bytes = Path.read_bytes
 
-    def create_then_raise(self, mode="r", *args, **kwargs):
+    def create_then_raise(
+        self: Path, mode: str = "r", *args: Any, **kwargs: Any
+    ) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(b"user content")
@@ -261,7 +270,9 @@ def test_install_handles_unreadable_concurrent_file(
     assert "cannot verify instructions file" in result.reason
 
 
-def test_verify_rejects_symlinked_instructions_file(copilot_project: Path, tmp_path: Path) -> None:
+def test_verify_rejects_symlinked_instructions_file(
+    copilot_project: Path, tmp_path: Path
+) -> None:
     target = copilot_project / INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
     external = tmp_path / "instructions.md"
@@ -282,7 +293,7 @@ def test_verify_reports_read_error(
     target = copilot_project / INSTRUCTIONS_REL_PATH
     original_read_bytes = Path.read_bytes
 
-    def fail_read(self):
+    def fail_read(self: Path) -> bytes:
         if self == target:
             raise OSError("simulated read failure")
         return original_read_bytes(self)
