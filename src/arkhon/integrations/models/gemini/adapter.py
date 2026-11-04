@@ -85,7 +85,10 @@ class GeminiAdapter(Integration):
         ):
             return IntegrationResponse(
                 ok=False,
-                reason="Gemini endpoint must use HTTPS port 443 on the approved Google API host and model must be a safe identifier",
+                reason=(
+                    "Gemini endpoint must use HTTPS port 443 on the approved "
+                    "Google API host and model must be a safe identifier"
+                ),
             )
 
         payload: dict[str, Any] = {
