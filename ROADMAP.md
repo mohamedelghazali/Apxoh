@@ -1,6 +1,6 @@
 # Apxoh Roadmap
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Active — pre-release  
 **Last updated:** 2026-11-04
 
@@ -10,7 +10,7 @@
 
 Apxoh is in **pre-release** (0.1.0.dev1). Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed.
 
-The latest `main` commit at this update is `a596fb6afb18597437558fe3a658b9bd40c0cfb5` (PR #63 merged after PR #62). The merge commit reports 55/55 successful checks. PR #63's head completed 56/56 checks; the Installation Test matrix completed 11/11 jobs, including clean installs on Windows, macOS, and Ubuntu with Python 3.11–3.13, wheel smoke test, and offline check.
+The validation baseline for this update is `d9bc9b27eb45669a858d925fe6c0aae080ad81cb` (PR #74). On this main commit, CI, agent integrations, integration tests, model integrations, TSAR end-to-end, release validation, schema validation, and supply-chain assurance completed successfully. The Installation Test matrix has passed its Ubuntu and Windows jobs, wheel smoke test, and offline check; three macOS/Python jobs were still queued at the time of this update. Do not treat queued jobs as passed.
 
 ---
 
@@ -94,9 +94,9 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Behavioral verification with each supported agent product in a real configured environment
 - [ ] Verify instruction discovery, activation, precedence, and enforcement per supported platform
 - [ ] Complete platform-specific integration validation, including GitHub Copilot
-- [ ] Successful CI execution of agent integration checks
+- [x] Successful CI execution of agent integration checks
 
-**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
+**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow passed on main commit `d9bc9b27eb45669a858d925fe6c0aae080ad81cb` (run `41855226651`), including package installation, source compilation, and the full pytest suite. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
 
 ### Milestone 5 — Orchestrator & Full CLI 🔄
 
