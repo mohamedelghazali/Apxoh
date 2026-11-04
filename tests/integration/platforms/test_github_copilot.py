@@ -42,7 +42,7 @@ def test_health_check_with_prompt() -> None:
 def test_install_creates_file(copilot_project: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
 
-    result = copilot_adapter.install(copilot_project)
+    result = adapter.install(copilot_project)
 
     assert result.ok
 
@@ -56,8 +56,8 @@ def test_install_creates_file(copilot_project: Path) -> None:
 
 def test_install_is_idempotent(copilot_project: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
-    first = copilot_adapter.install(copilot_project)
-    second = copilot_adapter.install(copilot_project)
+    first = adapter.install(copilot_project)
+    second = adapter.install(copilot_project)
     assert first.ok and second.ok
     assert first.payload["sha256"] == second.payload["sha256"]
 
@@ -75,9 +75,9 @@ def test_install_preserves_existing_user_content(copilot_project: Path) -> None:
 def test_verify_passes_after_install(copilot_project: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
 
-    copilot_adapter.install(copilot_project)
+    adapter.install(copilot_project)
 
-    result = copilot_adapter.verify(copilot_project)
+    result = adapter.verify(copilot_project)
 
     assert result.ok
 
@@ -95,13 +95,13 @@ def test_verify_fails_without_file(copilot_project: Path) -> None:
 def test_verify_fails_on_tampered_file(copilot_project: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
 
-    copilot_adapter.install(copilot_project)
+    adapter.install(copilot_project)
 
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
 
     target.write_text("tampered", encoding="utf-8")
 
-    result = copilot_adapter.verify(copilot_project)
+    result = adapter.verify(copilot_project)
 
     assert not result.ok
 
@@ -138,7 +138,7 @@ def test_install_rejects_symlinked_github_directory(
     external.mkdir()
     (copilot_project / ".github").symlink_to(external, target_is_directory=True)
 
-    result = copilot_adapter.install(copilot_project)
+    result = adapter.install(copilot_project)
 
     assert not result.ok
     assert "symlinked .github" in result.reason
@@ -180,7 +180,7 @@ def test_install_rejects_symlinked_instructions_file(
     external.write_text("user content", encoding="utf-8")
     target.symlink_to(external)
 
-    result = copilot_adapter.install(copilot_project)
+    result = adapter.install(copilot_project)
 
     assert not result.ok
     assert "symlinked instructions" in result.reason
@@ -311,7 +311,7 @@ def test_verify_reports_read_error(
     copilot_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
-    copilot_adapter.install(copilot_project)
+    adapter.install(copilot_project)
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_read_bytes = Path.read_bytes
 
@@ -322,7 +322,7 @@ def test_verify_reports_read_error(
 
     monkeypatch.setattr(Path, "read_bytes", fail_read)
 
-    result = copilot_adapter.verify(copilot_project)
+    result = adapter.verify(copilot_project)
 
     assert not result.ok
     assert "cannot read instructions file" in result.reason
