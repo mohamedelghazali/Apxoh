@@ -1,6 +1,7 @@
 # ruff: noqa: I001
 from __future__ import annotations
 
+import hashlib
 import runpy
 from pathlib import Path
 
@@ -30,6 +31,25 @@ from arkhon.language_support.detector import DetectionResult
 from arkhon.integrations.tsar.verifier import _maximum_version_tuple
 
 
+def _evidence_record(root: Path, evidence_id: str, status: str) -> dict[str, object]:
+    artifact = root / f"{evidence_id}.txt"
+    artifact.write_text(f"evidence for {evidence_id}", encoding="utf-8")
+    return {
+        "evidence_id": evidence_id,
+        "source": "arkhon",
+        "source_version": "0.1.0",
+        "commit_sha": "a" * 40,
+        "executed_at": "2026-11-01T00:00:00Z",
+        "status": status,
+        "artifacts": [
+            {
+                "path": artifact.name,
+                "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }
+        ],
+    }
+
+
 def test_gate_invalid_status_and_closes_property() -> None:
     with pytest.raises(GateError, match="invalid gate status"):
         GateVerdict("testing_gate", "UNKNOWN")
@@ -48,9 +68,9 @@ def test_cli_assess_fails_closed_with_aggregate_evidence_and_verify_missing_proj
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     store = EvidenceStore(tmp_path)
-    store.write("testing", {"evidence_id": "EVID-ASSESS-PASS", "status": "PASS"})
-    store.write("testing", {"evidence_id": "EVID-ASSESS-FAIL", "status": "FAIL"})
-    store.write("unknown-domain", {"evidence_id": "EVID-ASSESS-OTHER", "status": "PASS"})
+    store.write("testing", _evidence_record(tmp_path, "EVID-ASSESS-PASS", "PASS"))
+    store.write("testing", _evidence_record(tmp_path, "EVID-ASSESS-FAIL", "FAIL"))
+    store.write("unknown-domain", _evidence_record(tmp_path, "EVID-ASSESS-OTHER", "PASS"))
     assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
     assert "Evidence records inspected: 3" in output

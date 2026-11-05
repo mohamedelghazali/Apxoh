@@ -70,6 +70,8 @@ def test_assess_fails_closed_without_rule_outcomes(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     store = EvidenceStore(tmp_path)
+    artifact = tmp_path / "test-report.json"
+    artifact.write_text('{"tests": 1, "failures": 0}', encoding="utf-8")
     store.write(
         "testing",
         {
@@ -79,7 +81,12 @@ def test_assess_fails_closed_without_rule_outcomes(
             "commit_sha": "a" * 40,
             "executed_at": "2026-11-05T00:00:00Z",
             "status": "PASS",
-            "artifacts": [{"path": "test-report.json", "sha256": "b" * 64}],
+            "artifacts": [
+                {
+                    "path": artifact.name,
+                    "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                }
+            ],
         },
     )
     assert main(["assess", str(tmp_path)]) == 1

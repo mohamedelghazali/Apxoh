@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -47,9 +48,27 @@ def test_status_text_summarizes_evidence(
         ("EVID-ONE", "PASS", "testing"),
         ("EVID-TWO", "FAIL", "testing"),
         ("EVID-THREE", "BLOCKED", "security"),
-        ("EVID-FOUR", "SKIPPED", "security"),
+        ("EVID-FOUR", "ACCEPTED_RISK", "security"),
     ):
-        store.write(domain, {"evidence_id": evidence_id, "status": status})
+        artifact = tmp_path / f"{evidence_id}.txt"
+        artifact.write_text(f"evidence for {evidence_id}", encoding="utf-8")
+        store.write(
+            domain,
+            {
+                "evidence_id": evidence_id,
+                "source": "arkhon",
+                "source_version": "0.1.0",
+                "commit_sha": "a" * 40,
+                "executed_at": "2026-11-01T00:00:00Z",
+                "status": status,
+                "artifacts": [
+                    {
+                        "path": artifact.name,
+                        "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                    }
+                ],
+            },
+        )
     assert main(["status", str(tmp_path)]) == 0
     output = capsys.readouterr().out
     assert "Evidence records: 4" in output

@@ -82,10 +82,15 @@ class EvidenceStore:
         if data.get("evidence_id") != evidence_id:
             raise EvidenceTamperedError(f"evidence ID does not match filename: {path}")
 
+        commit_sha = data.get("commit_sha")
+        if not isinstance(commit_sha, str) or not _COMMIT_SHA.fullmatch(commit_sha):
+            raise EvidenceTamperedError(
+                "evidence record has invalid commit SHA (invalid commit_sha); expected a 40-character lowercase SHA-256"
+            )
+
         required = {
             "source",
             "source_version",
-            "commit_sha",
             "executed_at",
             "status",
             "artifacts",
@@ -103,21 +108,17 @@ class EvidenceStore:
         if not isinstance(source_version, str) or not source_version.strip():
             raise EvidenceTamperedError("evidence source_version must be a non-empty string")
 
-        commit_sha = data["commit_sha"]
-        if not isinstance(commit_sha, str) or not _COMMIT_SHA.fullmatch(commit_sha):
-            raise EvidenceTamperedError("evidence record has an invalid commit SHA")
-
         status = data["status"]
         if status not in ALL_STATUSES:
             raise EvidenceTamperedError(f"evidence record has an invalid status: {status!r}")
 
         executed_at = data["executed_at"]
         if not isinstance(executed_at, str):
-            raise EvidenceTamperedError("evidence executed_at must be a date-time string")
+            raise EvidenceTamperedError("invalid executed_at: must be a date-time string")
         try:
             timestamp = datetime.fromisoformat(executed_at.replace("Z", "+00:00"))
         except ValueError as exc:
-            raise EvidenceTamperedError("evidence executed_at is not a valid date-time") from exc
+            raise EvidenceTamperedError("invalid executed_at: not a valid date-time") from exc
         if timestamp.tzinfo is None:
             raise EvidenceTamperedError("evidence executed_at must include a timezone")
 
@@ -149,11 +150,14 @@ class EvidenceStore:
             ):
                 raise EvidenceTamperedError("evidence artifact path must be a safe relative path")
 
-        verify_bundle(
-            path,
-            evidence_root=self._project_root,
-            expected_commit_sha=commit_sha,
-        )
+        try:
+            verify_bundle(
+                path,
+                evidence_root=self._project_root,
+                expected_commit_sha=commit_sha,
+            )
+        except EvidenceTamperedError as exc:
+            raise EvidenceTamperedError(f"evidence verification failed: {exc}") from exc
 
     def write(self, domain: str, evidence: dict[str, Any]) -> Path:
         if not isinstance(evidence, dict):
