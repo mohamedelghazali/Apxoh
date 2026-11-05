@@ -121,6 +121,7 @@ def test_assess_blocks_malformed_method_declaration(
 metadata:
   domain: testing
   status: active
+  enforcement: blocking
 verification:
   methods: invalid
 human_review:
@@ -335,7 +336,6 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     from arkhon.cli import main
-    from arkhon.verification.methods import MethodImplementation
     from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     from arkhon.verification.runners.mypy_runner import MypyRunner
 
@@ -356,17 +356,10 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     ]
     for index, domain in enumerate(domains):
         _write_assessment_rule(
-            rules, f"SE-TEST-{index:03d}", domain, "[test-method]"
+            rules, f"SE-TEST-{index:03d}", domain, "[type-checker-execution]"
         )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr(
-        "arkhon.verification.methods.resolve_methods",
-        lambda methods: tuple(
-            (method, MethodImplementation(method, "MypyRunner", "mypy")) for method in methods
-        ),
-    )
-
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = root / ".arkhon" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
