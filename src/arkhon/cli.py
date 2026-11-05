@@ -386,9 +386,8 @@ def cmd_assess(args: argparse.Namespace) -> int:
             "evidence-commit-match",
             "evidence-freshness-check",
             "timestamp-verification",
-        }:
-            if result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
-                return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
+        } and result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
+            return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
         return STATUS_BLOCKED, result.reason or "method did not establish its acceptance criteria"
 
     outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
@@ -420,7 +419,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
 
             if review_required and not any(item[0] == "human-review" for item in method_details):
                 method_details.append(
-                    ("human-review-approval", STATUS_BLOCKED, "authorized human approval is required")
+                    (
+                        "human-review-approval",
+                        STATUS_BLOCKED,
+                        "authorized human approval is required",
+                    )
                 )
 
             statuses = [item[1] for item in method_details]
@@ -561,7 +564,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
     for domain, rule_outcomes in outcomes_per_domain.items():
         score_domain = score_domain_map.get(domain)
         if score_domain is not None:
-            score_outcomes.setdefault(score_domain, []).extend(item.status for item in rule_outcomes)
+            score_outcomes.setdefault(score_domain, []).extend(
+                item.status for item in rule_outcomes
+            )
     score = score_from_outcomes(score_outcomes)
     decision = decide(score, verdicts)
     print(f"Engineering score: {score.total:.2f}/{score.maximum:.0f}")
