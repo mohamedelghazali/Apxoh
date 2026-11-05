@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import subprocess
@@ -276,11 +277,21 @@ def test_enforcement_gate_ignores_inactive_and_aggregates(tmp_path: Path) -> Non
 
 def test_evidence_store_integrity_iteration_and_latest(tmp_path: Path) -> None:
     store = EvidenceStore(tmp_path)
+    artifact = tmp_path / "evidence.txt"
+    artifact.write_text("verified", encoding="utf-8")
     data = {
         "evidence_id": "EVID-1",
+        "source": "arkhon",
+        "source_version": "0.1.0",
         "commit_sha": "a" * 40,
         "status": "PASS",
         "executed_at": "2026-11-01T00:00:00Z",
+        "artifacts": [
+            {
+                "path": artifact.name,
+                "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }
+        ],
     }
     path = store.write("testing", data)
     assert store.write("testing", data) == path
