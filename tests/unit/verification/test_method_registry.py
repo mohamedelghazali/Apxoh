@@ -82,6 +82,7 @@ human_review:
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     from arkhon.verification.runners.mypy_runner import MypyRunner
@@ -305,6 +306,7 @@ def test_assess_blocks_when_project_head_changes_during_verification(
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     commits = iter(["a" * 40, "b" * 40])
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: next(commits))
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = root / ".arkhon" / "reports" / "mypy.txt"
