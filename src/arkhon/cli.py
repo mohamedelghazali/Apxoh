@@ -450,7 +450,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
         f"rules requiring human review: {human_review_rules}; "
         f"malformed rule declarations: {malformed_rules}"
     )
-    print(f"Evidence records inspected (integrity-checked): {len(records)}")
+    print(f"Evidence records inspected: {len(records)} (integrity-checked)")
     print(f"Commit assessed: {commit_sha or 'UNRESOLVED'}")
     print("Gates:")
     for gate, verdict in verdicts.items():
