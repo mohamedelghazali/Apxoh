@@ -97,7 +97,7 @@ human_review:
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
     assert "SE-SAMPLE-001: 1/2 methods implemented" in output
-    assert "[UNIMPLEMENTED] not-yet-implemented" in output
+    assert "not-yet-implemented: no executable implementation is registered" in output
     assert "human review required" in output
     assert "aggregate runner records are not accepted as per-rule proof" not in output
     assert "[PASS] type-checker-execution" in output
