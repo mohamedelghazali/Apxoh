@@ -100,6 +100,7 @@ def cmd_validate(_args: argparse.Namespace) -> int:
 def cmd_inspect(args: argparse.Namespace) -> int:
     from arkhon.config import get_manifest
     from arkhon.language_support.detector import detect_languages
+    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
 
     project = Path(args.project).resolve()
@@ -215,6 +216,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
     try:
         records = list(EvidenceStore(project).iter_records())
         profile = match_profile(project)
+        available_profiles = set(list_profiles(_project_template_root()))
+        if profile.profile not in available_profiles:
+            raise ConfigError(f"unknown project profile: {profile.profile!r}")
     except EvidenceError as exc:
         print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
         return 1
