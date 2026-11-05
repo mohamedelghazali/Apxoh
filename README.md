@@ -45,6 +45,17 @@ arkhon exceptions list --json
 
 The status command verifies evidence-store integrity before reporting counts. Exception inspection is read-only; approval, extension, and revocation remain governed operations and are not performed by this listing command.
 
+## Rule-level assessment
+
+```powershell
+# Execute supported rule verifiers and persist commit-bound evidence per rule.
+arkhon assess .
+```
+
+Assessment requires a resolvable Git commit and a clean working tree. A project profile inferred from directory markers is advisory and never excludes rules; only a valid, explicitly declared profile can establish that a rule is out of scope. Each rule receives its own PASS, FAIL, BLOCKED, or NOT_APPLICABLE outcome and an integrity-checked evidence record under `.arkhon/evidence/`, with a run summary under `.arkhon/reports/assessments/`.
+
+Only methods backed by an executable verifier can produce automated results. Unsupported methods and required human approvals remain BLOCKED. The score and readiness decision are withheld until every applicable rule and gate has complete passing evidence.
+
 ## Trust model
 
 Missing required tools or evidence are BLOCKED, not PASS. CI success alone is not proof of product quality. Standards mappings are informative and do not establish certification. TSAR is an optional, separately versioned integration; ARKHON remains independently usable. Consult COMPATIBILITY.md before relying on any integration.
