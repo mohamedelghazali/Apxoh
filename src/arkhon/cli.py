@@ -301,7 +301,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
         supported = [
             (method, implementation)
             for method, implementation in resolutions
-            if implementation is not None
+            if implementation is not None and rule.domain in implementation.allowed_domains
         ]
         implemented_methods += len(supported)
         required_runners.update(implementation.runner for _, implementation in supported)
@@ -450,6 +450,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
                         if method_id == "human-review"
                         else "no executable implementation is registered"
                     )
+                elif rule.domain not in implementation.allowed_domains:
+                    status = STATUS_BLOCKED
+                    reason = (
+                        f"implementation is not approved for rule domain {rule.domain!r}"
+                    )
                 else:
                     status, reason = method_status(method_id, implementation.runner)
                 method_details.append((method_id, status, reason))
@@ -494,7 +499,10 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     raise EvidenceError("refusing symlinked assessment summary")
                 artifact_paths: set[Path] = set()
                 for _, implementation in resolutions:
-                    if implementation is None:
+                    if (
+                        implementation is None
+                        or rule.domain not in implementation.allowed_domains
+                    ):
                         continue
                     runner_result = runner_results.get(implementation.runner)
                     if runner_result is not None and runner_result.outcome in {
