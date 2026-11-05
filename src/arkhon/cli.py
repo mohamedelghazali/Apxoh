@@ -165,6 +165,24 @@ def _commit_sha(project: Path) -> str | None:
         return None
 
 
+def _working_tree_clean(project: Path) -> bool:
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        return False
+    try:
+        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+            [git_executable, "status", "--porcelain", "--untracked-files=all"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return not result.stdout.strip()
+
+
 def cmd_audit(args: argparse.Namespace) -> int:
     from arkhon.rules.loader import load_rules_dir
 
@@ -226,6 +244,8 @@ def cmd_assess(args: argparse.Namespace) -> int:
         print(f"[FAIL] project applicability could not be determined: {exc}", file=sys.stderr)
         return 1
 
+    commit_sha = _commit_sha(project)
+    working_tree_clean = commit_sha is not None and _working_tree_clean(project)
     active_rules = [rule for rule in rules_result.rules if rule.status == "active"]
     assessment_id = f"ASSESS-{uuid.uuid4().hex[:12].upper()}"
     evidence_records_written = 0
@@ -254,7 +274,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
             continue
 
         if (
-            profile.explicit
+            commit_sha is not None
+            and working_tree_clean
+            and profile.explicit
             and profile.profile != "universal"
             and "all" not in project_types
             and profile.profile not in project_types
@@ -298,7 +320,6 @@ def cmd_assess(args: argparse.Namespace) -> int:
             f"human review {'required' if review_required else 'not required'}"
         )
 
-    commit_sha = _commit_sha(project)
     runner_instances = {
         "mypy": MypyRunner(),
         "tsar": TsarRunner(),
@@ -306,11 +327,17 @@ def cmd_assess(args: argparse.Namespace) -> int:
     runner_results: dict[str, RunnerResult] = {}
 
     if commit_sha is None:
+        block_reason = "assessment requires a resolvable Git commit SHA"
+    elif not working_tree_clean:
+        block_reason = "working tree is dirty or its clean state could not be verified"
+    else:
+        block_reason = ""
+    if block_reason:
         for runner_name in required_runners:
             runner_results[runner_name] = RunnerResult(
                 runner=runner_name,
                 outcome=RunnerOutcome.BLOCKED,
-                reason="assessment requires a resolvable Git commit SHA",
+                reason=block_reason,
             )
     else:
         for runner_name in sorted(required_runners):
@@ -361,7 +388,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     )
             runner_results[runner_name] = result
 
-        if _commit_sha(project) != commit_sha:
+        if _commit_sha(project) != commit_sha or not _working_tree_clean(project):
             for runner_name in required_runners:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
@@ -396,7 +423,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
         return STATUS_BLOCKED, result.reason or "method did not establish its acceptance criteria"
 
     outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
-    complete = True
+    complete = commit_sha is not None and working_tree_clean
     print("Rule outcomes:")
     for rule in active_rules:
         resolutions, review_required, planning_error = planned[rule.id]
@@ -480,6 +507,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     "status": rule_status,
                     "commit_sha": commit_sha,
                     "project_profile": profile.profile,
+                    "working_tree_clean": working_tree_clean,
                     "human_review_required": review_required,
                     "methods": [
                         {"method_id": method_id, "status": status, "reason": reason}
@@ -541,6 +569,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
     print(f"Evidence records inspected: {len(records)} (integrity-checked)")
     print(f"New rule-level evidence records persisted: {evidence_records_written}")
     print(f"Commit assessed: {commit_sha or 'UNRESOLVED'}")
+    print(f"Working tree clean: {'yes' if working_tree_clean else 'no'}")
     print("Gates:")
     for gate, verdict in verdicts.items():
         print(f"  {gate}: {verdict.status}")
