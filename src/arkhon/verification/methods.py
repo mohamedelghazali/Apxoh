@@ -34,16 +34,28 @@ METHOD_REGISTRY: Mapping[str, MethodImplementation] = MappingProxyType(
             "tsar-audit-invocation", "TsarRunner", "tsar", frozenset({"software-security"})
         ),
         "evidence-integrity-check": MethodImplementation(
-            "evidence-integrity-check", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
+            "evidence-integrity-check",
+            "verify_tsar_evidence",
+            "tsar",
+            frozenset({"software-security"}),
         ),
         "evidence-commit-match": MethodImplementation(
-            "evidence-commit-match", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
+            "evidence-commit-match",
+            "verify_tsar_evidence",
+            "tsar",
+            frozenset({"software-security"}),
         ),
         "evidence-freshness-check": MethodImplementation(
-            "evidence-freshness-check", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
+            "evidence-freshness-check",
+            "verify_tsar_evidence",
+            "tsar",
+            frozenset({"software-security"}),
         ),
         "timestamp-verification": MethodImplementation(
-            "timestamp-verification", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
+            "timestamp-verification",
+            "verify_tsar_evidence",
+            "tsar",
+            frozenset({"software-security"}),
         ),
     }
 )
