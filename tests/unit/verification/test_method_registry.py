@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from arkhon.verification.methods import METHOD_REGISTRY, resolve_method, resolve_methods
@@ -9,12 +11,19 @@ from arkhon.verification.methods import METHOD_REGISTRY, resolve_method, resolve
 
 def test_registry_contains_only_explicit_implementations() -> None:
     assert resolve_method("type-checker-execution") == METHOD_REGISTRY["type-checker-execution"]
-    assert resolve_method("zero-type-errors-check").runner == "mypy"
-    assert resolve_method("tsar-audit-invocation").runner == "tsar"
-    assert resolve_method("evidence-integrity-check").component == "verify_tsar_evidence"
-    assert resolve_method("evidence-commit-match").component == "verify_tsar_evidence"
-    assert resolve_method("evidence-freshness-check").component == "verify_tsar_evidence"
-    assert resolve_method("timestamp-verification").component == "verify_tsar_evidence"
+    implementation = resolve_method("zero-type-errors-check")
+    assert implementation is not None and implementation.runner == "mypy"
+    implementation = resolve_method("tsar-audit-invocation")
+    assert implementation is not None and implementation.runner == "tsar"
+    for method_id in (
+        "evidence-integrity-check",
+        "evidence-commit-match",
+        "evidence-freshness-check",
+        "timestamp-verification",
+    ):
+        implementation = resolve_method(method_id)
+        assert implementation is not None
+        assert implementation.component == "verify_tsar_evidence"
 
 
 def test_unknown_method_is_not_claimed_as_implemented() -> None:
@@ -48,7 +57,7 @@ def test_resolve_methods_rejects_malformed_lists(value: object, message: str) ->
 
 
 def test_assess_reports_implementation_coverage_but_never_passes(
-    tmp_path, monkeypatch, capsys
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     from arkhon.cli import main
 
@@ -58,16 +67,17 @@ def test_assess_reports_implementation_coverage_but_never_passes(
     rules = repository / "rules"
     rules.mkdir(parents=True)
     (rules / "sample.yaml").write_text(
-        "id: SE-SAMPLE-001\\n"
-        "metadata:\\n"
-        "  domain: testing\\n"
-        "  status: active\\n"
-        "  enforcement: blocking\\n"
-        "  severity: high\\n"
-        "verification:\\n"
-        "  methods: [type-checker-execution, not-yet-implemented]\\n"
-        "human_review:\\n"
-        "  required: true\\n",
+        """id: SE-SAMPLE-001
+metadata:
+  domain: testing
+  status: active
+  enforcement: blocking
+  severity: high
+verification:
+  methods: [type-checker-execution, not-yet-implemented]
+human_review:
+  required: true
+""",
         encoding="utf-8",
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
