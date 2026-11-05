@@ -159,4 +159,13 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
     assert _working_tree_clean(tmp_path) is False
 
     monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: None)
+    assert _commit_sha(tmp_path) is None
+    assert _working_tree_clean(tmp_path) is False
+
+    monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: "/usr/bin/git")
+    monkeypatch.setattr(
+        "arkhon.cli.subprocess.run",
+        lambda *args, **kwargs: (_ for _ in ()).throw(OSError("git unavailable")),
+    )
+    assert _commit_sha(tmp_path) is None
     assert _working_tree_clean(tmp_path) is False
