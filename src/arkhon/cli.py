@@ -101,7 +101,6 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     from arkhon.config import get_manifest
     from arkhon.language_support.detector import detect_languages
     from arkhon.projects.loader import list_profiles
-    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
 
     project = Path(args.project).resolve()
@@ -214,6 +213,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
     from arkhon.core.errors import ConfigError, EvidenceError, GateError
     from arkhon.evidence.collector import EvidenceCollector
     from arkhon.evidence.store import EvidenceStore
+    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
     from arkhon.rules.loader import load_rules_dir
     from arkhon.verification.methods import resolve_methods
