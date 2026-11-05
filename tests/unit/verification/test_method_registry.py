@@ -482,3 +482,28 @@ def test_assess_blocks_worktree_changed_while_runner_executes(
     assert "Working tree clean: no" in output
     assert "project commit or working tree changed during assessment" in output
 
+def test_assess_rejects_verifier_used_outside_its_approved_domain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(
+        rules,
+        "SE-SEC-GOV-001",
+        "software-security",
+        "[type-checker-execution]",
+    )
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "SE-SEC-GOV-001: BLOCKED" in output
+    assert "not approved for rule domain 'software-security'" in output
+
