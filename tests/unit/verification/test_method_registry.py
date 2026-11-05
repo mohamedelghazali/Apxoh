@@ -479,5 +479,5 @@ def test_assess_blocks_worktree_changed_while_runner_executes(
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
     assert "Working tree clean: no" in output
-    assert "project HEAD changed during assessment" in output
+    assert "project commit or working tree changed during assessment" in output
 
