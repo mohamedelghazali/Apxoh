@@ -45,3 +45,37 @@ def test_resolve_methods_preserves_supported_and_unsupported_methods() -> None:
 def test_resolve_methods_rejects_malformed_lists(value: object, message: str) -> None:
     with pytest.raises(ValueError, match=message):
         resolve_methods(value)
+
+
+def test_assess_reports_implementation_coverage_but_never_passes(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    (rules / "sample.yaml").write_text(
+        "id: SE-SAMPLE-001\\n"
+        "metadata:\\n"
+        "  domain: testing\\n"
+        "  status: active\\n"
+        "  enforcement: blocking\\n"
+        "  severity: high\\n"
+        "verification:\\n"
+        "  methods: [type-checker-execution, not-yet-implemented]\\n"
+        "human_review:\\n"
+        "  required: true\\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "SE-SAMPLE-001: 1/2 methods implemented" in output
+    assert "[UNIMPLEMENTED] not-yet-implemented" in output
+    assert "human review required" in output
+    assert "aggregate runner records are not accepted as per-rule proof" in output
+    assert "no score or readiness level has been computed" in output
