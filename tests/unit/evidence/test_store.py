@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -114,3 +117,78 @@ def test_iter_records_rejects_resolved_path_escape(
     monkeypatch.setattr(Path, "resolve", redirected_resolve)
     with pytest.raises(EvidenceTamperedError, match="escapes evidence root"):
         list(EvidenceStore(project).iter_records("security"))
+
+def _valid_record(project: Path, evidence_id: str = "EVID-TEST-0002") -> dict[str, Any]:
+    artifact = project / "artifact.txt"
+    artifact.write_text("verified evidence", encoding="utf-8")
+    return {
+        "evidence_id": evidence_id,
+        "source": "arkhon",
+        "source_version": "0.1.0.dev1",
+        "commit_sha": "a" * 40,
+        "executed_at": datetime.now(UTC).isoformat(),
+        "status": "PASS",
+        "artifacts": [
+            {
+                "path": "artifact.txt",
+                "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }
+        ],
+    }
+
+
+def test_read_verifies_artifact_hash(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    store.write("testing", record)
+
+    (tmp_path / "artifact.txt").write_text("modified after evidence", encoding="utf-8")
+
+    with pytest.raises(EvidenceTamperedError, match="hash mismatch"):
+        store.read("testing", "EVID-TEST-0002")
+
+
+def test_iter_records_verifies_artifact_hash(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    store.write("testing", record)
+
+    (tmp_path / "artifact.txt").write_text("modified after evidence", encoding="utf-8")
+
+    with pytest.raises(EvidenceTamperedError, match="hash mismatch"):
+        list(store.iter_records())
+
+
+def test_read_rejects_malformed_evidence_metadata(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    record["commit_sha"] = "not-a-commit"
+    store.write("testing", record)
+
+    with pytest.raises(EvidenceTamperedError, match="invalid commit SHA"):
+        store.read("testing", "EVID-TEST-0002")
+
+
+def test_read_rejects_artifact_path_traversal(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    artifact = record["artifacts"][0]
+    assert isinstance(artifact, dict)
+    artifact["path"] = "../outside.txt"
+    store.write("testing", record)
+
+    with pytest.raises(EvidenceTamperedError, match="safe relative path"):
+        store.read("testing", "EVID-TEST-0002")
+
+
+def test_read_rejects_missing_artifact(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    artifact = record["artifacts"][0]
+    assert isinstance(artifact, dict)
+    artifact["path"] = "missing.txt"
+    store.write("testing", record)
+
+    with pytest.raises(EvidenceTamperedError, match="artifact missing"):
+        store.read("testing", "EVID-TEST-0002")
+
