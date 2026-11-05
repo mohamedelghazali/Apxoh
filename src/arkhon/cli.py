@@ -232,6 +232,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
     print(f"Project profile: {profile.profile} ({profile.reason})")
     print("Rule verification execution:")
     for rule in active_rules:
+        if not re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\\d{3,}", rule.id):
+            malformed_rules += 1
+            planned[rule.id] = ((), False, "rule identifier does not match the evidence schema")
+            print(f"  {rule.id}: BLOCKED (invalid rule identifier)")
+            continue
         scope = rule.raw.get("scope", {"project_types": ["all"]})
         project_types = scope.get("project_types") if isinstance(scope, dict) else None
         if (
@@ -403,7 +408,12 @@ def cmd_assess(args: argparse.Namespace) -> int:
             method_details = []
             for method_id, implementation in resolutions:
                 if implementation is None:
-                    status, reason = STATUS_BLOCKED, "no executable implementation is registered"
+                    status = STATUS_BLOCKED
+                    reason = (
+                        "authorized human approval evidence is not available"
+                        if method_id == "human-review"
+                        else "no executable implementation is registered"
+                    )
                 else:
                     status, reason = method_status(method_id, implementation.runner)
                 method_details.append((method_id, status, reason))
