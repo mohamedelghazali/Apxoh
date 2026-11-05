@@ -178,7 +178,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
-    from arkhon.assessment.gates import evaluate_all_gates
+    from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
     from arkhon.core.errors import EvidenceError
     from arkhon.evidence.store import EvidenceStore
     from arkhon.rules.loader import load_rules_dir
@@ -217,8 +217,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
             print(f"  {rule.id}: BLOCKED ({exc})")
             continue
         total_methods += len(resolutions)
-        supported = [(method, implementation) for method, implementation in resolutions
-                     if implementation is not None]
+        supported = [
+            (method, implementation)
+            for method, implementation in resolutions
+            if implementation is not None
+        ]
         implemented_methods += len(supported)
         human_review = rule.raw.get("human_review", {})
         review_required = (
@@ -238,7 +241,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     f"{implementation.component} ({implementation.runner})"
                 )
 
-    outcomes_per_domain: dict[str, list] = {}
+    outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
     verdicts = evaluate_all_gates(outcomes_per_domain)
     print(f"Active rules inspected: {len(active_rules)}")
     print(
