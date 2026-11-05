@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -44,6 +45,13 @@ def test_is_expired_future() -> None:
 def test_is_expired_past() -> None:
     e = _exc(expires_at="2020-01-01T00:00:00Z")
     assert e.is_expired()
+
+
+def test_is_expired_at_exact_expiry_instant() -> None:
+    expiry = datetime(2030, 1, 1, tzinfo=UTC)
+    e = _exc(expires_at="2030-01-01T00:00:00Z")
+    assert e.is_expired(now=expiry)
+    assert not e.is_active(now=expiry)
 
 
 def test_is_active() -> None:
