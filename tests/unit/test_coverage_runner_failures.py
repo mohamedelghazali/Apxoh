@@ -240,3 +240,28 @@ def test_mypy_runner_blocks_tampered_content_addressed_artifact(
     assert result.outcome == RunnerOutcome.BLOCKED
     assert "does not match its digest" in result.reason
 
+def test_mypy_runner_refuses_symlinked_content_addressed_artifact(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import hashlib
+
+    payload = b"symlinked output"
+    digest = hashlib.sha256(payload).hexdigest()
+    target_dir = tmp_path / ".arkhon" / "evidence" / "code-quality"
+    target_dir.mkdir(parents=True)
+    victim = tmp_path / "victim.txt"
+    victim.write_bytes(payload)
+    target = target_dir / f"mypy-{digest}.txt"
+    target.symlink_to(victim)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _name: "/usr/bin/mypy"
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.subprocess.run",
+        lambda command, **kwargs: _completed(command, 0, payload.decode("utf-8")),
+    )
+
+    result = MypyRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "refusing symlinked" in result.reason
+
