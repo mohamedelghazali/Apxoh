@@ -251,13 +251,15 @@ def test_read_rejects_invalid_tsar_metadata(
 @pytest.mark.parametrize(
     "rule_ids",
     [
+        None,
+        [1],
         ["not-a-rule-id"],
         ["SE-TEST-001", "SE-TEST-001"],
         [],
     ],
 )
 def test_read_rejects_invalid_rule_identifier_metadata(
-    tmp_path: Path, rule_ids: list[str]
+    tmp_path: Path, rule_ids: object
 ) -> None:
     store = EvidenceStore(tmp_path)
     record = _valid_record(tmp_path)
