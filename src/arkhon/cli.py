@@ -179,6 +179,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 def cmd_assess(args: argparse.Namespace) -> int:
     """Execute supported rule methods and fail closed on missing proof."""
+    from arkhon.assessment.decision import decide
     from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
     from arkhon.assessment.scorer import score_from_outcomes
     from arkhon.core.constants import (
@@ -235,7 +236,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
             or any(not isinstance(item, str) or not item for item in project_types)
         ):
             malformed_rules += 1
-            planned[rule.id] = ([], False, "scope.project_types is missing or malformed")
+            planned[rule.id] = ((), False, "scope.project_types is missing or malformed")
             print(f"  {rule.id}: BLOCKED (invalid project scope)")
             continue
 
@@ -244,7 +245,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
             and "all" not in project_types
             and profile.profile not in project_types
         ):
-            planned[rule.id] = ([], False, None)
+            planned[rule.id] = ((), False, None)
             print(f"  {rule.id}: NOT_APPLICABLE (outside declared project scope)")
             continue
 
@@ -254,7 +255,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
             resolutions = resolve_methods(methods)
         except ValueError as exc:
             malformed_rules += 1
-            planned[rule.id] = ([], False, str(exc))
+            planned[rule.id] = ((), False, str(exc))
             print(f"  {rule.id}: BLOCKED ({exc})")
             continue
 
