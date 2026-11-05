@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+from types import SimpleNamespace
 
 import pytest
 
@@ -16,7 +17,7 @@ from arkhon.evidence.supply_chain import (
     SOURCE_URI,
     identity_regexp_for_tag,
 )
-from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter
+from arkhon.reporting.json_reporter import SECTION_MAP, JsonReporter, _record_timestamp
 
 
 def _write_evidence(
@@ -327,3 +328,50 @@ def test_build_blocks_supply_chain_pass_without_sbom(tmp_path: Path) -> None:
 
 
 # ruff: noqa: I001
+
+@pytest.mark.parametrize(
+    ("timestamp", "message"),
+    [
+        (None, "invalid executed_at"),
+        ("not-a-timestamp", "invalid executed_at"),
+        ("2026-11-01T00:00:00", "must include a timezone"),
+    ],
+)
+def test_record_timestamp_rejects_invalid_values(timestamp: object, message: str) -> None:
+    record = SimpleNamespace(
+        evidence_id="EVID-TIMESTAMP",
+        data={"executed_at": timestamp},
+    )
+    with pytest.raises(EvidenceError, match=message):
+        _record_timestamp(record)
+
+
+def test_build_rejects_invalid_record_commit_before_aggregation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    record = SimpleNamespace(
+        evidence_id="EVID-BAD-COMMIT",
+        data={"commit_sha": "short", "executed_at": "2026-11-01T00:00:00Z"},
+        path=tmp_path / ".arkhon" / "evidence" / "testing" / "EVID-BAD-COMMIT.json",
+    )
+    monkeypatch.setattr(EvidenceStore, "iter_records", lambda self: iter([record]))
+    with pytest.raises(EvidenceError, match="invalid commit_sha"):
+        JsonReporter().build(tmp_path)
+
+
+def test_build_rejects_invalid_record_status_before_verification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    record = SimpleNamespace(
+        evidence_id="EVID-BAD-STATUS",
+        data={
+            "commit_sha": "a" * 40,
+            "executed_at": "2026-11-01T00:00:00Z",
+            "status": "UNKNOWN",
+        },
+        path=tmp_path / ".arkhon" / "evidence" / "testing" / "EVID-BAD-STATUS.json",
+    )
+    monkeypatch.setattr(EvidenceStore, "iter_records", lambda self: iter([record]))
+    with pytest.raises(EvidenceError, match="invalid status"):
+        JsonReporter().build(tmp_path)
+
