@@ -518,6 +518,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
                         {"method_id": method_id, "status": status, "reason": reason}
                         for method_id, status, reason in method_details
                     ],
+                    "artifacts": [
+                        path.relative_to(project).as_posix() for path in sorted(artifact_paths)
+                    ],
                     "reasons": reasons,
                 }
                 with summary_path.open("x", encoding="utf-8") as stream:
