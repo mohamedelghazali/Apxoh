@@ -248,3 +248,22 @@ def test_read_rejects_invalid_tsar_metadata(
     with pytest.raises(EvidenceTamperedError, match=message):
         store.read("security", "EVID-TEST-0002")
 
+@pytest.mark.parametrize(
+    "rule_ids",
+    [
+        ["not-a-rule-id"],
+        ["SE-TEST-001", "SE-TEST-001"],
+        [],
+    ],
+)
+def test_read_rejects_invalid_rule_identifier_metadata(
+    tmp_path: Path, rule_ids: list[str]
+) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    record["rule_ids"] = rule_ids
+    store.write("testing", record)
+
+    with pytest.raises(EvidenceTamperedError, match="rule_ids"):
+        store.read("testing", "EVID-TEST-0002")
+
