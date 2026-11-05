@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+import tempfile
 from typing import Any
 
 import yaml
@@ -143,3 +144,80 @@ def add_exception(registry_path: Path, exception: Exception) -> None:
     registry_path.parent.mkdir(parents=True, exist_ok=True)
     registry_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     logger.info("added exception %s", exception.exception_id)
+
+
+
+def revoke_exception(
+    registry_path: Path,
+    exception_id: str,
+    *,
+    revoked_by: str,
+    reason: str,
+    revoked_at: str | None = None,
+) -> None:
+    """Revoke an active exception and persist an auditable revocation record."""
+    if not exception_id.strip():
+        raise GovernanceError("exception_id cannot be empty")
+    if not revoked_by.strip():
+        raise GovernanceError("revoked_by cannot be empty")
+    if not reason.strip():
+        raise GovernanceError("revocation reason cannot be empty")
+    timestamp = revoked_at or datetime.now(UTC).isoformat()
+    try:
+        _parse_iso(timestamp)
+    except ValueError as exc:
+        raise GovernanceError(f"invalid revocation timestamp: {timestamp}") from exc
+
+    if registry_path.is_symlink():
+        raise GovernanceError("refusing to revoke through a symlinked registry")
+    if registry_path.is_file():
+        try:
+            data = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            raise GovernanceError(f"cannot read exception registry: {exc}") from exc
+    else:
+        raise GovernanceError(f"exception registry not found: {registry_path}")
+
+    if not isinstance(data, dict) or not isinstance(data.get("exceptions"), list):
+        raise GovernanceError("exception registry must contain an exceptions list")
+
+    matches = [
+        item
+        for item in data["exceptions"]
+        if isinstance(item, dict) and item.get("exception_id") == exception_id
+    ]
+    if not matches:
+        raise GovernanceError(f"exception not found: {exception_id}")
+    if len(matches) != 1:
+        raise GovernanceError(f"duplicate exception ID in registry: {exception_id}")
+    target = matches[0]
+    if target.get("status", "active") != "active":
+        raise GovernanceError(f"exception is not active: {exception_id}")
+
+    target["status"] = "revoked"
+    target["revocation"] = {
+        "revoked_by": revoked_by.strip(),
+        "revoked_at": timestamp,
+        "reason": reason.strip(),
+    }
+
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=registry_path.parent,
+            prefix=f".{registry_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            temporary_path = Path(stream.name)
+            yaml.safe_dump(data, stream, sort_keys=False, allow_unicode=True)
+            stream.flush()
+        temporary_path.replace(registry_path)
+    except OSError as exc:
+        raise GovernanceError(f"cannot persist exception revocation: {exc}") from exc
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
