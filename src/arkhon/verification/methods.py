@@ -19,30 +19,31 @@ class MethodImplementation:
     method_id: str
     component: str
     runner: str
+    allowed_domains: frozenset[str] = frozenset()
 
 
 METHOD_REGISTRY: Mapping[str, MethodImplementation] = MappingProxyType(
     {
         "type-checker-execution": MethodImplementation(
-            "type-checker-execution", "MypyRunner", "mypy"
+            "type-checker-execution", "MypyRunner", "mypy", frozenset({"code-quality"})
         ),
         "zero-type-errors-check": MethodImplementation(
-            "zero-type-errors-check", "MypyRunner", "mypy"
+            "zero-type-errors-check", "MypyRunner", "mypy", frozenset({"code-quality"})
         ),
         "tsar-audit-invocation": MethodImplementation(
-            "tsar-audit-invocation", "TsarRunner", "tsar"
+            "tsar-audit-invocation", "TsarRunner", "tsar", frozenset({"software-security"})
         ),
         "evidence-integrity-check": MethodImplementation(
-            "evidence-integrity-check", "verify_tsar_evidence", "tsar"
+            "evidence-integrity-check", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
         ),
         "evidence-commit-match": MethodImplementation(
-            "evidence-commit-match", "verify_tsar_evidence", "tsar"
+            "evidence-commit-match", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
         ),
         "evidence-freshness-check": MethodImplementation(
-            "evidence-freshness-check", "verify_tsar_evidence", "tsar"
+            "evidence-freshness-check", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
         ),
         "timestamp-verification": MethodImplementation(
-            "timestamp-verification", "verify_tsar_evidence", "tsar"
+            "timestamp-verification", "verify_tsar_evidence", "tsar", frozenset({"software-security"})
         ),
     }
 )
