@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -115,11 +118,7 @@ def test_iter_records_rejects_resolved_path_escape(
     with pytest.raises(EvidenceTamperedError, match="escapes evidence root"):
         list(EvidenceStore(project).iter_records("security"))
 
-def _valid_record(project: Path, evidence_id: str = "EVID-TEST-0002") -> dict[str, object]:
-    import hashlib
-
-    from datetime import UTC, datetime
-
+def _valid_record(project: Path, evidence_id: str = "EVID-TEST-0002") -> dict[str, Any]:
     artifact = project / "artifact.txt"
     artifact.write_text("verified evidence", encoding="utf-8")
     return {
