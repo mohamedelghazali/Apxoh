@@ -63,6 +63,7 @@ class EnforcementEngine:
         self._registry = registry
 
     def evaluate_rule(self, rule: Rule, evidence_root: Path | None) -> RuleOutcome:
+        """Check artifact presence without treating it as semantic verification."""
         evidence = rule.raw.get("evidence", {})
         if not isinstance(evidence, dict):
             return RuleOutcome(rule.id, STATUS_BLOCKED, "invalid evidence declaration")
@@ -70,7 +71,11 @@ class EnforcementEngine:
         if not isinstance(required, list):
             return RuleOutcome(rule.id, STATUS_BLOCKED, "evidence.required must be a list")
         if not required:
-            return RuleOutcome(rule.id, STATUS_PASS, "no evidence artifacts declared")
+            return RuleOutcome(
+                rule.id,
+                STATUS_BLOCKED,
+                "no evidence artifacts declared; independent rule verification is unavailable",
+            )
         if evidence_root is None or not evidence_root.is_dir():
             return RuleOutcome(rule.id, STATUS_BLOCKED, "evidence root missing")
 
@@ -95,7 +100,12 @@ class EnforcementEngine:
                 missing.append("<invalid evidence declaration>")
         if missing:
             return RuleOutcome(rule.id, STATUS_BLOCKED, f"missing evidence: {', '.join(missing)}")
-        return RuleOutcome(rule.id, STATUS_PASS, "evidence artifacts are present", True)
+        return RuleOutcome(
+            rule.id,
+            STATUS_BLOCKED,
+            "evidence artifacts are present but have not been independently verified",
+            True,
+        )
 
     def evaluate_gate(
         self, gate_name: str, domain_filter: tuple[str, ...], evidence_root: Path | None
