@@ -179,29 +179,27 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 def cmd_assess(args: argparse.Namespace) -> int:
     from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
-    from arkhon.assessment.scorer import WEIGHTS, score_from_ratios
     from arkhon.evidence.store import EvidenceStore
 
     project = Path(args.project).resolve()
     if not project.is_dir():
         print(f"[FAIL] not a directory: {project}", file=sys.stderr)
         return 1
+
+    # Evidence records currently contain aggregate statuses, not the complete
+    # per-rule outcome and enforcement data required by the assessment model.
+    # Never turn aggregate evidence counts into a score or a release-readiness
+    # level. Missing rule-level outcomes must remain explicitly BLOCKED.
     store = EvidenceStore(project)
-    ratios = {key: 0.0 for key in WEIGHTS}
+    records = list(store.iter_records())
     outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
-    for record in store.iter_records():
-        domain = record.path.parent.name
-        if domain in ratios and record.status == "PASS":
-            ratios[domain] = min(1.0, ratios[domain] + 0.25)
-    score = score_from_ratios(ratios)
     verdicts = evaluate_all_gates(outcomes_per_domain)
-    print(f"Score: {score.total:.1f} / {score.maximum}")
-    print(f"Level: {score.level}")
+    print("[BLOCKED] rule-level assessment outcomes are not available")
+    print("[BLOCKED] no score or readiness level has been computed")
+    print(f"Evidence records inspected: {len(records)}")
     print("Gates:")
     for gate, verdict in verdicts.items():
         print(f"  {gate}: {verdict.status}")
-    if not outcomes_per_domain:
-        print("[BLOCKED] rule-level assessment outcomes are not available")
     return 1
 
 
