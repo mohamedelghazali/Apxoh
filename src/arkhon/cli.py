@@ -101,6 +101,7 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     from arkhon.config import get_manifest
     from arkhon.language_support.detector import detect_languages
     from arkhon.projects.loader import list_profiles
+    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
 
     project = Path(args.project).resolve()
@@ -159,7 +160,8 @@ def _commit_sha(project: Path) -> str | None:
             check=True,
             timeout=10,
         )
-        return result.stdout.strip()
+        commit_sha = result.stdout.strip()
+        return commit_sha if re.fullmatch(r"[0-9a-f]{40}", commit_sha) else None
     except (OSError, subprocess.SubprocessError) as exc:
         print(f"[FAIL] cannot resolve commit SHA: {exc}", file=sys.stderr)
         return None
