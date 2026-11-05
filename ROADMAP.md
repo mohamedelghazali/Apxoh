@@ -2,7 +2,7 @@
 
 **Version:** 1.3  
 **Status:** Active — official release 0.1.0  
-**Last updated:** 2026-11-04
+**Last updated:** 2026-11-05
 
 ---
 
@@ -10,7 +10,7 @@
 
 ARKHON 0.1.0 is the current official package release. Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed. The remaining milestone items describe follow-on capability expansion and independently verifiable operational evidence; they are not alternate package-version labels.
 
-The current main commit is `a919f1d515ebe85cbdfc38401ed86cec04899bda` (PR #85 merge, 2026-11-04). Validation is running on this commit. The initial `repository-infrastructure` run identified a YAML parsing error in the release-validation workflow; a corrective change is being prepared before the release tag is created. Earlier successful workflow results on commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` remain historical evidence and are not attributed to the newer commit. The `main` branch API reports `protected: false`; no repository rulesets, tags, or published releases were found at this review.
+The current main commit is `2de93636b69a7a166fce653c3a5e19bf26c3db26` (PR #96 merge, 2026-11-05). Its post-merge CI, security, unit-test (Python 3.11–3.13), language-fixture, TSAR, Syft SBOM, clean-install, and release-readiness checks completed successfully. The CI test job enforces `pytest-cov --cov-fail-under=100`; all three Python-version test jobs passed on this commit. The published GitHub Release is tagged `0.1.0`, but the successful SLSA workflow run was triggered by `v0.1.0`; the published release currently has no assets. Do not treat the workflow artifacts as attached to the published release or as accepted release evidence until tag identity, provenance, and release assets are reconciled. The `main` branch API reports `protected: false` and the rulesets endpoint is empty; branch enforcement is not configured.
 
 ---
 
@@ -67,7 +67,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] CI execution and review of all 9 language fixture jobs
 - [ ] Broader language-specific rule catalog and semantic verification
 
-**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current main commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` (Integration Tests run `41860304793`). The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
+**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current main commit `2de93636b69a7a166fce653c3a5e19bf26c3db26`. The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
 
 ### Milestone 3 — Verification & Evidence 🔄
 
@@ -82,7 +82,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] First signed release with independently verified provenance
 - [ ] End-to-end release-attestation evidence accepted from an actual tagged release
 
-**Status:** Core and supply-chain implementations are present. On current main commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9`, the real TSAR CLI end-to-end workflow passed (run `41860304634`) and real Syft SBOM generation with commit binding passed (run `41860304591`). First signed release and acceptance of release-attestation evidence from an actual tagged release remain open.
+**Status:** Core and supply-chain implementations are present. On current main commit `2de93636b69a7a166fce653c3a5e19bf26c3db26`, the real Syft SBOM generation and commit-binding check passed. A successful SLSA run exists for tag `v0.1.0`, but the published release uses tag `0.1.0` and has no uploaded assets; end-to-end acceptance of the published release's provenance therefore remains open.
 
 ### Milestone 4 — AI Agent Adoption 🔄
 
@@ -96,7 +96,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Complete platform-specific integration validation, including GitHub Copilot
 - [x] Successful CI execution of agent integration checks
 
-**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow passed on current main commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` (run `41894490602`), including package installation, source compilation, and the full pytest suite. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
+**Status:** The resource pack and installer are implemented. The integration registry now points model entries to their packaged runtime adapters; Copilot installation is non-destructive and explicitly reports external activation as unverified. The `agent-integrations` workflow and repository-level contract checks pass; these checks do not establish that a third-party agent actually loads or obeys the instructions. Repository-level contract tests validate registry paths and scaffold declarations. These checks do not establish that a third-party agent actually loads or obeys the instructions. Generic-agent adapters remain manual scaffolds; exact-version behavioral adoption and platform activation remain open.
 
 ### Milestone 5 — Orchestrator & Full CLI 🔄
 
@@ -110,7 +110,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
 - [ ] Complete rule-outcome assessment integration; the current assessment command fails closed when rule-level outcomes are unavailable
 
-**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current main commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9`, the Installation Test workflow completed successfully (run `41894490652`). The full current-main installation workflow is green; retain OS/version-specific caveats if later workflow evidence changes. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
+**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current main commit `2de93636b69a7a166fce653c3a5e19bf26c3db26`, post-merge installation and clean-install checks completed successfully. The full current-main installation workflow is green; retain OS/version-specific caveats if later workflow evidence changes. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
 
 ### Milestone 6 — Self-Governance & CI 🔄
 
@@ -123,7 +123,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Read back the effective settings and verify that required checks are enforced (not yet configured)
 - [ ] First signed release with independently verified provenance
 
-**Status:** All 17 workflow runs on current main commit `59c5b7d8e30d57f1ff370461c0132dc5edf072f9` completed successfully. The branch API reports `protected: false` and the rulesets endpoint returned an empty list. Branch enforcement and signed-release gates remain open until configured and independently verified.
+**Status:** Post-merge CI and security gates passed on `2de93636b69a7a166fce653c3a5e19bf26c3db26`. Coverage is configured as a 100% minimum in the primary CI test job and the Python 3.11, 3.12, and 3.13 test jobs passed. The branch API reports `protected: false` and the rulesets endpoint returned an empty list. Branch enforcement and release-asset/provenance reconciliation remain open.
 
 ---
 
