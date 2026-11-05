@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -198,7 +199,6 @@ def cmd_assess(args: argparse.Namespace) -> int:
     from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     from arkhon.verification.runners.mypy_runner import MypyRunner
     from arkhon.verification.runners.tsar_runner import TsarRunner
-    import uuid
 
     project = Path(args.project).resolve()
     if not project.is_dir():
