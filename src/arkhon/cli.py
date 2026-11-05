@@ -181,8 +181,14 @@ def cmd_assess(args: argparse.Namespace) -> int:
     """Execute supported rule methods and fail closed on missing proof."""
     from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
     from arkhon.assessment.scorer import score_from_outcomes
-    from arkhon.core.constants import ALL_ENFORCEMENT, STATUS_BLOCKED, STATUS_FAIL, STATUS_NOT_APPLICABLE, STATUS_PASS
-    from arkhon.core.errors import ConfigError, EvidenceError
+    from arkhon.core.constants import (
+        ALL_ENFORCEMENT,
+        STATUS_BLOCKED,
+        STATUS_FAIL,
+        STATUS_NOT_APPLICABLE,
+        STATUS_PASS,
+    )
+    from arkhon.core.errors import ConfigError, EvidenceError, GateError
     from arkhon.evidence.store import EvidenceStore
     from arkhon.projects.matcher import match_profile
     from arkhon.rules.loader import load_rules_dir
@@ -432,7 +438,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
         for method_id, status, reason in method_details:
             print(f"    [{status}] {method_id}: {reason}")
 
-    verdicts = evaluate_all_gates(outcomes_per_domain)
+    try:
+        verdicts = evaluate_all_gates(outcomes_per_domain)
+    except GateError as exc:
+        print(f"[FAIL] rule outcomes cannot be evaluated safely: {exc}", file=sys.stderr)
+        return 1
     print(f"Active rules inspected: {len(active_rules)}")
     print(
         f"Method implementations present: {implemented_methods}/{total_methods}; "
