@@ -178,19 +178,31 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
+    """Execute supported rule methods and fail closed on missing proof."""
+    from arkhon.assessment.decision import decide
     from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
-    from arkhon.core.errors import EvidenceError
+    from arkhon.assessment.scorer import score_from_outcomes
+    from arkhon.core.constants import (
+        ALL_ENFORCEMENT,
+        STATUS_BLOCKED,
+        STATUS_FAIL,
+        STATUS_NOT_APPLICABLE,
+        STATUS_PASS,
+    )
+    from arkhon.core.errors import ConfigError, EvidenceError, GateError
     from arkhon.evidence.store import EvidenceStore
+    from arkhon.projects.matcher import match_profile
     from arkhon.rules.loader import load_rules_dir
     from arkhon.verification.methods import resolve_methods
+    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
+    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from arkhon.verification.runners.tsar_runner import TsarRunner
 
     project = Path(args.project).resolve()
     if not project.is_dir():
         print(f"[FAIL] not a directory: {project}", file=sys.stderr)
         return 1
 
-    # Report method implementation coverage, but do not confuse a registered
-    # implementation with a verified, rule-specific outcome for this commit.
     rules_result = load_rules_dir(_repo_root() / "rules")
     if not rules_result.ok:
         print(f"[FAIL] rule load errors: {len(rules_result.errors)}", file=sys.stderr)
@@ -200,22 +212,53 @@ def cmd_assess(args: argparse.Namespace) -> int:
 
     try:
         records = list(EvidenceStore(project).iter_records())
+        profile = match_profile(project)
     except EvidenceError as exc:
         print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
         return 1
+    except (ConfigError, OSError, ValueError) as exc:
+        print(f"[FAIL] project applicability could not be determined: {exc}", file=sys.stderr)
+        return 1
 
     active_rules = [rule for rule in rules_result.rules if rule.status == "active"]
+    planned: dict[str, tuple[tuple[tuple[str, Any], ...], bool, str | None]] = {}
+    required_runners: set[str] = set()
     total_methods = implemented_methods = human_review_rules = malformed_rules = 0
-    print("Rule verification method coverage:")
+
+    print(f"Project profile: {profile.profile} ({profile.reason})")
+    print("Rule verification execution:")
     for rule in active_rules:
+        scope = rule.raw.get("scope", {"project_types": ["all"]})
+        project_types = scope.get("project_types") if isinstance(scope, dict) else None
+        if (
+            not isinstance(project_types, list)
+            or not project_types
+            or any(not isinstance(item, str) or not item for item in project_types)
+        ):
+            malformed_rules += 1
+            planned[rule.id] = ((), False, "scope.project_types is missing or malformed")
+            print(f"  {rule.id}: BLOCKED (invalid project scope)")
+            continue
+
+        if (
+            profile.profile != "universal"
+            and "all" not in project_types
+            and profile.profile not in project_types
+        ):
+            planned[rule.id] = ((), False, None)
+            print(f"  {rule.id}: NOT_APPLICABLE (outside declared project scope)")
+            continue
+
         verification = rule.raw.get("verification")
         methods = verification.get("methods") if isinstance(verification, dict) else None
         try:
             resolutions = resolve_methods(methods)
         except ValueError as exc:
             malformed_rules += 1
+            planned[rule.id] = ((), False, str(exc))
             print(f"  {rule.id}: BLOCKED ({exc})")
             continue
+
         total_methods += len(resolutions)
         supported = [
             (method, implementation)
@@ -223,41 +266,230 @@ def cmd_assess(args: argparse.Namespace) -> int:
             if implementation is not None
         ]
         implemented_methods += len(supported)
+        required_runners.update(implementation.runner for _, implementation in supported)
+
         human_review = rule.raw.get("human_review", {})
-        review_required = (
-            isinstance(human_review, dict) and human_review.get("required") is True
-        )
+        if not isinstance(human_review, dict) or not isinstance(
+            human_review.get("required", False), bool
+        ):
+            malformed_rules += 1
+            planned[rule.id] = (resolutions, False, "human_review declaration is malformed")
+            print(f"  {rule.id}: BLOCKED (human_review declaration is malformed)")
+            continue
+        review_required = human_review.get("required", False)
         human_review_rules += int(review_required)
+        planned[rule.id] = (resolutions, review_required, None)
         print(
             f"  {rule.id}: {len(supported)}/{len(resolutions)} methods implemented; "
-            f"human review {'required' if review_required else 'not declared'}"
+            f"human review {'required' if review_required else 'not required'}"
         )
-        for method, implementation in resolutions:
-            if implementation is None:
-                print(f"    [UNIMPLEMENTED] {method}")
-            else:
-                print(
-                    f"    [IMPLEMENTED] {method} -> "
-                    f"{implementation.component} ({implementation.runner})"
+
+    commit_sha = _commit_sha(project)
+    runner_instances = {
+        "mypy": MypyRunner(),
+        "tsar": TsarRunner(),
+    }
+    runner_results: dict[str, RunnerResult] = {}
+
+    if commit_sha is None:
+        for runner_name in required_runners:
+            runner_results[runner_name] = RunnerResult(
+                runner=runner_name,
+                outcome=RunnerOutcome.BLOCKED,
+                reason="assessment requires a resolvable Git commit SHA",
+            )
+    else:
+        for runner_name in sorted(required_runners):
+            runner = runner_instances.get(runner_name)
+            if runner is None:
+                runner_results[runner_name] = RunnerResult(
+                    runner=runner_name,
+                    outcome=RunnerOutcome.BLOCKED,
+                    reason="registered runner has no executable implementation",
+                )
+                continue
+            try:
+                result = runner.run(project)
+            except Exception as exc:
+                result = RunnerResult(
+                    runner=runner_name,
+                    outcome=RunnerOutcome.BLOCKED,
+                    reason=f"runner crashed: {type(exc).__name__}: {exc}",
+                )
+            if not isinstance(result, RunnerResult) or not isinstance(
+                result.outcome, RunnerOutcome
+            ):
+                result = RunnerResult(
+                    runner=runner_name,
+                    outcome=RunnerOutcome.BLOCKED,
+                    reason="runner returned an invalid result",
+                )
+            elif result.outcome != RunnerOutcome.BLOCKED:
+                artifact_error = ""
+                if not result.artifacts:
+                    artifact_error = "runner returned a verdict without evidence artifacts"
+                else:
+                    for artifact in result.artifacts:
+                        try:
+                            resolved = Path(artifact).resolve()
+                            resolved.relative_to(project)
+                            if not resolved.is_file():
+                                artifact_error = f"runner artifact is missing: {artifact}"
+                                break
+                        except (OSError, RuntimeError, TypeError, ValueError):
+                            artifact_error = f"runner artifact is outside project root: {artifact}"
+                            break
+                if artifact_error:
+                    result = RunnerResult(
+                        runner=runner_name,
+                        outcome=RunnerOutcome.BLOCKED,
+                        reason=artifact_error,
+                    )
+            runner_results[runner_name] = result
+
+        if _commit_sha(project) != commit_sha:
+            for runner_name in required_runners:
+                runner_results[runner_name] = RunnerResult(
+                    runner=runner_name,
+                    outcome=RunnerOutcome.BLOCKED,
+                    reason="project HEAD changed during assessment; rerun required",
                 )
 
+    def method_status(method_id: str, runner_name: str) -> tuple[str, str]:
+        result = runner_results.get(runner_name)
+        if result is None or result.outcome == RunnerOutcome.BLOCKED:
+            return STATUS_BLOCKED, (
+                result.reason if result is not None else "verification method was not executed"
+            )
+        if method_id == "type-checker-execution":
+            if result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
+                return STATUS_PASS, "Mypy executed and produced an evidence artifact"
+        elif method_id == "zero-type-errors-check":
+            if result.outcome == RunnerOutcome.PASS:
+                return STATUS_PASS, "Mypy reported zero type errors"
+            return STATUS_FAIL, result.reason or "Mypy reported type errors"
+        elif method_id == "tsar-audit-invocation":
+            if result.outcome == RunnerOutcome.PASS:
+                return STATUS_PASS, "TSAR audit and acceptance checks passed"
+            return STATUS_FAIL, result.reason or "TSAR reported unresolved security findings"
+        elif method_id in {
+            "evidence-integrity-check",
+            "evidence-commit-match",
+            "evidence-freshness-check",
+            "timestamp-verification",
+        }:
+            if result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
+                return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
+        return STATUS_BLOCKED, result.reason or "method did not establish its acceptance criteria"
+
     outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
-    verdicts = evaluate_all_gates(outcomes_per_domain)
+    complete = True
+    print("Rule outcomes:")
+    for rule in active_rules:
+        resolutions, review_required, planning_error = planned[rule.id]
+        if planning_error is not None:
+            rule_status = STATUS_BLOCKED
+            reasons = [planning_error]
+            method_details: list[tuple[str, str, str]] = []
+        elif not resolutions and not review_required:
+            rule_status = STATUS_NOT_APPLICABLE
+            reasons = ["outside declared project scope"]
+            method_details = []
+        else:
+            method_details = []
+            for method_id, implementation in resolutions:
+                if implementation is None:
+                    status, reason = STATUS_BLOCKED, "no executable implementation is registered"
+                else:
+                    status, reason = method_status(method_id, implementation.runner)
+                method_details.append((method_id, status, reason))
+
+            if review_required and not any(item[0] == "human-review" for item in method_details):
+                method_details.append(
+                    ("human-review-approval", STATUS_BLOCKED, "authorized human approval is required")
+                )
+
+            statuses = [item[1] for item in method_details]
+            if STATUS_FAIL in statuses:
+                rule_status = STATUS_FAIL
+            elif STATUS_BLOCKED in statuses or not statuses:
+                rule_status = STATUS_BLOCKED
+            else:
+                rule_status = STATUS_PASS
+            reasons = [
+                f"{method_id}: {reason}"
+                for method_id, status, reason in method_details
+                if status != STATUS_PASS
+            ]
+
+        if rule.enforcement not in ALL_ENFORCEMENT:
+            rule_status = STATUS_BLOCKED
+            reasons.append(f"unsupported enforcement level: {rule.enforcement!r}")
+            malformed_rules += 1
+
+        outcome = RuleOutcome(
+            rule_id=rule.id,
+            enforcement=rule.enforcement,
+            status=rule_status,
+            reason="; ".join(reasons),
+        )
+        outcomes_per_domain.setdefault(rule.domain, []).append(outcome)
+        complete = complete and rule_status in {STATUS_PASS, STATUS_NOT_APPLICABLE}
+        print(f"  {rule.id}: {rule_status}")
+        for method_id, status, reason in method_details:
+            print(f"    [{status}] {method_id}: {reason}")
+
+    try:
+        verdicts = evaluate_all_gates(outcomes_per_domain)
+    except GateError as exc:
+        print(f"[FAIL] rule outcomes cannot be evaluated safely: {exc}", file=sys.stderr)
+        return 1
     print(f"Active rules inspected: {len(active_rules)}")
     print(
         f"Method implementations present: {implemented_methods}/{total_methods}; "
         f"rules requiring human review: {human_review_rules}; "
         f"malformed rule declarations: {malformed_rules}"
     )
-    print("[BLOCKED] rule-level outcomes are not available for the inspected commit")
-    print("[BLOCKED] aggregate runner records are not accepted as per-rule proof")
-    print("[BLOCKED] no score or readiness level has been computed")
-    print(f"Evidence records inspected: {len(records)}")
+    print(f"Evidence records inspected: {len(records)} (integrity-checked)")
+    print(f"Commit assessed: {commit_sha or 'UNRESOLVED'}")
     print("Gates:")
     for gate, verdict in verdicts.items():
         print(f"  {gate}: {verdict.status}")
-    return 1
 
+    if not complete or any(verdict.status != STATUS_PASS for verdict in verdicts.values()):
+        print("[BLOCKED] one or more rules lack complete, commit-bound verification")
+        print("[BLOCKED] no score or readiness level has been computed")
+        return 1
+
+    score_domain_map = {
+        "requirements": "requirements",
+        "architecture": "architecture_and_code_quality",
+        "code-quality": "architecture_and_code_quality",
+        "testing": "testing",
+        "software-security": "security",
+        "privacy-compliance": "security",
+        "performance": "performance",
+        "reliability": "reliability",
+        "scalability": "scalability",
+        "api-integration": "documentation_deployment_maintenance",
+        "database": "documentation_deployment_maintenance",
+        "devops": "documentation_deployment_maintenance",
+        "infrastructure": "documentation_deployment_maintenance",
+        "maintenance": "documentation_deployment_maintenance",
+        "observability": "documentation_deployment_maintenance",
+        "release": "documentation_deployment_maintenance",
+    }
+    score_outcomes: dict[str, list[str]] = {}
+    for domain, rule_outcomes in outcomes_per_domain.items():
+        score_domain = score_domain_map.get(domain)
+        if score_domain is not None:
+            score_outcomes.setdefault(score_domain, []).extend(item.status for item in rule_outcomes)
+    score = score_from_outcomes(score_outcomes)
+    decision = decide(score, verdicts)
+    print(f"Engineering score: {score.total:.2f}/{score.maximum:.0f}")
+    print(f"Readiness level: {score.level}")
+    print(f"Decision: {decision.decision} — {decision.reason}")
+    return 0 if decision.decision in {"APPROVED", "APPROVED_WITH_CONDITIONS"} else 1
 
 
 def cmd_status(args: argparse.Namespace) -> int:
