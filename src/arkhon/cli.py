@@ -220,7 +220,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
         return 1
 
     active_rules = [rule for rule in rules_result.rules if rule.status == "active"]
-    planned: dict[str, tuple[list[tuple[str, Any]], bool, str | None]] = {}
+    planned: dict[str, tuple[tuple[tuple[str, Any], ...], bool, str | None]] = {}
     required_runners: set[str] = set()
     total_methods = implemented_methods = human_review_rules = malformed_rules = 0
 
@@ -335,7 +335,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                             if not resolved.is_file():
                                 artifact_error = f"runner artifact is missing: {artifact}"
                                 break
-                        except (OSError, TypeError, ValueError):
+                        except (OSError, RuntimeError, TypeError, ValueError):
                             artifact_error = f"runner artifact is outside project root: {artifact}"
                             break
                 if artifact_error:
