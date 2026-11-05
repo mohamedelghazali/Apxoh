@@ -66,11 +66,28 @@ def test_commit_sha_missing_git_and_git_failure(
     assert "cannot resolve commit SHA" in capsys.readouterr().err
 
 
-def test_assess_reports_score_and_gates(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_assess_fails_closed_without_rule_outcomes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    store = EvidenceStore(tmp_path)
+    store.write(
+        "testing",
+        {
+            "evidence_id": "EVID-ASSESS",
+            "source": "arkhon",
+            "source_version": "0.1.0",
+            "commit_sha": "a" * 40,
+            "executed_at": "2026-11-05T00:00:00Z",
+            "status": "PASS",
+            "artifacts": [{"path": "test-report.json", "sha256": "b" * 64}],
+        },
+    )
     assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
-    assert "Score:" in output and "Gates:" in output
-    assert "[BLOCKED]" in output
+    assert "Evidence records inspected: 1" in output
+    assert "Gates:" in output and "[BLOCKED]" in output
+    assert "no score or readiness level has been computed" in output
+    assert "Score:" not in output and "Level:" not in output
     assert main(["assess", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
 
