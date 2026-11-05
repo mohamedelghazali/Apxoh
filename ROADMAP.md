@@ -10,7 +10,7 @@
 
 ARKHON 0.1.0 is the current official package release. Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed. The remaining milestone items describe follow-on capability expansion and independently verifiable operational evidence; they are not alternate package-version labels.
 
-The current main commit is `e889ebab5bd7805e671aba2221b5879aee1b37b1` (PR #98 merge, 2026-11-05). PR #98 prevents `arkhon assess` from emitting a score or readiness level when genuine rule-level outcomes are unavailable; its regression and Python-version test checks passed, and the post-merge workflow checks were reported successful. The broader CI, security, language-fixture, TSAR, Syft SBOM, clean-install, and 100%-coverage validation was completed on the immediately preceding main baseline (`01c8a1a50e9b217784a017c7f52c76314ab6e482`); do not attribute those earlier run results to a new execution on this merge. The published GitHub Release is tagged `0.1.0`, but the successful SLSA workflow run was triggered by `v0.1.0`; the published release currently has no assets. Do not treat the workflow artifacts as attached to the published release or as accepted release evidence until tag identity, provenance, and release assets are reconciled. The `main` branch API reports `protected: false` and the rulesets endpoint is empty; branch enforcement is not configured.
+The current `main` branch includes PR #99 (merged 2026-11-05). PR #99 corrected stale commit references in this roadmap; all 30 GitHub Actions check runs for its head commit completed successfully. PR #98's assessment fail-closed correction remains in main. This roadmap intentionally avoids pinning a moving branch to a commit SHA; consult GitHub for the live branch head. Successful configured workflows do not close the explicitly open rule-level assessment, exception lifecycle, external agent behavior, branch-protection, or release-provenance gaps. The published GitHub Release is tagged `0.1.0`, but the successful SLSA workflow run was triggered by `v0.1.0`; the published release currently has no assets. Do not treat the workflow artifacts as attached to the published release or as accepted release evidence until tag identity, provenance, and release assets are reconciled. The `main` branch API reports `protected: false` and the rulesets endpoint is empty; branch enforcement is not configured.
 
 ---
 
@@ -67,7 +67,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] CI execution and review of all 9 language fixture jobs
 - [ ] Broader language-specific rule catalog and semantic verification
 
-**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current main commit `e889ebab5bd7805e671aba2221b5879aee1b37b1`. The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
+**Status:** Implementation and test fixtures are present for all 9 declared languages, and all 9 language-fixture jobs passed on current `main` branch. The initial rule catalog is intentionally limited; expansion remains planned for v0.2.0.
 
 ### Milestone 3 — Verification & Evidence 🔄
 
@@ -82,7 +82,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] First signed release with independently verified provenance
 - [ ] End-to-end release-attestation evidence accepted from an actual tagged release
 
-**Status:** Core and supply-chain implementations are present. On current main commit `e889ebab5bd7805e671aba2221b5879aee1b37b1`, the real Syft SBOM generation and commit-binding check passed. A successful SLSA run exists for tag `v0.1.0`, but the published release uses tag `0.1.0` and has no uploaded assets; end-to-end acceptance of the published release's provenance therefore remains open.
+**Status:** Core and supply-chain implementations are present. On current `main` branch, the real Syft SBOM generation and commit-binding check passed. A successful SLSA run exists for tag `v0.1.0`, but the published release uses tag `0.1.0` and has no uploaded assets; end-to-end acceptance of the published release's provenance therefore remains open.
 
 ### Milestone 4 — AI Agent Adoption 🔄
 
@@ -110,7 +110,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
 - [ ] Complete rule-outcome assessment integration; the current assessment command fails closed when rule-level outcomes are unavailable
 
-**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current main commit `e889ebab5bd7805e671aba2221b5879aee1b37b1`, post-merge installation and clean-install checks completed successfully. The full current-main installation workflow is green; retain OS/version-specific caveats if later workflow evidence changes. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
+**Status:** The listed commands are implemented and registered. The project schema and all eight project profiles are included in the wheel. On current `main` branch, post-merge installation and clean-install checks completed successfully. The full current-main installation workflow is green; retain OS/version-specific caveats if later workflow evidence changes. Assessment must not report a release-ready score until genuine rule-level outcomes are available.
 
 ### Milestone 6 — Self-Governance & CI 🔄
 
@@ -123,7 +123,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [ ] Read back the effective settings and verify that required checks are enforced (not yet configured)
 - [ ] First signed release with independently verified provenance
 
-**Status:** Post-merge CI and security gates passed on `e889ebab5bd7805e671aba2221b5879aee1b37b1`. Coverage is configured as a 100% minimum in the primary CI test job and the Python 3.11, 3.12, and 3.13 test jobs passed. The branch API reports `protected: false` and the rulesets endpoint returned an empty list. Branch enforcement and release-asset/provenance reconciliation remain open.
+**Status:** Post-merge CI and security gates passed on `54509688b60557024bb64c5925cb6377988dfbb3`. Coverage is configured as a 100% minimum in the primary CI test job and the Python 3.11, 3.12, and 3.13 test jobs passed. The branch API reports `protected: false` and the rulesets endpoint returned an empty list. Branch enforcement and release-asset/provenance reconciliation remain open.
 
 ---
 
