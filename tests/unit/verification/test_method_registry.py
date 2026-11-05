@@ -105,6 +105,14 @@ human_review:
     assert "human-review-approval" in output
     assert "[BLOCKED] no score or readiness level has been computed" in output
 
+    from arkhon.evidence.store import EvidenceStore
+
+    records = list(EvidenceStore(project).iter_records())
+    assert len(records) == 1
+    assert records[0].commit_sha == "a" * 40
+    assert records[0].data["rule_ids"] == ["SE-SAMPLE-001"]
+    assert records[0].status == "BLOCKED"
+
 
 def test_assess_blocks_malformed_method_declaration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
