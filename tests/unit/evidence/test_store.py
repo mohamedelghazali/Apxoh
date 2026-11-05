@@ -192,3 +192,59 @@ def test_read_rejects_missing_artifact(tmp_path: Path) -> None:
     with pytest.raises(EvidenceTamperedError, match="artifact missing"):
         store.read("testing", "EVID-TEST-0002")
 
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("source", "untrusted", "invalid source"),
+        ("source_version", "", "source_version"),
+        ("status", "UNKNOWN", "invalid status"),
+        ("executed_at", None, "invalid executed_at"),
+        ("executed_at", "not-a-date", "invalid executed_at"),
+        ("executed_at", "2026-11-01T00:00:00", "must include a timezone"),
+        ("artifacts", [], "at least one artifact"),
+        ("artifacts", [None], "artifact entry must be an object"),
+    ],
+)
+def test_read_rejects_invalid_evidence_fields(
+    tmp_path: Path, field: str, value: object, message: str
+) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    record[field] = value
+    store.write("testing", record)
+
+    with pytest.raises(EvidenceTamperedError, match=message):
+        store.read("testing", "EVID-TEST-0002")
+
+
+def test_read_rejects_missing_required_evidence_field(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    record.pop("source_version")
+    store.write("testing", record)
+
+    with pytest.raises(EvidenceTamperedError, match="source_version"):
+        store.read("testing", "EVID-TEST-0002")
+
+
+@pytest.mark.parametrize(
+    ("metadata", "message"),
+    [
+        (None, "missing tsar_metadata"),
+        ({"tsar_version": 1, "rule_ids": ["TSAR-001"]}, "invalid tsar_version"),
+        ({"tsar_version": "1.0", "rule_ids": []}, "invalid rule_ids"),
+    ],
+)
+def test_read_rejects_invalid_tsar_metadata(
+    tmp_path: Path, metadata: object, message: str
+) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    record["source"] = "tsar"
+    if metadata is not None:
+        record["tsar_metadata"] = metadata
+    store.write("security", record)
+
+    with pytest.raises(EvidenceTamperedError, match=message):
+        store.read("security", "EVID-TEST-0002")
+
