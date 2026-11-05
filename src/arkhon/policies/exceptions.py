@@ -31,7 +31,7 @@ class Exception:
     def is_expired(self, *, now: datetime | None = None) -> bool:
         now_dt = now or datetime.now(UTC)
         expires = _parse_iso(self.expires_at)
-        return now_dt > expires
+        return now_dt >= expires
 
     def is_active(self, *, now: datetime | None = None) -> bool:
         return self.status == "active" and not self.is_expired(now=now)
