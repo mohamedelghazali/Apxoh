@@ -14,6 +14,7 @@ from arkhon.policies.exceptions import (
     ExceptionRegistry,
     add_exception,
     load_exceptions,
+    revoke_exception,
 )
 
 
@@ -184,3 +185,65 @@ def test_add_exception_repairs_missing_exceptions_key(tmp_path: Path) -> None:
     add_exception(path, _exc("EXC-REPAIRED"))
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     assert [item["exception_id"] for item in data["exceptions"]] == ["EXC-REPAIRED"]
+
+
+
+def test_revoke_exception_persists_audit_record(tmp_path: Path) -> None:
+    path = tmp_path / "registry.yaml"
+    add_exception(path, _exc("EXC-REVOKE"))
+    revoke_exception(
+        path,
+        "EXC-REVOKE",
+        revoked_by="security@example.com",
+        reason="risk no longer accepted",
+        revoked_at="2026-11-05T18:30:00Z",
+    )
+
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    item = data["exceptions"][0]
+    assert item["status"] == "revoked"
+    assert item["revocation"] == {
+        "revoked_by": "security@example.com",
+        "revoked_at": "2026-11-05T18:30:00Z",
+        "reason": "risk no longer accepted",
+    }
+    assert load_exceptions(path).all_active() == []
+
+
+def test_revoke_exception_rejects_unknown_or_already_revoked_ids(tmp_path: Path) -> None:
+    path = tmp_path / "registry.yaml"
+    add_exception(path, _exc("EXC-REVOKE"))
+
+    with pytest.raises(GovernanceError, match="not found"):
+        revoke_exception(path, "EXC-MISSING", revoked_by="admin", reason="closed")
+
+    revoke_exception(path, "EXC-REVOKE", revoked_by="admin", reason="closed")
+    with pytest.raises(GovernanceError, match="not active"):
+        revoke_exception(path, "EXC-REVOKE", revoked_by="admin", reason="again")
+
+
+@pytest.mark.parametrize(
+    ("revoked_by", "reason", "revoked_at", "message"),
+    [
+        ("", "reason", None, "revoked_by"),
+        ("admin", " ", None, "reason"),
+        ("admin", "reason", "not-a-date", "timestamp"),
+    ],
+)
+def test_revoke_exception_rejects_invalid_audit_metadata(
+    tmp_path: Path,
+    revoked_by: str,
+    reason: str,
+    revoked_at: str | None,
+    message: str,
+) -> None:
+    path = tmp_path / "registry.yaml"
+    add_exception(path, _exc("EXC-REVOKE"))
+    with pytest.raises(GovernanceError, match=message):
+        revoke_exception(
+            path,
+            "EXC-REVOKE",
+            revoked_by=revoked_by,
+            reason=reason,
+            revoked_at=revoked_at,
+        )
