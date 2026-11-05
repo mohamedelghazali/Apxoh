@@ -81,14 +81,29 @@ human_review:
         encoding="utf-8",
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+
+    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
+    from arkhon.verification.runners.mypy_runner import MypyRunner
+
+    def fake_mypy(self: MypyRunner, root: Path) -> RunnerResult:
+        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("Success: no issues found", encoding="utf-8")
+        return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
+
+    monkeypatch.setattr(MypyRunner, "run", fake_mypy)
 
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
     assert "SE-SAMPLE-001: 1/2 methods implemented" in output
     assert "[UNIMPLEMENTED] not-yet-implemented" in output
     assert "human review required" in output
-    assert "aggregate runner records are not accepted as per-rule proof" in output
-    assert "no score or readiness level has been computed" in output
+    assert "aggregate runner records are not accepted as per-rule proof" not in output
+    assert "[PASS] type-checker-execution" in output
+    assert "[BLOCKED] not-yet-implemented" in output
+    assert "human-review-approval" in output
+    assert "[BLOCKED] no score or readiness level has been computed" in output
 
 
 def test_assess_blocks_malformed_method_declaration(
@@ -114,6 +129,7 @@ human_review:
         encoding="utf-8",
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
 
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
