@@ -85,7 +85,7 @@ class EvidenceStore:
         commit_sha = data.get("commit_sha")
         if not isinstance(commit_sha, str) or not _COMMIT_SHA.fullmatch(commit_sha):
             raise EvidenceTamperedError(
-                "evidence record has invalid commit_sha; expected a 40-character lowercase SHA-256"
+                "evidence record has invalid commit SHA (invalid commit_sha); expected a 40-character lowercase SHA-256"
             )
 
         required = {
