@@ -46,8 +46,17 @@ jobs:
           system = manifest.get("system", {}) if isinstance(manifest, dict) else {}
           if normalize(str(system.get("version", ""))) != normalize(project_version):
               raise SystemExit("manifest/system.yaml version does not match pyproject.toml")
-          if system.get("status") != "stable":
-              raise SystemExit("manifest/system.yaml status must be stable for a stable package release")
+          if system.get("status") != "beta":
+              raise SystemExit("manifest/system.yaml status must be beta for a pre-1.0 package release")
+
+          classifiers = pyproject["project"].get("classifiers", [])
+          if "Development Status :: 4 - Beta" not in classifiers:
+              raise SystemExit("pyproject.toml must declare the pre-1.0 Beta development status")
+
+          project_config = yaml.safe_load(Path(".arkhon/project.yaml").read_text(encoding="utf-8"))
+          lifecycle = project_config.get("lifecycle", {}) if isinstance(project_config, dict) else {}
+          if lifecycle.get("current_stage") != "development" or lifecycle.get("release_channel") != "pre-release":
+              raise SystemExit(".arkhon/project.yaml must declare the 0.x development/pre-release channel")
 
           tag = os.environ.get("GITHUB_REF", "")
           if tag.startswith("refs/tags/v"):

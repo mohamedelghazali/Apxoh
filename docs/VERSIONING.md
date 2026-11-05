@@ -50,7 +50,7 @@ Before `1.0.0`, Apxoh uses **development-stage pre-release versions**:
 0.1.0     ← current official release
 ```
 
-Breaking changes are allowed at any pre-1.0 version. From `1.0.0`, semantic versioning applies strictly.
+Breaking changes are allowed at any pre-1.0 version. A published `0.1.0` is an official package release, but it does not declare the public API stable. The project remains in the 0.x development stage; `1.0.0` is the first stable API release.
 
 ---
 
@@ -258,4 +258,4 @@ All versions are also recorded in the SBOM of every release.
 
 ---
 
-**End of Document**
+**Release-stage policy:** `0.x` means pre-1.0 development, regardless of whether a particular package version has been published. Use the Beta development-status classifier and `pre-release` project channel until the explicit 1.0.0 stability milestone.\n\n**End of Document**
