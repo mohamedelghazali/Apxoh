@@ -400,3 +400,25 @@ def test_assess_rejects_unknown_explicit_project_profile(
     assert main(["assess", str(project)]) == 1
     assert "unknown project profile" in capsys.readouterr().err
 
+def test_assess_does_not_exclude_rules_using_heuristic_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    (project / "public").mkdir(parents=True)
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(
+        rules, "SE-API-001", "api-integration", "[api-contract-analysis]", scope="api-service"
+    )
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "Project profile: web-application" in output
+    assert "SE-API-001: BLOCKED" in output
+    assert "NOT_APPLICABLE" not in output
+
