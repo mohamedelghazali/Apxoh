@@ -373,6 +373,20 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
         )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr(
+        "arkhon.verification.methods.resolve_methods",
+        lambda methods: tuple(
+            (
+                method,
+                MethodImplementation(
+                    method, "MypyRunner", "mypy", frozenset(domains)
+                ),
+            )
+            for method in methods
+        ),
+    )
+
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = root / ".arkhon" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
@@ -385,6 +399,7 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     assert "Engineering score: 100.00/100" in output
     assert "Readiness level: hyperscale-validated" in output
     assert "Decision: APPROVED" in output
+
 
 def test_assess_rejects_unknown_explicit_project_profile(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
