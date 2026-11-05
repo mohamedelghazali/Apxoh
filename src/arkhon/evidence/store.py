@@ -133,8 +133,8 @@ class EvidenceStore:
             if not isinstance(tsar_metadata.get("rule_ids"), list) or not tsar_metadata["rule_ids"]:
                 raise EvidenceTamperedError("TSAR evidence has invalid rule_ids metadata")
 
-        rule_ids = data.get("rule_ids")
-        if rule_ids is not None:
+        if "rule_ids" in data:
+            rule_ids = data["rule_ids"]
             if (
                 not isinstance(rule_ids, list)
                 or not rule_ids
