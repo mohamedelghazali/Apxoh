@@ -89,3 +89,80 @@ human_review:
     assert "human review required" in output
     assert "aggregate runner records are not accepted as per-rule proof" in output
     assert "no score or readiness level has been computed" in output
+
+
+def test_assess_blocks_malformed_method_declaration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    (rules / "sample.yaml").write_text(
+        """id: SE-SAMPLE-002
+metadata:
+  domain: testing
+  status: active
+verification:
+  methods: invalid
+human_review:
+  required: false
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "SE-SAMPLE-002: BLOCKED" in output
+    assert "malformed rule declarations: 1" in output
+    assert "rules requiring human review: 0" in output
+
+
+def test_assess_rejects_invalid_rule_registry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    (rules / "broken.yaml").write_text("[", encoding="utf-8")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+
+    assert main(["assess", str(project)]) == 1
+    assert "rule load errors" in capsys.readouterr().err
+
+
+def test_assess_rejects_tampered_evidence_store(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    (rules / "sample.yaml").write_text(
+        """id: SE-SAMPLE-003
+metadata:
+  domain: testing
+  status: active
+verification:
+  methods: [unknown-method]
+""",
+        encoding="utf-8",
+    )
+    evidence_dir = project / ".arkhon" / "evidence" / "testing"
+    evidence_dir.mkdir(parents=True)
+    (evidence_dir / "EVID-TAMPER.json").write_text("{", encoding="utf-8")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+
+    assert main(["assess", str(project)]) == 1
+    assert "evidence integrity check failed" in capsys.readouterr().err
