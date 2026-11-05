@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -17,6 +18,30 @@ from arkhon.projects.loader import (
 )
 from arkhon.rules.loader import Rule
 from arkhon.rules.registry import RuleRegistry
+
+
+def _store_evidence(
+    root: Path,
+    evidence_id: str,
+    status: str = "PASS",
+    executed_at: str = "2026-11-01T00:00:00Z",
+) -> dict[str, object]:
+    artifact = root / f"{evidence_id}.txt"
+    artifact.write_text(f"evidence for {evidence_id}", encoding="utf-8")
+    return {
+        "evidence_id": evidence_id,
+        "source": "arkhon",
+        "source_version": "0.1.0",
+        "commit_sha": "a" * 40,
+        "executed_at": executed_at,
+        "status": status,
+        "artifacts": [
+            {
+                "path": artifact.name,
+                "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }
+        ],
+    }
 
 
 def _profile_tree(root: Path, name: str = "demo") -> Path:
@@ -117,21 +142,11 @@ def test_evidence_store_read_iteration_and_latest_error_paths(tmp_path: Path, mo
     with pytest.raises(EvidenceError, match="not found"):
         store.read("testing", "EVID-MISSING")
 
-    first = {
-        "evidence_id": "EVID-1",
-        "commit_sha": "a" * 40,
-        "status": "PASS",
-        "executed_at": "2026-01-01T00:00:00Z",
-    }
+    first = _store_evidence(tmp_path, "EVID-1", executed_at="2026-01-01T00:00:00Z")
     target = store.write("testing", first)
     assert store.write("testing", first) == target
     assert store.read("testing", "EVID-1").evidence_id == "EVID-1"
-    second = {
-        "evidence_id": "EVID-2",
-        "commit_sha": "a" * 40,
-        "status": "PASS",
-        "executed_at": "2026-02-01T00:00:00Z",
-    }
+    second = _store_evidence(tmp_path, "EVID-2", executed_at="2026-02-01T00:00:00Z")
     store.write("testing", second)
     assert store.latest_for_commit("testing", "a" * 40).evidence_id == "EVID-2"
     assert store.latest_for_commit("testing", "b" * 40) is None
@@ -220,11 +235,7 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     store = EvidenceStore(tmp_path)
-    record = {
-        "evidence_id": "EVID-RACE",
-        "commit_sha": "a" * 40,
-        "status": "PASS",
-    }
+    record = _store_evidence(tmp_path, "EVID-RACE")
     target = store.root / "testing" / "EVID-RACE.json"
     import hashlib
 
@@ -249,12 +260,7 @@ def test_evidence_store_concurrent_identical_write_and_non_object_iteration(
 
 def test_evidence_store_skips_non_record_json_artifacts(tmp_path: Path) -> None:
     store = EvidenceStore(tmp_path)
-    record = {
-        "evidence_id": "EVID-STORE-1",
-        "commit_sha": "a" * 40,
-        "status": "PASS",
-        "executed_at": "2026-11-01T00:00:00Z",
-    }
+    record = _store_evidence(tmp_path, "EVID-STORE-1")
     store.write("testing", record)
     evidence_dir = store.root / "testing"
     (evidence_dir / "ruff.json").write_text("[]", encoding="utf-8")
@@ -267,11 +273,7 @@ def test_evidence_store_skips_non_record_json_artifacts(tmp_path: Path) -> None:
 
 def test_evidence_store_rejects_filename_id_mismatch(tmp_path: Path) -> None:
     store = EvidenceStore(tmp_path)
-    record = {
-        "evidence_id": "EVID-STORE-2",
-        "commit_sha": "a" * 40,
-        "status": "PASS",
-    }
+    record = _store_evidence(tmp_path, "EVID-STORE-2")
     target = store.write("testing", record)
     target.write_text(json.dumps({**record, "evidence_id": "EVID-OTHER"}), encoding="utf-8")
     with pytest.raises(EvidenceTamperedError, match="does not match filename"):
