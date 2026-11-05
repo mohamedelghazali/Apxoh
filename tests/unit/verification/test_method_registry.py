@@ -424,3 +424,60 @@ def test_assess_does_not_exclude_rules_using_heuristic_profile(
     assert "SE-API-001: BLOCKED" in output
     assert "NOT_APPLICABLE" not in output
 
+def test_assess_blocks_dirty_worktree_before_running_verifiers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+    from arkhon.evidence.store import EvidenceStore
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: False)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "Working tree clean: no" in output
+    assert "working tree is dirty" in output
+    records = list(EvidenceStore(project).iter_records())
+    assert len(records) == 1
+    assert records[0].status == "BLOCKED"
+
+
+def test_assess_blocks_worktree_changed_while_runner_executes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
+    from arkhon.verification.runners.mypy_runner import MypyRunner
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    clean_states = iter([True, False])
+    monkeypatch.setattr(
+        "arkhon.cli._working_tree_clean", lambda _project: next(clean_states)
+    )
+
+    def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
+        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("Success", encoding="utf-8")
+        return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
+
+    monkeypatch.setattr(MypyRunner, "run", passing_mypy)
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "Working tree clean: no" in output
+    assert "project HEAD changed during assessment" in output
+
