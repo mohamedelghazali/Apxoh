@@ -444,7 +444,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
             reasons.append(f"unsupported enforcement level: {rule.enforcement!r}")
             malformed_rules += 1
 
-        if commit_sha is not None:
+        if commit_sha is not None and re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\\d{3,}", rule.id):
             try:
                 summary_dir = (
                     project / ".arkhon" / "reports" / "assessments" / assessment_id
@@ -500,7 +500,10 @@ def cmd_assess(args: argparse.Namespace) -> int:
                 for artifact_path in sorted(artifact_paths):
                     draft.add_artifact(artifact_path)
                 draft.add_artifact(summary_path)
-                EvidenceStore(project).write(rule.domain, draft.to_evidence())
+                evidence = draft.to_evidence()
+                evidence_store = EvidenceStore(project)
+                evidence_store.write(rule.domain, evidence)
+                evidence_store.read(rule.domain, str(evidence["evidence_id"]))
                 evidence_records_written += 1
             except (EvidenceError, OSError, RuntimeError, ValueError) as exc:
                 rule_status = STATUS_BLOCKED
