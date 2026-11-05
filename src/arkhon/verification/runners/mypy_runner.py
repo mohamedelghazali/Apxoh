@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 import subprocess
 from pathlib import Path
@@ -59,8 +60,17 @@ class MypyRunner(Runner):
         target_dir = root / ".arkhon" / "evidence" / "code-quality"
         try:
             target_dir.mkdir(parents=True, exist_ok=True)
-            target = target_dir / "mypy.txt"
-            target.write_text(output, encoding="utf-8")
+            payload = output.encode("utf-8")
+            digest = hashlib.sha256(payload).hexdigest()
+            target = target_dir / f"mypy-{digest}.txt"
+            if target.is_symlink():
+                raise OSError("refusing symlinked content-addressed Mypy evidence")
+            try:
+                with target.open("xb") as stream:
+                    stream.write(payload)
+            except FileExistsError:
+                if target.read_bytes() != payload:
+                    raise OSError("content-addressed Mypy evidence does not match its digest")
         except OSError as exc:
             return RunnerResult(
                 runner=self.name,
