@@ -13,8 +13,10 @@ def test_registry_contains_only_explicit_implementations() -> None:
     assert resolve_method("type-checker-execution") == METHOD_REGISTRY["type-checker-execution"]
     implementation = resolve_method("zero-type-errors-check")
     assert implementation is not None and implementation.runner == "mypy"
+    assert implementation.allowed_domains == frozenset({"code-quality"})
     implementation = resolve_method("tsar-audit-invocation")
     assert implementation is not None and implementation.runner == "tsar"
+    assert implementation.allowed_domains == frozenset({"software-security"})
     for method_id in (
         "evidence-integrity-check",
         "evidence-commit-match",
