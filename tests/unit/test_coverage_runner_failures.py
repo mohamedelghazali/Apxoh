@@ -160,11 +160,14 @@ def test_mypy_runner_all_execution_paths(tmp_path: Path, monkeypatch) -> None:
         "arkhon.verification.runners.mypy_runner.subprocess.run",
         lambda command, **kwargs: _completed(command, 0, "Success"),
     )
-    monkeypatch.setattr(
-        Path,
-        "write_text",
-        lambda *a, **k: (_ for _ in ()).throw(OSError("read only")),
-    )
+    original_open = Path.open
+
+    def fail_content_addressed_write(path: Path, mode: str = "r", *args, **kwargs):
+        if mode == "xb":
+            raise OSError("read only")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", fail_content_addressed_write)
     assert "cannot persist" in MypyRunner().run(tmp_path).reason
     monkeypatch.undo()
     monkeypatch.setattr(
@@ -185,3 +188,33 @@ def test_mypy_runner_all_execution_paths(tmp_path: Path, monkeypatch) -> None:
         lambda command, **kwargs: _completed(command, 2, "internal error"),
     )
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
+
+def test_mypy_runner_reuses_immutable_content_addressed_artifacts(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _name: "/usr/bin/mypy"
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.subprocess.run",
+        lambda command, **kwargs: _completed(command, 0, "same mypy output"),
+    )
+
+    first = MypyRunner().run(tmp_path)
+    second = MypyRunner().run(tmp_path)
+    assert first.outcome == RunnerOutcome.PASS
+    assert second.outcome == RunnerOutcome.PASS
+    assert first.artifacts == second.artifacts
+    artifact = first.artifacts[0]
+    assert artifact.name.startswith("mypy-")
+    assert artifact.read_text(encoding="utf-8") == "same mypy output"
+
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.subprocess.run",
+        lambda command, **kwargs: _completed(command, 0, "new mypy output"),
+    )
+    third = MypyRunner().run(tmp_path)
+    assert third.outcome == RunnerOutcome.PASS
+    assert third.artifacts[0] != artifact
+    assert artifact.read_text(encoding="utf-8") == "same mypy output"
+
