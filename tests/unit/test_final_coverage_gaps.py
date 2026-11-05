@@ -74,7 +74,7 @@ def test_cli_assess_fails_closed_with_aggregate_evidence_and_verify_missing_proj
     assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
     assert "Evidence records inspected: 3" in output
-    assert "[BLOCKED] rule-level outcomes are not available for the inspected commit" in output
+    assert "[BLOCKED] one or more rules lack complete, commit-bound verification" in output
     assert "no score or readiness level has been computed" in output
     assert "Gates:" in output
     assert "Score:" not in output and "Level:" not in output

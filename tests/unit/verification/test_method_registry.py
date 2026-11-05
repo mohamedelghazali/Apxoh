@@ -13,8 +13,10 @@ def test_registry_contains_only_explicit_implementations() -> None:
     assert resolve_method("type-checker-execution") == METHOD_REGISTRY["type-checker-execution"]
     implementation = resolve_method("zero-type-errors-check")
     assert implementation is not None and implementation.runner == "mypy"
+    assert implementation.allowed_domains == frozenset({"code-quality"})
     implementation = resolve_method("tsar-audit-invocation")
     assert implementation is not None and implementation.runner == "tsar"
+    assert implementation.allowed_domains == frozenset({"software-security"})
     for method_id in (
         "evidence-integrity-check",
         "evidence-commit-match",
@@ -82,6 +84,7 @@ human_review:
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     from arkhon.verification.runners.mypy_runner import MypyRunner
@@ -104,6 +107,14 @@ human_review:
     assert "[BLOCKED] not-yet-implemented" in output
     assert "human-review-approval" in output
     assert "[BLOCKED] no score or readiness level has been computed" in output
+
+    from arkhon.evidence.store import EvidenceStore
+
+    records = list(EvidenceStore(project).iter_records())
+    assert len(records) == 1
+    assert records[0].commit_sha == "a" * 40
+    assert records[0].data["rule_ids"] == ["SE-SAMPLE-001"]
+    assert records[0].status == "BLOCKED"
 
 
 def test_assess_blocks_malformed_method_declaration(
@@ -297,6 +308,7 @@ def test_assess_blocks_when_project_head_changes_during_verification(
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     commits = iter(["a" * 40, "b" * 40])
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: next(commits))
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = root / ".arkhon" / "reports" / "mypy.txt"
@@ -336,6 +348,7 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     from arkhon.cli import main
+    from arkhon.verification.methods import MethodImplementation
     from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     from arkhon.verification.runners.mypy_runner import MypyRunner
 
@@ -360,6 +373,20 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
         )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr(
+        "arkhon.verification.methods.resolve_methods",
+        lambda methods: tuple(
+            (
+                method,
+                MethodImplementation(
+                    method, "MypyRunner", "mypy", frozenset(domains)
+                ),
+            )
+            for method in methods
+        ),
+    )
+
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = root / ".arkhon" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
@@ -372,4 +399,128 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     assert "Engineering score: 100.00/100" in output
     assert "Readiness level: hyperscale-validated" in output
     assert "Decision: APPROVED" in output
+
+
+def test_assess_rejects_unknown_explicit_project_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    (project / ".arkhon").mkdir(parents=True)
+    (project / ".arkhon" / "project.yaml").write_text(
+        "project:\n  profile: invented-profile\n", encoding="utf-8"
+    )
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+
+    assert main(["assess", str(project)]) == 1
+    assert "unknown project profile" in capsys.readouterr().err
+
+def test_assess_does_not_exclude_rules_using_heuristic_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    (project / "public").mkdir(parents=True)
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(
+        rules, "SE-API-001", "api-integration", "[api-contract-analysis]", scope="api-service"
+    )
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "Project profile: web-application" in output
+    assert "SE-API-001: BLOCKED" in output
+    assert "NOT_APPLICABLE" not in output
+
+def test_assess_blocks_dirty_worktree_before_running_verifiers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+    from arkhon.evidence.store import EvidenceStore
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: False)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "Working tree clean: no" in output
+    assert "working tree is dirty" in output
+    records = list(EvidenceStore(project).iter_records())
+    assert len(records) == 1
+    assert records[0].status == "BLOCKED"
+
+
+def test_assess_blocks_worktree_changed_while_runner_executes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
+    from arkhon.verification.runners.mypy_runner import MypyRunner
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    clean_states = iter([True, False])
+    monkeypatch.setattr(
+        "arkhon.cli._working_tree_clean", lambda _project: next(clean_states)
+    )
+
+    def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
+        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("Success", encoding="utf-8")
+        return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
+
+    monkeypatch.setattr(MypyRunner, "run", passing_mypy)
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "Working tree clean: no" in output
+    assert "project commit or working tree changed during assessment" in output
+
+def test_assess_rejects_verifier_used_outside_its_approved_domain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    project.mkdir()
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(
+        rules,
+        "SE-SEC-GOV-001",
+        "software-security",
+        "[type-checker-execution]",
+    )
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+
+    assert main(["assess", str(project)]) == 1
+    output = capsys.readouterr().out
+    assert "SE-SEC-GOV-001: BLOCKED" in output
+    assert "not approved for rule domain 'software-security'" in output
 

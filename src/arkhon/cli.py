@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -99,6 +100,7 @@ def cmd_validate(_args: argparse.Namespace) -> int:
 def cmd_inspect(args: argparse.Namespace) -> int:
     from arkhon.config import get_manifest
     from arkhon.language_support.detector import detect_languages
+    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
 
     project = Path(args.project).resolve()
@@ -157,10 +159,29 @@ def _commit_sha(project: Path) -> str | None:
             check=True,
             timeout=10,
         )
-        return result.stdout.strip()
+        commit_sha = result.stdout.strip()
+        return commit_sha if re.fullmatch(r"[0-9a-f]{40}", commit_sha) else None
     except (OSError, subprocess.SubprocessError) as exc:
         print(f"[FAIL] cannot resolve commit SHA: {exc}", file=sys.stderr)
         return None
+
+
+def _working_tree_clean(project: Path) -> bool:
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        return False
+    try:
+        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+            [git_executable, "status", "--porcelain", "--untracked-files=all"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return not result.stdout.strip()
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -178,7 +199,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
-    """Execute supported rule methods and fail closed on missing proof."""
+    """Execute supported methods; require a clean, commit-bound project snapshot."""
     from arkhon.assessment.decision import decide
     from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
     from arkhon.assessment.scorer import score_from_outcomes
@@ -190,7 +211,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
         STATUS_PASS,
     )
     from arkhon.core.errors import ConfigError, EvidenceError, GateError
+    from arkhon.evidence.collector import EvidenceCollector
     from arkhon.evidence.store import EvidenceStore
+    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
     from arkhon.rules.loader import load_rules_dir
     from arkhon.verification.methods import resolve_methods
@@ -213,6 +236,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
     try:
         records = list(EvidenceStore(project).iter_records())
         profile = match_profile(project)
+        available_profiles = set(list_profiles(_project_template_root()))
+        if profile.profile not in available_profiles:
+            raise ConfigError(f"unknown project profile: {profile.profile!r}")
     except EvidenceError as exc:
         print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
         return 1
@@ -220,7 +246,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
         print(f"[FAIL] project applicability could not be determined: {exc}", file=sys.stderr)
         return 1
 
+    commit_sha = _commit_sha(project)
+    working_tree_clean = commit_sha is not None and _working_tree_clean(project)
     active_rules = [rule for rule in rules_result.rules if rule.status == "active"]
+    assessment_id = f"ASSESS-{uuid.uuid4().hex[:12].upper()}"
+    evidence_records_written = 0
     planned: dict[str, tuple[tuple[tuple[str, Any], ...], bool, str | None]] = {}
     required_runners: set[str] = set()
     total_methods = implemented_methods = human_review_rules = malformed_rules = 0
@@ -228,6 +258,11 @@ def cmd_assess(args: argparse.Namespace) -> int:
     print(f"Project profile: {profile.profile} ({profile.reason})")
     print("Rule verification execution:")
     for rule in active_rules:
+        if not re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\d{3,}", rule.id):
+            malformed_rules += 1
+            planned[rule.id] = ((), False, "rule identifier does not match the evidence schema")
+            print(f"  {rule.id}: BLOCKED (invalid rule identifier)")
+            continue
         scope = rule.raw.get("scope", {"project_types": ["all"]})
         project_types = scope.get("project_types") if isinstance(scope, dict) else None
         if (
@@ -241,7 +276,10 @@ def cmd_assess(args: argparse.Namespace) -> int:
             continue
 
         if (
-            profile.profile != "universal"
+            commit_sha is not None
+            and working_tree_clean
+            and profile.explicit
+            and profile.profile != "universal"
             and "all" not in project_types
             and profile.profile not in project_types
         ):
@@ -263,7 +301,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
         supported = [
             (method, implementation)
             for method, implementation in resolutions
-            if implementation is not None
+            if implementation is not None and rule.domain in implementation.allowed_domains
         ]
         implemented_methods += len(supported)
         required_runners.update(implementation.runner for _, implementation in supported)
@@ -284,7 +322,6 @@ def cmd_assess(args: argparse.Namespace) -> int:
             f"human review {'required' if review_required else 'not required'}"
         )
 
-    commit_sha = _commit_sha(project)
     runner_instances = {
         "mypy": MypyRunner(),
         "tsar": TsarRunner(),
@@ -292,11 +329,17 @@ def cmd_assess(args: argparse.Namespace) -> int:
     runner_results: dict[str, RunnerResult] = {}
 
     if commit_sha is None:
+        block_reason = "assessment requires a resolvable Git commit SHA"
+    elif not working_tree_clean:
+        block_reason = "working tree is dirty or its clean state could not be verified"
+    else:
+        block_reason = ""
+    if block_reason:
         for runner_name in required_runners:
             runner_results[runner_name] = RunnerResult(
                 runner=runner_name,
                 outcome=RunnerOutcome.BLOCKED,
-                reason="assessment requires a resolvable Git commit SHA",
+                reason=block_reason,
             )
     else:
         for runner_name in sorted(required_runners):
@@ -347,12 +390,15 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     )
             runner_results[runner_name] = result
 
-        if _commit_sha(project) != commit_sha:
+        current_commit_sha = _commit_sha(project)
+        current_working_tree_clean = _working_tree_clean(project)
+        if current_commit_sha != commit_sha or not current_working_tree_clean:
+            working_tree_clean = False
             for runner_name in required_runners:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
                     outcome=RunnerOutcome.BLOCKED,
-                    reason="project HEAD changed during assessment; rerun required",
+                    reason="project commit or working tree changed during assessment; rerun required",
                 )
 
     def method_status(method_id: str, runner_name: str) -> tuple[str, str]:
@@ -377,13 +423,12 @@ def cmd_assess(args: argparse.Namespace) -> int:
             "evidence-commit-match",
             "evidence-freshness-check",
             "timestamp-verification",
-        }:
-            if result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
-                return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
+        } and result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
+            return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
         return STATUS_BLOCKED, result.reason or "method did not establish its acceptance criteria"
 
     outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
-    complete = True
+    complete = commit_sha is not None and working_tree_clean
     print("Rule outcomes:")
     for rule in active_rules:
         resolutions, review_required, planning_error = planned[rule.id]
@@ -399,14 +444,28 @@ def cmd_assess(args: argparse.Namespace) -> int:
             method_details = []
             for method_id, implementation in resolutions:
                 if implementation is None:
-                    status, reason = STATUS_BLOCKED, "no executable implementation is registered"
+                    status = STATUS_BLOCKED
+                    reason = (
+                        "authorized human approval evidence is not available"
+                        if method_id == "human-review"
+                        else "no executable implementation is registered"
+                    )
+                elif rule.domain not in implementation.allowed_domains:
+                    status = STATUS_BLOCKED
+                    reason = (
+                        f"implementation is not approved for rule domain {rule.domain!r}"
+                    )
                 else:
                     status, reason = method_status(method_id, implementation.runner)
                 method_details.append((method_id, status, reason))
 
             if review_required and not any(item[0] == "human-review" for item in method_details):
                 method_details.append(
-                    ("human-review-approval", STATUS_BLOCKED, "authorized human approval is required")
+                    (
+                        "human-review-approval",
+                        STATUS_BLOCKED,
+                        "authorized human approval is required",
+                    )
                 )
 
             statuses = [item[1] for item in method_details]
@@ -426,6 +485,79 @@ def cmd_assess(args: argparse.Namespace) -> int:
             rule_status = STATUS_BLOCKED
             reasons.append(f"unsupported enforcement level: {rule.enforcement!r}")
             malformed_rules += 1
+
+        if commit_sha is not None and re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\d{3,}", rule.id):
+            try:
+                summary_dir = (
+                    project / ".arkhon" / "reports" / "assessments" / assessment_id
+                )
+                summary_dir.mkdir(parents=True, exist_ok=True)
+                resolved_summary_dir = summary_dir.resolve()
+                resolved_summary_dir.relative_to(project)
+                summary_path = resolved_summary_dir / f"{rule.id}.json"
+                if summary_path.is_symlink():
+                    raise EvidenceError("refusing symlinked assessment summary")
+                artifact_paths: set[Path] = set()
+                for _, implementation in resolutions:
+                    if (
+                        implementation is None
+                        or rule.domain not in implementation.allowed_domains
+                    ):
+                        continue
+                    runner_result = runner_results.get(implementation.runner)
+                    if runner_result is not None and runner_result.outcome in {
+                        RunnerOutcome.PASS,
+                        RunnerOutcome.FAIL,
+                    }:
+                        artifact_paths.update(
+                            Path(item).resolve() for item in runner_result.artifacts
+                        )
+                summary = {
+                    "assessment_id": assessment_id,
+                    "rule_id": rule.id,
+                    "domain": rule.domain,
+                    "enforcement": rule.enforcement,
+                    "status": rule_status,
+                    "commit_sha": commit_sha,
+                    "project_profile": profile.profile,
+                    "working_tree_clean": working_tree_clean,
+                    "human_review_required": review_required,
+                    "methods": [
+                        {"method_id": method_id, "status": status, "reason": reason}
+                        for method_id, status, reason in method_details
+                    ],
+                    "artifacts": [
+                        path.relative_to(project).as_posix() for path in sorted(artifact_paths)
+                    ],
+                    "reasons": reasons,
+                }
+                with summary_path.open("x", encoding="utf-8") as stream:
+                    json.dump(summary, stream, indent=2, sort_keys=True)
+                    stream.write("\n")
+                collector = EvidenceCollector(root=project)
+                draft = collector.new_evidence(
+                    source="arkhon",
+                    source_version=__version__,
+                    commit_sha=commit_sha,
+                    status=rule_status,
+                )
+                draft.rule_ids = [rule.id]
+                draft.notes = (
+                    f"Rule-level assessment {assessment_id}; "
+                    "generated by live verification"
+                )
+                for artifact_path in sorted(artifact_paths):
+                    draft.add_artifact(artifact_path)
+                draft.add_artifact(summary_path)
+                evidence = draft.to_evidence()
+                evidence_store = EvidenceStore(project)
+                evidence_store.write(rule.domain, evidence)
+                evidence_store.read(rule.domain, str(evidence["evidence_id"]))
+                evidence_records_written += 1
+            except (EvidenceError, OSError, RuntimeError, ValueError) as exc:
+                rule_status = STATUS_BLOCKED
+                reasons.append(f"rule assessment evidence could not be persisted: {exc}")
+                complete = False
 
         outcome = RuleOutcome(
             rule_id=rule.id,
@@ -451,7 +583,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
         f"malformed rule declarations: {malformed_rules}"
     )
     print(f"Evidence records inspected: {len(records)} (integrity-checked)")
+    print(f"New rule-level evidence records persisted: {evidence_records_written}")
     print(f"Commit assessed: {commit_sha or 'UNRESOLVED'}")
+    print(f"Working tree clean: {'yes' if working_tree_clean else 'no'}")
     print("Gates:")
     for gate, verdict in verdicts.items():
         print(f"  {gate}: {verdict.status}")
@@ -483,7 +617,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
     for domain, rule_outcomes in outcomes_per_domain.items():
         score_domain = score_domain_map.get(domain)
         if score_domain is not None:
-            score_outcomes.setdefault(score_domain, []).extend(item.status for item in rule_outcomes)
+            score_outcomes.setdefault(score_domain, []).extend(
+                item.status for item in rule_outcomes
+            )
     score = score_from_outcomes(score_outcomes)
     decision = decide(score, verdicts)
     print(f"Engineering score: {score.total:.2f}/{score.maximum:.0f}")

@@ -20,6 +20,7 @@ logger = get_logger("evidence.store")
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _EVIDENCE_ID = re.compile(r"^EVID-[A-Z0-9-]+$")
 _COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
+_RULE_ID = re.compile(r"^SE-[A-Z]+(-[A-Z]+)?-\d{3,}$")
 _ALLOWED_SOURCES = frozenset({"arkhon", "tsar", "external-tool"})
 
 
@@ -131,6 +132,19 @@ class EvidenceStore:
                 raise EvidenceTamperedError("TSAR evidence has invalid tsar_version metadata")
             if not isinstance(tsar_metadata.get("rule_ids"), list) or not tsar_metadata["rule_ids"]:
                 raise EvidenceTamperedError("TSAR evidence has invalid rule_ids metadata")
+
+        if "rule_ids" in data:
+            rule_ids = data["rule_ids"]
+            if (
+                not isinstance(rule_ids, list)
+                or not rule_ids
+                or any(
+                    not isinstance(rule_id, str) or not _RULE_ID.fullmatch(rule_id)
+                    for rule_id in rule_ids
+                )
+                or len(set(rule_ids)) != len(rule_ids)
+            ):
+                raise EvidenceTamperedError("evidence rule_ids must be unique valid rule identifiers")
 
         artifacts = data["artifacts"]
         if not isinstance(artifacts, list) or not artifacts:
