@@ -52,7 +52,7 @@ The status command verifies evidence-store integrity before reporting counts. Ex
 arkhon assess .
 ```
 
-Assessment requires a resolvable Git commit and a clean working tree. A project profile inferred from directory markers is advisory and never excludes rules; only a valid, explicitly declared profile can establish that a rule is out of scope. Each rule receives its own PASS, FAIL, BLOCKED, or NOT_APPLICABLE outcome and an integrity-checked evidence record under `.arkhon/evidence/`, with a run summary under `.arkhon/reports/assessments/`.
+Assessment requires a resolvable Git commit and a clean working tree. A project profile inferred from directory markers is advisory and never excludes rules; only a valid, explicitly declared profile can establish that a rule is out of scope. Each rule receives its own PASS, FAIL, BLOCKED, or NOT_APPLICABLE outcome. When a valid commit is available, ARKHON persists an integrity-checked evidence record under `.arkhon/evidence/`, with a run summary under `.arkhon/reports/assessments/`.
 
 Only methods backed by an executable verifier can produce automated results. Unsupported methods and required human approvals remain BLOCKED. The score and readiness decision are withheld until every applicable rule and gate has complete passing evidence.
 
