@@ -396,7 +396,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
                     outcome=RunnerOutcome.BLOCKED,
-                    reason="project HEAD changed during assessment; rerun required",
+                    reason="project commit or working tree changed during assessment; rerun required",
                 )
 
     def method_status(method_id: str, runner_name: str) -> tuple[str, str]:
