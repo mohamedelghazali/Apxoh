@@ -218,3 +218,25 @@ def test_mypy_runner_reuses_immutable_content_addressed_artifacts(
     assert third.artifacts[0] != artifact
     assert artifact.read_text(encoding="utf-8") == "same mypy output"
 
+def test_mypy_runner_blocks_tampered_content_addressed_artifact(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import hashlib
+
+    payload = b"expected output"
+    digest = hashlib.sha256(payload).hexdigest()
+    target = tmp_path / ".arkhon" / "evidence" / "code-quality" / f"mypy-{digest}.txt"
+    target.parent.mkdir(parents=True)
+    target.write_text("tampered", encoding="utf-8")
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _name: "/usr/bin/mypy"
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.subprocess.run",
+        lambda command, **kwargs: _completed(command, 0, payload.decode("utf-8")),
+    )
+
+    result = MypyRunner().run(tmp_path)
+    assert result.outcome == RunnerOutcome.BLOCKED
+    assert "does not match its digest" in result.reason
+
