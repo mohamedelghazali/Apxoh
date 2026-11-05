@@ -388,7 +388,10 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     )
             runner_results[runner_name] = result
 
-        if _commit_sha(project) != commit_sha or not _working_tree_clean(project):
+        current_commit_sha = _commit_sha(project)
+        current_working_tree_clean = _working_tree_clean(project)
+        if current_commit_sha != commit_sha or not current_working_tree_clean:
+            working_tree_clean = False
             for runner_name in required_runners:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
