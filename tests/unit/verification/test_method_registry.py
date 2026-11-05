@@ -381,3 +381,22 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     assert "Readiness level: hyperscale-validated" in output
     assert "Decision: APPROVED" in output
 
+def test_assess_rejects_unknown_explicit_project_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from arkhon.cli import main
+
+    project = tmp_path / "project"
+    (project / ".arkhon").mkdir(parents=True)
+    (project / ".arkhon" / "project.yaml").write_text(
+        "project:\n  profile: invented-profile\n", encoding="utf-8"
+    )
+    repository = tmp_path / "repository"
+    rules = repository / "rules"
+    rules.mkdir(parents=True)
+    _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
+    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+
+    assert main(["assess", str(project)]) == 1
+    assert "unknown project profile" in capsys.readouterr().err
+
