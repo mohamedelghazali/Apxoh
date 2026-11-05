@@ -187,7 +187,6 @@ def test_add_exception_repairs_missing_exceptions_key(tmp_path: Path) -> None:
     assert [item["exception_id"] for item in data["exceptions"]] == ["EXC-REPAIRED"]
 
 
-
 def test_revoke_exception_persists_audit_record(tmp_path: Path) -> None:
     path = tmp_path / "registry.yaml"
     add_exception(path, _exc("EXC-REVOKE"))
@@ -247,3 +246,96 @@ def test_revoke_exception_rejects_invalid_audit_metadata(
             reason=reason,
             revoked_at=revoked_at,
         )
+
+
+
+def test_revoke_exception_rejects_empty_id(tmp_path: Path) -> None:
+    with pytest.raises(GovernanceError, match="exception_id"):
+        revoke_exception(tmp_path / "registry.yaml", " ", revoked_by="admin", reason="closed")
+
+
+def test_revoke_exception_rejects_symlinked_registry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text("exceptions: []\n", encoding="utf-8")
+    original = Path.is_symlink
+
+    def is_symlink(candidate: Path) -> bool:
+        return True if candidate == path else original(candidate)
+
+    monkeypatch.setattr(Path, "is_symlink", is_symlink)
+    with pytest.raises(GovernanceError, match="symlinked"):
+        revoke_exception(path, "EXC-1", revoked_by="admin", reason="closed")
+
+
+def test_revoke_exception_rejects_missing_registry(tmp_path: Path) -> None:
+    with pytest.raises(GovernanceError, match="not found"):
+        revoke_exception(
+            tmp_path / "missing.yaml", "EXC-1", revoked_by="admin", reason="closed"
+        )
+
+
+@pytest.mark.parametrize("contents", ["exceptions: {}\n", "- invalid-root\n", "exceptions: [\n"])
+def test_revoke_exception_rejects_invalid_registry_yaml(
+    tmp_path: Path, contents: str
+) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text(contents, encoding="utf-8")
+    with pytest.raises(GovernanceError):
+        revoke_exception(path, "EXC-1", revoked_by="admin", reason="closed")
+
+
+def test_revoke_exception_rejects_duplicate_ids(tmp_path: Path) -> None:
+    path = tmp_path / "registry.yaml"
+    record = {
+        "exception_id": "EXC-DUP",
+        "rule_id": "SE-TST-001",
+        "scope": {},
+        "rationale": "test rationale",
+        "owner": "owner",
+        "approver": "approver",
+        "approved_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "compensating_control": "manual review",
+        "status": "active",
+    }
+    path.write_text(yaml.safe_dump({"exceptions": [record, record]}), encoding="utf-8")
+    with pytest.raises(GovernanceError, match="duplicate"):
+        revoke_exception(path, "EXC-DUP", revoked_by="admin", reason="closed")
+
+
+def test_revoke_exception_wraps_read_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text("exceptions: []\n", encoding="utf-8")
+    original = Path.read_text
+
+    def read_text(candidate: Path, *args: object, **kwargs: object) -> str:
+        if candidate == path:
+            raise OSError("simulated read failure")
+        return original(candidate, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    with pytest.raises(GovernanceError, match="cannot read"):
+        revoke_exception(path, "EXC-1", revoked_by="admin", reason="closed")
+
+
+def test_revoke_exception_cleans_temporary_file_after_replace_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "registry.yaml"
+    add_exception(path, _exc("EXC-ATOMIC"))
+    original = Path.replace
+
+    def fail_replace(candidate: Path, target: Path) -> Path:
+        if candidate.parent == tmp_path and candidate.name.startswith(".registry.yaml."):
+            raise OSError("simulated atomic replace failure")
+        return original(candidate, target)
+
+    monkeypatch.setattr(Path, "replace", fail_replace)
+    with pytest.raises(GovernanceError, match="cannot persist"):
+        revoke_exception(path, "EXC-ATOMIC", revoked_by="admin", reason="closed")
+    assert not list(tmp_path.glob(".registry.yaml.*.tmp"))
+    assert load_exceptions(path).all_active()
