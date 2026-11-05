@@ -44,7 +44,7 @@ def test_scorer_guard_and_lowest_level() -> None:
     assert Score(-1.0, 100.0).level == "development"
 
 
-def test_cli_assess_counts_only_pass_evidence_and_verify_missing_project(
+def test_cli_assess_fails_closed_with_aggregate_evidence_and_verify_missing_project(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     store = EvidenceStore(tmp_path)
@@ -53,7 +53,11 @@ def test_cli_assess_counts_only_pass_evidence_and_verify_missing_project(
     store.write("unknown-domain", {"evidence_id": "EVID-ASSESS-OTHER", "status": "PASS"})
     assert main(["assess", str(tmp_path)]) == 1
     output = capsys.readouterr().out
-    assert "Score:" in output
+    assert "Evidence records inspected: 3" in output
+    assert "[BLOCKED] rule-level assessment outcomes are not available" in output
+    assert "no score or readiness level has been computed" in output
+    assert "Gates:" in output
+    assert "Score:" not in output and "Level:" not in output
     assert main(["verify", str(tmp_path / "missing"), "--domain", "testing"]) == 1
     assert "not a directory" in capsys.readouterr().err
 
