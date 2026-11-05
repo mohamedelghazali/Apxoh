@@ -8,7 +8,7 @@ system:
   latin_reference: "ARKHON"
   description: "Software Engineering Governance & Assurance System"
   version: "0.1.0"
-  status: "stable"
+  status: "beta"
   milestone: 0
 
 identity:
