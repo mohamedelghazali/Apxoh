@@ -4,7 +4,7 @@
 
 | Version | Supported |
 | :--- | :--- |
-| `0.1.x` (pre-release) | Security fixes only |
+| `0.1.x` (pre-1.0 development release) | Security fixes only |
 | `< 0.1.0` | Not supported |
 
 ## Reporting a Vulnerability
