@@ -252,9 +252,9 @@ def test_enforcement_evidence_validation_and_path_safety(tmp_path: Path) -> None
     assert present.evidence_present
     assert engine.evaluate_rule(rule("R4", {"required": ["missing"]}), root).status == "BLOCKED"
     assert "escapes" in engine.evaluate_rule(rule("R5", {"required": ["../escape"]}), root).reason
-    assert (
-        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status == "BLOCKED"
-    )
+    assert engine.evaluate_rule(
+        rule("R6", {"required": [{"type": "proof"}]}), root
+    ).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R7", {"required": [{"type": ""}]}), root).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R8", {"required": [None]}), root).status == "BLOCKED"
 
@@ -551,3 +551,13 @@ def test_mypy_runner_timeout_and_start_error(
 
     monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", start_error)
     assert "failed to start" in MypyRunner().run(tmp_path).reason
+
+
+
+def test_enforcement_gate_continues_for_non_blocking_outcome() -> None:
+    engine = EnforcementEngine(SimpleNamespace(by_domain=lambda _domain: [rule("R1", {})]))
+    engine.evaluate_rule = lambda item, _root: RuleOutcome(item.id, "PASS")  # type: ignore[method-assign]
+    result = engine.evaluate_gate("security", ("security",), None)
+    assert result.status == "PASS"
+    assert result.blocking_failures == 0
+    assert result.critical_failures == 0
