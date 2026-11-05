@@ -199,7 +199,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
-    """Execute supported rule methods and fail closed on missing proof."""
+    """Execute supported methods; require a clean, commit-bound project snapshot."""
     from arkhon.assessment.decision import decide
     from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
     from arkhon.assessment.scorer import score_from_outcomes
