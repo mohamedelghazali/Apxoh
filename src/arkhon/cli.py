@@ -178,23 +178,76 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
-    from arkhon.assessment.gates import RuleOutcome, evaluate_all_gates
+    from arkhon.assessment.gates import evaluate_all_gates
+    from arkhon.core.errors import EvidenceError
     from arkhon.evidence.store import EvidenceStore
+    from arkhon.rules.loader import load_rules_dir
+    from arkhon.verification.methods import resolve_methods
 
     project = Path(args.project).resolve()
     if not project.is_dir():
         print(f"[FAIL] not a directory: {project}", file=sys.stderr)
         return 1
 
-    # Evidence records currently contain aggregate statuses, not the complete
-    # per-rule outcome and enforcement data required by the assessment model.
-    # Never turn aggregate evidence counts into a score or a release-readiness
-    # level. Missing rule-level outcomes must remain explicitly BLOCKED.
-    store = EvidenceStore(project)
-    records = list(store.iter_records())
-    outcomes_per_domain: dict[str, list[RuleOutcome]] = {}
+    # Report method implementation coverage, but do not confuse a registered
+    # implementation with a verified, rule-specific outcome for this commit.
+    rules_result = load_rules_dir(_repo_root() / "rules")
+    if not rules_result.ok:
+        print(f"[FAIL] rule load errors: {len(rules_result.errors)}", file=sys.stderr)
+        for error in rules_result.errors:
+            print(f"  - {error}", file=sys.stderr)
+        return 1
+
+    try:
+        records = list(EvidenceStore(project).iter_records())
+    except EvidenceError as exc:
+        print(f"[FAIL] evidence integrity check failed: {exc}", file=sys.stderr)
+        return 1
+
+    active_rules = [rule for rule in rules_result.rules if rule.status == "active"]
+    total_methods = implemented_methods = human_review_rules = malformed_rules = 0
+    print("Rule verification method coverage:")
+    for rule in active_rules:
+        verification = rule.raw.get("verification")
+        methods = verification.get("methods") if isinstance(verification, dict) else None
+        try:
+            resolutions = resolve_methods(methods)
+        except ValueError as exc:
+            malformed_rules += 1
+            print(f"  {rule.id}: BLOCKED ({exc})")
+            continue
+        total_methods += len(resolutions)
+        supported = [(method, implementation) for method, implementation in resolutions
+                     if implementation is not None]
+        implemented_methods += len(supported)
+        human_review = rule.raw.get("human_review", {})
+        review_required = (
+            isinstance(human_review, dict) and human_review.get("required") is True
+        )
+        human_review_rules += int(review_required)
+        print(
+            f"  {rule.id}: {len(supported)}/{len(resolutions)} methods implemented; "
+            f"human review {'required' if review_required else 'not declared'}"
+        )
+        for method, implementation in resolutions:
+            if implementation is None:
+                print(f"    [UNIMPLEMENTED] {method}")
+            else:
+                print(
+                    f"    [IMPLEMENTED] {method} -> "
+                    f"{implementation.component} ({implementation.runner})"
+                )
+
+    outcomes_per_domain: dict[str, list] = {}
     verdicts = evaluate_all_gates(outcomes_per_domain)
-    print("[BLOCKED] rule-level assessment outcomes are not available")
+    print(f"Active rules inspected: {len(active_rules)}")
+    print(
+        f"Method implementations present: {implemented_methods}/{total_methods}; "
+        f"rules requiring human review: {human_review_rules}; "
+        f"malformed rule declarations: {malformed_rules}"
+    )
+    print("[BLOCKED] rule-level outcomes are not available for the inspected commit")
+    print("[BLOCKED] aggregate runner records are not accepted as per-rule proof")
     print("[BLOCKED] no score or readiness level has been computed")
     print(f"Evidence records inspected: {len(records)}")
     print("Gates:")
