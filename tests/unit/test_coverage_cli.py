@@ -138,6 +138,7 @@ def test_verify_all_runs_security_domain_and_fails_closed(
     assert seen == ["testing", "code-quality", "software-security", "supply-chain"]
     assert "Domain:   software-security" in capsys.readouterr().out
 
+
 def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> None:
     from arkhon.cli import _commit_sha, _working_tree_clean
 
