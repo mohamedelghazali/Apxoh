@@ -444,7 +444,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
             reasons.append(f"unsupported enforcement level: {rule.enforcement!r}")
             malformed_rules += 1
 
-        if commit_sha is not None and re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\\d{3,}", rule.id):
+        if commit_sha is not None and re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\d{3,}", rule.id):
             try:
                 summary_dir = (
                     project / ".arkhon" / "reports" / "assessments" / assessment_id
