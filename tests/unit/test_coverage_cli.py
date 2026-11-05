@@ -137,3 +137,25 @@ def test_verify_all_runs_security_domain_and_fails_closed(
     assert main(["verify", str(project), "--domain", "all"]) == 1
     assert seen == ["testing", "code-quality", "software-security", "supply-chain"]
     assert "Domain:   software-security" in capsys.readouterr().out
+
+def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> None:
+    from arkhon.cli import _commit_sha, _working_tree_clean
+
+    monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: "/usr/bin/git")
+    monkeypatch.setattr(
+        "arkhon.cli.subprocess.run",
+        lambda command, **kwargs: SimpleNamespace(stdout="a" * 40 + "\\n"),
+    )
+    assert _commit_sha(tmp_path) == "a" * 40
+    assert _working_tree_clean(tmp_path) is True
+
+    monkeypatch.setattr(
+        "arkhon.cli.subprocess.run",
+        lambda command, **kwargs: SimpleNamespace(stdout="invalid-sha\\n"),
+    )
+    assert _commit_sha(tmp_path) is None
+    assert _working_tree_clean(tmp_path) is False
+
+    monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: None)
+    assert _working_tree_clean(tmp_path) is False
+
