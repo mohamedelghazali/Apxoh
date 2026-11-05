@@ -121,6 +121,15 @@ class EvidenceStore:
         if timestamp.tzinfo is None:
             raise EvidenceTamperedError("evidence executed_at must include a timezone")
 
+        if source == "tsar":
+            tsar_metadata = data.get("tsar_metadata")
+            if not isinstance(tsar_metadata, dict):
+                raise EvidenceTamperedError("TSAR evidence is missing tsar_metadata")
+            if not isinstance(tsar_metadata.get("tsar_version"), str):
+                raise EvidenceTamperedError("TSAR evidence has invalid tsar_version metadata")
+            if not isinstance(tsar_metadata.get("rule_ids"), list) or not tsar_metadata["rule_ids"]:
+                raise EvidenceTamperedError("TSAR evidence has invalid rule_ids metadata")
+
         artifacts = data["artifacts"]
         if not isinstance(artifacts, list) or not artifacts:
             raise EvidenceTamperedError("evidence record must contain at least one artifact")
@@ -135,6 +144,7 @@ class EvidenceStore:
                 or "\\" in relative_path
                 or PurePosixPath(relative_path).is_absolute()
                 or PureWindowsPath(relative_path).is_absolute()
+                or bool(PureWindowsPath(relative_path).drive)
                 or ".." in PurePosixPath(relative_path).parts
             ):
                 raise EvidenceTamperedError("evidence artifact path must be a safe relative path")
