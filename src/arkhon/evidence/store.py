@@ -138,7 +138,10 @@ class EvidenceStore:
             if (
                 not isinstance(rule_ids, list)
                 or not rule_ids
-                or any(not isinstance(rule_id, str) or not _RULE_ID.fullmatch(rule_id) for rule_id in rule_ids)
+                or any(
+                    not isinstance(rule_id, str) or not _RULE_ID.fullmatch(rule_id)
+                    for rule_id in rule_ids
+                )
                 or len(set(rule_ids)) != len(rule_ids)
             ):
                 raise EvidenceTamperedError("evidence rule_ids must be unique valid rule identifiers")
