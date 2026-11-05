@@ -346,6 +346,7 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     from arkhon.cli import main
+    from arkhon.verification.methods import MethodImplementation
     from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     from arkhon.verification.runners.mypy_runner import MypyRunner
 
