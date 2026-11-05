@@ -556,7 +556,11 @@ def test_mypy_runner_timeout_and_start_error(
 
 def test_enforcement_gate_continues_for_non_blocking_outcome() -> None:
     engine = EnforcementEngine(SimpleNamespace(by_domain=lambda _domain: [rule("R1", {})]))
-    engine.evaluate_rule = lambda item, _root: RuleOutcome(item.id, "PASS")  # type: ignore[method-assign]
+
+    def evaluate_pass(item: SimpleNamespace, _root: Path | None) -> RuleOutcome:
+        return RuleOutcome(item.id, "PASS")
+
+    engine.evaluate_rule = evaluate_pass  # type: ignore[method-assign]
     result = engine.evaluate_gate("security", ("security",), None)
     assert result.status == "PASS"
     assert result.blocking_failures == 0
