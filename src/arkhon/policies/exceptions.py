@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import tempfile
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-import tempfile
 from typing import Any
 
 import yaml
@@ -144,7 +144,6 @@ def add_exception(registry_path: Path, exception: Exception) -> None:
     registry_path.parent.mkdir(parents=True, exist_ok=True)
     registry_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     logger.info("added exception %s", exception.exception_id)
-
 
 
 def revoke_exception(
