@@ -254,7 +254,8 @@ def cmd_assess(args: argparse.Namespace) -> int:
             continue
 
         if (
-            profile.profile != "universal"
+            profile.explicit
+            and profile.profile != "universal"
             and "all" not in project_types
             and profile.profile not in project_types
         ):
