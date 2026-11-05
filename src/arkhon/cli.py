@@ -232,7 +232,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
     print(f"Project profile: {profile.profile} ({profile.reason})")
     print("Rule verification execution:")
     for rule in active_rules:
-        if not re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\\d{3,}", rule.id):
+        if not re.fullmatch(r"SE-[A-Z]+(-[A-Z]+)?-\d{3,}", rule.id):
             malformed_rules += 1
             planned[rule.id] = ((), False, "rule identifier does not match the evidence schema")
             print(f"  {rule.id}: BLOCKED (invalid rule identifier)")
