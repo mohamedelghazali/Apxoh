@@ -241,17 +241,19 @@ def rule(
 
 def test_enforcement_evidence_validation_and_path_safety(tmp_path: Path) -> None:
     engine = EnforcementEngine(SimpleNamespace())
-    assert engine.evaluate_rule(rule("R0", {}), None).status == "PASS"
+    assert engine.evaluate_rule(rule("R0", {}), None).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R1", {"required": ["x"]}), None).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R2", {"required": "bad"}), tmp_path).status == "BLOCKED"
     root = tmp_path / "evidence"
     root.mkdir()
     (root / "proof.txt").write_text("proof", encoding="utf-8")
-    assert engine.evaluate_rule(rule("R3", {"required": ["proof.txt"]}), root).evidence_present
+    present = engine.evaluate_rule(rule("R3", {"required": ["proof.txt"]}), root)
+    assert present.status == "BLOCKED"
+    assert present.evidence_present
     assert engine.evaluate_rule(rule("R4", {"required": ["missing"]}), root).status == "BLOCKED"
     assert "escapes" in engine.evaluate_rule(rule("R5", {"required": ["../escape"]}), root).reason
     assert (
-        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status == "PASS"
+        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status == "BLOCKED"
     )
     assert engine.evaluate_rule(rule("R7", {"required": [{"type": ""}]}), root).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R8", {"required": [None]}), root).status == "BLOCKED"
