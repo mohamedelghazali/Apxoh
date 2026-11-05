@@ -144,7 +144,9 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
     monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: "/usr/bin/git")
     monkeypatch.setattr(
         "arkhon.cli.subprocess.run",
-        lambda command, **kwargs: SimpleNamespace(\n            stdout="a" * 40 + "\\n" if command[1] == "rev-parse" else ""\n        ),
+        lambda command, **kwargs: SimpleNamespace(
+            stdout="a" * 40 + "\\n" if command[1] == "rev-parse" else ""
+        ),
     )
     assert _commit_sha(tmp_path) == "a" * 40
     assert _working_tree_clean(tmp_path) is True
@@ -158,4 +160,3 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
 
     monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: None)
     assert _working_tree_clean(tmp_path) is False
-
