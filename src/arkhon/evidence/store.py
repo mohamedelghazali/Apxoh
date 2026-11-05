@@ -97,7 +97,7 @@ class EvidenceStore:
             )
 
         source = data["source"]
-        if source not in _ALLOWED_SOURCES:
+        if not isinstance(source, str) or source not in _ALLOWED_SOURCES:
             raise EvidenceTamperedError(f"evidence record has an invalid source: {source!r}")
         source_version = data["source_version"]
         if not isinstance(source_version, str) or not source_version.strip():
