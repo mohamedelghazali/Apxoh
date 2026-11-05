@@ -181,13 +181,13 @@ def test_enforcement_rule_evidence_declarations(tmp_path: Path) -> None:
     escaped = engine.evaluate_rule(_rule(raw={"evidence": {"required": ["../outside"]}}), tmp_path)
     assert escaped.reason.endswith("escapes evidence root")
     (tmp_path / "artifact.json").write_text("{}", encoding="utf-8")
-    assert (
-        engine.evaluate_rule(
-            _rule(raw={"evidence": {"required": ["artifact.json", {"type": "artifact"}]}}),
-            tmp_path,
-        ).status
-        == "PASS"
+    present = engine.evaluate_rule(
+        _rule(raw={"evidence": {"required": ["artifact.json", {"type": "artifact"}]}}),
+        tmp_path,
     )
+    assert present.status == "BLOCKED"
+    assert present.evidence_present is True
+    assert "not been independently verified" in present.reason
     assert (
         engine.evaluate_rule(
             _rule(raw={"evidence": {"required": [{"type": ""}, 1]}}), tmp_path

@@ -129,6 +129,8 @@ def test_enforcement_gate_continues_pass_and_counts_high_severity_block(
     )
     engine = EnforcementEngine(RuleRegistry([passing, blocked_high]))
     verdict = engine.evaluate_gate("testing_gate", ("testing",), tmp_path)
+    assert verdict.outcomes[0].status == "BLOCKED"
+    assert verdict.outcomes[1].status == "BLOCKED"
     assert verdict.status == "FAIL"
     assert verdict.critical_failures == 1
     assert verdict.closes is False
