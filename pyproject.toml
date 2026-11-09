@@ -36,7 +36,7 @@ dev = [
     "types-PyYAML==6.0.12.20240917",
     "cryptography==50.0.0",
     "setuptools==84.1.0",
-    "tuf==7.0.0",
+    "tuf==7.0.1",
 ]
 
 [project.scripts]
