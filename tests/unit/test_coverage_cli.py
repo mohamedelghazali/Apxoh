@@ -12,6 +12,7 @@ import pytest
 
 from arkhon.cli import cmd_report, main
 
+
 def test_cli_inspect_text_json_and_invalid_project(tmp_path: Path, capsys, monkeypatch) -> None:
     project = tmp_path / "project"
     project.mkdir()
