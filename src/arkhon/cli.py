@@ -397,7 +397,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
                     outcome=RunnerOutcome.BLOCKED,
-                    reason="project commit or working tree changed"
+                    reason="project commit or working tree changed "
                     "during assessment; rerun required",
                 )
 
