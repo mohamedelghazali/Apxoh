@@ -212,9 +212,8 @@ def test_scoring_and_gate_validation_edges() -> None:
     with pytest.raises(AssessmentError, match="numeric"):
         score_from_ratios(
             {
-                **{
-                    k: 0.5
-                    for k in (
+                **dict.fromkeys(
+                    (
                         "requirements",
                         "architecture_and_code_quality",
                         "testing",
@@ -223,8 +222,9 @@ def test_scoring_and_gate_validation_edges() -> None:
                         "reliability",
                         "scalability",
                         "documentation_deployment_maintenance",
-                    )
-                },
+                    ),
+                    0.5,
+                ),
                 "testing": "not-a-number",
             }
         )

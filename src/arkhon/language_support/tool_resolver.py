@@ -5,14 +5,14 @@ from __future__ import annotations
 import shutil
 import subprocess
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 from arkhon.core.logging import get_logger
 
 logger = get_logger("language_support.tool_resolver")
 
 
-class ToolStatus(str, Enum):
+class ToolStatus(StrEnum):
     AVAILABLE = "AVAILABLE"
     MISSING = "MISSING"
     VERSION_UNKNOWN = "VERSION_UNKNOWN"
