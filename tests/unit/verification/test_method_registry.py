@@ -71,7 +71,7 @@ def test_assess_reports_implementation_coverage_but_never_passes(
     (rules / "sample.yaml").write_text(
         """id: SE-SAMPLE-001
 metadata:
-  domain: testing
+  domain: code-quality
   status: active
   enforcement: blocking
   severity: high
@@ -243,6 +243,7 @@ def test_assess_distinguishes_tool_execution_from_zero_type_errors(
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     def failed_mypy(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = root / ".arkhon" / "reports" / "mypy.txt"
@@ -274,6 +275,7 @@ def test_assess_blocks_runner_exception_and_invalid_artifact(
     _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     def outside_artifact(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = tmp_path / "outside.txt"
@@ -318,7 +320,10 @@ def test_assess_blocks_when_project_head_changes_during_verification(
 
     monkeypatch.setattr(MypyRunner, "run", passing_mypy)
     assert main(["assess", str(project)]) == 1
-    assert "HEAD changed during assessment" in capsys.readouterr().out
+    assert (
+        "project commit or working tree changed during assessment; rerun required"
+        in capsys.readouterr().out
+    )
 
 
 def test_assess_marks_out_of_scope_rule_not_applicable(
@@ -339,6 +344,7 @@ def test_assess_marks_out_of_scope_rule_not_applicable(
     )
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
 
     assert main(["assess", str(project)]) == 1
     assert "SE-API-001: NOT_APPLICABLE" in capsys.readouterr().out
