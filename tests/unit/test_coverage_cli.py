@@ -219,7 +219,7 @@ def test_assess_blocks_malformed_rule_declarations(
     ]
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
-    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: rules)
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: SimpleNamespace(ok=True, rules=rules, errors=[]))
 
     assert main(["assess", str(project)]) == 1
     out = capsys.readouterr().out
@@ -247,7 +247,7 @@ def test_assess_handles_runner_contract_failures(
     )
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
-    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: [rule])
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: SimpleNamespace(ok=True, rules=[rule], errors=[]))
 
     monkeypatch.setattr(
         "arkhon.verification.methods.resolve_methods",
@@ -355,7 +355,7 @@ def test_assess_method_status_mappings_for_mypy_tsar_and_fallback(
     ]
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
-    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: rules)
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: SimpleNamespace(ok=True, rules=rules, errors=[]))
     monkeypatch.setattr("arkhon.verification.methods.resolve_methods", lambda _ids: impls)
     monkeypatch.setattr(
         "arkhon.verification.runners.mypy_runner.MypyRunner.run",
@@ -415,7 +415,7 @@ def test_assess_handles_symlink_summary_and_gate_error(
     )
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
-    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: [rule])
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: SimpleNamespace(ok=True, rules=[rule], errors=[]))
 
     orig_is_symlink = Path.is_symlink
 
@@ -440,4 +440,4 @@ def test_assess_handles_symlink_summary_and_gate_error(
 
 
 
-    
+
