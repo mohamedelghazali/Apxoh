@@ -1,6 +1,7 @@
 # ruff: noqa: I001
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
@@ -34,7 +35,7 @@ def _payload(root: Path, status: str = "PASS") -> dict:
         "evidence_id": "EVID-TSAR-1",
         "tsar_version": "1.2.0",
         "commit_sha": SHA,
-        "executed_at": "2026-11-03T00:00:00Z",
+        "executed_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "status": status,
         "rule_ids": list(REQUIRED_RULE_IDS),
         "findings": [],
