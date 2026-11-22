@@ -146,7 +146,7 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
     monkeypatch.setattr(
         "arkhon.cli.subprocess.run",
         lambda command, **kwargs: SimpleNamespace(
-            stdout="a" * 40 + "\\n" if command[1] == "rev-parse" else ""
+            stdout="a" * 40 + "\\n" if "rev-parse" in command else ""
         ),
     )
     assert _commit_sha(tmp_path) == "a" * 40
