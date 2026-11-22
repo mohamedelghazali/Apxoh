@@ -219,7 +219,7 @@ def test_assess_blocks_malformed_rule_declarations(
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
     monkeypatch.setattr(
-        "arkhon.rules.loader.load_rules_dir", 
+        "arkhon.rules.loader.load_rules_dir",
         lambda _path: SimpleNamespace(ok=True, rules=rules, errors=[]))
 
     assert main(["assess", str(project)]) == 1
