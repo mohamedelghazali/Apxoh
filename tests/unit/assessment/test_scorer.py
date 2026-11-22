@@ -14,7 +14,7 @@ from arkhon.core.errors import AssessmentError
 
 
 def _all(ratio: float) -> dict[str, float]:
-    return {key: ratio for key in WEIGHTS}
+    return dict.fromkeys(WEIGHTS, ratio)
 
 
 def test_weights_sum_to_100() -> None:
