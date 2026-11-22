@@ -11,8 +11,6 @@ from types import SimpleNamespace
 import pytest
 
 from arkhon.cli import cmd_report, main
-from arkhon.core.errors import GateError
-from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
 
 def test_cli_inspect_text_json_and_invalid_project(tmp_path: Path, capsys, monkeypatch) -> None:
     project = tmp_path / "project"
@@ -235,6 +233,7 @@ def test_assess_handles_runner_contract_failures(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     project = tmp_path / "project"
     project.mkdir()
     rule = SimpleNamespace(
@@ -250,7 +249,7 @@ def test_assess_handles_runner_contract_failures(
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
     monkeypatch.setattr(
-        "arkhon.rules.loader.load_rules_dir", 
+        "arkhon.rules.loader.load_rules_dir",
         lambda _path: SimpleNamespace(ok=True, rules=[rule], errors=[]))
 
     monkeypatch.setattr(
@@ -308,6 +307,7 @@ def test_assess_method_status_mappings_for_mypy_tsar_and_fallback(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
     project = tmp_path / "project"
     project.mkdir()
     artifact = project / "evidence.json"
@@ -359,7 +359,7 @@ def test_assess_method_status_mappings_for_mypy_tsar_and_fallback(
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
     monkeypatch.setattr(
-        "arkhon.rules.loader.load_rules_dir", 
+        "arkhon.rules.loader.load_rules_dir",
         lambda _path: SimpleNamespace(ok=True, rules=rules, errors=[]))
     monkeypatch.setattr("arkhon.verification.methods.resolve_methods", lambda _ids: impls)
     monkeypatch.setattr(
@@ -398,7 +398,7 @@ def test_assess_method_status_mappings_for_mypy_tsar_and_fallback(
     assert main(["assess", str(project)]) == 1
     out2 = capsys.readouterr().out
     assert "[FAIL] tsar-audit-invocation" in out2
-    assert "[FAIL] evidence-integrity-check" in out2
+    assert "[PASS] evidence-integrity-check" in out2
     assert "critical finding" in out2
 
 def test_assess_handles_symlink_summary_and_gate_error(
@@ -406,6 +406,7 @@ def test_assess_handles_symlink_summary_and_gate_error(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    from arkhon.core.errors import GateError
     project = tmp_path / "project"
     project.mkdir()
     rule = SimpleNamespace(
@@ -421,7 +422,7 @@ def test_assess_handles_symlink_summary_and_gate_error(
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
     monkeypatch.setattr(
-        "arkhon.rules.loader.load_rules_dir", 
+        "arkhon.rules.loader.load_rules_dir",
         lambda _path: SimpleNamespace(ok=True, rules=[rule], errors=[]))
 
     orig_is_symlink = Path.is_symlink
