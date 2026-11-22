@@ -144,7 +144,8 @@ class EvidenceStore:
                 )
                 or len(set(rule_ids)) != len(rule_ids)
             ):
-                raise EvidenceTamperedError("evidence rule_ids must be unique valid rule identifiers")
+                raise EvidenceTamperedError("evidence rule_ids must be unique"
+                                          "  valid rule identifiers")
 
         artifacts = data["artifacts"]
         if not isinstance(artifacts, list) or not artifacts:

@@ -120,7 +120,7 @@ def _valid_payload(tmp_path: Path, commit_sha: str = "a" * 40) -> dict:
         "evidence_id": "EVID-TSAR-001",
         "tsar_version": "1.2.0",
         "commit_sha": commit_sha,
-        "executed_at": "2026-11-01T00:00:00Z",
+        "executed_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "status": "PASS",
         "rule_ids": list(REQUIRED_RULE_IDS),
         "findings": [],

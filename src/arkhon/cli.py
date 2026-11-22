@@ -100,7 +100,6 @@ def cmd_validate(_args: argparse.Namespace) -> int:
 def cmd_inspect(args: argparse.Namespace) -> int:
     from arkhon.config import get_manifest
     from arkhon.language_support.detector import detect_languages
-    from arkhon.projects.loader import list_profiles
     from arkhon.projects.matcher import match_profile
 
     project = Path(args.project).resolve()
@@ -398,7 +397,8 @@ def cmd_assess(args: argparse.Namespace) -> int:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
                     outcome=RunnerOutcome.BLOCKED,
-                    reason="project commit or working tree changed during assessment; rerun required",
+                    reason="project commit or working tree changed "
+                    "during assessment; rerun required",
                 )
 
     def method_status(method_id: str, runner_name: str) -> tuple[str, str]:

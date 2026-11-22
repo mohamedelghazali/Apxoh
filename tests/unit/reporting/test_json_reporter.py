@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import hashlib
 import json
 from pathlib import Path
@@ -26,7 +27,7 @@ def _write_evidence(
     evidence_id: str,
     status: str = "PASS",
     commit_sha: str = "a" * 40,
-    executed_at: str = "2026-11-01T00:00:00Z",
+    executed_at: str = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
 ) -> Path:
     target_dir = project / ".arkhon" / "evidence" / domain
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -108,7 +109,7 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
             "source": "arkhon",
             "source_version": "0.1.0.dev1",
             "commit_sha": "a" * 40,
-            "executed_at": "2026-11-03T00:00:00Z",
+            "executed_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "status": "PASS",
             "artifacts": [{"path": sbom.relative_to(project).as_posix(), "sha256": digest(sbom)}],
         },
@@ -120,7 +121,7 @@ def _write_supply_chain_evidence(project: Path, evidence_id: str) -> None:
             "source": "arkhon",
             "source_version": "0.1.0.dev1",
             "commit_sha": "a" * 40,
-            "executed_at": "2026-11-03T00:00:00Z",
+            "executed_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "status": "PASS",
             "artifacts": [
                 {"path": item.relative_to(project).as_posix(), "sha256": digest(item)}
@@ -234,14 +235,14 @@ def test_build_selects_latest_commit_group_when_unspecified(tmp_path: Path) -> N
         "testing",
         "EVID-OLD",
         commit_sha="a" * 40,
-        executed_at="2026-11-01T00:00:00Z",
+        executed_at=(datetime.now(UTC) - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     _write_evidence(
         tmp_path,
         "software-security",
         "EVID-NEW",
         commit_sha="c" * 40,
-        executed_at="2026-11-02T00:00:00Z",
+        executed_at=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     report = JsonReporter().build(tmp_path)
     assert report["commit_sha"] == "c" * 40

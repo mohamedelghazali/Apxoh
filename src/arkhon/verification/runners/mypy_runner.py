@@ -68,9 +68,10 @@ class MypyRunner(Runner):
             try:
                 with target.open("xb") as stream:
                     stream.write(payload)
-            except FileExistsError:
+            except FileExistsError as exc:
                 if target.read_bytes() != payload:
-                    raise OSError("content-addressed Mypy evidence does not match its digest")
+                    raise OSError(
+                    "content-addressed Mypy evidence does not match its digest") from exc
         except OSError as exc:
             return RunnerResult(
                 runner=self.name,
