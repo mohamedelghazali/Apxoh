@@ -351,6 +351,10 @@ def test_assess_method_status_mappings_for_mypy_tsar_and_fallback(
             runner="tsar",
             allowed_domains=frozenset({"software-security"}),
         )),
+        ("unmapped-method", SimpleNamespace(
+          runner="mypy",
+            allowed_domains=frozenset({"code-quality"}),
+        )),
     ]
     monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
     monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
