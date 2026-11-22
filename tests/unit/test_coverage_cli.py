@@ -11,7 +11,8 @@ from types import SimpleNamespace
 import pytest
 
 from arkhon.cli import cmd_report, main
-
+from arkhon.core.errors import GateError
+from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
 
 def test_cli_inspect_text_json_and_invalid_project(tmp_path: Path, capsys, monkeypatch) -> None:
     project = tmp_path / "project"
@@ -146,7 +147,7 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
     monkeypatch.setattr(
         "arkhon.cli.subprocess.run",
         lambda command, **kwargs: SimpleNamespace(
-            stdout="a" * 40 + "\\n" if "rev-parse" in command else ""
+            stdout="a" * 40 + "\n" if "rev-parse" in command else ""
         ),
     )
     assert _commit_sha(tmp_path) == "a" * 40
@@ -154,7 +155,7 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
 
     monkeypatch.setattr(
         "arkhon.cli.subprocess.run",
-        lambda command, **kwargs: SimpleNamespace(stdout="invalid-sha\\n"),
+        lambda command, **kwargs: SimpleNamespace(stdout="invalid-sha\n"),
     )
     assert _commit_sha(tmp_path) is None
     assert _working_tree_clean(tmp_path) is False
@@ -170,3 +171,273 @@ def test_commit_and_worktree_provenance_helpers(tmp_path: Path, monkeypatch) -> 
     )
     assert _commit_sha(tmp_path) is None
     assert _working_tree_clean(tmp_path) is False
+
+
+def test_assess_blocks_malformed_rule_declarations(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    rules = [
+        SimpleNamespace(
+            id="BAD-ID",
+            domain="code-quality",
+            status="active",
+            enforcement="blocking",
+            raw={"scope": {"project_types": ["universal"]}},
+        ),
+        SimpleNamespace(
+            id="SE-CQ-901",
+            domain="code-quality",
+            status="active",
+            enforcement="blocking",
+            raw={"scope": {"project_types": []}},
+        ),
+        SimpleNamespace(
+            id="SE-CQ-902",
+            domain="code-quality",
+            status="active",
+            enforcement="blocking",
+            raw={
+                "scope": {"project_types": ["universal"]},
+                "verification": {"methods": []},
+                "human_review": "invalid",
+            },
+        ),
+        SimpleNamespace(
+            id="SE-CQ-903",
+            domain="code-quality",
+            status="active",
+            enforcement="unknown-level",
+            raw={
+                "scope": {"project_types": ["universal"]},
+                "verification": {"methods": []},
+            },
+        ),
+    ]
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: rules)
+
+    assert main(["assess", str(project)]) == 1
+    out = capsys.readouterr().out
+    assert "BAD-ID: BLOCKED (invalid rule identifier)" in out
+    assert "SE-CQ-901: BLOCKED (invalid project scope)" in out
+    assert "SE-CQ-902: BLOCKED (human_review declaration is malformed)" in out
+    assert "SE-CQ-903: BLOCKED (unsupported enforcement 'unknown-level')" in out
+
+def test_assess_handles_runner_contract_failures(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    rule = SimpleNamespace(
+        id="SE-CQ-904",
+        domain="code-quality",
+        status="active",
+        enforcement="blocking",
+        raw={
+            "scope": {"project_types": ["universal"]},
+            "verification": {"methods": ["zero-type-errors-check"]},
+        },
+    )
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: [rule])
+
+    monkeypatch.setattr(
+        "arkhon.verification.methods.resolve_methods",
+        lambda _ids: [
+            SimpleNamespace(
+                method_id="zero-type-errors-check",
+                runner="unregistered-runner",
+                allowed_domains=frozenset({"code-quality"}),
+            )
+        ],
+    )
+    assert main(["assess", str(project)]) == 1
+    assert "BLOCKED" in capsys.readouterr().out
+
+    monkeypatch.setattr(
+        "arkhon.verification.methods.resolve_methods",
+        lambda _ids: [
+            SimpleNamespace(
+                method_id="zero-type-errors-check",
+                runner="mypy",
+                allowed_domains=frozenset({"code-quality"}),
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.MypyRunner.run",
+        lambda *_a, **_k: "invalid",
+    )
+    assert main(["assess", str(project)]) == 1
+    assert "BLOCKED" in capsys.readouterr().out
+
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.MypyRunner.run",
+        lambda *_a, **_k: RunnerResult(
+            runner="mypy",
+            outcome=RunnerOutcome.PASS,
+            artifacts=(),
+        ),
+    )
+    assert main(["assess", str(project)]) == 1
+    assert "BLOCKED" in capsys.readouterr().out
+
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.MypyRunner.run",
+        lambda *_a, **_k: RunnerResult(
+            runner="mypy",
+            outcome=RunnerOutcome.PASS,
+            artifacts=(project / "missing.txt",),
+        ),
+    )
+    assert main(["assess", str(project)]) == 1
+    assert "BLOCKED" in capsys.readouterr().out
+
+def test_assess_method_status_mappings_for_mypy_tsar_and_fallback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    artifact = project / "evidence.json"
+    artifact.write_text("{}", encoding="utf-8")
+    rules = [
+        SimpleNamespace(
+            id="SE-CQ-910",
+            domain="code-quality",
+            status="active",
+            enforcement="blocking",
+            raw={
+                "scope": {"project_types": ["universal"]},
+                "verification": {
+                    "methods": ["zero-type-errors-check", "unmapped-method"],
+                },
+            },
+        ),
+        SimpleNamespace(
+            id="SE-SEC-910",
+            domain="software-security",
+            status="active",
+            enforcement="blocking",
+            raw={
+                "scope": {"project_types": ["universal"]},
+                "verification": {
+                    "methods": ["tsar-audit-invocation", "evidence-integrity-check"],
+                },
+            },
+        ),
+    ]
+    impls = [
+        SimpleNamespace(
+            method_id="zero-type-errors-check",
+            runner="mypy",
+            allowed_domains=frozenset({"code-quality"}),
+        ),
+        SimpleNamespace(
+            method_id="tsar-audit-invocation",
+            runner="tsar",
+            allowed_domains=frozenset({"software-security"}),
+        ),
+        SimpleNamespace(
+            method_id="evidence-integrity-check",
+            runner="tsar",
+            allowed_domains=frozenset({"software-security"}),
+        ),
+    ]
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: rules)
+    monkeypatch.setattr("arkhon.verification.methods.resolve_methods", lambda _ids: impls)
+    monkeypatch.setattr(
+        "arkhon.verification.runners.mypy_runner.MypyRunner.run",
+        lambda *_a, **_k: RunnerResult(
+            runner="mypy",
+            outcome=RunnerOutcome.PASS,
+            artifacts=(artifact,),
+        ),
+    )
+    monkeypatch.setattr(
+        "arkhon.verification.runners.tsar_runner.TsarRunner.run",
+        lambda *_a, **_k: RunnerResult(
+            runner="tsar",
+            outcome=RunnerOutcome.PASS,
+            artifacts=(artifact,),
+        ),
+    )
+
+    assert main(["assess", str(project)]) == 1
+    out1 = capsys.readouterr().out
+    assert "[PASS] zero-type-errors-check" in out1
+    assert "[BLOCKED] unmapped-method" in out1
+    assert "[PASS] tsar-audit-invocation" in out1
+    assert "[PASS] evidence-integrity-check" in out1
+
+    monkeypatch.setattr(
+        "arkhon.verification.runners.tsar_runner.TsarRunner.run",
+        lambda *_a, **_k: RunnerResult(
+            runner="tsar",
+            outcome=RunnerOutcome.FAIL,
+            reason="critical finding",
+            artifacts=(artifact,),
+        ),
+    )
+    assert main(["assess", str(project)]) == 1
+    out2 = capsys.readouterr().out
+    assert "[FAIL] tsar-audit-invocation" in out2
+    assert "[FAIL] evidence-integrity-check" in out2
+    assert "critical finding" in out2
+
+def test_assess_handles_symlink_summary_and_gate_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    rule = SimpleNamespace(
+        id="SE-CQ-920",
+        domain="code-quality",
+        status="active",
+        enforcement="blocking",
+        raw={
+            "scope": {"project_types": ["universal"]},
+            "verification": {"methods": []},
+        },
+    )
+    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _root: "a" * 40)
+    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _root: True)
+    monkeypatch.setattr("arkhon.rules.loader.load_rules_dir", lambda _path: [rule])
+
+    orig_is_symlink = Path.is_symlink
+
+    def _fake_is_symlink(self: Path) -> bool:
+        if self.name == "SE-CQ-920.json":
+            return True
+        return orig_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", _fake_is_symlink)
+    assert main(["assess", str(project)]) == 1
+    assert "refusing symlinked assessment summary" in capsys.readouterr().out
+
+    monkeypatch.setattr(Path, "is_symlink", orig_is_symlink)
+
+    def _raise_gate_error(*_args: object, **_kwargs: object) -> object:
+        raise GateError("gate failure")
+
+    monkeypatch.setattr("arkhon.assessment.gates.evaluate_all_gates", _raise_gate_error)
+    assert main(["assess", str(project)]) == 1
+    err = capsys.readouterr().err
+    assert "[FAIL] rule outcomes cannot be evaluated safely: gate failure" in err
+
+
+
+    
