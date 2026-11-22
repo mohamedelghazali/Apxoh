@@ -7,10 +7,10 @@ through. Each stage has entry criteria, exit criteria, and a gate.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class Stage(str, Enum):
+class Stage(StrEnum):
     PROJECT_INIT = "project-initialization"
     REQUIREMENTS = "requirements-engineering"
     ARCHITECTURE = "architecture-design"
