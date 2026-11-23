@@ -69,7 +69,7 @@ The supported Python interpreter range is declared separately in `requires-pytho
 
 ### 3.1 Apxoh's License
 
-Apxoh is licensed under **Apache-2.0**.
+Apxoh is licensed under **MIT**.
 
 ### 3.2 Generally Acceptable Licenses
 
