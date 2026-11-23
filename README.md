@@ -7,11 +7,11 @@
 *Evidence Before Approval. Verification Before Release.*
 
 <p align="center">
-  <a href="pyproject.toml"><img src="https://img.shields.io/badge/Python-3.11--3.13-1E293B?style=flat-square&logo=python&logoColor=3776AB" alt="Python 3.11–3.13" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-1E293B?style=flat-square&logo=apache&logoColor=D22128" alt="Apache License 2.0" /></a>
-  <img src="https://img.shields.io/badge/Linux-1E293B?style=flat-square&logo=linux&logoColor=FCC624" alt="Linux" />
-  <img src="https://img.shields.io/badge/macOS-1E293B?style=flat-square&logo=apple&logoColor=FFFFFF" alt="macOS" />
-  <img src="https://img.shields.io/badge/Windows-1E293B?style=flat-square&logo=windows&logoColor=0078D4" alt="Windows" />
+  <a href="pyproject.toml"><img src="https://img.shields.io/badge/Python-3.11--3.13-1E293B?style=flat&logo=python&logoColor=3776AB" alt="Python 3.11–3.13" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1E293B?style=flat&logo=opensourceinitiative&logoColor=FFFFFF" alt="MIT License" /></a>
+  <img src="https://img.shields.io/badge/Linux-supported-1E293B?style=flat&logo=linux&logoColor=FCC624" alt="Linux" />
+  <img src="https://img.shields.io/badge/macOS-supported-1E293B?style=flat&logo=apple&logoColor=FFFFFF" alt="macOS" />
+  <img src="https://img.shields.io/badge/Windows-supported-1E293B?style=flat&logo=windows&logoColor=0078D4" alt="Windows" />
 </p>
 
 [Overview](#why-apxoh) · [Architecture](#architecture--workflow) · [AI Coding Agents](#apxoh-for-ai-coding-agents) · [Installation](#local-installation) · [Local Workflow](#local-workflow) · [CLI Reference](#cli-reference)
@@ -389,4 +389,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`GOVERNANCE.md`](GOVERNANCE.md), [`CO
 
 ## License
 
-Licensed under the [Apache License 2.0](LICENSE).
+Licensed under the [MIT License](LICENSE).
