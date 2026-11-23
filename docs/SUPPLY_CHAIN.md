@@ -120,7 +120,7 @@ Do not use hash-enforcement flags unless the dependency input file actually cont
 
 ### 4.4 License Compatibility
 
-Apxoh is licensed under Apache-2.0. Dependency license decisions require package-specific legal and distribution review. The following is a screening policy, not legal advice:
+Apxoh is licensed under MIT. Dependency license decisions require package-specific legal and distribution review. The following is a screening policy, not legal advice:
 
 | License family | Default treatment |
 | :--- | :--- |
