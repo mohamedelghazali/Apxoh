@@ -13,8 +13,8 @@ system:
 
 identity:
   repository: "https://github.com/mohamedelghazali/Apxoh"
-  license: "Apache-2.0"
-  license_url: "https://www.apache.org/licenses/LICENSE-2.0"
+  license: "MIT"
+  license_url: "https://opensource.org/licenses/MIT"
   maintainer: "mohamedelghazali"
   created: "2026-11-01"
   last_updated: "2026-11-04"
