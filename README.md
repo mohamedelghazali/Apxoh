@@ -2,13 +2,19 @@
 
 # APXOH (ARKHON)
 
-**Local-first, evidence-driven software engineering governance and assurance.**
+**Engineering assurance for AI-generated code and modern software development.**
 
 *Evidence Before Approval. Verification Before Release.*
 
-**Python 3.11 – 3.13** · **Apache-2.0** · **Linux · macOS · Windows** · **Local-First Deterministic Engine**
+<p align="center">
+  <a href="pyproject.toml"><img src="https://img.shields.io/badge/Python-3.11--3.13-1E293B?style=flat-square&logo=python&logoColor=white" alt="Python 3.11–3.13" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-1E293B?style=flat-square&logo=apache&logoColor=white" alt="Apache License 2.0" /></a>
+  <img src="https://img.shields.io/badge/Linux-1E293B?style=flat-square&logo=linux&logoColor=white" alt="Linux" />
+  <img src="https://img.shields.io/badge/macOS-1E293B?style=flat-square&logo=apple&logoColor=white" alt="macOS" />
+  <img src="https://img.shields.io/badge/Windows-1E293B?style=flat-square&logo=windows&logoColor=white" alt="Windows" />
+</p>
 
-[Overview](#why-apxoh) · [Compatibility](#operating-system--language-compatibility) · [Architecture](#architecture--workflow) · [AI Coding Agents](#apxoh-for-ai-coding-agents) · [Installation](#local-installation) · [Local Workflow](#local-workflow) · [CLI Reference](#cli-reference)
+[Overview](#why-apxoh) · [Architecture](#architecture--workflow) · [AI Coding Agents](#apxoh-for-ai-coding-agents) · [Installation](#local-installation) · [Local Workflow](#local-workflow) · [CLI Reference](#cli-reference)
 
 </div>
 
@@ -32,7 +38,6 @@ Modern software teams and AI coding agents produce changes faster than informal 
 
 ## Contents
 
-- [Operating System & Language Compatibility](#operating-system--language-compatibility)
 - [Architecture & Workflow](#architecture--workflow)
 - [APXOH for AI Coding Agents](#apxoh-for-ai-coding-agents)
 - [Local Installation](#local-installation)
@@ -42,32 +47,6 @@ Modern software teams and AI coding agents produce changes faster than informal 
 - [Verification & Contributing](#verification--contributing)
 - [Documentation Index](#documentation-index)
 - [License](#license)
-
----
-
-## Operating System & Language Compatibility
-
-### Supported Operating Systems
-
-Verified continuously in GitHub Actions across clean installations, wheel installs, and offline execution (`.github/workflows/installation-test.yml`):
-
-<p align="center">
-  <img src="docs/assets/compatibility-os.svg" alt="Verified Operating Systems: Linux (ubuntu-latest), macOS (macos-latest), and Windows (windows-latest) across Python 3.11 to 3.13" width="840" />
-</p>
-
-### Programming Language Classification
-
-APXOH distinguishes clearly between its **implementation language**, its **supported target language profiles** (defined in [`languages/registry.yaml`](languages/registry.yaml)), and its **tooling and integration ecosystem**:
-
-<p align="center">
-  <img src="docs/assets/compatibility-languages.svg" alt="Programming Language Classification: Implementation in Python 3.11-3.13; 9 Active Target Language Profiles (Python, JavaScript, TypeScript, Java, C#, C++, Go, Rust, Ruby); Tooling in YAML/JSON, Bash/PowerShell, and Go" width="840" />
-</p>
-
-| Classification | Languages | Evidence & Coverage Scope |
-| :--- | :--- | :--- |
-| **Implementation Language** | **Python** (`>=3.11,<3.14`) | Core engine, CLI (`arkhon`), rule loader, evidence store, and test suite (`src/arkhon/`, [`pyproject.toml`](pyproject.toml)). |
-| **Target Language Profiles** | **Python, JavaScript, TypeScript, Java, C#, C++, Go, Rust, Ruby** | All 9 profiles are `status: active` in [`languages/registry.yaml`](languages/registry.yaml) and validated by CI language fixtures. **Partial automated runner coverage:** executable verification runners currently cover Python (`mypy`) and optional TSAR security checks; rules without an implemented runner resolve transparently to `BLOCKED`. |
-| **Tooling & Integrations** | **YAML / JSON**, **Bash / PowerShell**, **Go** | Governance rules, manifests, schemas, and `.arkhon/project.yaml` (YAML/JSON); cross-platform CLI and CI automation (Bash/PowerShell); CI supply-chain SBOM/Syft tooling (Go). See [`COMPATIBILITY.md`](COMPATIBILITY.md). |
 
 ---
 
