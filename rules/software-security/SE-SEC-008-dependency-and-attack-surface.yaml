@@ -1,0 +1,42 @@
+id: SE-SEC-008
+metadata:
+  title: Dependency Vulnerability and Attack Surface Management
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Dependencies and exposed components must be inventoried, vulnerability-scanned,
+    minimized, and maintained through a documented remediation policy.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, testing, release, maintenance]
+requirement:
+  statement: >
+    Generate an inventory of direct and transitive dependencies from authoritative
+    lockfiles; scan supported ecosystems for known vulnerabilities and malicious or
+    compromised packages; block release on exploitable critical/high findings unless
+    a time-bounded risk acceptance is approved; remove unused dependencies after impact
+    review; pin or constrain dependencies according to the ecosystem; and retain
+    provenance, update, and remediation evidence. Do not treat secret scanning or SAST
+    as a substitute for SCA.
+verification:
+  mode: hybrid
+  methods: [lockfile-inventory, software-composition-analysis, unused-dependency-analysis, vulnerability-triage, provenance-review]
+acceptance:
+  untriaged_critical_vulnerabilities: 0
+  untriaged_high_vulnerabilities: 0
+  undeclared_runtime_dependencies: 0
+  unused_dependencies_without_disposition: 0
+evidence:
+  required: [dependency-inventory-sbom, sca-report, vulnerability-triage-report, dependency-change-review]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

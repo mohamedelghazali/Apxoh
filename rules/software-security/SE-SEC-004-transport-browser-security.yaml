@@ -1,0 +1,44 @@
+id: SE-SEC-004
+metadata:
+  title: Transport and Browser Security Controls
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Network-facing applications must enforce authenticated TLS and browser security
+    controls appropriate to their deployment and threat model.
+scope:
+  project_types: [web-application, api-service, enterprise]
+  lifecycle_stages: [architecture, implementation, deployment, release]
+requirement:
+  statement: >
+    Production traffic and sensitive service-to-service traffic must use HTTPS/TLS;
+    certificate and hostname validation must remain enabled; HTTP must redirect to
+    HTTPS or be disabled; HSTS must be configured for eligible HTTPS web origins.
+    CORS must allow only explicitly required origins, methods, and headers. Apply
+    appropriate security headers (including CSP where applicable, frame restrictions,
+    content-type protection, and referrer policy). Where cookies are used, set Secure,
+    HttpOnly, and an appropriate SameSite policy. Implement CSRF defenses for
+    cookie-authenticated state-changing requests.
+verification:
+  mode: hybrid
+  methods: [tls-configuration-review, certificate-validation-tests, http-redirect-check, cors-policy-tests, security-header-tests, csrf-negative-tests, cookie-attribute-review]
+acceptance:
+  production_cleartext_sensitive_endpoints: 0
+  disabled_certificate_validation: 0
+  wildcard_or_unrestricted_cors_without_justification: 0
+  missing_applicable_security_headers: 0
+  cookie_authenticated_state_changes_without_csrf_defense: 0
+evidence:
+  required: [tls-configuration-report, cors-test-report, security-header-report, csrf-test-report]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: Application Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

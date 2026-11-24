@@ -2,44 +2,56 @@ id: SE-DB-001
 metadata:
   title: Database Migration Reviewed and Reversible
   domain: database
-  version: 1.0.0
+  version: 1.1.0
   status: active
   severity: critical
-  enforcement: blocking
+  enforcement: critical
   description: >
-    Every database migration must be reviewed and have a documented
-    rollback plan.
+    Production database migrations require expert review, a suitable recovery point,
+    compatibility analysis, and a tested rollback or forward-recovery strategy.
 scope:
   project_types: [all]
-  lifecycle_stages: [implementation, release]
+  lifecycle_stages: [planning, implementation, deployment, release]
 requirement:
   statement: >
-    Every database migration must be (1) reviewed by a database expert,
-    (2) have a documented rollback plan, and (3) be tested in a
-    production-like environment before release.
+    Every production migration must be reviewed by a database engineer; include schema
+    and data compatibility, lock/downtime and data-volume analysis; be tested against a
+    production-like engine/version and representative data volume; and have a documented,
+    tested rollback or forward-recovery plan. Before destructive or high-risk migration,
+    verify a backup/recovery point whose RPO is suitable for the change and create a fresh
+    backup if needed. Validate restored data integrity before proceeding. Prefer
+    expand/migrate/contract for changes requiring compatibility across application versions.
 verification:
   mode: hybrid
   methods:
     - migration-file-detection
-    - rollback-plan-presence
+    - schema-and-data-compatibility-review
+    - production-like-migration-test
+    - prechange-backup-verification
+    - rollback-or-forward-recovery-drill
     - human-review
 acceptance:
   migrations_without_review: 0
-  migrations_without_rollback: 0
-  migrations_untested: 0
+  migrations_without_compatibility_analysis: 0
+  migrations_without_test: 0
+  destructive_migrations_without_verified_recovery_point: 0
+  migrations_without_tested_recovery_strategy: 0
 evidence:
   required:
     - migration-review-report
-    - rollback-plan
+    - compatibility-analysis
+    - prechange-backup-and-restore-report
+    - rollback-or-forward-recovery-plan
+    - recovery-drill-report
 failure:
   actions:
-    - block-release-gate
+    - block-production-change
     - create-finding
     - require-remediation
     - escalate-to-human
 human_review:
   required: true
-  approver_role: "Database Engineer"
+  approver_role: Database Engineer
 tests:
   positive: required
   negative: required

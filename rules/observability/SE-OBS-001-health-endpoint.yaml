@@ -1,36 +1,42 @@
 id: SE-OBS-001
 metadata:
-  title: Health Endpoint Required for Every Service
+  title: Health Endpoint and Safe Diagnostic Disclosure
   domain: observability
-  version: 1.0.0
+  version: 1.1.0
   status: active
   severity: high
   enforcement: blocking
   description: >
-    Every service must expose a health endpoint that reports its
-    dependencies' status.
+    Services need machine-readable health signals while detailed dependency and
+    infrastructure diagnostics remain protected from public disclosure.
 scope:
   project_types: [web-application, api-service, distributed-system, enterprise]
-  lifecycle_stages: [implementation, release]
+  lifecycle_stages: [implementation, deployment, release]
 requirement:
   statement: >
-    Every service must expose an HTTP health endpoint (e.g., /health or
-    /healthz) that returns 200 when the service and its critical
-    dependencies are healthy, and a non-200 status otherwise. The response
-    must be machine-parseable.
+    Every service must provide machine-readable liveness and readiness signals appropriate
+    to its orchestrator. Public probes, if required, disclose only minimal status and must
+    not expose dependency names, topology, versions, credentials, stack traces, or internal
+    metadata. Detailed dependency health and diagnostic endpoints must require authenticated
+    authorized operator access and must not be publicly reachable.
 verification:
-  mode: deterministic
+  mode: hybrid
   methods:
     - endpoint-detection
     - endpoint-schema-validation
+    - public-health-disclosure-test
+    - detailed-health-access-control-test
 acceptance:
-  health_endpoint_present: true
-  health_endpoint_returns_json: true
-  health_endpoint_checks_dependencies: true
+  health_signal_present: true
+  health_endpoint_returns_machine_parseable_status: true
+  sensitive_details_in_public_health_responses: 0
+  detailed_diagnostics_publicly_accessible: 0
 evidence:
   required:
     - endpoint-inventory
     - health-response-sample
+    - public-disclosure-test-report
+    - detailed-health-access-control-report
 failure:
   actions:
     - create-finding

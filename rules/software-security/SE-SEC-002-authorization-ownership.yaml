@@ -1,0 +1,40 @@
+id: SE-SEC-002
+metadata:
+  title: Authorization and Data Ownership Isolation
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Every protected operation and data object must enforce server-side authorization
+    and ownership boundaries, including tenant isolation.
+scope:
+  project_types: [web-application, api-service, mobile-application, enterprise]
+  lifecycle_stages: [architecture, implementation, testing, release]
+requirement:
+  statement: >
+    The agent must document roles, permissions, resource ownership, and tenant boundaries;
+    enforce deny-by-default server-side authorization on every protected route and object
+    operation; derive identity and ownership from trusted server-side context rather than
+    client-supplied identifiers; and test horizontal, vertical, cross-tenant, and IDOR
+    access attempts for read, write, export, and delete operations.
+verification:
+  mode: hybrid
+  methods: [authorization-matrix-review, route-policy-inventory, object-ownership-tests, cross-tenant-negative-tests, human-security-review]
+acceptance:
+  protected_operations_without_server_authorization: 0
+  cross_tenant_access_paths: 0
+  client_controlled_owner_trust: false
+  deny_by_default: true
+evidence:
+  required: [authorization-matrix, protected-route-inventory, access-control-test-report]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation, escalate-to-human]
+human_review:
+  required: true
+  approver_role: Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

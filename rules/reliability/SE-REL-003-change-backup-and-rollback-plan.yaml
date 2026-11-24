@@ -1,0 +1,42 @@
+id: SE-REL-003
+metadata:
+  title: High-Risk Change Backup and Tested Rollback
+  domain: reliability
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Destructive or high-risk production changes require a recent recoverable backup,
+    tested rollback or roll-forward strategy, and explicit decision criteria.
+scope:
+  project_types: [all]
+  lifecycle_stages: [planning, implementation, deployment, release, operations]
+requirement:
+  statement: >
+    Before destructive data changes, major schema migrations, storage transformations,
+    or high-risk production changes, create or verify a backup whose recovery point is
+    appropriate to the change; prove restore integrity in an isolated environment; document
+    data-loss boundaries, RPO/RTO, rollback or forward-fix steps, decision thresholds,
+    responsible operator, and recovery communications. Test application and database
+    rollback compatibility together. If rollback is unsafe after writes, define and test
+    a forward-recovery strategy and state that limitation explicitly.
+verification:
+  mode: hybrid
+  methods: [change-risk-classification, prechange-backup-verification, restore-drill, application-rollback-test, database-compatibility-test, human-approval]
+acceptance:
+  high_risk_changes_without_prechange_recovery_point: 0
+  untested_rollback_or_forward_recovery_steps: 0
+  data_integrity_after_restore: true
+  rpo_rto_defined: true
+evidence:
+  required: [change-risk-assessment, backup-manifest, restore-integrity-report, rollback-drill-report, recovery-approval]
+failure:
+  actions: [create-finding, block-production-change, require-remediation, escalate-to-human]
+human_review:
+  required: true
+  approver_role: Release Manager and Database Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

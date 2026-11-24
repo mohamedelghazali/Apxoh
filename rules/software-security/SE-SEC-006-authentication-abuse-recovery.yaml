@@ -1,0 +1,43 @@
+id: SE-SEC-006
+metadata:
+  title: Authentication Abuse Controls and Recovery Token Lifetime
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Authentication endpoints and account recovery flows must resist automated abuse
+    and use short-lived, single-use recovery credentials.
+scope:
+  project_types: [web-application, api-service, mobile-application, enterprise]
+  lifecycle_stages: [implementation, testing, deployment, release]
+requirement:
+  statement: >
+    Apply configurable rate limits and progressive abuse controls to login, registration,
+    MFA, password-reset request, and token-verification endpoints; avoid account-enumeration
+    responses; monitor credential-stuffing patterns; and make password-reset tokens
+    cryptographically random, single-use, securely stored, and expire no later than
+    60 seconds after issuance unless a formally approved product/security exception
+    documents an alternative. Invalidate outstanding reset tokens after successful use
+    or a new reset request.
+verification:
+  mode: hybrid
+  methods: [auth-endpoint-inventory, rate-limit-tests, account-enumeration-tests, reset-token-lifecycle-tests, abuse-monitoring-review]
+acceptance:
+  authentication_endpoints_without_rate_limits: 0
+  account_enumeration_paths: 0
+  reset_token_max_ttl_seconds: 60
+  reset_tokens_reusable: false
+  reset_tokens_stored_in_plaintext: false
+evidence:
+  required: [rate-limit-test-report, account-enumeration-test-report, password-reset-security-report]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: Application Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

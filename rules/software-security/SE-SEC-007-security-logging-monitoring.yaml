@@ -1,0 +1,44 @@
+id: SE-SEC-007
+metadata:
+  title: Security Event Logging and Detection
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Security-relevant events must be recorded in protected structured logs with
+    actionable detection and alerting while excluding sensitive data.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [implementation, deployment, operations, release]
+requirement:
+  statement: >
+    Record authentication successes and failures, authorization denials, privilege
+    changes, administrative actions, credential lifecycle events, suspicious request
+    patterns, configuration/security changes, and security-control failures in a
+    dedicated structured security log. Include timestamp, event type, outcome,
+    correlation/request ID, service, and a privacy-safe actor reference where lawful.
+    Never log passwords, API keys, access/refresh/reset tokens, session cookies,
+    private keys, or raw sensitive payloads; redact before serialization. Protect log
+    access and integrity, define retention, alert on actionable suspicious patterns,
+    and document response ownership.
+verification:
+  mode: hybrid
+  methods: [security-event-coverage-review, log-redaction-tests, log-access-control-review, alert-rule-review, incident-playbook-review]
+acceptance:
+  required_security_event_types_missing: 0
+  sensitive_values_in_logs: 0
+  security_logs_accessible_to_unauthorized_users: 0
+  critical_alerts_without_owner: 0
+evidence:
+  required: [security-event-catalog, log-redaction-test-report, log-access-review, alert-and-response-matrix]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: Security Operations Lead
+tests:
+  positive: required
+  negative: required
+  regression: required

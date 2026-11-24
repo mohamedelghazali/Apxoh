@@ -1,0 +1,42 @@
+id: SE-SEC-009
+metadata:
+  title: Production Exposure and Configuration Hardening
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Production deployments must expose only intended resources and must not ship
+    development diagnostics, sample secrets, or administrative surfaces without access control.
+scope:
+  project_types: [web-application, api-service, desktop-application, enterprise]
+  lifecycle_stages: [deployment, testing, release]
+requirement:
+  statement: >
+    Disable debug mode, verbose stack traces, development consoles, test routes, sample
+    accounts, directory listings, source maps containing secrets, and development-only
+    endpoints in production unless explicitly justified and access-controlled. Inventory
+    public files, buckets, artifacts, backups, metadata endpoints, admin routes, and
+    network listeners; deny public access by default; require strong authentication,
+    server-side authorization, and audit logging for administrative functions.
+verification:
+  mode: hybrid
+  methods: [production-config-review, exposed-resource-scan, admin-route-access-tests, debug-mode-negative-tests, cloud-storage-permission-review]
+acceptance:
+  production_debug_enabled: false
+  unintended_public_resources: 0
+  unauthenticated_admin_routes: 0
+  directory_listing_enabled: false
+  test_or_sample_credentials_in_production: 0
+evidence:
+  required: [production-hardening-checklist, exposed-resource-scan-report, admin-access-test-report]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: Platform Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

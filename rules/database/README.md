@@ -1,3 +1,7 @@
 # rules/database
 
-This directory defines a bounded ARKHON extension point. Add only versioned, reviewable artifacts. Required checks that cannot run are BLOCKED, never PASS. Record scope, ownership, acceptance criteria, evidence, and limitations.
+Agents MUST load applicable SE-DB-* rules for schema design, migrations, query
+construction, database credentials, and data access. SE-DB-001 governs migration
+review and reversibility; SE-DB-002 governs least-privilege database identities,
+network isolation, and server-side record/tenant ownership. Parameterized query
+requirements are also defined in SE-SEC-003.
