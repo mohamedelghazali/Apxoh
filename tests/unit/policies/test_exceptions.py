@@ -142,7 +142,7 @@ def test_add_exception_writes(tmp_path: Path) -> None:
 
 def test_add_exception_rejects_symlinked_registry(tmp_path: Path) -> None:
     target = tmp_path / "outside.yaml"
-    target.write_text("exceptions: []\\n", encoding="utf-8")
+    target.write_text("exceptions: []\n", encoding="utf-8")
     registry = tmp_path / "registry.yaml"
     try:
         registry.symlink_to(target)
