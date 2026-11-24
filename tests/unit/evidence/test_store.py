@@ -137,6 +137,15 @@ def _valid_record(project: Path, evidence_id: str = "EVID-TEST-0002") -> dict[st
     }
 
 
+def test_write_publishes_complete_record_without_temp_files(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path)
+    written = store.write("testing", record)
+    assert written.is_file()
+    assert written.read_text(encoding="utf-8").startswith("{")
+    assert list(written.parent.glob(".EVID-TEST-0002.*.tmp")) == []
+
+
 def test_read_verifies_artifact_hash(tmp_path: Path) -> None:
     store = EvidenceStore(tmp_path)
     record = _valid_record(tmp_path)
@@ -269,3 +278,29 @@ def test_read_rejects_invalid_rule_identifier_metadata(
     with pytest.raises(EvidenceTamperedError, match="rule_ids"):
         store.read("testing", "EVID-TEST-0002")
 
+
+
+def test_write_wraps_directory_fsync_failure_and_cleans_temp_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import os
+
+    store = EvidenceStore(tmp_path)
+    record = _valid_record(tmp_path, "EVID-FSYNC-FAIL")
+    original_fsync = os.fsync
+    calls = 0
+
+    def fail_directory_fsync(file_descriptor: int) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("simulated directory fsync failure")
+        original_fsync(file_descriptor)
+
+    monkeypatch.setattr(os, "fsync", fail_directory_fsync)
+
+    with pytest.raises(EvidenceError, match="cannot atomically persist evidence record"):
+        store.write("testing", record)
+
+    evidence_dir = tmp_path / ".arkhon" / "evidence" / "testing"
+    assert list(evidence_dir.glob(".EVID-FSYNC-FAIL.*.tmp")) == []

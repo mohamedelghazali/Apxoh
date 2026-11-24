@@ -91,6 +91,16 @@ def test_send_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.payload["model"] == "test-model-1"
 
 
+def test_send_rejects_oversized_provider_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TEST_API_KEY", "sk-test")
+    adapter = OpenAICompatibleAdapter(_config())
+    oversized = make_raw_response(b"x" * (8 * 1024 * 1024 + 1))
+    with patch_urlopen(oversized):
+        result = adapter.send("hi")
+    assert result.ok is False
+    assert "byte limit" in result.reason
+
+
 def test_send_missing_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("TEST_API_KEY", raising=False)
 

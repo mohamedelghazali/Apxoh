@@ -140,6 +140,19 @@ def test_add_exception_writes(tmp_path: Path) -> None:
     assert len(data["exceptions"]) == 1
 
 
+def test_add_exception_rejects_symlinked_registry(tmp_path: Path) -> None:
+    target = tmp_path / "outside.yaml"
+    target.write_text("exceptions: []\n", encoding="utf-8")
+    registry = tmp_path / "registry.yaml"
+    try:
+        registry.symlink_to(target)
+    except (OSError, NotImplementedError) as exc:
+        pytest.skip(f"symlinks unavailable in this environment: {exc}")
+    with pytest.raises(GovernanceError, match="symlinked"):
+        add_exception(registry, _exc("EXC-SYMLINK"))
+    assert yaml.safe_load(target.read_text(encoding="utf-8")) == {"exceptions": []}
+
+
 def test_add_duplicate_raises(tmp_path: Path) -> None:
     p = tmp_path / "registry.yaml"
     add_exception(p, _exc("EXC-1"))
@@ -339,3 +352,97 @@ def test_revoke_exception_cleans_temporary_file_after_replace_failure(
         revoke_exception(path, "EXC-ATOMIC", revoked_by="admin", reason="closed")
     assert not list(tmp_path.glob(".registry.yaml.*.tmp"))
     assert load_exceptions(path).all_active()
+
+def test_add_exception_rejects_non_file_registry_path(tmp_path: Path) -> None:
+    registry = tmp_path / "registry.yaml"
+    registry.mkdir()
+    with pytest.raises(GovernanceError, match="not a regular file"):
+        add_exception(registry, _exc("EXC-DIRECTORY"))
+
+
+def test_add_exception_wraps_registry_read_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = tmp_path / "registry.yaml"
+    registry.write_text("exceptions: []\n", encoding="utf-8")
+    original = Path.open
+
+    def fail_open(candidate: Path, *args: object, **kwargs: object):
+        if candidate == registry:
+            raise OSError("simulated registry read failure")
+        return original(candidate, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", fail_open)
+    with pytest.raises(GovernanceError, match="cannot read exception registry"):
+        add_exception(registry, _exc("EXC-READ-ERROR"))
+
+
+def test_add_exception_rejects_non_mapping_registry(tmp_path: Path) -> None:
+    registry = tmp_path / "registry.yaml"
+    registry.write_text("- invalid-root\n", encoding="utf-8")
+    with pytest.raises(GovernanceError, match="must be a mapping"):
+        add_exception(registry, _exc("EXC-INVALID-ROOT"))
+
+
+def test_add_exception_rejects_non_list_exceptions(tmp_path: Path) -> None:
+    registry = tmp_path / "registry.yaml"
+    registry.write_text("exceptions: {}\n", encoding="utf-8")
+    with pytest.raises(GovernanceError, match="must be a list"):
+        add_exception(registry, _exc("EXC-INVALID-LIST"))
+
+
+def test_add_exception_rechecks_symlink_before_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = tmp_path / "registry.yaml"
+    original = Path.is_symlink
+    calls = 0
+
+    def become_symlink(candidate: Path) -> bool:
+        nonlocal calls
+        if candidate == registry:
+            calls += 1
+            return calls == 2
+        return original(candidate)
+
+    monkeypatch.setattr(Path, "is_symlink", become_symlink)
+    with pytest.raises(GovernanceError, match="symlinked"):
+        add_exception(registry, _exc("EXC-SYMLINK-RACE-BEFORE"))
+    assert calls == 2
+    assert not registry.exists()
+
+
+def test_add_exception_rechecks_symlink_after_staging_and_cleans_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = tmp_path / "registry.yaml"
+    original = Path.is_symlink
+    calls = 0
+
+    def become_symlink(candidate: Path) -> bool:
+        nonlocal calls
+        if candidate == registry:
+            calls += 1
+            return calls == 3
+        return original(candidate)
+
+    monkeypatch.setattr(Path, "is_symlink", become_symlink)
+    with pytest.raises(GovernanceError, match="symlinked"):
+        add_exception(registry, _exc("EXC-SYMLINK-RACE-AFTER"))
+    assert calls == 3
+    assert not list(tmp_path.glob(".registry.yaml.*.tmp"))
+
+
+def test_add_exception_wraps_replace_failure_and_cleans_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = tmp_path / "registry.yaml"
+
+    def fail_replace(source: Path, destination: Path) -> None:
+        raise OSError("simulated atomic replace failure")
+
+    monkeypatch.setattr("arkhon.policies.exceptions.os.replace", fail_replace)
+    with pytest.raises(GovernanceError, match="cannot atomically persist"):
+        add_exception(registry, _exc("EXC-REPLACE-FAILURE"))
+    assert not registry.exists()
+    assert not list(tmp_path.glob(".registry.yaml.*.tmp"))

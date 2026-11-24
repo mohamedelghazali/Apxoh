@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import tempfile
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
@@ -194,12 +196,41 @@ class EvidenceStore:
                 )
             logger.debug("evidence already present: %s", target)
             return target
+        temporary_path: Path | None = None
         try:
-            with target.open("xb") as stream:
+            # Stage the complete record on the same filesystem, then publish it
+            # with an atomic, no-overwrite hard link. This preserves append-only
+            # semantics under concurrent writers and prevents partial JSON files.
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                dir=target_dir,
+                prefix=f".{evidence_id}.",
+                suffix=".tmp",
+                delete=False,
+            ) as stream:
+                temporary_path = Path(stream.name)
                 stream.write(payload)
-        except FileExistsError:
-            if sha256_of(target) != new_hash:
-                raise EvidenceTamperedError(f"concurrent evidence collision: {target}") from None
+                stream.flush()
+                os.fsync(stream.fileno())
+            try:
+                os.link(temporary_path, target)
+            except FileExistsError:
+                if target.is_symlink() or sha256_of(target) != new_hash:
+                    raise EvidenceTamperedError(
+                        f"concurrent evidence collision: {target}"
+                    ) from None
+            # Persist the directory entry where the platform supports it.
+            if hasattr(os, "O_DIRECTORY"):
+                directory_fd = os.open(target_dir, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(directory_fd)
+                finally:
+                    os.close(directory_fd)
+        except OSError as exc:
+            raise EvidenceError(f"cannot atomically persist evidence record: {target}") from exc
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
         logger.debug("wrote evidence %s to %s", evidence_id, target)
         return target
 

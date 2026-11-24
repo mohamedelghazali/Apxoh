@@ -103,17 +103,14 @@ def test_evidence_store_detects_concurrent_collision(
 ) -> None:
     store = EvidenceStore(tmp_path)
     target = store.root / "testing" / "EVID-RACE.json"
-    original_open = Path.open
-
-    def racing_open(path: Path, mode: str = "r", *args, **kwargs):
-        if path == target and mode == "xb":
+    def racing_link(source: Path, destination: Path) -> None:
+        if destination == target:
             target.parent.mkdir(parents=True, exist_ok=True)
-            with original_open(target, "wb") as stream:
-                stream.write(b'{"other":"writer"}')
+            target.write_bytes(b'{"other":"writer"}')
             raise FileExistsError(target)
-        return original_open(path, mode, *args, **kwargs)
+        raise AssertionError("unexpected hard-link destination")
 
-    monkeypatch.setattr(Path, "open", racing_open)
+    monkeypatch.setattr("arkhon.evidence.store.os.link", racing_link)
     with pytest.raises(EvidenceTamperedError, match="concurrent evidence collision"):
         store.write("testing", {"evidence_id": "EVID-RACE", "status": "PASS"})
 

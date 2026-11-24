@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -115,12 +116,24 @@ def load_exceptions(registry_path: Path) -> ExceptionRegistry:
 
 
 def add_exception(registry_path: Path, exception: Exception) -> None:
+    if registry_path.is_symlink():
+        raise GovernanceError("refusing to write through a symlinked exception registry")
     data: dict[str, Any] = {"exceptions": []}
-    if registry_path.is_file():
-        with registry_path.open("r", encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {"exceptions": []}
+    if registry_path.exists():
+        if not registry_path.is_file():
+            raise GovernanceError("exception registry path is not a regular file")
+        try:
+            with registry_path.open("r", encoding="utf-8") as fh:
+                loaded = yaml.safe_load(fh) or {"exceptions": []}
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            raise GovernanceError(f"cannot read exception registry: {exc}") from exc
+        if not isinstance(loaded, dict):
+            raise GovernanceError("exception registry must be a mapping")
+        data = loaded
         if "exceptions" not in data:
             data["exceptions"] = []
+    if not isinstance(data.get("exceptions"), list):
+        raise GovernanceError("exception registry exceptions must be a list")
 
     existing_ids = {e.get("exception_id") for e in data["exceptions"] if isinstance(e, dict)}
     if exception.exception_id in existing_ids:
@@ -142,7 +155,30 @@ def add_exception(registry_path: Path, exception: Exception) -> None:
     )
 
     registry_path.parent.mkdir(parents=True, exist_ok=True)
-    registry_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    if registry_path.is_symlink():
+        raise GovernanceError("refusing to replace a symlinked exception registry")
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=registry_path.parent,
+            prefix=f".{registry_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            temporary_path = Path(stream.name)
+            yaml.safe_dump(data, stream, sort_keys=False, allow_unicode=True)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if registry_path.is_symlink():
+            raise GovernanceError("refusing to replace a symlinked exception registry")
+        os.replace(temporary_path, registry_path)
+    except OSError as exc:
+        raise GovernanceError(f"cannot atomically persist exception registry: {exc}") from exc
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
     logger.info("added exception %s", exception.exception_id)
 
 

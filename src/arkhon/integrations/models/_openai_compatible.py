@@ -12,6 +12,8 @@ from urllib.parse import urlsplit
 
 from arkhon.integrations.base import Integration, IntegrationInfo, IntegrationResponse
 
+_MAX_RESPONSE_BYTES = 8 * 1024 * 1024
+
 
 @dataclass(frozen=True)
 class OpenAICompatibleConfig:
@@ -153,18 +155,24 @@ class OpenAICompatibleAdapter(Integration):
                 headers=headers,
             )
             response = connection.getresponse()
-            raw = response.read().decode("utf-8")
             if response.status >= 400:
                 return IntegrationResponse(
                     ok=False,
                     reason=f"HTTP {response.status}: {response.reason}",
                 )
+            response_bytes = response.read(_MAX_RESPONSE_BYTES + 1)
+            if len(response_bytes) > _MAX_RESPONSE_BYTES:
+                return IntegrationResponse(
+                    ok=False,
+                    reason=f"provider response exceeds {_MAX_RESPONSE_BYTES} byte limit",
+                )
+            raw = response_bytes.decode("utf-8")
         except TimeoutError:
             return IntegrationResponse(
                 ok=False,
                 reason=f"timeout after {self.config.timeout_seconds}s",
             )
-        except (OSError, http.client.HTTPException) as exc:
+        except (OSError, UnicodeDecodeError, http.client.HTTPException) as exc:
             return IntegrationResponse(
                 ok=False,
                 reason=f"network error: {exc}",
