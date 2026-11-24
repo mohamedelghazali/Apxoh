@@ -29,6 +29,7 @@ verification:
 acceptance:
   required_security_event_types_missing: 0
   sensitive_values_in_logs: 0
+  usernames_in_logs: 0
   security_logs_accessible_to_unauthorized_users: 0
   critical_alerts_without_owner: 0
 evidence:
