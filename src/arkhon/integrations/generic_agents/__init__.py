@@ -1,1 +1,0 @@
-"""Generic agent adapter package."""

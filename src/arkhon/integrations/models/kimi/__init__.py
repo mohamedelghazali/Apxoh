@@ -1,1 +1,0 @@
-"""Model provider adapter package."""

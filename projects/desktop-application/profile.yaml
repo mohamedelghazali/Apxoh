@@ -1,5 +1,0 @@
-id: desktop-application
-version: 1
-status: draft
-scope: desktop-application
-inherit: universal

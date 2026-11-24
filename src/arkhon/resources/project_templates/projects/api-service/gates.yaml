@@ -1,3 +1,0 @@
-profile: api-service
-hard_gates: [unresolved_critical_security, unverified_data_integrity, failed_rollback_readiness]
-missing_evidence: BLOCKED

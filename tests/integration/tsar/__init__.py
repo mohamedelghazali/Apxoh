@@ -1,1 +1,0 @@
-"""TSAR integration contract tests."""
