@@ -1,0 +1,187 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secret scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: SAST (Bandit and Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - name: Bandit
+        run: bandit -r src/ -c pyproject.toml -f json -o bandit.json
+      - name: Semgrep
+        run: >-
+          docker run --rm
+          --volume "${{ github.workspace }}:/src"
+          semgrep/semgrep@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0
+          semgrep scan --config auto --error --sarif --output /src/semgrep.sarif /src/src
+      - name: Upload Bandit report
+        if: always() && hashFiles('bandit.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bandit-results
+          path: bandit.json
+      - name: Archive Semgrep SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: semgrep-results
+          path: semgrep.sarif
+          if-no-files-found: error
+      - name: Upload Semgrep SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: semgrep.sarif
+
+  dependencies:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]" pip-licenses
+      - name: Dependency audit
+        run: |
+          python -m pip freeze --exclude-editable > requirements-audit.txt
+          pip-audit --requirement requirements-audit.txt --strict --desc
+      - name: License inventory
+        run: pip-licenses --format=csv --with-urls > licenses.csv
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dependency-license-inventory
+          path: licenses.csv
+          if-no-files-found: error
+
+  filesystem:
+    name: Filesystem scan (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Upload Trivy SARIF
+        if: always() && hashFiles('trivy.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: trivy.sarif
+
+  workflows:
+    name: Workflow security (zizmor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install zizmor
+      - run: zizmor --format sarif .github/workflows/ > zizmor.sarif
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: zizmor-results
+          path: zizmor.sarif
+          if-no-files-found: ignore
+
+  tamper-tests:
+    name: Tampering and bypass tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - run: pytest tests/security/ -v --tb=short
+
+  adapter-safety:
+    name: Adapter safety tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - run: pytest tests/security/adapter-safety/ -v
+
+  aggregate:
+    name: Security gate
+    if: always()
+    needs: [secrets, sast, dependencies, filesystem, workflows, tamper-tests, adapter-safety]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every security job to pass
+        env:
+          SECRETS: ${{ needs.secrets.result }}
+          SAST: ${{ needs.sast.result }}
+          DEPENDENCIES: ${{ needs.dependencies.result }}
+          FILESYSTEM: ${{ needs.filesystem.result }}
+          WORKFLOWS: ${{ needs.workflows.result }}
+          TAMPER_TESTS: ${{ needs.tamper-tests.result }}
+          ADAPTER_SAFETY: ${{ needs.adapter-safety.result }}
+        run: |
+          for result in "$SECRETS" "$SAST" "$DEPENDENCIES" "$FILESYSTEM" "$WORKFLOWS" "$TAMPER_TESTS" "$ADAPTER_SAFETY"; do
+            if [ "$result" != "success" ]; then
+              echo "Security gate FAILED: $result"
+              exit 1
+            fi
+          done
+          echo "Security gate PASSED"

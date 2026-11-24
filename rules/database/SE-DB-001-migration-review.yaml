@@ -1,0 +1,46 @@
+id: SE-DB-001
+metadata:
+  title: Database Migration Reviewed and Reversible
+  domain: database
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: blocking
+  description: >
+    Every database migration must be reviewed and have a documented
+    rollback plan.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, release]
+requirement:
+  statement: >
+    Every database migration must be (1) reviewed by a database expert,
+    (2) have a documented rollback plan, and (3) be tested in a
+    production-like environment before release.
+verification:
+  mode: hybrid
+  methods:
+    - migration-file-detection
+    - rollback-plan-presence
+    - human-review
+acceptance:
+  migrations_without_review: 0
+  migrations_without_rollback: 0
+  migrations_untested: 0
+evidence:
+  required:
+    - migration-review-report
+    - rollback-plan
+failure:
+  actions:
+    - block-release-gate
+    - create-finding
+    - require-remediation
+    - escalate-to-human
+human_review:
+  required: true
+  approver_role: "Database Engineer"
+tests:
+  positive: required
+  negative: required
+  regression: required

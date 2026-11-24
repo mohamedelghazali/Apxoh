@@ -1,0 +1,8 @@
+standards_version: 1
+catalog:
+  iso: [iso/iso-25010.yaml, iso/iso-25040.yaml, iso/iso-27001.yaml]
+  owasp: [owasp/asvs-5.0.0.yaml, owasp/samm-2.0.yaml, owasp/top10.yaml]
+  sre: [sre/slo-guidelines.yaml, sre/error-budget.yaml]
+  testing: [testing/test-pyramid.yaml]
+  supply_chain: [supply-chain/slsa.yaml, supply-chain/sbom.yaml]
+  tsar: [tsar/reference.yaml, tsar/covered-domains.yaml, tsar/rule-id-map.yaml]

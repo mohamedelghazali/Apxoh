@@ -1,0 +1,72 @@
+name: release-validation
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - name: Validate package metadata and version
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import tomllib
+          import yaml
+
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          project_version = pyproject["project"]["version"]
+          version_file = Path("VERSION").read_text(encoding="utf-8").strip()
+          normalize = lambda value: re.sub(r"[-_]", ".", value).lower()
+          if normalize(project_version) != normalize(version_file):
+              raise SystemExit(f"VERSION ({version_file}) != pyproject ({project_version})")
+
+          init_source = Path("src/arkhon/__init__.py").read_text(encoding="utf-8")
+          init_match = re.search(r"(?m)^__version__ = ['\"]([^'\"]+)['\"]$", init_source)
+          if not init_match or normalize(init_match.group(1)) != normalize(project_version):
+              raise SystemExit("src/arkhon/__init__.py version does not match pyproject.toml")
+
+          manifest = yaml.safe_load(Path("manifest/system.yaml").read_text(encoding="utf-8"))
+          system = manifest.get("system", {}) if isinstance(manifest, dict) else {}
+          if normalize(str(system.get("version", ""))) != normalize(project_version):
+              raise SystemExit("manifest/system.yaml version does not match pyproject.toml")
+          if system.get("status") != "beta":
+              raise SystemExit("manifest/system.yaml status must be beta for a pre-1.0 package release")
+
+          classifiers = pyproject["project"].get("classifiers", [])
+          if "Development Status :: 4 - Beta" not in classifiers:
+              raise SystemExit("pyproject.toml must declare the pre-1.0 Beta development status")
+
+          project_config = yaml.safe_load(Path(".arkhon/project.yaml").read_text(encoding="utf-8"))
+          lifecycle = project_config.get("lifecycle", {}) if isinstance(project_config, dict) else {}
+          if lifecycle.get("current_stage") != "development" or lifecycle.get("release_channel") != "pre-release":
+              raise SystemExit(".arkhon/project.yaml must declare the 0.x development/pre-release channel")
+
+          tag = os.environ.get("GITHUB_REF", "")
+          if tag.startswith("refs/tags/v"):
+              tag_version = tag.rsplit("/", 1)[-1][1:]
+              if normalize(tag_version) != normalize(project_version):
+                  raise SystemExit(f"tag ({tag_version}) != package ({project_version})")
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          if not re.search(r"(?m)^##\s+\S+", changelog):
+              raise SystemExit("CHANGELOG.md has no version heading")
+          print(f"Release metadata consistent: {project_version}")
+          PY
+      - run: python scripts/validation/validate_all.py
+      - run: python -m pytest -q

@@ -1,0 +1,9 @@
+# Only map identifiers emitted by the supported TSAR SARIF CLI.
+version: "1.1.0"
+status: partial-coverage
+mappings: []
+required_tsar_rules:
+  - TSAR-SCAN-EXECUTED
+unmapped_finding_behavior: BLOCKED
+preserve_source_finding: true
+coverage_note: "SARIF rule IDs are preserved verbatim. No crypto, dependency, authentication, or ASVS coverage is inferred."

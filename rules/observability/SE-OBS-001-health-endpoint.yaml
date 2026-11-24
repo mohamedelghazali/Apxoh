@@ -1,0 +1,44 @@
+id: SE-OBS-001
+metadata:
+  title: Health Endpoint Required for Every Service
+  domain: observability
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every service must expose a health endpoint that reports its
+    dependencies' status.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [implementation, release]
+requirement:
+  statement: >
+    Every service must expose an HTTP health endpoint (e.g., /health or
+    /healthz) that returns 200 when the service and its critical
+    dependencies are healthy, and a non-200 status otherwise. The response
+    must be machine-parseable.
+verification:
+  mode: deterministic
+  methods:
+    - endpoint-detection
+    - endpoint-schema-validation
+acceptance:
+  health_endpoint_present: true
+  health_endpoint_returns_json: true
+  health_endpoint_checks_dependencies: true
+evidence:
+  required:
+    - endpoint-inventory
+    - health-response-sample
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

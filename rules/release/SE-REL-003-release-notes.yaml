@@ -1,0 +1,44 @@
+id: SE-REL-003
+metadata:
+  title: Release Notes Published
+  domain: release
+  version: 1.0.0
+  status: active
+  severity: medium
+  enforcement: required
+  description: >
+    Every release must publish release notes that cite the commit SHA,
+    include a summary of changes, and link to the full CHANGELOG.
+scope:
+  project_types: [all]
+  lifecycle_stages: [release, post-release]
+requirement:
+  statement: >
+    Every release must publish release notes that include: (1) the exact
+    commit SHA, (2) a human-readable summary of changes, (3) a link to the
+    full CHANGELOG, (4) any known issues or breaking changes.
+verification:
+  mode: deterministic
+  methods:
+    - release-notes-presence
+    - release-notes-structure-validation
+acceptance:
+  release_notes_published: true
+  commit_sha_in_notes: true
+  changelog_linked: true
+  breaking_changes_documented: true
+evidence:
+  required:
+    - release-notes
+    - github-release-url
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

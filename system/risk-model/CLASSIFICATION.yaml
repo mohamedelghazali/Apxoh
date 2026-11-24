@@ -1,0 +1,6 @@
+version: 1
+levels:
+  - {id: critical, description: Catastrophic impact or compromise of core security boundaries}
+  - {id: high, description: Significant impact requiring prompt mitigation}
+  - {id: medium, description: Bounded impact requiring planned remediation}
+  - {id: low, description: Limited impact suitable for routine backlog}

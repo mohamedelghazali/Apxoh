@@ -1,0 +1,46 @@
+id: SE-REL-002
+metadata:
+  title: Backup Restore Verified
+  domain: reliability
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Every backup must be restored and verified before it counts as
+    evidence. An unverified backup is not a backup.
+scope:
+  project_types: [all]
+  lifecycle_stages: [release, post-release]
+requirement:
+  statement: >
+    Before a release, the most recent backup must have been restored to a
+    test environment and verified. The verification must include a data
+    integrity check, not just a successful restore command.
+verification:
+  mode: deterministic
+  methods:
+    - restore-execution
+    - data-integrity-check
+    - rto-rpo-verification
+acceptance:
+  last_restore_within_days: 30
+  restore_success_rate: 1.0
+  data_integrity_verified: true
+evidence:
+  required:
+    - restore-test-log
+    - data-integrity-report
+failure:
+  actions:
+    - block-release-gate
+    - create-finding
+    - require-remediation
+    - escalate-to-human
+human_review:
+  required: true
+  approver_role: "Reliability Engineer"
+tests:
+  positive: required
+  negative: required
+  regression: required

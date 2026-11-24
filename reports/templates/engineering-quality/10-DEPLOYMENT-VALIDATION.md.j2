@@ -1,0 +1,22 @@
+# 10 DEPLOYMENT VALIDATION md j2
+
+Project: {{ project.name | default("Unspecified") }}
+Assessment: {{ assessment.id | default("Unassigned") }}
+Status: {{ assessment.status | default("BLOCKED") }}
+
+## Scope
+{{ assessment.scope | default("Not supplied") }}
+
+## Evidence
+{% for item in evidence | default([]) %}
+- {{ item.id }} — {{ item.status }} — {{ item.sha256 | default("digest unavailable") }}
+{% else %}
+No evidence supplied. This is not a pass.
+{% endfor %}
+
+## Findings
+{% for finding in findings | default([]) %}
+- {{ finding.severity }} {{ finding.id }}: {{ finding.title }}
+{% else %}
+No findings supplied or assessment not run.
+{% endfor %}

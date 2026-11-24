@@ -1,0 +1,43 @@
+id: SE-TST-002
+metadata:
+  title: Regression Test Required for Every Bugfix
+  domain: testing
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every commit that fixes a bug must include a test that would have
+    caught the bug before the fix.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification]
+requirement:
+  statement: >
+    Every commit with a bugfix (referencing an issue, CVE, or bug report)
+    must include a test that reproduces the bug. The test must fail on the
+    parent commit and pass on the fix commit.
+verification:
+  mode: hybrid
+  methods:
+    - commit-message-analysis
+    - test-diff-analysis
+    - human-review
+acceptance:
+  bugfix_commits_without_regression_test: 0
+evidence:
+  required:
+    - commit-analysis-report
+    - regression-test-evidence
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+human_review:
+  required: true
+  approver_role: "Engineering Lead"
+tests:
+  positive: required
+  negative: required
+  regression: required

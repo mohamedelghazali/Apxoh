@@ -1,0 +1,43 @@
+id: SE-PRF-001
+metadata:
+  title: P95 Latency Target Defined and Measured
+  domain: performance
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every user-facing endpoint must have a defined P95 latency target, and
+    the target must be measured under documented load.
+scope:
+  project_types: [web-application, api-service, distributed-system]
+  lifecycle_stages: [performance, release]
+requirement:
+  statement: >
+    Every user-facing endpoint must have a documented P95 latency target.
+    A load test must demonstrate that the endpoint meets its target under
+    the documented expected load, with the test conditions recorded.
+verification:
+  mode: deterministic
+  methods:
+    - load-test-execution
+    - target-comparison
+acceptance:
+  endpoints_without_target: 0
+  endpoints_exceeding_target: 0
+  load_test_documented: true
+evidence:
+  required:
+    - load-test-results
+    - performance-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

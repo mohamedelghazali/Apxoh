@@ -1,0 +1,49 @@
+# Apxoh System Identity and Versions
+
+system:
+  name: "Apxoh"
+  display_name: "Apxoh"
+  identifier: "arkhon"
+  cyrillic_reference: "АРХОН"
+  latin_reference: "ARKHON"
+  description: "Software Engineering Governance & Assurance System"
+  version: "0.1.0"
+  status: "beta"
+  milestone: 0
+
+identity:
+  repository: "https://github.com/mohamedelghazali/Apxoh"
+  license: "MIT"
+  license_url: "https://opensource.org/licenses/MIT"
+  maintainer: "mohamedelghazali"
+  created: "2026-11-01"
+  last_updated: "2026-11-04"
+
+founding_decisions:
+  relation_to_tsar: "separate"
+  scope: "universal"
+  engine: "hybrid"
+  operation: "local-first-with-ai-agent-adoption"
+  repository_language: "english-only"
+  ai_provider_required_for_core: false
+  security_authority: "tsar"
+
+runtime:
+  python_minimum: "3.11"
+  python_maximum_exclusive: "3.14"
+  python_tested: ["3.11", "3.12", "3.13"]
+  platforms: ["linux", "macos", "windows"]
+
+core_principle: |
+  Evidence Before Approval.
+  Verification Before Release.
+  No trust without testing.
+  No claim without proof.
+
+motto_short: "No approval without evidence."
+
+versioning_policy:
+  scheme: "semantic"
+  current_stage: "0.x"
+  pre_release_suffix: "dev"
+  doc: "docs/VERSIONING.md"

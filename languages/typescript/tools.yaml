@@ -1,0 +1,41 @@
+id: typescript
+tools:
+  static_analysis:
+    - name: tsc
+      role: type-checker
+      required: true
+      invocation: "tsc --noEmit --strict"
+      output_format: text
+      version_arg: "--version"
+
+    - name: eslint
+      role: linter
+      required: true
+      invocation: "eslint . --ext .ts,.tsx --format=json"
+      output_format: json
+      version_arg: "--version"
+
+  testing:
+    - name: vitest
+      role: test-runner
+      required: true
+      invocation: "vitest run --reporter=junit --outputFile=junit.xml"
+      output_format: junit-xml
+      version_arg: "--version"
+
+  build:
+    - name: tsc
+      role: compiler
+      required: true
+      invocation: "tsc --noEmit"
+      version_arg: "--version"
+
+  supply_chain:
+    - name: npm
+      role: dependency-auditor
+      required: true
+      invocation: "npm audit --json"
+      output_format: json
+      version_arg: "--version"
+
+missing_tool_policy: BLOCKED

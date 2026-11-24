@@ -1,0 +1,47 @@
+# Claude integration configuration.
+id: claude
+name: Claude
+provider: anthropic
+kind: model
+version: 1.0.0
+
+model:
+  provider: anthropic
+  endpoint: "https://api.anthropic.com/v1/messages"
+  default_model: "claude-sonnet-4-5"
+  available_models:
+    - "claude-sonnet-4-5"
+    - "claude-opus-4-1"
+    - "claude-haiku-4-5"
+  max_tokens: 8192
+  temperature: 0.0
+
+auth:
+  method: header
+  header_name: "x-api-key"
+  env_var: "ANTHROPIC_API_KEY"
+  required: true
+
+capabilities:
+  - code-generation
+  - code-review
+  - long-context
+  - instruction-following
+  - structured-output
+
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: strong
+
+verification:
+  max_reachable_level: verified
+  notes: |
+    Claude supports a strong system prompt and structured content markers.
+    Apxoh can run full behavioral verification by issuing a test prompt
+    and checking the response.
+
+rate_limits:
+  default_rpm: 60
+  default_tpm: 100000

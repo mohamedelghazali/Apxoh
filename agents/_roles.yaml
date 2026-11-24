@@ -1,0 +1,83 @@
+# Apxoh agent role bindings.
+# Roles reference skills and rule domains; this file is declarative and
+# does not itself enforce runtime permissions.
+
+version: "1.0.0"
+
+roles:
+  - id: requirements-engineer
+    display_name: "Requirements Engineer"
+    description: "Extracts, refines, and verifies requirements."
+    skills: [arkhon-governance, requirements-engineering]
+    rule_domains: [requirements]
+    outputs: [requirements-register, acceptance-criteria]
+
+  - id: software-architect
+    display_name: "Software Architect"
+    description: "Designs architecture, documents decisions, produces threat model."
+    skills: [arkhon-governance, architecture-engineering, secure-software-engineering]
+    rule_domains: [architecture, software-security]
+    outputs: [architecture-decision-records, threat-model, component-diagram]
+
+  - id: developer
+    display_name: "Developer"
+    description: "Writes code that satisfies requirements and rules."
+    skills: [arkhon-governance, secure-software-engineering, software-testing]
+    rule_domains: [code-quality, testing]
+    outputs: [source-code, unit-tests]
+
+  - id: code-reviewer
+    display_name: "Code Reviewer"
+    description: "Reviews code for correctness, clarity, and compliance."
+    skills: [arkhon-governance, secure-software-engineering, software-testing]
+    rule_domains: [code-quality, software-security, testing]
+    outputs: [review-comments, review-approval]
+
+  - id: test-engineer
+    display_name: "Test Engineer"
+    description: "Designs and runs the test strategy."
+    skills: [arkhon-governance, software-testing]
+    rule_domains: [testing]
+    outputs: [test-plan, test-results, coverage-report]
+
+  - id: security-engineer
+    display_name: "Security Engineer"
+    description: "Coordinates security verification through TSAR."
+    skills: [arkhon-governance, secure-software-engineering]
+    rule_domains: [software-security]
+    outputs: [tsar-evidence, security-findings]
+
+  - id: performance-engineer
+    display_name: "Performance Engineer"
+    description: "Designs and runs performance tests."
+    skills: [arkhon-governance, performance-engineering]
+    rule_domains: [performance]
+    outputs: [benchmark-results, performance-report]
+
+  - id: reliability-engineer
+    display_name: "Reliability Engineer"
+    description: "Ensures the system is reliable under failure."
+    skills: [arkhon-governance, reliability-engineering]
+    rule_domains: [reliability]
+    outputs: [reliability-report, chaos-test-results]
+
+  - id: release-manager
+    display_name: "Release Manager"
+    description: "Prepares release recommendations based on evidence."
+    skills: [arkhon-governance, release-readiness]
+    rule_domains: [release]
+    outputs: [release-recommendation, production-readiness-review]
+
+constraints:
+  no_role_may:
+    - sign_evidence
+    - modify_governance_files
+    - bypass_critical_gate
+    - claim_verification_without_evidence
+
+  only_release_manager_may:
+    - issue_release_decision
+
+  only_security_engineer_may:
+    - request_tsar_assessment
+    - interpret_tsar_findings

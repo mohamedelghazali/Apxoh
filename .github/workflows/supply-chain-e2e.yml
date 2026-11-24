@@ -1,0 +1,65 @@
+name: Supply-chain assurance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syft-sbom:
+    name: Real Syft SBOM generation and commit binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: "1.26.8"
+      - name: Install pinned Syft
+        run: |
+          go install github.com/anchore/syft/cmd/syft@v1.56.0
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+      - name: Install Apxoh
+        run: python -m pip install -e ".[dev]"
+      - name: Generate SBOM and persist fail-closed Apxoh evidence
+        run: arkhon verify . --domain supply-chain
+      - name: Verify persisted SBOM evidence
+        run: |
+          python - <<'PY'
+          import subprocess
+          from pathlib import Path
+          from arkhon.evidence.store import EvidenceStore
+          from arkhon.evidence.supply_chain import verify_cyclonedx_sbom
+
+          root = Path.cwd()
+          commit = subprocess.run(
+              ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+          ).stdout.strip()
+          records = [
+              record
+              for record in EvidenceStore(root).iter_records("supply-chain")
+              if record.commit_sha == commit
+          ]
+          if not records or records[-1].status != "PASS":
+              raise SystemExit("Apxoh did not persist PASS SBOM evidence for this commit")
+          entries = records[-1].data.get("artifacts", [])
+          sboms = [
+              root / item["path"]
+              for item in entries
+              if isinstance(item, dict) and str(item.get("path", "")).endswith(".cdx.json")
+          ]
+          if len(sboms) != 1:
+              raise SystemExit("expected exactly one persisted CycloneDX SBOM")
+          verify_cyclonedx_sbom(sboms[0], expected_commit_sha=commit)
+          print(f"Persisted and verified SBOM: {sboms[0]}")
+          PY

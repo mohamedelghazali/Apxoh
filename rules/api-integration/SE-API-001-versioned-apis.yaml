@@ -1,0 +1,35 @@
+id: SE-API-001
+metadata:
+  title: Versioned APIs
+  domain: api-integration
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Public API contracts need an explicit version and a compatibility policy
+    so clients can upgrade without unexpected breaking changes.
+scope:
+  project_types: [api-service, web-application]
+  lifecycle_stages: [architecture, implementation, release]
+requirement:
+  statement: >
+    Every public API must declare a version and maintain backward
+    compatibility within a major version. Breaking changes require a new
+    major version and a documented migration path.
+verification:
+  mode: deterministic
+  methods: [api-contract-analysis, endpoint-version-inventory]
+acceptance:
+  versioned_endpoints: 100%
+  unversioned_endpoints: 0
+evidence:
+  required: [api-contract-inventory, compatibility-analysis]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

@@ -1,0 +1,5 @@
+id: enterprise
+version: 1
+status: draft
+scope: enterprise
+inherit: universal

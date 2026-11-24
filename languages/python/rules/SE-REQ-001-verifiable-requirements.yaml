@@ -1,0 +1,52 @@
+id: SE-REQ-001
+metadata:
+  title: Verifiable Requirements
+  domain: requirements
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every approved functional requirement must have at least one
+    measurable and verifiable acceptance criterion.
+
+scope:
+  project_types: [all]
+  lifecycle_stages: [requirements, architecture, release]
+
+requirement:
+  statement: >
+    Every approved functional requirement must have at least one
+    measurable and verifiable acceptance criterion. A requirement
+    without an acceptance criterion is a wish, not a requirement.
+
+verification:
+  mode: hybrid
+  methods:
+    - schema-validation
+    - requirements-audit
+    - acceptance-criteria-validation
+
+acceptance:
+  unverified_requirements: 0
+  missing_acceptance_criteria: 0
+
+evidence:
+  required:
+    - requirements-register
+    - validation-report
+
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+
+human_review:
+  required: true
+  approver_role: "Requirements Lead"
+
+tests:
+  positive: required
+  negative: required
+  regression: required

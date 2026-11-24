@@ -1,0 +1,46 @@
+id: SE-PRI-001
+metadata:
+  title: Personal Data Inventory Required
+  domain: privacy-compliance
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    If the project processes personal data, a data inventory and DPIA
+    must exist before release.
+scope:
+  project_types: [web-application, api-service, mobile-application, enterprise]
+  lifecycle_stages: [requirements, release]
+requirement:
+  statement: >
+    If the project processes personal data (as defined by GDPR, CCPA, or
+    equivalent), the project must have (1) a data inventory listing every
+    category of personal data, its purpose, retention period, and legal
+    basis, and (2) a DPIA if processing is high-risk.
+verification:
+  mode: hybrid
+  methods:
+    - data-inventory-presence
+    - dpia-presence
+    - human-review
+acceptance:
+  data_inventory_present: true
+  dpia_present_when_required: true
+  retention_periods_documented: true
+evidence:
+  required:
+    - data-inventory
+    - dpia-document
+failure:
+  actions:
+    - block-release-gate
+    - create-finding
+    - escalate-to-human
+human_review:
+  required: true
+  approver_role: "Privacy Officer"
+tests:
+  positive: required
+  negative: required
+  regression: required

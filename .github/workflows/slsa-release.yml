@@ -1,0 +1,246 @@
+name: SLSA Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, inventory, and sign release artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: "1.27.0"
+      - name: Verify release version consistency
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          tag = os.environ['RELEASE_TAG']
+          version = tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version']
+          canonical = Path('VERSION').read_text(encoding='utf-8').strip()
+          if tag != f'v{version}':
+              raise SystemExit(f'tag {tag!r} does not match package version {version!r}')
+          if canonical != version:
+              raise SystemExit(f'VERSION {canonical!r} does not match pyproject version {version!r}')
+          print(f'Release version verified: {tag}')
+          PY
+      - name: Install pinned Syft and Cosign
+        run: |
+          go install github.com/anchore/syft/cmd/syft@v1.56.0
+          go install github.com/sigstore/cosign/v3/cmd/cosign@v3.1.4
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+          sha256sum dist/*.whl dist/*.tar.gz > dist/SHA256SUMS
+      - name: Generate CycloneDX source SBOM
+        run: syft dir:. -o cyclonedx-json > dist/source-sbom.cdx.json
+      - name: Sign every release artifact and SBOM with GitHub OIDC
+        env:
+          COSIGN_YES: "true"
+        run: |
+          set -euo pipefail
+          for artifact in dist/*.whl dist/*.tar.gz dist/source-sbom.cdx.json; do
+            cosign sign-blob --yes --bundle "${artifact}.sigstore.json" "$artifact"
+          done
+      - name: Compute distribution hashes for SLSA provenance
+        id: hash
+        run: |
+          cd dist
+          echo "hashes=$(sha256sum *.whl *.tar.gz source-sbom.cdx.json | base64 -w0)" >> "$GITHUB_OUTPUT"
+      - name: Upload build outputs for provenance and verification
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish-draft:
+    name: Attach signed artifacts to a draft GitHub release
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    outputs:
+      release_id: ${{ steps.release.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Download signed build outputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: dist
+      - name: Select or create the draft release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_id="$(gh api --paginate --jq '.[] | select(.tag_name == env.GITHUB_REF_NAME and .draft == true) | .id' "repos/$GITHUB_REPOSITORY/releases?per_page=100" | sed -n '1p')"
+          if [[ -z "$release_id" ]]; then
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "$GITHUB_REF_NAME" \
+              --notes "Official ARKHON release artifacts. Keep this release as a draft until provenance, signatures, and release-evidence verification succeed."
+            release_id="$(gh api --paginate --jq '.[] | select(.tag_name == env.GITHUB_REF_NAME and .draft == true) | .id' "repos/$GITHUB_REPOSITORY/releases?per_page=100" | sed -n '1p')"
+          fi
+          test -n "$release_id" || { echo "Could not resolve draft release ID for $GITHUB_REF_NAME" >&2; exit 1; }
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+      - name: Upload signed artifacts to that draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          for artifact in dist/*; do
+            asset_name="$(basename "$artifact")"
+            existing_asset_id="$(ASSET_NAME="$asset_name" gh api --paginate --jq '.[] | select(.name == env.ASSET_NAME) | .id' "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" | sed -n '1p')"
+            if [[ -n "$existing_asset_id" ]]; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$existing_asset_id" >/dev/null
+            fi
+          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" --data-binary "@$artifact" "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$asset_name" >/dev/null
+          done
+
+  provenance:
+    name: Generate SLSA provenance
+    needs: [build, publish-draft]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # v2.1.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.hashes }}
+      # Build the generator from source instead of relying on a prebuilt binary.
+      compile-generator: true
+      # Keep generation separate from release upload to avoid duplicate drafts.
+      upload-assets: false
+      provenance-name: multiple.intoto.jsonl
+
+  attach-provenance:
+    name: Attach SLSA provenance to the canonical draft release
+    needs: [publish-draft, provenance]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download generated SLSA provenance artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ needs.provenance.outputs.provenance-name }}
+          path: dist
+      - name: Upload provenance to the exact draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.publish-draft.outputs.release_id }}
+          PROVENANCE_NAME: ${{ needs.provenance.outputs.provenance-name }}
+        run: |
+          set -euo pipefail
+          test -n "$RELEASE_ID"
+          test -f "dist/$PROVENANCE_NAME"
+          existing_asset_id="$(ASSET_NAME="$PROVENANCE_NAME" gh api --paginate --jq '.[] | select(.name == env.ASSET_NAME) | .id' "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" | sed -n '1p')"
+          if [[ -n "$existing_asset_id" ]]; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$existing_asset_id" >/dev/null
+          fi
+          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" --data-binary "@dist/$PROVENANCE_NAME" "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$PROVENANCE_NAME" >/dev/null
+
+  verify:
+    name: Verify release provenance, signatures, and Apxoh evidence acceptance
+    needs: [build, provenance, attach-provenance]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.ref }}
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: dist
+      - name: Download generated SLSA provenance from this workflow run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ needs.provenance.outputs.provenance-name }}
+          path: dist
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: "1.27.0"
+      - name: Install pinned verifiers and Syft
+        run: |
+          go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.7.1
+          go install github.com/sigstore/cosign/v3/cmd/cosign@v3.1.4
+          go install github.com/anchore/syft/cmd/syft@v1.56.0
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+      - name: Verify signatures on all release artifacts
+        run: |
+          set -euo pipefail
+          for artifact in dist/*.whl dist/*.tar.gz dist/source-sbom.cdx.json; do
+            cosign verify-blob \
+              --bundle "${artifact}.sigstore.json" \
+              --certificate-identity-regexp '^https://github[.]com/mohamedelghazali/Apxoh/[.]github/workflows/slsa-release[.]yml@refs/tags/v.*$' \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "$artifact"
+          done
+      - name: Verify SLSA provenance for the signed source SBOM
+        run: |
+          set -euo pipefail
+          slsa-verifier verify-artifact dist/source-sbom.cdx.json \
+            --provenance-path "$(find dist -maxdepth 1 -name '*.intoto.jsonl' -print -quit)" \
+            --source-uri github.com/mohamedelghazali/Apxoh \
+            --source-tag "$GITHUB_REF_NAME"
+      - name: Configure the release artifact trust inputs
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          wheel = sorted(Path("dist").glob("*.whl"))[0]
+          provenance = sorted(Path("dist").glob("*.intoto.jsonl"))[0]
+          config = {
+              "artifact": wheel.as_posix(),
+              "provenance": provenance.as_posix(),
+              "source_tag": os.environ["GITHUB_REF_NAME"],
+              "signature_bundle": Path(str(wheel) + ".sigstore.json").as_posix(),
+          }
+          path = Path(".arkhon/supply-chain.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+          PY
+      - name: Verify release artifact through Apxoh and re-accept its evidence
+        run: |
+          python -m pip install -e ".[dev]"
+          arkhon verify . --domain supply-chain
+          arkhon verify . --domain release-attestations
+          arkhon report .

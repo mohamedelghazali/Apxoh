@@ -1,0 +1,5 @@
+integration: gpt
+status: scaffolded
+scope: project
+requires_user_consent: true
+verification_required: true

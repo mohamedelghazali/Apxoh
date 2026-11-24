@@ -1,0 +1,7 @@
+version: 1
+references:
+  - {id: owasp-asvs, publisher: OWASP, url: https://owasp.org/www-project-application-security-verification-standard/}
+  - {id: owasp-samm, publisher: OWASP, url: https://owaspsamm.org/}
+  - {id: slsa, publisher: OpenSSF, url: https://slsa.dev/}
+  - {id: sbom, publisher: CISA, url: https://www.cisa.gov/sbom}
+  - {id: iso, publisher: ISO, url: https://www.iso.org/}

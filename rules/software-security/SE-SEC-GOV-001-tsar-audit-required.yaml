@@ -1,0 +1,59 @@
+id: SE-SEC-GOV-001
+metadata:
+  title: TSAR Security Audit Required Before Release
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    No release gate may close unless a valid TSAR security audit exists
+    for the exact commit being released.
+
+scope:
+  project_types: [all]
+  lifecycle_stages: [release]
+
+requirement:
+  statement: >
+    Before a release gate closes, TSAR must have produced a security
+    audit for the exact commit being released. The audit must cover
+    SAST, DAST, SCA, secret scanning, and dependency vulnerabilities.
+
+verification:
+  mode: delegated
+  delegate_to: tsar
+  methods:
+    - tsar-audit-invocation
+    - evidence-integrity-check
+    - evidence-commit-match
+    - evidence-freshness-check
+
+acceptance:
+  tsar_evidence_status: PASS
+  unresolved_critical_findings: 0
+  unresolved_high_findings: 0
+  secrets_exposed: 0
+  commit_sha_match: true
+
+evidence:
+  required:
+    - type: tsar_evidence_bundle
+      schema: schemas/evidence.schema.json
+      source: tsar
+
+failure:
+  actions:
+    - block-release-gate
+    - create-finding
+    - require-tsar-rerun
+    - escalate-to-human
+
+human_review:
+  required: true
+  approver_role: "Security Lead"
+
+tests:
+  positive: required
+  negative: required
+  regression: required

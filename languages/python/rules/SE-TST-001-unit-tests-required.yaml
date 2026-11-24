@@ -1,0 +1,50 @@
+id: SE-TST-001
+metadata:
+  title: Unit Tests Required for Every Public Function
+  domain: testing
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Every public function in production code must have at least one
+    unit test that exercises it.
+
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, release]
+  languages: [python]
+
+requirement:
+  statement: >
+    Every public function (not starting with an underscore) in
+    production code must have at least one corresponding unit test
+    that calls it and asserts on its output or behavior.
+
+verification:
+  mode: deterministic
+  methods:
+    - coverage-analysis
+    - ast-test-mapping
+
+acceptance:
+  untested_public_functions: 0
+
+evidence:
+  required:
+    - coverage-xml
+    - test-mapping-json
+
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+
+human_review:
+  required: false
+
+tests:
+  positive: required
+  negative: required
+  regression: required

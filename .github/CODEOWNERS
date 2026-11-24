@@ -1,0 +1,32 @@
+# Apxoh — Code Owners
+# Any file not matched here falls to the default owner.
+
+*                                   @mohamedelghazali
+
+# --- Critical governance (require explicit review) -------------------------
+
+/system/                            @mohamedelghazali
+/schemas/                           @mohamedelghazali
+/manifest/                          @mohamedelghazali
+/policies/                          @mohamedelghazali
+
+# --- Security documents (highest sensitivity) -----------------------------
+
+SECURITY.md                         @mohamedelghazali
+SECURITY_AGENTS.md                  @mohamedelghazali
+AGENTS.md                           @mohamedelghazali
+/docs/threat-model/                 @mohamedelghazali
+/docs/SUPPLY_CHAIN.md               @mohamedelghazali
+/docs/VULNERABILITY_RESPONSE.md     @mohamedelghazali
+/docs/PROMPT_INJECTION.md           @mohamedelghazali
+/docs/EVIDENCE_INTEGRITY.md         @mohamedelghazali
+/docs/DEPENDENCY_POLICY.md          @mohamedelghazali
+
+# --- CI workflows (protect the build) -------------------------------------
+
+/.github/workflows/                 @mohamedelghazali
+
+# --- Integration contracts ------------------------------------------------
+
+/integrations/tsar/contract.yaml    @mohamedelghazali
+/integrations/tsar/evidence-mapping.yaml @mohamedelghazali

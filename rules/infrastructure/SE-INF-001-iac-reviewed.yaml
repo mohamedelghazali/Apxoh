@@ -1,0 +1,36 @@
+id: SE-INF-001
+metadata:
+  title: Infrastructure as Code Reviewed
+  domain: infrastructure
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Infrastructure changes must be reproducible, reviewable, and traceable
+    rather than applied through undocumented manual changes.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, release]
+requirement:
+  statement: >
+    Every infrastructure change must be expressed as code and reviewed
+    before application. Emergency manual changes require a recorded
+    exception and a follow-up code reconciliation.
+verification:
+  mode: hybrid
+  methods: [iac-file-detection, change-review-record, human-review]
+acceptance:
+  untracked_infrastructure_changes: 0
+  unreviewed_iac_changes: 0
+evidence:
+  required: [iac-change-plan, iac-review-log]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: "Infrastructure Engineer"
+tests:
+  positive: required
+  negative: required
+  regression: required

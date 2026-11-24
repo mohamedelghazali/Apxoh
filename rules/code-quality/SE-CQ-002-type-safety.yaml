@@ -1,0 +1,43 @@
+id: SE-CQ-002
+metadata:
+  title: Type Safety Enforced
+  domain: code-quality
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Statically typed languages must use strict type checking. Dynamically
+    typed languages must use type hints where supported.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, release]
+  languages: [python, typescript, java, csharp, cpp, go, rust]
+requirement:
+  statement: >
+    Type checkers must run in strict mode. Type errors are build failures,
+    not warnings. Python must use mypy --strict. TypeScript must use tsc
+    --noEmit --strict. Java/C#/C++/Go/Rust must compile with all warnings
+    as errors.
+verification:
+  mode: deterministic
+  methods:
+    - type-checker-execution
+    - zero-type-errors-check
+acceptance:
+  type_errors: 0
+  type_checker_exit_code: 0
+evidence:
+  required:
+    - type-checker-output
+failure:
+  actions:
+    - create-finding
+    - block-stage
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

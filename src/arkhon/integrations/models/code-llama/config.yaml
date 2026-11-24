@@ -1,0 +1,34 @@
+id: code-llama
+name: "Code Llama"
+provider: meta
+kind: model
+version: 1.0.0
+model:
+  provider: meta
+  endpoint: "http://127.0.0.1:11434/v1/chat/completions"
+  default_model: "codellama:13b"
+  available_models:
+    - "codellama:7b"
+    - "codellama:13b"
+    - "codellama:34b"
+  max_tokens: 4096
+  temperature: 0.0
+auth:
+  method: header
+  header_name: "Authorization"
+  env_var: "CODE_LLAMA_API_KEY"
+  required: false
+capabilities:
+  - code-generation
+  - code-review
+  - instruction-following
+governance:
+  injection: system-prompt
+  system_prompt_file: "prompts/system.md"
+  injection_file: "prompts/governance-injection.md"
+  instruction_hierarchy_support: configured
+verification:
+  max_reachable_level: configured
+  notes: "Transport implemented; behavioral verification is required before claiming verified."
+rate_limits:
+  timeout_seconds: 180

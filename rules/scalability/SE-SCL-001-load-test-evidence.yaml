@@ -1,0 +1,43 @@
+id: SE-SCL-001
+metadata:
+  title: Load Test Evidence Required for Scale Claims
+  domain: scalability
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Any claim of scalability (concurrent users, requests per second,
+    throughput) must be backed by a documented load test.
+scope:
+  project_types: [web-application, api-service, distributed-system]
+  lifecycle_stages: [performance, release]
+requirement:
+  statement: >
+    If the project claims to support N concurrent users or X requests per
+    second, a load test must demonstrate this under documented conditions
+    (data set, hardware, network, load generator).
+verification:
+  mode: deterministic
+  methods:
+    - load-test-execution
+    - target-comparison
+acceptance:
+  claim_has_load_test: true
+  test_conditions_documented: true
+  claim_verified_under_load: true
+evidence:
+  required:
+    - load-test-results
+    - test-conditions-document
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

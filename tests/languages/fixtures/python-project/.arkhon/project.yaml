@@ -1,0 +1,23 @@
+# Apxoh project declaration for the Python fixture.
+project:
+  name: "python-fixture"
+  identifier: python-fixture
+  type: library
+  profile: universal
+  risk_level: low
+  description: "Minimal Python project used to validate Apxoh language detection."
+
+languages:
+  primary: python
+  secondary: []
+
+lifecycle:
+  current_stage: development
+  current_milestone: 2
+  release_channel: pre-release
+
+gates:
+  requirements_gate: required
+  testing_gate: required
+  security_gate: required
+  release_gate: required

@@ -1,0 +1,5 @@
+{
+  "artifact": "dist/arkhon-0.1.0-py3-none-any.whl",
+  "provenance": "dist/multiple.intoto.jsonl",
+  "signature_bundle": "dist/arkhon-0.1.0-py3-none-any.whl.sigstore.json"
+}
