@@ -160,6 +160,11 @@ debug mode and exposed resources; Git history secret scanning; database least pr
 monitoring access; backups, migrations, and tested rollback.
 
 The exact controls are defined in applicable SE-SEC-*, SE-DB-*, SE-OBS-*, and SE-REL-* rules.
+The baseline is enumerated by SE-SEC-001 through SE-SEC-010, SE-DB-002, SE-OBS-002,
+and SE-REL-004, alongside the strengthened SE-DB-001 and SE-OBS-001 rules. Load the
+application-security skill from the installed pack when the target project has an
+application-facing security surface.
+
 Do not treat TSAR as complete coverage: follow integrations/tsar/contract.yaml and run
 separate tools/tests for controls outside its declared scope.
 
