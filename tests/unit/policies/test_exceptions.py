@@ -364,7 +364,7 @@ def test_add_exception_wraps_registry_read_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     registry = tmp_path / "registry.yaml"
-    registry.write_text("exceptions: []\\n", encoding="utf-8")
+    registry.write_text("exceptions: []\n", encoding="utf-8")
     original = Path.open
 
     def fail_open(candidate: Path, *args: object, **kwargs: object):
@@ -379,14 +379,14 @@ def test_add_exception_wraps_registry_read_errors(
 
 def test_add_exception_rejects_non_mapping_registry(tmp_path: Path) -> None:
     registry = tmp_path / "registry.yaml"
-    registry.write_text("- invalid-root\\n", encoding="utf-8")
+    registry.write_text("- invalid-root\n", encoding="utf-8")
     with pytest.raises(GovernanceError, match="must be a mapping"):
         add_exception(registry, _exc("EXC-INVALID-ROOT"))
 
 
 def test_add_exception_rejects_non_list_exceptions(tmp_path: Path) -> None:
     registry = tmp_path / "registry.yaml"
-    registry.write_text("exceptions: {}\\n", encoding="utf-8")
+    registry.write_text("exceptions: {}\n", encoding="utf-8")
     with pytest.raises(GovernanceError, match="must be a list"):
         add_exception(registry, _exc("EXC-INVALID-LIST"))
 
