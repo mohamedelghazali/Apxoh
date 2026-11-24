@@ -438,7 +438,55 @@ The configuration schema, identity semantics, approval process, and enforcement 
 
 ---
 
-## 8. References
+
+## 9. Application Security Requirements for Governed Projects
+
+The agent must apply all relevant rules under rules/software-security/ and rules/database/
+when building or changing a target application. The minimum review includes:
+
+- Authentication: vetted adaptive password hashing (Argon2id preferred), session rotation
+  and revocation, secure cookie attributes where cookies are used.
+- Authorization: deny-by-default server-side checks, ownership and tenant isolation,
+  object-level access, administrative route protection, and negative IDOR tests.
+- Input/data: server-side validation at every trust boundary; parameterized SQL or safe ORM
+  bindings; safe file, path, command, template, and deserialization handling.
+- Transport/browser: HTTPS/TLS, certificate-chain and hostname validation, restrictive
+  CORS, applicable security headers/CSP, CSRF protection for cookie-authenticated mutations.
+- Secrets: managed secret storage, sanitized environment templates, no live secrets in
+  source/history/logs/evidence, Git-history scanning, immediate credential revocation and
+  rotation after exposure.
+- Abuse/recovery: rate limiting and abuse detection on authentication/recovery endpoints;
+  single-use reset tokens with a maximum 60-second lifetime unless a formally approved
+  exception is recorded.
+- Security operations: structured security event logs, access controls, retention, alerts,
+  and redaction of passwords, usernames, tokens, keys, cookies, and sensitive payloads.
+- Dependencies and production: SCA, vulnerability triage, unused dependency review,
+  debug-off, exposed-file/resource review, and protected admin surfaces.
+- Database: least-privilege identities, private network access, and record/tenant isolation.
+
+These controls are specified by SE-SEC-001 through SE-SEC-010 and SE-DB-002. Load those
+rules and the application-security skill. Do not infer that a scanner covers a control
+unless its verified contract explicitly says so. TSAR must be supplemented by SCA, DAST,
+configuration tests, negative authorization tests, and human review where applicable.
+
+## 10. Operational Engineering Requirements
+
+For governed production systems, require structured diagnostic logs with privacy-safe
+redaction; monitoring of availability, latency, error rate, saturation, and dependencies;
+operator-only access to detailed dashboards and diagnostics; current verified backups
+before destructive/high-risk changes; tested restore integrity and RPO/RTO; and tested
+application/database rollback or forward-recovery procedures.
+
+Public health probes must disclose only minimal liveness/readiness state. Detailed
+monitoring dashboards and diagnostics must not be publicly accessible. A backup command
+without a successful isolated restore and integrity check is not evidence of recoverability.
+
+The agent must produce a release traceability report with PASS/FAIL/BLOCKED/NOT_APPLICABLE,
+evidence, commit SHA, residual risks, and authorized approvals. These instructions describe
+required behavior; they do not claim automatic runtime enforcement unless separately proven.
+
+
+## 11. References
 
 ### Apxoh Documents
 - `docs/threat-model/ARKHON_THREAT_MODEL.md` — system-wide threat model

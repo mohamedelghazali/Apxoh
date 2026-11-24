@@ -141,6 +141,43 @@ Apxoh is intended to apply its governance rules to itself. The required release 
 
 Do not claim these checks are active or passing until the corresponding workflows and results have been inspected. Disabling a required check to obtain a green result is not acceptable.
 
+
+## 11. Mandatory Application Security and Operations Review
+
+When governing an application, API, service, mobile client, data platform, or production
+deployment, the agent MUST load applicable rules in rules/software-security/, rules/database/,
+rules/observability/, rules/reliability/, and rules/privacy-compliance/. Use the
+application-security skill for application-facing work and secure/reliability engineering
+skills as applicable.
+
+Before implementation, create a threat model and a rule traceability matrix. At minimum,
+review authentication/password hashing/session lifecycle; authorization and tenant/record
+ownership; server-side input validation and parameterized queries; HTTPS/TLS certificate
+validation; CORS, security headers, CSRF and cookie attributes where applicable; secrets
+and environment configuration; login/recovery rate limits and reset-token expiry; security
+logging and redaction; dependency vulnerabilities and unused dependencies; production
+debug mode and exposed resources; Git history secret scanning; database least privilege;
+monitoring access; backups, migrations, and tested rollback.
+
+The exact controls are defined in applicable SE-SEC-*, SE-DB-*, SE-OBS-*, and SE-REL-* rules.
+The baseline is enumerated by SE-SEC-001 through SE-SEC-010, SE-DB-002, SE-OBS-002,
+and SE-REL-004, alongside the strengthened SE-DB-001 and SE-OBS-001 rules. Load the
+application-security skill from the installed pack when the target project has an
+application-facing security surface.
+
+Do not treat TSAR as complete coverage: follow integrations/tsar/contract.yaml and run
+separate tools/tests for controls outside its declared scope.
+
+For every rule, report PASS, FAIL, BLOCKED, or NOT_APPLICABLE with reason and evidence
+bound to the evaluated commit. NOT_APPLICABLE requires an architectural explanation.
+Missing implementation, tests, scanner support, or evidence is never a reason for PASS.
+A checklist or method name does not prove execution. Critical/high applicable failures
+block the relevant stage and require human escalation under policy.
+
+Before high-risk production changes, verify a suitable pre-change recovery point, restore
+integrity, RPO/RTO, and tested application/database rollback or forward-recovery steps.
+Do not claim monitoring, backup, logging, or rollback readiness without current evidence.
+
 ---
 
 **End of AGENTS.md**

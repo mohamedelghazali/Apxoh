@@ -1,0 +1,41 @@
+id: SE-OBS-002
+metadata:
+  title: Operations Monitoring Access Restricted
+  domain: observability
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Operational health, infrastructure status, internal metrics, and administrative
+    dashboards must be accessible only to authorized operators.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [implementation, deployment, operations, release]
+requirement:
+  statement: >
+    Provide monitoring for service availability, health, latency percentiles, error rates,
+    saturation, dependency health, and critical background jobs. Restrict dashboards,
+    detailed health diagnostics, infrastructure metadata, and alert controls to authenticated
+    authorized operators using least privilege and audit logging. Public health endpoints,
+    if required by an orchestrator, must disclose only minimal liveness/readiness status and
+    must not expose secrets, topology, versions, stack traces, or internal dependency details.
+verification:
+  mode: hybrid
+  methods: [monitoring-signal-inventory, dashboard-access-control-tests, health-response-disclosure-review, alert-delivery-test, operator-audit-review]
+acceptance:
+  critical_services_without_availability_signal: 0
+  critical_services_without_latency_and_error_signals: 0
+  monitoring_dashboards_publicly_accessible: 0
+  sensitive_details_in_public_health_responses: 0
+evidence:
+  required: [monitoring-signal-catalog, dashboard-access-matrix, health-disclosure-test-report, alert-test-report]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation]
+human_review:
+  required: true
+  approver_role: SRE Lead
+tests:
+  positive: required
+  negative: required
+  regression: required

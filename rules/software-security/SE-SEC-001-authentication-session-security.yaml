@@ -1,0 +1,42 @@
+id: SE-SEC-001
+metadata:
+  title: Authentication and Session Security
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Authentication mechanisms, credential storage, account recovery, and session
+    lifecycle must resist credential theft, replay, fixation, and brute-force abuse.
+scope:
+  project_types: [web-application, api-service, mobile-application, enterprise]
+  lifecycle_stages: [architecture, implementation, testing, release]
+requirement:
+  statement: >
+    The agent must inventory every authentication and recovery flow; store passwords
+    only with a vetted adaptive password-hashing algorithm (prefer Argon2id, otherwise
+    an approved equivalent with reviewed parameters); never encrypt or reversibly store
+    passwords; rotate session identifiers after authentication and privilege changes;
+    invalidate sessions on logout, credential reset, and account disablement; and use
+    secure, HttpOnly, appropriately SameSite cookies where cookies are used.
+verification:
+  mode: hybrid
+  methods: [authentication-flow-inventory, password-storage-review, session-lifecycle-tests, negative-authentication-tests, human-security-review]
+acceptance:
+  plaintext_or_reversible_password_storage: 0
+  session_fixation_paths: 0
+  unauthenticated_protected_routes: 0
+  logout_and_reset_invalidate_sessions: true
+  password_hashing_algorithm_reviewed: true
+evidence:
+  required: [authentication-flow-inventory, password-storage-review, session-security-test-report, security-review]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation, escalate-to-human]
+human_review:
+  required: true
+  approver_role: Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

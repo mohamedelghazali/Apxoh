@@ -1,0 +1,41 @@
+id: SE-DB-002
+metadata:
+  title: Database Least Privilege and Data Ownership Isolation
+  domain: database
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Database access must use least privilege and enforce tenant and record ownership
+    boundaries at trusted server-side layers.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [architecture, implementation, testing, deployment, release]
+requirement:
+  statement: >
+    Use distinct least-privilege database identities for application runtime, migrations,
+    reporting, and administration where feasible; deny public database access by default;
+    restrict network access to approved workloads; never expose owner/admin credentials
+    to application clients or AI agents; and enforce tenant/record ownership checks in
+    server-side application authorization and, where supported, database row-level
+    security. Prove that one tenant/user cannot read or mutate another tenant's records.
+verification:
+  mode: hybrid
+  methods: [database-role-review, network-exposure-review, credential-separation-review, row-ownership-negative-tests, cross-tenant-isolation-tests]
+acceptance:
+  runtime_superuser_accounts: 0
+  publicly_exposed_database_endpoints: 0
+  client_exposed_database_credentials: 0
+  cross_tenant_read_or_write_paths: 0
+evidence:
+  required: [database-access-matrix, database-network-policy-report, ownership-isolation-test-report]
+failure:
+  actions: [create-finding, block-release-gate, require-remediation, escalate-to-human]
+human_review:
+  required: true
+  approver_role: Database Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required

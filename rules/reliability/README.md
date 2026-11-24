@@ -1,3 +1,6 @@
 # rules/reliability
 
-This directory defines a bounded ARKHON extension point. Add only versioned, reviewable artifacts. Required checks that cannot run are BLOCKED, never PASS. Record scope, ownership, acceptance criteria, evidence, and limitations.
+Agents MUST load applicable SE-REL-* rules before high-risk changes and production
+releases. Reliability requirements cover measurable SLOs, tested backup restoration,
+RPO/RTO, pre-change recovery points, and tested application/database rollback or forward
+recovery. A backup command or written rollback procedure alone is not evidence.
