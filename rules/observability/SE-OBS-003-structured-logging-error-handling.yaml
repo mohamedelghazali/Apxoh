@@ -1,0 +1,66 @@
+id: SE-OBS-003
+metadata:
+  title: Structured Diagnostic Logging, Safe Error Handling, and Crash Dump Governance
+  domain: observability
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Services must emit redacted structured diagnostic logs and sanitized error
+    responses while governing crash dumps and memory snapshots under distinct
+    least-privilege operational controls.
+scope:
+  project_types: [web-application, api-service, mobile-application, distributed-system, enterprise]
+  lifecycle_stages: [design, implementation, testing, deployment, operations, release]
+requirement:
+  statement: >
+    (1) Application logs, exception reporters, and telemetry: implement structured error
+    handling across all entry points and background workers so unhandled exceptions return
+    sanitized, machine-parseable error responses carrying a request or correlation identifier
+    while never exposing stack traces, SQL queries, filesystem paths, environment variables,
+    or internal topology to untrusted clients. Emit structured diagnostic logs with timestamp,
+    severity, service, correlation ID, and error code. Enforce pre-serialization sensitive-data
+    redaction or strict field allowlisting across application logs, exception-reporting SDKs,
+    and distributed trace/telemetry spans so passwords, API keys, session cookies,
+    bearer/refresh/reset tokens, database credentials, private keys, and regulated secrets
+    are never written to log or telemetry sinks, and verify these behaviors through automated
+    tests. (2) Crash dumps and memory snapshots: because raw process memory cannot be reliably
+    redacted prior to capture, disable core dumps, crash dumps, and heap snapshots by default
+    in production unless explicitly justified; where operationally justified, enforce explicit
+    authorization and least-privilege access, encryption in transit and at rest where
+    applicable, restricted storage and transfer paths, defined short retention and verifiable
+    secure deletion, and access audit monitoring, with zero unrestricted exposure to
+    developers, AI agents, CI artifacts, or third parties.
+verification:
+  mode: hybrid
+  methods:
+    - observability-behavior-test-verification
+    - error-handler-boundary-review
+    - crash-dump-governance-review
+    - human-review
+acceptance:
+  raw_stack_traces_or_internals_in_client_errors: 0
+  uncorrelated_unhandled_error_paths: 0
+  sensitive_values_in_application_logs_or_traces: 0
+  structured_diagnostic_log_schema_enforced: true
+  unjustified_production_crash_dumps_enabled: 0
+  unrestricted_crash_dump_exposure_paths: 0
+evidence:
+  required:
+    - observability-behavior-test-report
+    - error-handling-boundary-inventory
+    - diagnostic-log-and-trace-redaction-report
+    - crash-dump-governance-and-retention-policy
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: true
+  approver_role: Observability or Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required
