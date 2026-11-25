@@ -396,9 +396,9 @@ proj = tmp_path / "governed_proj"
 proj.mkdir(parents=True)
 ran = {"count": 0}
 
-    class _StubSuiteRunner(LanguageNeutralTestRunner):
-        def run(self, project_root: Path) -> RunnerResult:
-            ran["count"] += 1
+class _StubSuiteRunner(LanguageNeutralTestRunner):
+    def run(self, project_root: Path) -> RunnerResult:
+        ran["count"] += 1
             ev = project_root / ".arkhon/evidence/testing"
             ev.mkdir(parents=True, exist_ok=True)
             rp = ev / "test-execution-report.json"
