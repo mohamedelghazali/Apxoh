@@ -10,6 +10,8 @@ from pathlib import Path
 
 import yaml
 
+from arkhon.core.constants import ALL_RULE_DOMAINS
+
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -58,38 +60,53 @@ def test_generic_agent_scaffolds_require_consent_and_verification() -> None:
 
 
 def test_application_security_rules_are_present_and_agent_pack_is_synchronized() -> None:
-    rules = ROOT / "rules" / "software-security"
-    expected = [f"SE-SEC-{number:03d}" for number in range(1, 11)]
-    for rule_id in expected:
-        matches = list(rules.glob(f"{rule_id}-*.yaml"))
-        assert len(matches) == 1, rule_id
+    sec_rules = ROOT / "rules" / "software-security"
+    for rule_id in [f"SE-SEC-{number:03d}" for number in range(1, 11)]:
+        assert len(list(sec_rules.glob(f"{rule_id}-*.yaml"))) == 1, rule_id
 
-    skill_names = [
-        "application-security",
-        "secure-software-engineering",
-        "reliability-engineering",
-        "release-readiness",
+    consolidated_rules = [
+        (ROOT / "rules" / "observability", "SE-OBS-003"),
+        (ROOT / "rules" / "performance", "SE-PRF-002"),
+        (ROOT / "rules" / "testing", "SE-TST-004"),
     ]
-    for name in skill_names:
+    for directory, rule_id in consolidated_rules:
+        assert len(list(directory.glob(f"{rule_id}-*.yaml"))) == 1, rule_id
+
+    canonical_skills = sorted(p.name for p in (ROOT / "skills").iterdir() if p.is_dir())
+    packaged_root = ROOT / "src" / "arkhon" / "resources" / "agent_pack" / "skills"
+    packaged_skills = sorted(p.name for p in packaged_root.iterdir() if p.is_dir())
+    assert canonical_skills == packaged_skills
+    for name in canonical_skills:
         source = ROOT / "skills" / name / "SKILL.md"
-        packaged = (
-            ROOT / "src" / "arkhon" / "resources" / "agent_pack"
-            / "skills" / name / "SKILL.md"
-        )
+        packaged = packaged_root / name / "SKILL.md"
         assert source.is_file(), name
         assert packaged.is_file(), name
-        assert source.read_text(encoding="utf-8") == packaged.read_text(encoding="utf-8")
+        assert source.read_text(encoding="utf-8") == packaged.read_text(encoding="utf-8"), name
+
+    for doc_name in ("AGENTS.md", "SECURITY_AGENTS.md"):
+        root_doc = (ROOT / doc_name).read_text(encoding="utf-8")
+        pack_doc = (
+            ROOT / "src" / "arkhon" / "resources" / "agent_pack" / doc_name
+        ).read_text(encoding="utf-8")
+        assert root_doc == pack_doc, doc_name
 
     agent_instructions = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    packaged_instructions = (
-        ROOT / "src" / "arkhon" / "resources" / "agent_pack" / "AGENTS.md"
-    ).read_text(encoding="utf-8")
-    assert "SE-SEC-001" in agent_instructions
-    assert "SE-SEC-010" in agent_instructions
-    assert agent_instructions == packaged_instructions
+    for required_id in ("SE-SEC-001", "SE-SEC-010", "SE-OBS-003", "SE-PRF-002", "SE-TST-004"):
+        assert required_id in agent_instructions, required_id
+
+    roles_data = _load_yaml(ROOT / "agents" / "_roles.yaml")
+    covered_domains = {d for role in roles_data["roles"] for d in role["rule_domains"]}
+    assert covered_domains == set(ALL_RULE_DOMAINS)
+    roles_with_appsec = [
+        role["id"] for role in roles_data["roles"] if "application-security" in role["skills"]
+    ]
+    assert {"security-engineer", "developer", "code-reviewer", "test-engineer"} <= set(
+        roles_with_appsec
+    )
 
     security_agent = (
         ROOT / "src" / "arkhon" / "resources" / "agent_pack"
         / "agents" / "security-engineer" / "AGENT.md"
-    )
-    assert "SE-SEC-001" in security_agent.read_text(encoding="utf-8")
+    ).read_text(encoding="utf-8")
+    for required_id in ("SE-SEC-001", "SE-OBS-003", "SE-PRF-002", "SE-TST-004"):
+        assert required_id in security_agent, required_id
