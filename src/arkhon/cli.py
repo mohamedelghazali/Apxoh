@@ -341,8 +341,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
                 reason=block_reason,
             )
     else:
+        from arkhon.verification.assess_dispatch import create_assess_runner
         for runner_name in sorted(required_runners):
-            runner = runner_instances.get(runner_name)
+            runner = runner_instances.get(runner_name) or create_assess_runner(runner_name)
             if runner is None:
                 runner_results[runner_name] = RunnerResult(
                     runner=runner_name,
@@ -425,6 +426,10 @@ def cmd_assess(args: argparse.Namespace) -> int:
             "timestamp-verification",
         } and result.outcome in {RunnerOutcome.PASS, RunnerOutcome.FAIL}:
             return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
+        from arkhon.verification.assess_dispatch import evaluate_extended_method
+        extended = evaluate_extended_method(method_id, result, project)
+        if extended is not None:
+            return extended
         return STATUS_BLOCKED, result.reason or "method did not establish its acceptance criteria"
 
     outcomes_per_domain: dict[str, list[RuleOutcome]] = {}

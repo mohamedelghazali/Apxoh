@@ -1,0 +1,55 @@
+id: SE-PRF-002
+metadata:
+  title: Continuous Latency Monitoring, Degradation Detection, and Alerting
+  domain: performance
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Production and pre-release services must continuously monitor response-time
+    percentiles, detect latency and throughput degradation against baselines, and
+    route actionable alerts to accountable owners.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [implementation, performance, deployment, operations, release]
+requirement:
+  statement: >
+    Instrument critical user journeys, API endpoints, database queries, and background
+    queues to emit response-time and latency distributions (at minimum P50, P95, and P99),
+    throughput, error rate, and saturation metrics. Configure automated performance
+    degradation detection comparing release candidates and live telemetry against approved
+    latency baselines and SLO burn rates. Define actionable alert rules with severity
+    thresholds, noise-suppression windows, named owning teams, and linked remediation or
+    rollback runbooks, and verify alert delivery before production release.
+verification:
+  mode: hybrid
+  methods:
+    - latency-telemetry-instrumentation-review
+    - baseline-regression-comparison
+    - degradation-alert-rule-validation
+    - alert-routing-and-runbook-check
+    - human-review
+acceptance:
+  critical_endpoints_without_latency_percentiles: 0
+  undetected_p95_or_p99_regression_paths: 0
+  degradation_alerts_without_owner_or_runbook: 0
+  alert_delivery_verified: true
+evidence:
+  required:
+    - latency-instrumentation-catalog
+    - performance-regression-comparison-report
+    - degradation-alert-rules-and-owners
+    - alert-delivery-verification-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: true
+  approver_role: Performance or SRE Lead
+tests:
+  positive: required
+  negative: required
+  regression: required

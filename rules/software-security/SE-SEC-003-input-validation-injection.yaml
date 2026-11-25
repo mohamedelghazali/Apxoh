@@ -1,30 +1,34 @@
 id: SE-SEC-003
 metadata:
-  title: Server-Side Input Validation and Injection Prevention
+  title: Server-Side Input, Form, and API Validation and Injection Prevention
   domain: software-security
-  version: 1.0.0
+  version: 1.1.0
   status: active
   severity: critical
   enforcement: critical
   description: >
-    All untrusted input must be validated at the trust boundary and safely handled
-    by database, command, template, and serialization interfaces.
+    All untrusted input, HTML/multipart forms, and API payloads must be validated
+    at the server trust boundary and safely handled by database, command, template,
+    and serialization interfaces.
 scope:
   project_types: [web-application, api-service, mobile-application, desktop-application, enterprise]
   lifecycle_stages: [design, implementation, testing, release]
 requirement:
   statement: >
-    The agent must identify every external input boundary, validate type, shape, length,
-    range, encoding, and business constraints on the server, reject unexpected fields
-    where appropriate, and never rely on client-side validation as a security control.
-    Database access must use parameterized queries or safe ORM bindings; dynamic SQL
-    identifiers must use strict allowlists. Shell commands, templates, paths, and
-    deserialization must use context-appropriate safe APIs and allowlists.
+    The agent must identify every external input, HTML/multipart form, file upload, and API
+    endpoint boundary; enforce server-side validation of type, schema, shape, content-type,
+    payload size, length, range, encoding, and business constraints; reject unexpected or
+    mass-assigned fields by default; enforce API pagination/resource bounds; and never rely
+    on client-side validation as a security control. Database access must use parameterized
+    queries or safe ORM bindings; dynamic SQL identifiers must use strict allowlists. Shell
+    commands, templates, paths, and deserialization must use context-appropriate safe APIs
+    and allowlists.
 verification:
   mode: hybrid
-  methods: [input-boundary-inventory, server-validation-review, sql-query-review, injection-negative-tests, fuzz-or-property-tests]
+  methods: [input-boundary-inventory, server-validation-review, api-schema-and-bounds-review, sql-query-review, injection-negative-tests, fuzz-or-property-tests]
 acceptance:
   unvalidated_external_input_boundaries: 0
+  unvalidated_server_side_forms_or_api_payloads: 0
   string_concatenated_untrusted_sql: 0
   client_validation_only_controls: 0
   injection_regressions: 0

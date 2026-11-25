@@ -30,6 +30,48 @@ METHOD_REGISTRY: Mapping[str, MethodImplementation] = MappingProxyType(
         "zero-type-errors-check": MethodImplementation(
             "zero-type-errors-check", "MypyRunner", "mypy", frozenset({"code-quality"})
         ),
+        "static-lint-execution": MethodImplementation(
+            "static-lint-execution", "RuffRunner", "ruff", frozenset({"code-quality"})
+        ),
+        "zero-lint-errors-check": MethodImplementation(
+            "zero-lint-errors-check", "RuffRunner", "ruff", frozenset({"code-quality"})
+        ),
+        "automated-test-suite-execution": MethodImplementation(
+            "automated-test-suite-execution",
+            "LanguageNeutralTestRunner",
+            "test-suite",
+            frozenset({"testing"}),
+        ),
+        "zero-test-failures-check": MethodImplementation(
+            "zero-test-failures-check",
+            "LanguageNeutralTestRunner",
+            "test-suite",
+            frozenset({"testing"}),
+        ),
+        "test-collector-analysis": MethodImplementation(
+            "test-collector-analysis",
+            "LanguageNeutralTestRunner",
+            "test-suite",
+            frozenset({"testing"}),
+        ),
+        "skip-marker-detection": MethodImplementation(
+            "skip-marker-detection",
+            "LanguageNeutralTestRunner",
+            "test-suite",
+            frozenset({"testing"}),
+        ),
+        "negative-security-scenario-traceability": MethodImplementation(
+            "negative-security-scenario-traceability",
+            "verify_negative_security_scenarios",
+            "test-suite",
+            frozenset({"testing"}),
+        ),
+        "observability-behavior-test-verification": MethodImplementation(
+            "observability-behavior-test-verification",
+            "verify_observability_and_crash_dump_controls",
+            "test-suite",
+            frozenset({"observability"}),
+        ),
         "tsar-audit-invocation": MethodImplementation(
             "tsar-audit-invocation", "TsarRunner", "tsar", frozenset({"software-security"})
         ),

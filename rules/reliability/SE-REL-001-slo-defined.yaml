@@ -2,20 +2,21 @@ id: SE-REL-001
 metadata:
   title: SLO Defined for Every Service
   domain: reliability
-  version: 1.0.0
+  version: 1.1.0
   status: active
   severity: high
   enforcement: blocking
   description: >
-    Every service must have a documented Service Level Objective with an
-    error budget and monitoring.
+    Every production web application and service must have documented Service Level
+    Objectives with an error budget, monitoring, and alerting.
 scope:
-  project_types: [api-service, distributed-system, enterprise]
-  lifecycle_stages: [architecture, release]
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [architecture, operations, release]
 requirement:
   statement: >
-    Every service must define an SLO (availability, latency, error rate)
-    with a documented error budget, monitoring, and alerting.
+    Every production web application and service must define measurable SLOs
+    (availability, latency, error rate) with a documented error budget, continuous
+    monitoring, and burn-rate alerting.
 verification:
   mode: hybrid
   methods:

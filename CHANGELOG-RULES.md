@@ -4,21 +4,32 @@ This file records changes to the Apxoh rule catalog. The YAML rule files remain 
 
 Rule versioning follows docs/VERSIONING.md §3.4. The lifecycle is described in docs/rule-authoring/RULE_LIFECYCLE.md.
 
----
-
 ## [Unreleased]
 
 ### Added
 - **SE-API-001** — Versioned APIs; high / blocking / deterministic. Public API endpoints must be versioned and preserve compatibility within a major version. Location: rules/api-integration/SE-API-001-versioned-apis.yaml.
 - **SE-INF-001** — Infrastructure as Code Reviewed; high / blocking / hybrid. Infrastructure changes must be represented as code and reviewed before application. Location: rules/infrastructure/SE-INF-001-iac-reviewed.yaml.
 - **SE-REQ-003** — Requirements Traceability; high / blocking / hybrid. Approved requirements must trace to design and verification artifacts. Location: rules/requirements/SE-REQ-003-requirement-traceability.yaml.
+- **SE-SEC-001** through **SE-SEC-010** — Application Security Governance Baseline (authentication/sessions, authorization/ownership, server-side input/form/API validation & injection prevention, transport/browser controls, secrets/environment governance, auth abuse & 60s reset-token TTL, security event logging, dependency/attack-surface management, production exposure hardening, Git history secret remediation). Location: rules/software-security/.
+- **SE-DB-002** — Database Least Privilege, Credential Security, and Data Ownership Isolation; critical / critical / hybrid. Location: rules/database/SE-DB-002-database-access-isolation.yaml.
+- **SE-OBS-002** — Operations Monitoring Access Restricted; high / blocking / hybrid. Location: rules/observability/SE-OBS-002-private-operations-monitoring.yaml.
+- **SE-OBS-003** — Structured Diagnostic Logging, Safe Error Handling, and Crash Dump Governance; high / blocking / hybrid. Location: rules/observability/SE-OBS-003-structured-logging-error-handling.yaml.
+- **SE-PRF-002** — Continuous Latency Monitoring, Degradation Detection, and Alerting; high / blocking / hybrid. Location: rules/performance/SE-PRF-002-latency-degradation-alerting.yaml.
+- **SE-REL-004** — High-Risk Change Backup and Tested Rollback; critical / critical / hybrid. Location: rules/reliability/SE-REL-004-change-backup-and-rollback-plan.yaml.
+- **SE-TST-004** — Automated Cross-Language Critical-Path and Negative Security Testing; critical / critical / hybrid. Location: rules/testing/SE-TST-004-critical-and-negative-security-tests.yaml.
+
+### Changed
+- **SE-DB-001** (1.1.0) — Expanded migration compatibility, pre-change recovery point, and rollback/forward-recovery drill requirements (critical / critical / hybrid).
+- **SE-DB-002** (1.1.0) — Added database credential rotation review and unauthorized direct data modification protections.
+- **SE-OBS-001** (1.1.0) — Strengthened public health-probe disclosure limits and authenticated operator access for detailed diagnostics (high / blocking / hybrid).
+- **SE-REL-001** (1.1.0) — Added `web-application` and `operations` scope parity for service SLOs and burn-rate alerting.
+- **SE-REL-002** (1.1.0) — Aligned verification mode to `hybrid` (matching required human review) and added documented `database-recovery-plan` evidence.
+- **SE-SEC-003** (1.1.0) — Added explicit server-side HTML/multipart form, file upload, mass-assignment, and API schema/bounds controls.
 
 ### Planned
 - Expand the catalog in line with the rule-engine milestones in ROADMAP.md.
 - Add language- and project-specific rules only after their schema, applicability, verification methods, and tests are defined.
 - Keep this inventory synchronized with rules/ and languages/*/rules/.
-
----
 
 ## [1.0.0] - 2026-11-01
 
@@ -74,40 +85,38 @@ Initial catalog snapshot: **20 active rules** — 17 global rules under rules/ a
 - **SE-TST-002** — Regression Test Required for Every Bugfix; high / blocking / hybrid. Bug fixes require a regression test that reproduces the defect. Location: rules/testing/SE-TST-002-regression-test-for-bugfix.yaml.
 - **SE-TST-003** — No Undocumented Skipped Tests; medium / blocking / deterministic. Skipped tests must have a documented reason, owner, and tracking entry. Location: rules/testing/SE-TST-003-no-skipped-tests.yaml.
 
----
-
 ## Rule Statistics
 
-Current counts include 20 global rule files under rules/ and 3 Python-specific rule files under languages/python/rules/. Recalculate them when rules are added, removed, or their metadata changes.
+Current counts include 36 global rule files under rules/ and 3 Python-specific rule files under languages/python/rules/ (**39 active rules** across **16 domains**). Recalculate them when rules are added, removed, or their metadata changes.
 
 | Domain | Count | Critical | High | Medium |
 | :--- | ---: | ---: | ---: | ---: |
 | Architecture | 1 | 0 | 1 | 0 |
 | API Integration | 1 | 0 | 1 | 0 |
 | Code Quality | 2 | 0 | 1 | 1 |
-| Database | 1 | 1 | 0 | 0 |
+| Database | 2 | 2 | 0 | 0 |
 | DevOps | 1 | 0 | 1 | 0 |
 | Maintenance | 1 | 0 | 0 | 1 |
-| Observability | 1 | 0 | 1 | 0 |
-| Performance | 1 | 0 | 1 | 0 |
+| Observability | 3 | 0 | 3 | 0 |
+| Performance | 2 | 0 | 2 | 0 |
 | Privacy & Compliance | 1 | 0 | 1 | 0 |
 | Release | 1 | 0 | 0 | 1 |
-| Reliability | 2 | 1 | 1 | 0 |
+| Reliability | 3 | 2 | 1 | 0 |
 | Infrastructure | 1 | 0 | 1 | 0 |
 | Requirements | 3 | 0 | 3 | 0 |
 | Scalability | 1 | 0 | 1 | 0 |
-| Software Security | 2 | 1 | 1 | 0 |
-| Testing | 3 | 0 | 2 | 1 |
-| **Total** | **23** | **3** | **16** | **4** |
+| Software Security | 12 | 7 | 5 | 0 |
+| Testing | 4 | 1 | 2 | 1 |
+| **Total** | **39** | **12** | **23** | **4** |
 
 ### Verification Mode Statistics
 
 | Mode | Count |
 | :--- | ---: |
-| deterministic | 12 |
-| hybrid | 9 |
+| deterministic | 10 |
+| hybrid | 27 |
 | delegated | 2 |
-| **Total** | **23** |
+| **Total** | **39** |
 
 ## Inventory and Validation Notes
 
