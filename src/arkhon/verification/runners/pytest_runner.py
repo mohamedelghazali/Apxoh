@@ -10,6 +10,7 @@ from pathlib import Path
 
 from defusedxml import ElementTree
 from defusedxml.common import DefusedXmlException
+
 from arkhon.core.logging import get_logger
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
