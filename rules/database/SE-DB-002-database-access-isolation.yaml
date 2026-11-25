@@ -1,14 +1,14 @@
 id: SE-DB-002
 metadata:
-  title: Database Least Privilege and Data Ownership Isolation
+  title: Database Least Privilege, Credential Security, and Data Ownership Isolation
   domain: database
-  version: 1.0.0
+  version: 1.1.0
   status: active
   severity: critical
   enforcement: critical
   description: >
-    Database access must use least privilege and enforce tenant and record ownership
-    boundaries at trusted server-side layers.
+    Database access must enforce least privilege, protected credentials, unauthorized
+    modification controls, and tenant/record ownership boundaries at trusted layers.
 scope:
   project_types: [web-application, api-service, distributed-system, enterprise]
   lifecycle_stages: [architecture, implementation, testing, deployment, release]
@@ -16,20 +16,23 @@ requirement:
   statement: >
     Use distinct least-privilege database identities for application runtime, migrations,
     reporting, and administration where feasible; deny public database access by default;
-    restrict network access to approved workloads; never expose owner/admin credentials
-    to application clients or AI agents; and enforce tenant/record ownership checks in
-    server-side application authorization and, where supported, database row-level
-    security. Prove that one tenant/user cannot read or mutate another tenant's records.
+    restrict network access and require TLS where supported; store and rotate database
+    credentials exclusively via approved secret management without exposing owner/admin
+    credentials to clients, logs, or AI agents; prevent unauthorized direct data
+    modification or schema alteration outside governed workflows; and enforce tenant/record
+    ownership checks in server-side authorization and, where supported, database row-level
+    security. Prove that one tenant/user cannot read, modify, or delete another tenant's records.
 verification:
   mode: hybrid
-  methods: [database-role-review, network-exposure-review, credential-separation-review, row-ownership-negative-tests, cross-tenant-isolation-tests]
+  methods: [database-role-review, network-exposure-review, credential-separation-review, unauthorized-modification-controls-review, row-ownership-negative-tests, cross-tenant-isolation-tests]
 acceptance:
   runtime_superuser_accounts: 0
   publicly_exposed_database_endpoints: 0
   client_exposed_database_credentials: 0
+  unguarded_direct_data_modification_paths: 0
   cross_tenant_read_or_write_paths: 0
 evidence:
-  required: [database-access-matrix, database-network-policy-report, ownership-isolation-test-report]
+  required: [database-access-matrix, database-network-policy-report, database-credential-rotation-review, ownership-isolation-test-report]
 failure:
   actions: [create-finding, block-release-gate, require-remediation, escalate-to-human]
 human_review:
