@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 from defusedxml import ElementTree
-
+from defusedxml.common import DefusedXmlException
 from arkhon.core.logging import get_logger
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
@@ -77,7 +77,7 @@ class PytestRunner(Runner):
                     reason=f"pytest produced no JUnit XML (exit={result.returncode}): {detail}",
                 )
             try:
-                xml_root = ElementTree.parse(junit).getroot()
+                xml_root = ElementTree.parse(junit, forbid_dtd=True).getroot()
                 suites = (
                     [xml_root]
                     if xml_root.tag == "testsuite"
@@ -87,7 +87,7 @@ class PytestRunner(Runner):
                 failures = sum(int(suite.get("failures", "0")) for suite in suites)
                 errors = sum(int(suite.get("errors", "0")) for suite in suites)
                 skipped = sum(int(suite.get("skipped", "0")) for suite in suites)
-            except (ElementTree.ParseError, ValueError) as exc:
+            except (ElementTree.ParseError, DefusedXmlException, ValueError) as exc:
                 return RunnerResult(
                     runner=self.name,
                     outcome=RunnerOutcome.BLOCKED,
