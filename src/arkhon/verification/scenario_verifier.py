@@ -98,10 +98,7 @@ def _detect_attack_surface(project_root: Path) -> set[str]:
     for path in root.rglob("*"):
         if not path.is_file() or path.is_symlink() or path.resolve() == self_file:
             continue
-        try:
-            rel = path.relative_to(root)
-        except ValueError:
-            continue
+        rel = path.relative_to(root)
         if any(part in ignored for part in rel.parts) or path.suffix.lower() in _DOC_EXTENSIONS:
             continue
         if path.suffix.lower() not in {".py", ".js", ".ts", ".go", ".rs", ".java", ".cs", ".rb"}:
