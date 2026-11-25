@@ -25,6 +25,13 @@ logger = get_logger("verification.runners.test_suite")
 
 _CARGO_CASE_RE = re.compile(r"^test\s+(\S+)\s+\.\.\.\s+(ok|FAILED|ignored)\s*$")
 _NODE_CASE_RE = re.compile(r"^\s*(ok|not ok)\s+\d+\s+-\s+(.+?)(?:\s+#\s*(SKIP|TODO).*)?$")
+_ZERO_COUNTS: dict[str, int] = {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+}
 
 
 def _declared_primary_language(project_root: Path) -> str | None:
@@ -100,9 +107,7 @@ def _persist_normalized_report(
     target_dir = project_root.resolve() / ".arkhon" / "evidence" / "testing"
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
-        resolved_dir = target_dir.resolve()
-        resolved_dir.relative_to(project_root.resolve())
-        report_path = resolved_dir / "test-execution-report.json"
+        report_path = target_dir / "test-execution-report.json"
         if report_path.is_symlink():
             return None
         report_path.write_text(
@@ -110,7 +115,7 @@ def _persist_normalized_report(
             encoding="utf-8",
         )
         return report_path
-    except (OSError, ValueError):
+    except OSError:
         return None
 
 
@@ -119,8 +124,6 @@ def _parse_junit_cases(junit_path: Path) -> tuple[dict[str, int], list[dict[str,
         return None
     try:
         xml_root = ElementTree.parse(junit_path, forbid_dtd=True).getroot()
-        if xml_root is None:
-            return None
         suites = (
             [xml_root]
             if xml_root.tag == "testsuite"
@@ -158,7 +161,26 @@ def _parse_junit_cases(junit_path: Path) -> tuple[dict[str, int], list[dict[str,
                         "status": status,
                     }
                 )
-    passed = max(0, total - failed - errors - skipped)
+    counts = {
+        "total": total,
+        "passed": max(0, total - failed - errors - skipped),
+        "failed": failed,
+        "errors": errors,
+        "skipped": skipped,
+    }
+    return counts, cases
+
+
+def _summarize_cases(
+    label: str,
+    cases: list[dict[str, str]],
+    returncode: int,
+) -> tuple[str, str, dict[str, int]]:
+    passed = sum(1 for c in cases if c["status"] == "passed")
+    failed = sum(1 for c in cases if c["status"] == "failed")
+    skipped = sum(1 for c in cases if c["status"] == "skipped")
+    total = passed + failed + skipped
+    errors = 1 if returncode != 0 and failed == 0 else 0
     counts = {
         "total": total,
         "passed": passed,
@@ -166,7 +188,13 @@ def _parse_junit_cases(junit_path: Path) -> tuple[dict[str, int], list[dict[str,
         "errors": errors,
         "skipped": skipped,
     }
-    return counts, cases
+    if total == 0 and returncode == 0:
+        return "zero_tests", f"{label} collected zero tests", counts
+    if returncode != 0 or failed > 0 or errors > 0:
+        return "failed", f"{label} reported {failed} failure(s) and exit code {returncode}", counts
+    if skipped > 0:
+        return "skipped", f"{label} recorded {skipped} skipped test(s)", counts
+    return "passed", "", counts
 
 
 class LanguageNeutralTestRunner(Runner):
@@ -202,7 +230,7 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="none",
                 classification="zero_tests",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason="no supported project language or test suite markers detected",
                 extra_artifacts=[],
@@ -213,7 +241,7 @@ class LanguageNeutralTestRunner(Runner):
             language_reason=language_reason,
             adapter="none",
             classification="unsupported",
-            counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+            counts=dict(_ZERO_COUNTS),
             cases=[],
             reason=(
                 f"no verified deterministic test-runner adapter is implemented "
@@ -222,9 +250,26 @@ class LanguageNeutralTestRunner(Runner):
             extra_artifacts=[],
         )
 
+    def _exec_cli(
+        self,
+        command: list[str],
+        root: Path,
+    ) -> tuple[subprocess.CompletedProcess[str] | None, str]:
+        try:
+            proc = subprocess.run(  # noqa: S603 - resolved toolchain binary and fixed arguments
+                command,
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=self._timeout,
+                check=False,
+            )
+            return proc, ""
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return None, str(exc)
+
     def _run_python(self, root: Path, language_reason: str) -> RunnerResult:
-        pytest_runner = PytestRunner(timeout_seconds=self._timeout)
-        sub_result = pytest_runner.run(root)
+        sub_result = PytestRunner(timeout_seconds=self._timeout).run(root)
         junit_files = [Path(p) for p in sub_result.artifacts if str(p).endswith(".xml")]
         if sub_result.outcome == RunnerOutcome.BLOCKED or len(junit_files) != 1:
             reason = sub_result.reason or "Pytest runner could not execute project tests"
@@ -239,7 +284,7 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="pytest",
                 classification=classification,
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason=reason,
                 extra_artifacts=[],
@@ -252,7 +297,7 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="pytest",
                 classification="unavailable",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason="JUnit XML artifact is unreadable or malformed",
                 extra_artifacts=[],
@@ -260,11 +305,7 @@ class LanguageNeutralTestRunner(Runner):
         counts, cases = parsed
         if counts["total"] <= 0:
             classification = "zero_tests"
-        elif (
-            counts["failed"] > 0
-            or counts["errors"] > 0
-            or sub_result.outcome == RunnerOutcome.FAIL
-        ):
+        elif bool(counts["failed"] or counts["errors"] or sub_result.outcome == RunnerOutcome.FAIL):
             classification = "failed"
         elif counts["skipped"] > 0:
             classification = "skipped"
@@ -283,28 +324,16 @@ class LanguageNeutralTestRunner(Runner):
         )
 
     def _run_go(self, root: Path, language_reason: str) -> RunnerResult:
-        if not (root / "go.mod").is_file():
+        if not (root / "go.mod").is_file() or not list(root.rglob("*_test.go")):
             return self._finalize(
                 root,
                 language="go",
                 language_reason=language_reason,
                 adapter="go-test",
                 classification="zero_tests",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
-                reason="Go project is missing go.mod",
-                extra_artifacts=[],
-            )
-        if not list(root.rglob("*_test.go")):
-            return self._finalize(
-                root,
-                language="go",
-                language_reason=language_reason,
-                adapter="go-test",
-                classification="zero_tests",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
-                cases=[],
-                reason="Go project contains no *_test.go files",
+                reason="Go project is missing go.mod or *_test.go files",
                 extra_artifacts=[],
             )
         go_bin = shutil.which("go")
@@ -315,37 +344,27 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="go-test",
                 classification="unavailable",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason="go toolchain executable not found on PATH",
                 extra_artifacts=[],
             )
-        try:
-            proc = subprocess.run(  # noqa: S603 - resolved go binary and fixed arguments
-                [go_bin, "test", "-json", "./..."],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                timeout=self._timeout,
-                check=False,
-            )
-        except (OSError, subprocess.TimeoutExpired) as exc:
+        proc, err = self._exec_cli([go_bin, "test", "-json", "./..."], root)
+        if proc is None:
             return self._finalize(
                 root,
                 language="go",
                 language_reason=language_reason,
                 adapter="go-test",
                 classification="unavailable",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
-                reason=f"go test failed to execute: {exc}",
+                reason=f"go test failed to execute: {err}",
                 extra_artifacts=[],
             )
-
         cases: list[dict[str, str]] = []
-        passed = failed = skipped = 0
-        for line in (proc.stdout or "").splitlines():
-            line = line.strip()
+        for raw_line in (proc.stdout or "").splitlines():
+            line = raw_line.strip()
             if not line:
                 continue
             try:
@@ -354,44 +373,22 @@ class LanguageNeutralTestRunner(Runner):
                 continue
             if not isinstance(event, dict) or "Test" not in event:
                 continue
-            test_name = str(event["Test"])
-            pkg = str(event.get("Package", ""))
             action = str(event.get("Action", ""))
-            if action == "pass":
-                passed += 1
-                cases.append({"id": test_name, "classname": pkg, "file": "", "status": "passed"})
-            elif action == "fail":
-                failed += 1
-                cases.append({"id": test_name, "classname": pkg, "file": "", "status": "failed"})
-            elif action == "skip":
-                skipped += 1
-                cases.append({"id": test_name, "classname": pkg, "file": "", "status": "skipped"})
-
-        total = passed + failed + skipped
-        errors = 1 if proc.returncode != 0 and failed == 0 else 0
-        counts = {
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "errors": errors,
-            "skipped": skipped,
-        }
+            if action in {"pass", "fail", "skip"}:
+                mapped = {"pass": "passed", "fail": "failed", "skip": "skipped"}[action]
+                cases.append(
+                    {
+                        "id": str(event["Test"]),
+                        "classname": str(event.get("Package", "")),
+                        "file": "",
+                        "status": mapped,
+                    }
+                )
         raw_dir = root / ".arkhon" / "evidence" / "testing"
         raw_dir.mkdir(parents=True, exist_ok=True)
         raw_path = raw_dir / "go-test.jsonl"
         raw_path.write_text(proc.stdout or "", encoding="utf-8")
-        if total == 0 and proc.returncode == 0:
-            classification = "zero_tests"
-            reason = "go test collected zero tests"
-        elif proc.returncode != 0 or failed > 0 or errors > 0:
-            classification = "failed"
-            reason = f"go test reported {failed} failure(s) and exit code {proc.returncode}"
-        elif skipped > 0:
-            classification = "skipped"
-            reason = f"go test recorded {skipped} skipped test(s)"
-        else:
-            classification = "passed"
-            reason = ""
+        classification, reason, counts = _summarize_cases("go test", cases, proc.returncode)
         return self._finalize(
             root,
             language="go",
@@ -412,7 +409,7 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="cargo-test",
                 classification="zero_tests",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason="Rust project is missing Cargo.toml",
                 extra_artifacts=[],
@@ -425,76 +422,39 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="cargo-test",
                 classification="unavailable",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason="cargo toolchain executable not found on PATH",
                 extra_artifacts=[],
             )
-        try:
-            proc = subprocess.run(  # noqa: S603 - resolved cargo binary and fixed arguments
-                [cargo_bin, "test", "--no-fail-fast", "--", "--color=never"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                timeout=self._timeout,
-                check=False,
-            )
-        except (OSError, subprocess.TimeoutExpired) as exc:
+        proc, err = self._exec_cli(
+            [cargo_bin, "test", "--no-fail-fast", "--", "--color=never"], root
+        )
+        if proc is None:
             return self._finalize(
                 root,
                 language="rust",
                 language_reason=language_reason,
                 adapter="cargo-test",
                 classification="unavailable",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
-                reason=f"cargo test failed to execute: {exc}",
+                reason=f"cargo test failed to execute: {err}",
                 extra_artifacts=[],
             )
-
         cases: list[dict[str, str]] = []
-        passed = failed = skipped = 0
         combined = (proc.stdout or "") + "\n" + (proc.stderr or "")
         for line in combined.splitlines():
             match = _CARGO_CASE_RE.match(line.strip())
-            if not match:
-                continue
-            test_name, verdict = match.group(1), match.group(2)
-            if verdict == "ok":
-                passed += 1
-                cases.append({"id": test_name, "classname": "", "file": "", "status": "passed"})
-            elif verdict == "FAILED":
-                failed += 1
-                cases.append({"id": test_name, "classname": "", "file": "", "status": "failed"})
-            else:
-                skipped += 1
-                cases.append({"id": test_name, "classname": "", "file": "", "status": "skipped"})
-
-        total = passed + failed + skipped
-        errors = 1 if proc.returncode != 0 and failed == 0 else 0
-        counts = {
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "errors": errors,
-            "skipped": skipped,
-        }
+            if match:
+                verdict = match.group(2)
+                mapped = {"ok": "passed", "FAILED": "failed", "ignored": "skipped"}[verdict]
+                cases.append({"id": match.group(1), "classname": "", "file": "", "status": mapped})
         raw_dir = root / ".arkhon" / "evidence" / "testing"
         raw_dir.mkdir(parents=True, exist_ok=True)
         raw_path = raw_dir / "cargo-test.txt"
         raw_path.write_text(combined, encoding="utf-8")
-        if total == 0 and proc.returncode == 0:
-            classification = "zero_tests"
-            reason = "cargo test collected zero tests"
-        elif proc.returncode != 0 or failed > 0 or errors > 0:
-            classification = "failed"
-            reason = f"cargo test reported {failed} failure(s) and exit code {proc.returncode}"
-        elif skipped > 0:
-            classification = "skipped"
-            reason = f"cargo test recorded {skipped} ignored test(s)"
-        else:
-            classification = "passed"
-            reason = ""
+        classification, reason, counts = _summarize_cases("cargo test", cases, proc.returncode)
         return self._finalize(
             root,
             language="rust",
@@ -516,7 +476,7 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="none",
                 classification="zero_tests",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason=f"{language} project is missing package.json",
                 extra_artifacts=[],
@@ -530,7 +490,7 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="none",
                 classification="unavailable",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason=f"invalid package.json: {exc}",
                 extra_artifacts=[],
@@ -546,113 +506,79 @@ class LanguageNeutralTestRunner(Runner):
                 language_reason=language_reason,
                 adapter="none",
                 classification="zero_tests",
-                counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
+                counts=dict(_ZERO_COUNTS),
                 cases=[],
                 reason="package.json defines no executable test script",
                 extra_artifacts=[],
             )
-
-        if "node --test" in test_script:
-            node_bin = shutil.which("node")
-            if node_bin is None:
-                return self._finalize(
-                    root,
-                    language=language,
-                    language_reason=language_reason,
-                    adapter="node-test",
-                    classification="unavailable",
-                    counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
-                    cases=[],
-                    reason="node runtime not found on PATH",
-                    extra_artifacts=[],
-                )
-            try:
-                proc = subprocess.run(  # noqa: S603 - resolved node binary and fixed TAP reporter
-                    [node_bin, "--test", "--test-reporter=tap"],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    timeout=self._timeout,
-                    check=False,
-                )
-            except (OSError, subprocess.TimeoutExpired) as exc:
-                return self._finalize(
-                    root,
-                    language=language,
-                    language_reason=language_reason,
-                    adapter="node-test",
-                    classification="unavailable",
-                    counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
-                    cases=[],
-                    reason=f"node --test failed to execute: {exc}",
-                    extra_artifacts=[],
-                )
-            cases: list[dict[str, str]] = []
-            passed = failed = skipped = 0
-            for line in (proc.stdout or "").splitlines():
-                m = _NODE_CASE_RE.match(line)
-                if not m:
-                    continue
-                verdict, name, directive = m.group(1), m.group(2).strip(), m.group(3)
-                if directive in {"SKIP", "TODO"}:
-                    skipped += 1
-                    cases.append({"id": name, "classname": "", "file": "", "status": "skipped"})
-                elif verdict == "ok":
-                    passed += 1
-                    cases.append({"id": name, "classname": "", "file": "", "status": "passed"})
-                else:
-                    failed += 1
-                    cases.append({"id": name, "classname": "", "file": "", "status": "failed"})
-            total = passed + failed + skipped
-            errors = 1 if proc.returncode != 0 and failed == 0 else 0
-            counts = {
-                "total": total,
-                "passed": passed,
-                "failed": failed,
-                "errors": errors,
-                "skipped": skipped,
-            }
-            raw_dir = root / ".arkhon" / "evidence" / "testing"
-            raw_dir.mkdir(parents=True, exist_ok=True)
-            raw_path = raw_dir / "node-test.tap"
-            raw_path.write_text(proc.stdout or "", encoding="utf-8")
-            if total == 0:
-                classification = "zero_tests"
-                reason = "node --test executed zero test cases"
-            elif proc.returncode != 0 or failed > 0 or errors > 0:
-                classification = "failed"
-                reason = f"node --test reported {failed} failure(s)"
-            elif skipped > 0:
-                classification = "skipped"
-                reason = f"node --test recorded {skipped} skipped test(s)"
-            else:
-                classification = "passed"
-                reason = ""
+        if "node --test" not in test_script:
+            return self._finalize(
+                root,
+                language=language,
+                language_reason=language_reason,
+                adapter="none",
+                classification="unavailable",
+                counts=dict(_ZERO_COUNTS),
+                cases=[],
+                reason=(
+                    f"no verified local test runner available for {language} script "
+                    f"{test_script!r}"
+                ),
+                extra_artifacts=[],
+            )
+        node_bin = shutil.which("node")
+        if node_bin is None:
             return self._finalize(
                 root,
                 language=language,
                 language_reason=language_reason,
                 adapter="node-test",
-                classification=classification,
-                counts=counts,
-                cases=cases,
-                reason=reason,
-                extra_artifacts=[raw_path],
+                classification="unavailable",
+                counts=dict(_ZERO_COUNTS),
+                cases=[],
+                reason="node runtime not found on PATH",
+                extra_artifacts=[],
             )
-
+        proc, err = self._exec_cli([node_bin, "--test", "--test-reporter=tap"], root)
+        if proc is None:
+            return self._finalize(
+                root,
+                language=language,
+                language_reason=language_reason,
+                adapter="node-test",
+                classification="unavailable",
+                counts=dict(_ZERO_COUNTS),
+                cases=[],
+                reason=f"node --test failed to execute: {err}",
+                extra_artifacts=[],
+            )
+        cases: list[dict[str, str]] = []
+        for line in (proc.stdout or "").splitlines():
+            m = _NODE_CASE_RE.match(line)
+            if m:
+                verdict, name, directive = m.group(1), m.group(2).strip(), m.group(3)
+                if directive in {"SKIP", "TODO"}:
+                    mapped = "skipped"
+                elif verdict == "ok":
+                    mapped = "passed"
+                else:
+                    mapped = "failed"
+                cases.append({"id": name, "classname": "", "file": "", "status": mapped})
+        raw_dir = root / ".arkhon" / "evidence" / "testing"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / "node-test.tap"
+        raw_path.write_text(proc.stdout or "", encoding="utf-8")
+        classification, reason, counts = _summarize_cases("node --test", cases, proc.returncode)
         return self._finalize(
             root,
             language=language,
             language_reason=language_reason,
-            adapter="none",
-            classification="unavailable",
-            counts={"total": 0, "passed": 0, "failed": 0, "errors": 0, "skipped": 0},
-            cases=[],
-            reason=(
-                f"no verified local test runner available for {language} script "
-                f"{test_script!r}"
-            ),
-            extra_artifacts=[],
+            adapter="node-test",
+            classification=classification,
+            counts=counts,
+            cases=cases,
+            reason=reason,
+            extra_artifacts=[raw_path],
         )
 
     def _finalize(
