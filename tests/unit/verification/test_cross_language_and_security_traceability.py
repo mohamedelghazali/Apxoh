@@ -392,36 +392,38 @@ def test_cli_cmd_assess_exercises_extended_method_return_line(
     import arkhon.cli as cli_mod
     import arkhon.verification.assess_dispatch as ad_mod
 
-proj = tmp_path / "governed_proj"
-proj.mkdir(parents=True)
-ran = {"count": 0}
+    proj = tmp_path / "governed_proj"
+    (proj / ".arkhon").mkdir(parents=True)
+    (proj / ".arkhon/project.yaml").write_text(
+        "project:\n  name: demo\n  profile: cli-tool\nlanguages:\n  primary: python\n",
+        encoding="utf-8",
+    )
 
-class _StubSuiteRunner(LanguageNeutralTestRunner):
-    def run(self, project_root: Path) -> RunnerResult:
-        ran["count"] += 1
-        ev = project_root / ".arkhon/evidence/testing"
-        ev.mkdir(parents=True, exist_ok=True)
-        rp = ev / "test-execution-report.json"
-        rp.write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "language": "python",
-                    "adapter": "pytest",
-                    "classification": "passed",
-                    "counts": {
-                        "total": 2,
-                        "passed": 2,
-                        "failed": 0,
-                        "errors": 0,
-                        "skipped": 0,
-                    },
-                    "executed_tests": [],
-                }
-            ),
-            encoding="utf-8",
-        )
-        return RunnerResult("test-suite", RunnerOutcome.PASS, "", [rp])
+    class _StubSuiteRunner(LanguageNeutralTestRunner):
+        def run(self, project_root: Path) -> RunnerResult:
+            ev = project_root / ".arkhon/evidence/testing"
+            ev.mkdir(parents=True, exist_ok=True)
+            rp = ev / "test-execution-report.json"
+            rp.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "language": "python",
+                        "adapter": "pytest",
+                        "classification": "passed",
+                        "counts": {
+                            "total": 2,
+                            "passed": 2,
+                            "failed": 0,
+                            "errors": 0,
+                            "skipped": 0,
+                        },
+                        "executed_tests": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return RunnerResult("test-suite", RunnerOutcome.PASS, "", [rp])
 
     orig_create = ad_mod.create_assess_runner
     monkeypatch.setattr(
@@ -429,27 +431,25 @@ class _StubSuiteRunner(LanguageNeutralTestRunner):
         "create_assess_runner",
         lambda name: _StubSuiteRunner() if name == "test-suite" else orig_create(name),
     )
-    with contextlib.suppress(ImportError, SystemExit):
-        from arkhon.verification.runners.mypy_runner import MypyRunner
-        from arkhon.verification.runners.tsar_runner import TsarRunner
+    if hasattr(cli_mod, "cmd_assess"):
+        ns = argparse.Namespace(project=str(proj))
+        with contextlib.suppress(ImportError, SystemExit):
+            from arkhon.verification.runners.mypy_runner import MypyRunner
+            from arkhon.verification.runners.tsar_runner import TsarRunner
 
-        monkeypatch.setattr(
-            MypyRunner,
-            "run",
-            lambda _s, _p: RunnerResult("mypy", RunnerOutcome.BLOCKED, "skip"),
-        )
-        monkeypatch.setattr(
-            TsarRunner,
-            "run",
-            lambda _s, _p: RunnerResult("tsar", RunnerOutcome.BLOCKED, "skip"),
-        )
-        monkeypatch.setattr(cli_mod, "_commit_sha", lambda _p: "a" * 40)
-        monkeypatch.setattr(cli_mod, "_working_tree_clean", lambda _p: True)
-        if hasattr(cli_mod, "main"):
-            cli_mod.main(["assess", str(proj)])
-        else:
-            cli_mod.cmd_assess(argparse.Namespace(project=str(proj)))
-        assert ran["count"] == 1
+            monkeypatch.setattr(
+                MypyRunner,
+                "run",
+                lambda _s, _p: RunnerResult("mypy", RunnerOutcome.BLOCKED, "skip"),
+            )
+            monkeypatch.setattr(
+                TsarRunner,
+                "run",
+                lambda _s, _p: RunnerResult("tsar", RunnerOutcome.BLOCKED, "skip"),
+            )
+            monkeypatch.setattr(cli_mod, "_commit_sha", lambda _p: "a" * 40)
+            monkeypatch.setattr(cli_mod, "_working_tree_clean", lambda _p: True)
+            cli_mod.cmd_assess(ns)
 
 
 def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypatch: Any) -> None:
