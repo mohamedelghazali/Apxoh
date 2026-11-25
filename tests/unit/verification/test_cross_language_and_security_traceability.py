@@ -399,29 +399,29 @@ ran = {"count": 0}
 class _StubSuiteRunner(LanguageNeutralTestRunner):
     def run(self, project_root: Path) -> RunnerResult:
         ran["count"] += 1
-            ev = project_root / ".arkhon/evidence/testing"
-            ev.mkdir(parents=True, exist_ok=True)
-            rp = ev / "test-execution-report.json"
-            rp.write_text(
-                json.dumps(
-                    {
-                        "schema_version": 1,
-                        "language": "python",
-                        "adapter": "pytest",
-                        "classification": "passed",
-                        "counts": {
-                            "total": 2,
-                            "passed": 2,
-                            "failed": 0,
-                            "errors": 0,
-                            "skipped": 0,
-                        },
-                        "executed_tests": [],
-                    }
-                ),
-                encoding="utf-8",
-            )
-            return RunnerResult("test-suite", RunnerOutcome.PASS, "", [rp])
+        ev = project_root / ".arkhon/evidence/testing"
+        ev.mkdir(parents=True, exist_ok=True)
+        rp = ev / "test-execution-report.json"
+        rp.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "language": "python",
+                    "adapter": "pytest",
+                    "classification": "passed",
+                    "counts": {
+                        "total": 2,
+                        "passed": 2,
+                        "failed": 0,
+                        "errors": 0,
+                        "skipped": 0,
+                    },
+                    "executed_tests": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+        return RunnerResult("test-suite", RunnerOutcome.PASS, "", [rp])
 
     orig_create = ad_mod.create_assess_runner
     monkeypatch.setattr(
