@@ -35,8 +35,6 @@ def inspect_junit_artifact(artifact_path: Path) -> tuple[int, int, int, int] | N
         return None
     try:
         xml_root = ElementTree.parse(artifact_path, forbid_dtd=True).getroot()
-        if xml_root is None:
-            return None
         suites = (
             [xml_root]
             if xml_root.tag == "testsuite"
