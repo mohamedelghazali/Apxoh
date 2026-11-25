@@ -201,4 +201,4 @@ def validate_rule(rule: Rule, schema_path: Path | None = None) -> list[RuleValid
     if schema_path is not None:
         errors.extend(validate_against_schema(rule, schema_path))
     errors.extend(validate_semantics(rule))
-    return errors.
+    return errors
