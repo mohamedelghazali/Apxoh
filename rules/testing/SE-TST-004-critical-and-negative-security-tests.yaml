@@ -1,0 +1,62 @@
+id: SE-TST-004
+metadata:
+  title: Automated Cross-Language Critical-Path and Negative Security Testing
+  domain: testing
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Target projects must execute language-appropriate automated behavioral tests
+    verifying critical functional workflows and scenario-mapped negative security
+    controls with real execution provenance.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, testing, verification, release]
+requirement:
+  statement: >
+    Execute automated behavioral tests using the verified test runner appropriate to the
+    project's language ecosystem (never requiring Python tooling for non-Python projects,
+    and never reporting PASS when no verified runner is available). Map and verify both
+    critical functional workflows and every applicable negative-security scenario derived
+    from the project's actual architecture and attack surface: (1) unauthenticated access,
+    (2) horizontal and vertical privilege escalation, (3) IDOR and unauthorized resource
+    access, (4) cross-user and cross-tenant read/write/delete isolation, (5) SQL, command,
+    and template injection where applicable, (6) CSRF on cookie-authenticated state-changing
+    operations, (7) login and password-recovery rate-limit abuse, and (8) expired, replayed,
+    malformed, and revoked authentication/recovery tokens. Record the actual test file, test
+    identifier, runner outcome, and commit-bound execution artifact in
+    .arkhon/security-test-matrix.yaml. Authorization boundaries must be exercised rather
+    than mocked out or bypassed; documentation, generic test counts, skipped tests, or
+    tautological assertions do not satisfy this rule.
+verification:
+  mode: hybrid
+  methods:
+    - automated-test-suite-execution
+    - zero-test-failures-check
+    - negative-security-scenario-traceability
+    - critical-workflow-test-coverage-review
+    - human-security-review
+acceptance:
+  failing_automated_tests: 0
+  untested_critical_functional_workflows: 0
+  missing_applicable_negative_security_scenarios: 0
+  mocked_or_tautological_security_assertions: 0
+evidence:
+  required:
+    - normalized-test-execution-report
+    - security-scenario-traceability-report
+    - critical-functionality-test-matrix
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+    - escalate-to-human
+human_review:
+  required: true
+  approver_role: Test Lead or Application Security Engineer
+tests:
+  positive: required
+  negative: required
+  regression: required
