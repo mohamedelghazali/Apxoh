@@ -146,33 +146,40 @@ Do not claim these checks are active or passing until the corresponding workflow
 
 When governing an application, API, service, mobile client, data platform, or production
 deployment, the agent MUST load applicable rules in rules/software-security/, rules/database/,
-rules/observability/, rules/reliability/, and rules/privacy-compliance/. Use the
-application-security skill for application-facing work and secure/reliability engineering
-skills as applicable.
+rules/observability/, rules/performance/, rules/reliability/, rules/testing/, and
+rules/privacy-compliance/. Use the application-security, software-testing,
+performance-engineering, and reliability-engineering skills as applicable.
 
 Before implementation, create a threat model and a rule traceability matrix. At minimum,
 review authentication/password hashing/session lifecycle; authorization and tenant/record
-ownership; server-side input validation and parameterized queries; HTTPS/TLS certificate
-validation; CORS, security headers, CSRF and cookie attributes where applicable; secrets
-and environment configuration; login/recovery rate limits and reset-token expiry; security
-logging and redaction; dependency vulnerabilities and unused dependencies; production
-debug mode and exposed resources; Git history secret scanning; database least privilege;
-monitoring access; backups, migrations, and tested rollback.
+ownership; server-side input/form/API validation and parameterized queries; HTTPS/TLS
+certificate validation; CORS, security headers, CSRF and cookie attributes where applicable;
+secrets and environment configuration; login/recovery rate limits and reset-token expiry;
+structured error handling, diagnostic logging, and security/application log/trace redaction;
+crash dump disablement by default and least-privilege encrypted retention where justified;
+dependency vulnerabilities and unused dependencies; production debug mode and exposed
+resources; Git history secret scanning; database least privilege and credential protection;
+monitoring access, latency percentiles, and degradation alerting; language-appropriate
+automated critical-path and scenario-traced negative security testing; backups, migrations,
+restore drills, and tested rollback.
 
-The exact controls are defined in applicable SE-SEC-*, SE-DB-*, SE-OBS-*, and SE-REL-* rules.
-The baseline is enumerated by SE-SEC-001 through SE-SEC-010, SE-DB-002, SE-OBS-002,
-and SE-REL-004, alongside the strengthened SE-DB-001 and SE-OBS-001 rules. Load the
-application-security skill from the installed pack when the target project has an
-application-facing security surface.
+The exact controls are defined in applicable SE-SEC-*, SE-DB-*, SE-OBS-*, SE-PRF-*, SE-REL-*,
+and SE-TST-* rules. The baseline is enumerated by SE-SEC-001 through SE-SEC-010, SE-DB-001,
+SE-DB-002, SE-OBS-001 through SE-OBS-003, SE-PRF-001, SE-PRF-002, SE-REL-001, SE-REL-002,
+SE-REL-004, and SE-TST-002 through SE-TST-004. Load the application-security skill from the
+installed pack whenever the target project has an application-facing security surface.
 
-Do not treat TSAR as complete coverage: follow integrations/tsar/contract.yaml and run
-separate tools/tests for controls outside its declared scope.
+Do not treat TSAR, static linters, or generic test counts as complete coverage: follow
+integrations/tsar/contract.yaml and record scenario-level automated test traceability in
+.arkhon/security-test-matrix.yaml (unauthenticated access, privilege escalation, IDOR,
+cross-tenant isolation, injection, CSRF, rate-limit abuse, expired/replayed/revoked tokens)
+without mocking out authorization boundaries.
 
-For every rule, report PASS, FAIL, BLOCKED, or NOT_APPLICABLE with reason and evidence
-bound to the evaluated commit. NOT_APPLICABLE requires an architectural explanation.
-Missing implementation, tests, scanner support, or evidence is never a reason for PASS.
-A checklist or method name does not prove execution. Critical/high applicable failures
-block the relevant stage and require human escalation under policy.
+For every rule, machine assessment records PASS, FAIL, BLOCKED, or NOT_APPLICABLE bound to
+the evaluated commit; in human and agent governance audit reports, use PASS, FAIL, BLOCKED,
+NOT VERIFIED (when evidence is insufficient to establish the claim), or NOT APPLICABLE
+(with an explicit architectural explanation). Neither BLOCKED nor NOT VERIFIED may ever be
+treated as PASS. Critical/high failures block the relevant stage and require human escalation.
 
 Before high-risk production changes, verify a suitable pre-change recovery point, restore
 integrity, RPO/RTO, and tested application/database rollback or forward-recovery steps.
