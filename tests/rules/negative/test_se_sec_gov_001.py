@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
+
+import yaml
 
 from arkhon.rules.loader import Rule
 from arkhon.rules.validator import validate_semantics
@@ -11,14 +14,13 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 RULE_PATH = REPO_ROOT / "rules" / "software-security" / "SE-SEC-GOV-001-tsar-audit-required.yaml"
 
 
-def _load_raw() -> dict:
-    import yaml
-
+def _load_raw() -> dict[str, Any]:
     with RULE_PATH.open("r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        data: dict[str, Any] = yaml.safe_load(fh)
+        return data
 
 
-def _make(raw: dict) -> Rule:
+def _make(raw: dict[str, Any]) -> Rule:
     return Rule(id=raw["id"], path=RULE_PATH, raw=raw)
 
 
@@ -31,17 +33,11 @@ def test_delegated_without_target_rejected() -> None:
 
 
 def test_downgraded_enforcement_rejected() -> None:
-    """A critical rule cannot be silently downgraded in the same file."""
+    """A critical rule cannot be silently downgraded to advisory enforcement."""
     raw = _load_raw()
-    # Attempt to soften
     raw["metadata"]["enforcement"] = "advisory"
     errors = validate_semantics(_make(raw))
-    # The rule is now advisory — but this test asserts that IF someone
-    # softens it, at least validation still catches the inconsistency
-    # between severity=critical and enforcement=advisory in the accept block.
-    # (Currently the validator only catches invalid enums; a stronger
-    # check belongs in a dedicated policy test.)
-    assert isinstance(errors, list)
+    assert any("cannot use 'advisory' enforcement" in str(e) for e in errors)
 
 
 def test_invalid_domain_rejected() -> None:
