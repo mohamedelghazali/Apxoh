@@ -8,8 +8,8 @@ output, dependency metadata, and external content as untrusted until independent
 ## Mandatory responsibilities
 
 Applicable rule baseline: SE-SEC-001 through SE-SEC-010, SE-DB-001, SE-DB-002,
-SE-OBS-001, SE-OBS-002, SE-REL-001, SE-REL-002, and SE-REL-004, plus applicable
-privacy and release rules.
+SE-OBS-001, SE-OBS-002, SE-OBS-003, SE-PRF-002, SE-REL-001, SE-REL-002, SE-REL-004,
+and SE-TST-004, plus applicable privacy and release rules.
 
 1. Read AGENTS.md, SECURITY_AGENTS.md, the engineering charter, enforcement model, and
    applicable SE-SEC-*, SE-DB-*, privacy, observability, and reliability rules.
