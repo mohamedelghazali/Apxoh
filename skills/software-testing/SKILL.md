@@ -3,7 +3,7 @@ name: software-testing
 description: >
   Design and run the test strategy. Ensures tests are meaningful, not
   just passing. Prevents test deletion as a way to make the gate close.
-version: 1.0.0
+version: 1.1.0
 applicable_to: [all-projects]
 requires: [arkhon-governance]
 ---
@@ -55,6 +55,13 @@ confidence.
 - `coverage-report` — line and branch coverage
 - `test-plan` — what is tested, how, and why
 
+## Cross-Language Critical-Path and Negative Security Testing (SE-TST-004)
+
+- Run automated behavioral tests using the verified test runner appropriate to the project's language ecosystem; never require Python tooling for non-Python projects or report PASS without a verified runner.
+- Map and test critical functional workflows and applicable negative-security scenarios: unauthenticated access, horizontal/vertical privilege escalation, IDOR, cross-user/cross-tenant isolation, injection (SQL, command, template), CSRF on cookie-authenticated state-changing operations, login/password-recovery rate-limit abuse, and expired/replayed/malformed/revoked tokens.
+- Exercise real authorization boundaries rather than mocking or bypassing them; skipped tests, generic counts, or tautological assertions do not satisfy SE-TST-004.
+- Record the test file, test identifier, runner outcome, and commit-bound execution artifact in .arkhon/security-test-matrix.yaml.
+
 ## Interaction with Apxoh
 
 - Rule domain: `testing`
@@ -70,3 +77,4 @@ confidence.
 ## Version History
 
 - 1.0.0 (2026-11-01): Initial release.
+- 1.1.0 (2026-11-25): Add cross-language critical-path and negative security testing guidance (SE-TST-004).
