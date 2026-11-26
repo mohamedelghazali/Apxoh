@@ -10,6 +10,7 @@ from arkhon.security_audit.coverage import (
     build_canonical_coverage_id,
     compare_coverage_ledgers,
 )
+from arkhon.security_audit.dispatcher import AuditRole, SecurityAuditTaskDispatcher
 from arkhon.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
@@ -89,6 +90,7 @@ __all__ = [
     "ArtifactValidationResult",
     "AttackClassDefinition",
     "AttackClassRegistry",
+    "AuditRole",
     "CoverageAttempt",
     "CoverageCheck",
     "CoverageLedger",
@@ -106,6 +108,7 @@ __all__ = [
     "SandboxLimits",
     "SandboxResult",
     "SecurityAuditRunner",
+    "SecurityAuditTaskDispatcher",
     "SecurityFinding",
     "SeverityAssessment",
     "TraceStep",
