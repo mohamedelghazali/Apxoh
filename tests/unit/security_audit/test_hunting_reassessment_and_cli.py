@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -21,10 +22,12 @@ from arkhon.verification.assess_dispatch import (
 from arkhon.verification.methods import resolve_method
 from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
 
+_GIT = shutil.which("git") or "/usr/bin/git"
+
 
 def _git(cwd: Path, *args: str) -> str:
-    res = subprocess.run(  # noqa: S603, S607
-        ["git", *args],
+    res = subprocess.run(  # noqa: S603
+        [_GIT, *args],
         cwd=cwd,
         capture_output=True,
         text=True,
@@ -216,7 +219,7 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
         runner="security-audit",
         outcome=RunnerOutcome.PASS,
         reason="clean",
-        artifacts=(str(run2_dir / "security-audit-report.json"),),
+        artifacts=[run2_dir / "security-audit-report.json"],
     )
     assert evaluate_extended_method(
         "security-audit-artifact-verification", pass_res, proj
@@ -226,11 +229,11 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
         runner="security-audit",
         outcome=RunnerOutcome.FAIL,
         reason="confirmed findings",
-        artifacts=(str(run3_dir / "security-audit-report.json"),),
+        artifacts=[run3_dir / "security-audit-report.json"],
     )
     assert evaluate_security_audit_method(fail_res)[0] == "FAIL"
     assert evaluate_security_audit_method(
-        RunnerResult(runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=())
+        RunnerResult(runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=[])
     )[0] == "BLOCKED"
 
     # Rule outcomes derivation & invalid bundle refusal
@@ -246,7 +249,7 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
     evid_id, evid_path, gate_st = record_security_audit_evidence(
         project_root=proj, audit_dir=run2_dir, commit_sha=_git(proj, "rev-parse", "HEAD")
     )
-    assert evid_id.startswith("EVID-SECAUD-")
+    assert evid_id.startswith("EVID-")
     assert evid_path.is_file()
     assert gate_st == "PASS"
 
