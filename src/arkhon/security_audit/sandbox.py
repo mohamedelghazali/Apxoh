@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import os
 import re
@@ -97,7 +98,20 @@ def probe_sandbox_capabilities(
     if bwrap is not None and run_probe:
         try:
             probe_bwrap = subprocess.run(  # noqa: S603 - fixed binary probe
-                [bwrap, "--unshare-net", "--ro-bind", "/", "/", "/bin/true"],
+                [
+                    bwrap, 
+                    "--unshare-net",
+                    "--unshare-pid",
+                    "--die-with-parent",
+                    "--ro-bind",
+                    "/",
+                    "/",
+                    "--dev",
+                    "/dev",
+                    "--proc",
+                    "/proc",
+                    "/bin/true",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=3,
@@ -188,22 +202,17 @@ def _build_preexec_limiter(limits: SandboxLimits) -> Callable[[], None]:
             (resource.RLIMIT_NOFILE, (limits.max_open_files, limits.max_open_files)),
         )
         for res_key, bounds in pairs:
-            try:
+            with contextlib.suppress(OSError, ValueError):
                 resource.setrlimit(res_key, bounds)
-            except (OSError, ValueError):
-                continue
         for optional_key, bound_val in (
             (resource.RLIMIT_AS, limits.memory_bytes),
             (resource.RLIMIT_NPROC, limits.max_processes),
         ):
-            try:
+            with contextlib.suppress(OSError, ValueError):
                 soft, hard = resource.getrlimit(optional_key)
                 capped = bound_val if hard == resource.RLIM_INFINITY else min(bound_val, hard)
                 _ = soft
                 resource.setrlimit(optional_key, (capped, hard))
-            except (OSError, ValueError):
-                continue
-
     return _apply
 
 
@@ -397,10 +406,8 @@ def _walk_parent_dirs_nofollow(root_fd: int, segments: tuple[str, ...], create: 
     try:
         for seg in segments:
             if create:
-                try:
+                with contextlib.suppress(FileExistsError):
                     os.mkdir(seg, 0o700, dir_fd=current_fd)
-                except FileExistsError:
-                    pass
             next_fd = os.open(seg, flags, dir_fd=current_fd)
             st = os.fstat(next_fd)
             if not stat.S_ISDIR(st.st_mode):
