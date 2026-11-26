@@ -185,6 +185,12 @@ Before high-risk production changes, verify a suitable pre-change recovery point
 integrity, RPO/RTO, and tested application/database rollback or forward-recovery steps.
 Do not claim monitoring, backup, logging, or rollback readiness without current evidence.
 
+For structured source-code security reviews, use `arkhon audit plan`,
+`arkhon audit run`, `arkhon audit validate`, and `arkhon audit reassess` with the
+`security-audit` skill. Never allow a discovering agent to self-confirm a finding,
+never assign severity to `needs_validation` leads, and never convert `BLOCKED` or
+`needs_validation` outcomes into `PASS`.
+
 ---
 
 **End of AGENTS.md**
