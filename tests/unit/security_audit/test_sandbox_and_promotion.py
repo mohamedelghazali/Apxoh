@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -53,7 +54,8 @@ def test_sandbox_capability_probing_and_isolated_execution(tmp_path: Path) -> No
     assert caps_bad_bin.unshare_net_available is False
 
     src_root = tmp_path / "src_repo"
-    src_root.mkdir()
+    (src_root / ".git").mkdir(parents=True)
+    (src_root / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
     (src_root / "app.py").write_text("x = 1\n", encoding="utf-8")
 
     # Fail-closed when network isolation is unavailable
@@ -125,6 +127,30 @@ def test_sandbox_capability_probing_and_isolated_execution(tmp_path: Path) -> No
     )
     assert tamper_res.status == "BLOCKED"
     assert "modified" in (tamper_res.blocker_reason or "")
+
+    # Deterministic unshare command-building coverage (both with and without loopback)
+    unshare_caps = SandboxCapabilities(True, True, True, True, None, True)
+    unshare_exec = SandboxExecutor(tmp_path / "audit_unshare_mock", capabilities=unshare_caps)
+    with patch(
+        "shutil.which",
+        side_effect=lambda name: "/bin/echo" if name == "unshare" else None,
+    ):
+        u_no_lo = unshare_exec.run_bounded(
+            agent_id="hunter-u1", argv=["ok"], source_root=src_root, allow_loopback=False
+        )
+        assert u_no_lo.status == "PASS"
+    with patch(
+        "shutil.which",
+        side_effect=lambda name: {
+            "unshare": "/bin/echo",
+            "ip": "/bin/true",
+            "sh": "/bin/sh",
+        }.get(name),
+    ):
+        u_lo = unshare_exec.run_bounded(
+            agent_id="hunter-u2", argv=["ok"], source_root=src_root, allow_loopback=True
+        )
+        assert u_lo.status == "PASS"
 
     # Real Linux unshare -r --net verification when available on host
     live_exec = SandboxExecutor(tmp_path / "audit_live")
