@@ -23,10 +23,19 @@ from arkhon.security_audit.hunting import (
     seed_coverage_ledger,
     write_reconnaissance_artifacts,
 )
+from arkhon.security_audit.orchestrator import (
+    CHECKPOINT_FILENAME,
+    MultiAgentAuditOrchestrator,
+    OrchestrationConfig,
+)
 from arkhon.security_audit.reassessment import reassess_repository
 from arkhon.security_audit.reporting import (
     compute_governance_gate_status,
     write_audit_reports,
+)
+from arkhon.security_audit.runtime import (
+    detect_available_runtimes,
+    resolve_runtime_adapter,
 )
 from arkhon.security_audit.sandbox import (
     SandboxCapabilities,
@@ -40,6 +49,8 @@ SECURITY_AUDIT_ACTIONS = frozenset(
     {
         "plan",
         "run",
+        "resume",
+        "runtimes",
         "status",
         "coverage",
         "verify-findings",
@@ -91,7 +102,17 @@ def dispatch_security_audit(
     raw_project = getattr(args, "project_flag", None) or getattr(args, "audit_target", None) or "."
     project = Path(raw_project).resolve()
 
-    if action in {"plan", "run", "reassess"}:
+    if action == "runtimes":
+        descriptors = detect_available_runtimes(agent_cmd=getattr(args, "agent_cmd", None))
+        rt_payload: dict[str, Any] = {
+            "action": "runtimes",
+            "runtimes": [d.to_dict() for d in descriptors],
+        }
+        avail = [d.runtime_id for d in descriptors if d.available]
+        _emit(rt_payload, as_json, f"[OK] available runtimes: {', '.join(avail)}")
+        return 0
+
+    if action in {"plan", "run", "resume", "reassess"}:
         if not project.is_dir():
             print(f"[FAIL] not a directory: {project}", file=sys.stderr)
             return 1
@@ -126,8 +147,7 @@ def dispatch_security_audit(
         _emit(plan_payload, as_json, f"[OK] security audit plan written to {out_dir}")
         return 0
 
-    if action == "run":
-        out_dir = _resolve_output_dir(args, project, run_id)
+    if action in {"run", "resume"}:
         sandbox_mode = getattr(args, "sandbox_mode", "auto")
         caps = _resolve_sandbox_caps(sandbox_mode)
         if sandbox_mode == "required" and not caps.can_enforce_full_sandbox:
@@ -137,6 +157,94 @@ def dispatch_security_audit(
                 file=sys.stderr,
             )
             return 1
+
+        is_resume = action == "resume" or bool(getattr(args, "resume", False))
+        if action == "resume":
+            raw_audit_dir = getattr(args, "audit_dir", None)
+            if not raw_audit_dir:
+                print("[FAIL] --audit-dir is required for 'arkhon audit resume'", file=sys.stderr)
+                return 1
+            out_dir = Path(raw_audit_dir).resolve()
+            if not (out_dir / CHECKPOINT_FILENAME).is_file():
+                print(
+                    f"[FAIL] no resumable checkpoint found in {out_dir}",
+                    file=sys.stderr,
+                )
+                return 1
+            exec_mode = "multi_agent_independent_sessions"
+        else:
+            out_dir = _resolve_output_dir(args, project, run_id)
+            exec_mode = getattr(args, "execution_mode", "single_process_deterministic")
+
+        if exec_mode in {"multi_agent_independent_sessions", "auto"}:
+            rt_name = getattr(args, "runtime", "auto")
+            adapter = resolve_runtime_adapter(
+                rt_name, agent_cmd=getattr(args, "agent_cmd", None)
+            )
+            probe = adapter.probe()
+            if not probe.available:
+                print(
+                    f"[BLOCKED] requested agent runtime {adapter.runtime_id!r} unavailable: "
+                    f"{probe.reason}",
+                    file=sys.stderr,
+                )
+                return 1
+            orch_cfg = OrchestrationConfig(
+                profile=getattr(args, "profile", "standard"),
+                scope_paths=getattr(args, "scope", None),
+                max_workers=int(getattr(args, "max_workers", 4)),
+                task_timeout_seconds=float(getattr(args, "task_timeout", 30.0)),
+                max_retries=int(getattr(args, "max_retries", 1)),
+                max_units=getattr(args, "max_units", None),
+                report_format=getattr(args, "report_format", "all"),
+            )
+            orchestrator = MultiAgentAuditOrchestrator(
+                project_root=project,
+                audit_dir=out_dir,
+                audit_run_id=run_id,
+                commit_sha=commit_sha,
+                runtime=adapter,
+                config=orch_cfg,
+                sandbox_caps=caps,
+            )
+            outcome = orchestrator.run(resume=is_resume)
+            ma_evid_id: str | None = None
+            if (
+                getattr(args, "record_evidence", False)
+                and (out_dir / "coverage-ledger.json").is_file()
+                and validate_audit_directory(out_dir).ok
+            ):
+                ma_evid_id, _, _ = record_security_audit_evidence(
+                    project_root=project,
+                    audit_dir=out_dir,
+                    commit_sha=commit_sha,
+                )
+            ma_payload: dict[str, Any] = {
+                "action": action,
+                "audit_run_id": outcome.audit_run_id,
+                "audit_dir": str(outcome.audit_dir),
+                "audit_status": outcome.status,
+                "execution_mode": outcome.execution_mode,
+                "governance_gate_status": outcome.governance_gate_status,
+                "evidence_id": ma_evid_id,
+                "session_count": outcome.session_count,
+                "distinct_session_ids": outcome.distinct_session_ids,
+                "distinct_pids": outcome.distinct_pids,
+                "resumed": outcome.resumed,
+                "blocker_reason": outcome.blocker_reason,
+            }
+            _emit(
+                ma_payload,
+                as_json,
+                f"[{outcome.governance_gate_status}] multi-agent audit {outcome.audit_run_id} "
+                f"({outcome.session_count} sessions) written to {outcome.audit_dir}",
+            )
+            return (
+                0
+                if outcome.status == "completed"
+                and outcome.governance_gate_status in {STATUS_PASS, STATUS_NOT_APPLICABLE}
+                else 1
+            )
 
         inventory = discover_architecture(project, commit_sha)
         ledger = seed_coverage_ledger(
@@ -188,6 +296,7 @@ def dispatch_security_audit(
             "audit_run_id": run_id,
             "audit_dir": str(out_dir),
             "audit_status": ledger.audit_status,
+            "execution_mode": ledger.execution_mode,
             "governance_gate_status": gate,
             "evidence_id": evid_id,
             "completeness": ledger.compute_completeness(),
