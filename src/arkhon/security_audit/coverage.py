@@ -280,7 +280,7 @@ class CoverageLedger:
 
     def compute_completeness(self) -> dict[str, Any]:
         """Compute exact status counts; planned/unexamined/blocked NEVER count as complete."""
-        counts = {status: 0 for status in UNIT_STATUSES}
+        counts = dict.fromkeys(UNIT_STATUSES, 0)
         for unit in self.units:
             if unit.status not in counts:
                 raise ValueError(f"invalid unit status: {unit.status!r}")
