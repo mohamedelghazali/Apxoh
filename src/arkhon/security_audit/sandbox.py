@@ -99,7 +99,7 @@ def probe_sandbox_capabilities(
         try:
             probe_bwrap = subprocess.run(  # noqa: S603 - fixed binary probe
                 [
-                    bwrap, 
+                    bwrap,
                    "--unshare-all",
                     "--die-with-parent",
                     "--ro-bind",
