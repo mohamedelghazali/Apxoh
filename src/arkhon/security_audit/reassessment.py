@@ -9,11 +9,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from arkhon.orchestrator.task_dispatcher import AuditRole, SecurityAuditTaskDispatcher
 from arkhon.security_audit.coverage import (
     CoverageLedger,
     compare_coverage_ledgers,
 )
+from arkhon.security_audit.dispatcher import AuditRole, SecurityAuditTaskDispatcher
 from arkhon.security_audit.findings import FindingsCollection, SecurityFinding
 from arkhon.security_audit.hunting import (
     discover_architecture,
@@ -259,7 +259,7 @@ def reassess_repository(
             merged_by_fp[fp] = resolved_copy
             remediated_ids.append(resolved_copy.finding_id)
 
-    for fp, carried in carried_unchanged_records.items():
+    for _fp, carried in carried_unchanged_records.items():
         if carried.verification_status != "rejected" and carried.finding_id not in persisting_ids:
             persisting_ids.append(carried.finding_id)
 
