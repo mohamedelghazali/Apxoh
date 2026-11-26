@@ -1098,6 +1098,32 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["all", "json", "markdown"],
         default="all",
     )
+    audit.add_argument(
+        "--execution-mode",
+        choices=[
+            "single_process_deterministic",
+            "multi_agent_independent_sessions",
+            "auto",
+        ],
+        default="single_process_deterministic",
+    )
+    audit.add_argument(
+        "--runtime",
+        choices=[
+            "auto",
+            "python-isolated-worker",
+            "claude-cli",
+            "codex-cli",
+            "gemini-cli",
+            "command",
+        ],
+        default="auto",
+    )
+    audit.add_argument("--agent-cmd", default=None)
+    audit.add_argument("--max-workers", type=int, default=4)
+    audit.add_argument("--task-timeout", type=float, default=30.0)
+    audit.add_argument("--max-retries", type=int, default=1)
+    audit.add_argument("--resume", action="store_true")
     audit.add_argument("--record-evidence", action="store_true")
     audit.add_argument("--json", action="store_true")
     audit.set_defaults(func=cmd_audit)
