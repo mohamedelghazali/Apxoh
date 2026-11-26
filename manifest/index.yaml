@@ -1,11 +1,11 @@
-# Apxoh Manifest — Index
+# GENCODE-GOV Manifest — Index
 # This file is the single entry point for all manifest data.
 # It links to the other manifest files in this directory.
 # Do not add data here — only references.
 
 manifest_version: "1.0.0"
-system_name: "Apxoh"
-system_identifier: "arkhon"
+system_name: "GENCODE-GOV"
+system_identifier: "gencode-gov"
 generated_at: "2026-11-04T19:38:27Z"
 
 files:

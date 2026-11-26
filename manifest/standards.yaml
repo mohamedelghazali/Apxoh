@@ -1,4 +1,4 @@
-# Apxoh Standards References
+# GENCODE-GOV Standards References
 # Copyrighted standards are referenced by ID only — never reproduced.
 
 index_path: "standards/index.yaml"
@@ -82,6 +82,6 @@ standards:
     file: "standards/references.yaml"
 
 copyright_policy: |
-  Apxoh references standards by ID, version, and URL.
+  GENCODE-GOV references standards by ID, version, and URL.
   Never reproduce copyrighted text from ISO, OWASP, NIST, or other bodies.
-  Summaries and check criteria are Apxoh's original work.
+  Summaries and check criteria are GENCODE-GOV's original work.

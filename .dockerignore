@@ -1,4 +1,4 @@
-# Apxoh Docker build context exclusions
+# GENCODE-GOV Docker build context exclusions
 
 # Git metadata
 .git/

@@ -1,4 +1,4 @@
-# Apxoh Language Registry
+# GENCODE-GOV Language Registry
 
 engine_language: python
 registry_path: "languages/registry.yaml"

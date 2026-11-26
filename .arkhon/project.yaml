@@ -1,18 +1,18 @@
-# Apxoh governs itself.
-# This file declares Apxoh-as-a-project to its own engine.
+# GENCODE-GOV governs itself.
+# This file declares GENCODE-GOV-as-a-project to its own engine.
 
 project:
-  name: "Apxoh"
-  identifier: "arkhon"
+  name: "GENCODE-GOV"
+  identifier: "gencode-gov"
   type: "library-and-cli"
   profile: "enterprise"
   risk_level: "high"
-  description: "Self-governance declaration for the Apxoh repository"
+  description: "Self-governance declaration for the GENCODE-GOV repository"
 
 languages:
   primary: python
   secondary: []
-  notes: "Apxoh itself is Python-only. Multi-language support exists in the governed projects, not in Apxoh."
+  notes: "GENCODE-GOV itself is Python-only. Multi-language support exists in the governed projects, not in GENCODE-GOV."
 
 lifecycle:
   current_stage: "development"

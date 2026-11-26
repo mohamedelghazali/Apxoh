@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apxoh.dev/schemas/finding/1.0.0",
-  "title": "Apxoh Finding",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/finding/1.0.0",
+  "title": "GENCODE-GOV Finding",
   "description": "A single finding produced by evaluating a rule against a target.",
   "type": "object",
   "required": [

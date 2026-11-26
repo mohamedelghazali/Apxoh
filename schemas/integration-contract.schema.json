@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apxoh.dev/schemas/integration-contract/1.0.0",
-  "title": "Apxoh Integration Contract",
-  "description": "Formal contract for external security or tool providers integrated with Apxoh.",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/integration-contract/1.0.0",
+  "title": "GENCODE-GOV Integration Contract",
+  "description": "Formal contract for external security or tool providers integrated with GENCODE-GOV.",
   "type": "object",
   "required": [
     "version",

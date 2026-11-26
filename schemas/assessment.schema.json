@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apxoh.dev/schemas/assessment/1.0.0",
-  "title": "Apxoh Assessment",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/assessment/1.0.0",
+  "title": "GENCODE-GOV Assessment",
   "description": "The result of evaluating all gates and computing a weighted engineering score.",
   "type": "object",
   "required": [

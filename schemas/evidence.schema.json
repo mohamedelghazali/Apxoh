@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apxoh.dev/schemas/evidence/1.0.0",
-  "title": "Apxoh Evidence",
-  "description": "A single piece of verifiable evidence produced by Apxoh or a delegated authority.",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/evidence/1.0.0",
+  "title": "GENCODE-GOV Evidence",
+  "description": "A single piece of verifiable evidence produced by GENCODE-GOV or a delegated authority.",
   "type": "object",
   "required": [
     "evidence_id",
