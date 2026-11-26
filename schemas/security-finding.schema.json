@@ -1,0 +1,612 @@
+{
+  "$id": "urn:apxoh:schemas:security-finding:1.0.0",
+  "title": "Apxoh Security Audit Findings Collection",
+  "description": "Structured, provenance-tracked, independently verified security findings and candidate dispositions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "audit_run_id",
+    "commit_sha",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "audit_run_id": {
+      "type": "string",
+      "pattern": "^AUDIT-[A-Za-z0-9_-]{4,64}$"
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "records": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/finding_record"
+      }
+    }
+  },
+  "$defs": {
+    "location_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "line",
+        "symbol"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "trace_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "file",
+        "line",
+        "scope",
+        "description"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "entrypoint",
+            "propagation",
+            "sink"
+          ]
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "discovery_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "role",
+        "run_id",
+        "timestamp",
+        "method"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "static_ast",
+            "structural_source",
+            "sandbox_local"
+          ]
+        }
+      }
+    },
+    "verification_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verifier_id",
+        "role",
+        "run_id",
+        "timestamp",
+        "method",
+        "supporting_evidence",
+        "contradictory_evidence",
+        "disprove_attempts"
+      ],
+      "properties": {
+        "verifier_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "independent_source_review",
+            "independent_sandbox_check"
+          ]
+        },
+        "supporting_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "contradictory_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "disprove_attempts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "severity_score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "string",
+          "enum": [
+            "informational",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "severity_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "likelihood",
+        "impact",
+        "overall_severity"
+      ],
+      "properties": {
+        "likelihood": {
+          "$ref": "#/$defs/severity_score"
+        },
+        "impact": {
+          "$ref": "#/$defs/severity_score"
+        },
+        "overall_severity": {
+          "type": "string",
+          "enum": [
+            "informational",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        }
+      }
+    },
+    "remediation_guidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy",
+        "invariant_to_enforce",
+        "code_changes"
+      ],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invariant_to_enforce": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "file",
+              "summary"
+            ],
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 1
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "finding_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "fingerprint",
+        "title",
+        "description",
+        "attack_class",
+        "component",
+        "affected_locations",
+        "trace",
+        "trust_boundary",
+        "entry_point",
+        "affected_principal_or_resource",
+        "preconditions",
+        "scenario_summary",
+        "reproduction_steps",
+        "security_impact",
+        "evidence_refs",
+        "discovery_provenance",
+        "verification_provenance",
+        "verification_status",
+        "lifecycle_state",
+        "confidence",
+        "severity",
+        "root_cause",
+        "claimed_root_cause",
+        "remediation",
+        "unresolved_blockers",
+        "validation_plan",
+        "rejection_reason",
+        "related_rules",
+        "related_requirements",
+        "commit_sha",
+        "first_seen_run",
+        "last_seen_run",
+        "first_seen_commit",
+        "last_seen_commit",
+        "state_history"
+      ],
+      "properties": {
+        "finding_id": {
+          "type": "string",
+          "pattern": "^SEC-FIND-[A-F0-9]{8}$"
+        },
+        "fingerprint": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attack_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "affected_locations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/location_ref"
+          }
+        },
+        "trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/trace_step"
+          }
+        },
+        "trust_boundary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry_point": {
+          "type": "string",
+          "minLength": 1
+        },
+        "affected_principal_or_resource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "scenario_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reproduction_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "security_impact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "discovery_provenance": {
+          "$ref": "#/$defs/discovery_provenance"
+        },
+        "verification_provenance": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/verification_provenance"
+            }
+          ]
+        },
+        "verification_status": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "needs_validation",
+            "rejected",
+            "blocked",
+            "not_verified"
+          ]
+        },
+        "lifecycle_state": {
+          "type": "string",
+          "enum": [
+            "candidate",
+            "confirmed",
+            "needs_validation",
+            "rejected",
+            "blocked",
+            "remediated",
+            "reopened"
+          ]
+        },
+        "confidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "score",
+            "reason",
+            "uncertainty_notes"
+          ],
+          "properties": {
+            "score": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uncertainty_notes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "severity": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/severity_assessment"
+            }
+          ]
+        },
+        "root_cause": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "claimed_root_cause": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "remediation": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/remediation_guidance"
+            }
+          ]
+        },
+        "unresolved_blockers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "validation_plan": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "local_check": {
+              "type": "string",
+              "minLength": 1
+            },
+            "owner_deployment_check": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "rejection_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "related_rules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^SE-[A-Z]+-[A-Z0-9-]+$"
+          }
+        },
+        "related_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "first_seen_run": {
+          "type": "string",
+          "minLength": 1
+        },
+        "last_seen_run": {
+          "type": "string",
+          "minLength": 1
+        },
+        "first_seen_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "last_seen_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "state_history": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "state",
+              "run_id",
+              "commit_sha",
+              "actor",
+              "reason"
+            ],
+            "properties": {
+              "state": {
+                "type": "string",
+                "minLength": 1
+              },
+              "run_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "commit_sha": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "actor": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
