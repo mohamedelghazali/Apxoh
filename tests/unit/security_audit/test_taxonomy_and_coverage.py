@@ -184,4 +184,4 @@ def test_coverage_ledger_canonical_ids_reassignment_completeness_and_comparison(
     assert len(delta["status_transitions"]) == 1
     assert delta["status_transitions"][0]["from_status"] == "planned"
     assert delta["status_transitions"][0]["to_status"] == "examined"
-  
+
