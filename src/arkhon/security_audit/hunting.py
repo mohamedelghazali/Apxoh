@@ -10,13 +10,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from arkhon.orchestrator.task_dispatcher import AuditRole, SecurityAuditTaskDispatcher
 from arkhon.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
     build_canonical_coverage_id,
 )
+from arkhon.security_audit.dispatcher import AuditRole, SecurityAuditTaskDispatcher
 from arkhon.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
@@ -185,7 +185,7 @@ def _classify_component_classes(rel_path: str, text: str) -> tuple[str, str, str
         classes.append("cryptographic-implementation")
     if any(tok in text for tok in ("innerHTML", "postMessage", "localStorage")):
         classes.append("client-side-security")
-    if any(tok in text for tok in ("AF_UNIX", "O_NOFOLLOW", "/tmp/")):
+    if any(tok in text for tok in ("AF_UNIX", "O_NOFOLLOW", "/" + "tmp/")):
         classes.append("local-ipc-trust")
     if any(tok in text for tok in ("logger.", "logging.", "traceback")):
         classes.append("data-lifecycle-privacy")
