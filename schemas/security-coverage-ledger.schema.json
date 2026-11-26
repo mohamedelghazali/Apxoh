@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:apxoh:schemas:security-coverage-ledger:1.0.0",
   "title": "Apxoh Security Coverage Ledger",
   "description": "Persistent machine-readable ledger of security audit coverage units, checks, and wave history.",
