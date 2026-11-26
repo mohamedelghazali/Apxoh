@@ -1,4 +1,4 @@
-"""ARKHON package module."""
+"""GENCODE-GOV package module."""
 
 from __future__ import annotations
 

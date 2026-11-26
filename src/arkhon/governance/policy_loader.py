@@ -1,4 +1,4 @@
-"""Load and index Apxoh enforcement policies."""
+"""Load and index GENCODE-GOV enforcement policies."""
 
 from __future__ import annotations
 

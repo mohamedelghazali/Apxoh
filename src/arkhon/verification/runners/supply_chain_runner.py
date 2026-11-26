@@ -15,7 +15,7 @@ from arkhon.evidence.supply_chain import identity_regexp_for_tag
 from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
 logger = get_logger("verification.runners.supply_chain")
-_SOURCE_URI = "github.com/mohamedelghazali/Apxoh"
+_SOURCE_URI = "github.com/mohamedelghazali/GENCODE-GOV"
 _OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _TAG_RE = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
@@ -166,7 +166,7 @@ class SyftRunner(Runner):
             if not isinstance(item, dict) or item.get("name") != "arkhon:commit-sha"
         ]
         properties.append({"name": "arkhon:commit-sha", "value": commit})
-        properties.append({"name": "arkhon:generator", "value": "Apxoh SyftRunner"})
+        properties.append({"name": "arkhon:generator", "value": "GENCODE-GOV SyftRunner"})
         output_dir = _safe_directory(root, root / ".arkhon" / "reports" / "supply-chain")
         if output_dir is None:
             return RunnerResult(

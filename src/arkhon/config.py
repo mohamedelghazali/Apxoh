@@ -1,4 +1,4 @@
-"""Manifest loader for Apxoh.
+"""Manifest loader for GENCODE-GOV.
 
 The manifest is split across manifest/*.yaml. This module is the only
 place that knows how to load and combine the files.
@@ -27,13 +27,15 @@ _MANIFEST_FILES = (
 
 
 def find_repo_root() -> Path:
-    """Locate the repository using APXOH_ROOT or this package's parents."""
-    env = os.environ.get("APXOH_ROOT")
+    """Locate the repository using GENCODE_GOV_ROOT (or legacy APXOH_ROOT) or parents."""
+    env = os.environ.get("GENCODE_GOV_ROOT") or os.environ.get("APXOH_ROOT")
     if env:
         candidate = Path(env).expanduser().resolve()
         if (candidate / "manifest" / "index.yaml").is_file():
             return candidate
-        raise ManifestError(f"APXOH_ROOT does not contain manifest/index.yaml: {candidate}")
+        raise ManifestError(
+            f"GENCODE_GOV_ROOT (or APXOH_ROOT) missing manifest/index.yaml: {candidate}"
+        )
 
     current = Path(__file__).resolve().parent
     for _ in range(12):
@@ -43,7 +45,7 @@ def find_repo_root() -> Path:
             break
         current = current.parent
     raise ManifestError(
-        "Could not locate Apxoh repository root. Set APXOH_ROOT or run from a checkout."
+        "Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout."
     )
 
 

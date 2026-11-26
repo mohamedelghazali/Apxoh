@@ -256,7 +256,8 @@ class SandboxExecutor:
             "LANG": "C.UTF-8",
             "LC_ALL": "C.UTF-8",
             "PYTHONHASHSEED": "0",
-            "ARKHON_SANDBOX": "1",
+            "GENCODE_GOV_SANDBOX": "1",
+        "ARKHON_SANDBOX": "1",
         }
         if extra_env:
             for key, val in extra_env.items():

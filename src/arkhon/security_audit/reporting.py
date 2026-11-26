@@ -19,7 +19,7 @@ def compute_governance_gate_status(
     ledger: CoverageLedger,
     findings: FindingsCollection,
 ) -> str:
-    """Derive fail-closed Apxoh gate status; NEVER convert unverified/partial into PASS."""
+    """Derive fail-closed GENCODE-GOV gate status; NEVER convert unverified/partial into PASS."""
     for rec in findings.records:
         if (
             rec.verification_status == "confirmed"

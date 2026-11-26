@@ -196,6 +196,7 @@ class JsonReporter:
             "project": project_root.name,
             "commit_sha": commit_sha,
             "generated_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "gencode_gov_version": __version__,
             "apxoh_version": __version__,
             "sections": sections,
             "final_decision": final,

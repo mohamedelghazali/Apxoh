@@ -1,4 +1,4 @@
-"""Apxoh evidence-driven, coverage-led security auditing subsystem."""
+"""GENCODE-GOV evidence-driven, coverage-led security auditing subsystem."""
 
 from __future__ import annotations
 

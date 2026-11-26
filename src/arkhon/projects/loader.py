@@ -1,4 +1,4 @@
-"""Load and validate Apxoh project profiles from projects/<name>/."""
+"""Load and validate GENCODE-GOV project profiles from projects/<name>/."""
 
 from __future__ import annotations
 

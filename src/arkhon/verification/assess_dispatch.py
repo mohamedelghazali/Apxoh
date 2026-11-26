@@ -1,4 +1,4 @@
-"""Deterministic runner instantiation and method outcome dispatch for arkhon assess."""
+"""Deterministic runner instantiation and method outcome dispatch for gencode-gov assess."""
 
 from __future__ import annotations
 

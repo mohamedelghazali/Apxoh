@@ -1,6 +1,6 @@
 """Adapter for the released TSAR CLI contract.
 
-TSAR output is untrusted SARIF. Apxoh accepts it only after validating the
+TSAR output is untrusted SARIF. GENCODE-GOV accepts it only after validating the
 SARIF envelope, scanner identity/version, commit binding, and artifact hash.
 """
 

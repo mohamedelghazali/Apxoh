@@ -1,4 +1,4 @@
-"""Extensible security attack-class taxonomy mapped to Apxoh governance rules."""
+"""Extensible security attack-class taxonomy mapped to GENCODE-GOV governance rules."""
 
 from __future__ import annotations
 

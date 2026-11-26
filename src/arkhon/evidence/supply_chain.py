@@ -12,10 +12,10 @@ from typing import Any
 from arkhon.core.errors import EvidenceError, EvidenceTamperedError
 from arkhon.evidence.integrity import sha256_of
 
-SOURCE_URI = "github.com/mohamedelghazali/Apxoh"
+SOURCE_URI = "github.com/mohamedelghazali/GENCODE-GOV"
 OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 IDENTITY_REGEXP = (
-    r"^https://github\.com/mohamedelghazali/Apxoh/"
+    r"^https://github\.com/mohamedelghazali/GENCODE-GOV/"
     r"\.github/workflows/slsa-release\.yml@refs/tags/v.*$"
 )
 _TAG_RE = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
@@ -26,7 +26,7 @@ def identity_regexp_for_tag(source_tag: str) -> str:
     if not _TAG_RE.fullmatch(source_tag):
         raise EvidenceTamperedError("supply-chain source tag is not a valid semantic version tag")
     return (
-        r"^https://github\.com/mohamedelghazali/Apxoh/"
+        r"^https://github\.com/mohamedelghazali/GENCODE-GOV/"
         r"\.github/workflows/slsa-release\.yml@refs/tags/"
         + re.escape(source_tag)
         + r"$"
@@ -50,7 +50,7 @@ def _in_root(root: Path, value: object) -> Path:
 
 
 def verify_cyclonedx_sbom(path: Path, *, expected_commit_sha: str) -> None:
-    """Validate the SBOM format and the commit property added by Apxoh."""
+    """Validate the SBOM format and the commit property added by GENCODE-GOV."""
     try:
         bom = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -63,7 +63,7 @@ def verify_cyclonedx_sbom(path: Path, *, expected_commit_sha: str) -> None:
     component = metadata.get("component") if isinstance(metadata, dict) else None
     properties = component.get("properties") if isinstance(component, dict) else None
     if not isinstance(properties, list):
-        raise EvidenceTamperedError("SBOM is missing Apxoh commit-binding properties")
+        raise EvidenceTamperedError("SBOM is missing GENCODE-GOV commit-binding properties")
     binding = [
         item.get("value")
         for item in properties

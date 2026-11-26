@@ -1,7 +1,7 @@
-"""Base interfaces for Apxoh integrations.
+"""Base interfaces for GENCODE-GOV integrations.
 
 Integrations collect external results. They never make governance or release
-decisions; Apxoh validates every returned artifact and claim.
+decisions; GENCODE-GOV validates every returned artifact and claim.
 """
 
 from __future__ import annotations

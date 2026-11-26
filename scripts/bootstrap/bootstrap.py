@@ -1,4 +1,4 @@
-"""Bootstrap ARKHON development environment."""
+"""Bootstrap GENCODE-GOV development environment."""
 
 import subprocess
 import sys

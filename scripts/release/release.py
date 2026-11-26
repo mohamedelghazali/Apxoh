@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare an Apxoh release without tagging or pushing.
+"""Prepare a GENCODE-GOV release without tagging or pushing.
 
 Usage:
     python scripts/release/release.py <version>
@@ -109,12 +109,12 @@ def print_next_steps(version: str) -> None:
     print("  1. Review changes: git diff")
     print("  2. Add files:      git add VERSION pyproject.toml src/arkhon/__init__.py CHANGELOG.md")
     print(f'  3. Commit:         git commit -m "release: v{version}"')
-    print(f'  4. Tag:            git tag -s v{version} -m "Apxoh v{version}"')
+    print(f'  4. Tag:            git tag -s v{version} -m "GENCODE-GOV v{version}"')
     print(f"  5. Push:           git push origin v{version}")
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Prepare an Apxoh release")
+    parser = argparse.ArgumentParser(description="Prepare a GENCODE-GOV release")
     parser.add_argument("version", help="Version string, e.g. 0.2.0 or 1.0.0-rc.1")
     parser.add_argument("--skip-check", action="store_true", help="Skip make release-check")
     args = parser.parse_args(argv)

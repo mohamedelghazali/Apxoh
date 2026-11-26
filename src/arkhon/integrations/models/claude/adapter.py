@@ -1,7 +1,7 @@
 """Claude adapter.
 
 Sends requests to the Anthropic Messages API. Does not import the
-Anthropic SDK — uses raw HTTP so Apxoh has no hard dependency on it.
+Anthropic SDK — uses raw HTTP so GENCODE-GOV has no hard dependency on it.
 
 All responses are treated as untrusted. The adapter only passes them
 back to the caller; it never decides anything.

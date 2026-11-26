@@ -1,4 +1,4 @@
-"""Sign Apxoh artifacts with Sigstore keyless signing.
+"""Sign GENCODE-GOV artifacts with Sigstore keyless signing.
 
 Usage:
     python tools/signing/sign-artifacts.py path/to/artifact [path/to/another-artifact]
