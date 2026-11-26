@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import unicodedata
 from pathlib import Path
@@ -11,11 +12,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from arkhon.security_audit import (
-    cli_dispatch as cd_mod,
-    sandbox as sandbox_mod,
-    validators as validators_mod,
-)
+from arkhon.security_audit import cli_dispatch as cd_mod
+from arkhon.security_audit import sandbox as sandbox_mod
+from arkhon.security_audit import validators as validators_mod
 from arkhon.security_audit.cli_dispatch import dispatch_security_audit
 from arkhon.security_audit.coverage import (
     CoverageCheck,
@@ -73,6 +72,7 @@ from arkhon.security_audit.validators import (
 from arkhon.security_audit.verifier import IndependentFindingVerifier
 from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
 
+_GIT = shutil.which("git") or "/usr/bin/git"
 SHA = "d" * 40
 
 
@@ -477,7 +477,7 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
     assert any(u.status == "not_examined" for u in s_ledger.units)
 
     # Max-units cap -> partially_completed
-    from arkhon.orchestrator.task_dispatcher import SecurityAuditTaskDispatcher
+    from arkhon.security_audit.dispatcher import SecurityAuditTaskDispatcher
 
     disp = SecurityAuditTaskDispatcher(tmp_path / "aud_s1")
     execute_hunting_waves(project_root=proj, ledger=s_ledger, dispatcher=disp, max_units=1)
@@ -583,7 +583,7 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
     bad_rep.write_text("{}", encoding="utf-8")
     assert evaluate_security_audit_method(
         RunnerResult(
-            runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=(str(bad_rep),)
+            runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=[bad_rep]
         )
     )[0] == "BLOCKED"
     assert summarize_audit_status(bad_rep.parent)["valid"] is False
@@ -706,21 +706,21 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
     git_proj = tmp_path / "reassess_same"
     (git_proj / "src").mkdir(parents=True)
     (git_proj / "src" / "a.py").write_text("def f(x):\n    return eval(x)\n", encoding="utf-8")
-    subprocess.run(  # noqa: S603, S607
-        ["git", "init"], cwd=git_proj, check=True, capture_output=True
+    subprocess.run(  # noqa: S603
+        [_GIT, "init"], cwd=git_proj, check=True, capture_output=True
     )
-    subprocess.run(  # noqa: S603, S607
-        ["git", "config", "user.email", "t@example.com"], cwd=git_proj, check=True
+    subprocess.run(  # noqa: S603
+        [_GIT, "config", "user.email", "t@example.com"], cwd=git_proj, check=True
     )
-    subprocess.run(  # noqa: S603, S607
-        ["git", "config", "user.name", "T"], cwd=git_proj, check=True
+    subprocess.run(  # noqa: S603
+        [_GIT, "config", "user.name", "T"], cwd=git_proj, check=True
     )
-    subprocess.run(["git", "add", "."], cwd=git_proj, check=True)  # noqa: S603, S607
-    subprocess.run(  # noqa: S603, S607
-        ["git", "commit", "-m", "init"], cwd=git_proj, check=True, capture_output=True
+    subprocess.run([_GIT, "add", "."], cwd=git_proj, check=True)  # noqa: S603
+    subprocess.run(  # noqa: S603
+        [_GIT, "commit", "-m", "init"], cwd=git_proj, check=True, capture_output=True
     )
-    g_sha = subprocess.run(  # noqa: S603, S607
-        ["git", "rev-parse", "HEAD"],
+    g_sha = subprocess.run(  # noqa: S603
+        [_GIT, "rev-parse", "HEAD"],
         cwd=git_proj,
         check=True,
         capture_output=True,
