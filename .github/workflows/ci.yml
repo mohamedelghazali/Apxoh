@@ -80,6 +80,7 @@ jobs:
         with:
           python-version: "${{ matrix.python }}"
       - run: pip install -e .
+      - run: gencode-gov version
       - run: arkhon version
       - run: arkhon doctor || true
 
