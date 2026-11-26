@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from arkhon.security_audit import (
-    cli_dispatch as cd_mod,
-    governance_bridge as gb_mod,
-    sandbox as sandbox_mod,
-    validators as validators_mod,
-)
+from arkhon.security_audit import cli_dispatch as cd_mod
+from arkhon.security_audit import governance_bridge as gb_mod
+from arkhon.security_audit import sandbox as sandbox_mod
+from arkhon.security_audit import validators as validators_mod
 from arkhon.security_audit.cli_dispatch import dispatch_security_audit
 from arkhon.security_audit.coverage import (
     CoverageCheck,
@@ -53,6 +52,7 @@ from arkhon.security_audit.validators import (
 )
 from arkhon.verification.runners.base import RunnerOutcome
 
+_GIT = shutil.which("git") or "/usr/bin/git"
 SHA = "d" * 40
 
 
@@ -223,17 +223,17 @@ def test_final_branches_for_100pct_coverage(tmp_path: Path) -> None:
     (gp / "src" / "pkg_touch" / "touch.py").write_text(
         "def f(z):\n    return eval(z)\n", encoding="utf-8"
     )
-    subprocess.run(["git", "init"], cwd=gp, check=True, capture_output=True)  # noqa: S603, S607
-    subprocess.run(  # noqa: S603, S607
-        ["git", "config", "user.email", "t@example.com"], cwd=gp, check=True
+    subprocess.run([_GIT, "init"], cwd=gp, check=True, capture_output=True)  # noqa: S603
+    subprocess.run(  # noqa: S603
+        [_GIT, "config", "user.email", "t@example.com"], cwd=gp, check=True
     )
-    subprocess.run(["git", "config", "user.name", "T"], cwd=gp, check=True)  # noqa: S603, S607
-    subprocess.run(["git", "add", "."], cwd=gp, check=True)  # noqa: S603, S607
-    subprocess.run(  # noqa: S603, S607
-        ["git", "commit", "-m", "c1"], cwd=gp, check=True, capture_output=True
+    subprocess.run([_GIT, "config", "user.name", "T"], cwd=gp, check=True)  # noqa: S603
+    subprocess.run([_GIT, "add", "."], cwd=gp, check=True)  # noqa: S603
+    subprocess.run(  # noqa: S603
+        [_GIT, "commit", "-m", "c1"], cwd=gp, check=True, capture_output=True
     )
-    sha_c1 = subprocess.run(  # noqa: S603, S607
-        ["git", "rev-parse", "HEAD"], cwd=gp, check=True, capture_output=True, text=True
+    sha_c1 = subprocess.run(  # noqa: S603
+        [_GIT, "rev-parse", "HEAD"], cwd=gp, check=True, capture_output=True, text=True
     ).stdout.strip()
 
     p_dir = tmp_path / "p_dir"
@@ -294,12 +294,12 @@ def test_final_branches_for_100pct_coverage(tmp_path: Path) -> None:
         "import pickle\ndef f(z):\n    pickle.loads(z)\n    return eval(z)\n",
         encoding="utf-8",
     )
-    subprocess.run(["git", "add", "."], cwd=gp, check=True)  # noqa: S603, S607
-    subprocess.run(  # noqa: S603, S607
-        ["git", "commit", "-m", "c2"], cwd=gp, check=True, capture_output=True
+    subprocess.run([_GIT, "add", "."], cwd=gp, check=True)  # noqa: S603
+    subprocess.run(  # noqa: S603
+        [_GIT, "commit", "-m", "c2"], cwd=gp, check=True, capture_output=True
     )
-    sha_c2 = subprocess.run(  # noqa: S603, S607
-        ["git", "rev-parse", "HEAD"], cwd=gp, check=True, capture_output=True, text=True
+    sha_c2 = subprocess.run(  # noqa: S603
+        [_GIT, "rev-parse", "HEAD"], cwd=gp, check=True, capture_output=True, text=True
     ).stdout.strip()
 
     re_out = tmp_path / "re_out"
