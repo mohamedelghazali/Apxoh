@@ -80,8 +80,7 @@
     },
     "completeness": {
       "$ref": "#/$defs/completeness_summary"
-    }
-  },
+    },
     "orchestration": {
       "type": [
         "object",
