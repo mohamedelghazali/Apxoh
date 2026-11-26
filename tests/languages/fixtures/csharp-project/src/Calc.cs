@@ -1,4 +1,4 @@
-namespace Apxoh.Fixture;
+namespace GencodeGov.Fixture;
 
 public static class Calc
 {

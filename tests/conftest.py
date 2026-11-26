@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for Apxoh tests."""
+"""Shared pytest fixtures for GENCODE-GOV tests."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def _run_git(args: list[str], cwd: Path) -> None:
 
 @pytest.fixture(scope="session")
 def repo_root() -> Path:
-    """Absolute path to the Apxoh repository root."""
+    """Absolute path to the GENCODE-GOV repository root."""
     return REPO_ROOT
 
 

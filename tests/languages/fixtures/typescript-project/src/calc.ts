@@ -1,4 +1,4 @@
-/** Minimal calculator module for Apxoh fixture testing. */
+/** Minimal calculator module for GENCODE-GOV fixture testing. */
 
 export function add(a: number, b: number): number {
   return a + b;

@@ -1,4 +1,4 @@
-"""Tests for the Apxoh error hierarchy."""
+"""Tests for the GENCODE-GOV error hierarchy."""
 
 from __future__ import annotations
 

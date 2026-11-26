@@ -1,4 +1,4 @@
-"""Heuristic secret-exposure checks for tracked Apxoh source and documentation."""
+"""Heuristic secret-exposure checks for tracked GENCODE-GOV source and documentation."""
 
 from __future__ import annotations
 

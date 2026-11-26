@@ -1,3 +1,3 @@
-module github.com/mohamedelghazali/apxoh-fixture-go
+module github.com/mohamedelghazali/gencode-gov-fixture-go
 
 go 1.22

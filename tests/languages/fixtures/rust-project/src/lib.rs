@@ -1,4 +1,4 @@
-//! Minimal calculator for Apxoh fixture testing.
+//! Minimal calculator for GENCODE-GOV fixture testing.
 
 /// Add a + b.
 pub fn add(a: i32, b: i32) -> i32 { a + b }

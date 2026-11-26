@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Apxoh.Fixture.Tests;
+namespace GencodeGov.Fixture.Tests;
 
 public class CalcTests
 {

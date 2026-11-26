@@ -1,11 +1,11 @@
-# Apxoh project declaration for the Python fixture.
+# GENCODE-GOV project declaration for the Python fixture.
 project:
   name: "python-fixture"
   identifier: python-fixture
   type: library
   profile: universal
   risk_level: low
-  description: "Minimal Python project used to validate Apxoh language detection."
+  description: "Minimal Python project used to validate GENCODE-GOV language detection."
 
 languages:
   primary: python

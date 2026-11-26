@@ -42,10 +42,10 @@ def _git_project(root: Path, *, with_tests: bool = False) -> None:
 
 def test_version_text_json_and_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["version"]) == 0
-    assert "Apxoh" in capsys.readouterr().out
+    assert "GENCODE-GOV" in capsys.readouterr().out
     assert main(["version", "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
-    assert data["identifier"] == "arkhon"
+    assert data["identifier"] == "gencode-gov"
     assert main([]) == 1
     assert "usage:" in capsys.readouterr().out.lower()
 
@@ -178,7 +178,7 @@ def test_doctor_reports_success_and_missing_files(
 ) -> None:
     monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
     (tmp_path / "VERSION").write_text("1.0.0", encoding="utf-8")
-    (tmp_path / "README.md").write_text("# Apxoh", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# GENCODE-GOV", encoding="utf-8")
     (tmp_path / "AGENTS.md").write_text("# Agents", encoding="utf-8")
     manifest = tmp_path / "manifest"
     manifest.mkdir()
@@ -186,7 +186,7 @@ def test_doctor_reports_success_and_missing_files(
     refs = {name: f"{name}.yaml" for name in names}
     (manifest / "index.yaml").write_text(yaml.safe_dump({"files": refs}), encoding="utf-8")
     for name in names:
-        value = {"system": {"name": "Apxoh", "identifier": "arkhon", "version": "1.0.0"}}
+        value = {"system": {"name": "GENCODE-GOV", "identifier": "gencode-gov", "version": "1.0.0"}}
         (manifest / f"{name}.yaml").write_text(yaml.safe_dump(value), encoding="utf-8")
     monkeypatch.setattr(
         "arkhon.integrations.tsar.adapter.TsarAdapter.health_check", lambda _self: False

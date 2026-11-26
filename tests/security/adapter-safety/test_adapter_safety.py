@@ -46,7 +46,7 @@ APPROVED_NETWORK_DOMAINS = {
     "example.com",
     "pypi.org",
     "files.pythonhosted.org",
-    "apxoh.dev",
+    "gencode-gov.dev",
     "www.apache.org",
 }
 
