@@ -16,7 +16,10 @@ from arkhon.security_audit.coverage import (
     CoverageUnit,
     build_canonical_coverage_id,
 )
-from arkhon.security_audit.dispatcher import AuditRole, SecurityAuditTaskDispatcher
+from arkhon.security_audit.dispatcher import (
+    AuditRole,
+    SecurityAuditTaskDispatcher,
+)
 from arkhon.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
@@ -515,6 +518,171 @@ def _unit_priority_key(unit: CoverageUnit) -> tuple[int, int, str]:
     return (unauth_rank, reval_rank, unit.coverage_id)
 
 
+def hunt_coverage_unit(
+    *,
+    project_root: Path,
+    unit: CoverageUnit,
+    hunter_id: str,
+    audit_run_id: str,
+    commit_sha: str,
+    taxonomy: AttackClassRegistry = DEFAULT_TAXONOMY,
+    session_id: str | None = None,
+    runtime_id: str | None = None,
+    pid: int | None = None,
+) -> tuple[CoverageUnit, list[SecurityFinding]]:
+    """Examine a single coverage unit and return updated unit plus candidate findings."""
+    resolved = project_root.resolve()
+    work_unit = CoverageUnit.from_dict(unit.to_dict())
+    work_unit.status = "in_progress"
+    work_unit.investigator_id = hunter_id
+
+    cls_def = taxonomy.require(work_unit.attack_class)
+    reviewed: list[str] = []
+    unit_findings: list[str] = []
+    unit_fps: list[str] = []
+    candidates: list[SecurityFinding] = []
+
+    for rel_path in work_unit.starting_paths:
+        full_path = resolved / rel_path
+        if not full_path.is_file() or full_path.is_symlink():
+            continue
+        reviewed.append(rel_path)
+        text = full_path.read_text(encoding="utf-8", errors="replace")
+        raw_hits = (
+            _scan_python_ast(text, work_unit.attack_class) if rel_path.endswith(".py") else []
+        )
+        raw_hits.extend(_scan_structural_text(rel_path, text, work_unit.attack_class))
+
+        for hit in raw_hits:
+            fp = compute_finding_fingerprint(
+                component=work_unit.component,
+                attack_class=work_unit.attack_class,
+                primary_file=rel_path,
+                symbol=hit.symbol,
+                invariant_key=hit.invariant_key,
+            )
+            fid = finding_id_from_fingerprint(fp)
+            blockers = (
+                ["Cluster admission controller policy is outside repository source."]
+                if hit.needs_external_context
+                else []
+            )
+            finding = SecurityFinding(
+                finding_id=fid,
+                fingerprint=fp,
+                title=hit.title,
+                description=f"{hit.claimed_cause} ({rel_path}:{hit.line})",
+                attack_class=work_unit.attack_class,
+                component=work_unit.component,
+                affected_locations=[
+                    LocationRef(file=rel_path, line=hit.line, symbol=hit.symbol)
+                ],
+                trace=[
+                    TraceStep(
+                        kind="sink",
+                        file=rel_path,
+                        line=hit.line,
+                        scope=hit.symbol,
+                        description=hit.claimed_cause,
+                    )
+                ],
+                trust_boundary=work_unit.trust_boundary,
+                entry_point=work_unit.entry_point,
+                affected_principal_or_resource=f"{work_unit.component} runtime state",
+                preconditions=[
+                    f"Caller reaches {work_unit.entry_point} across {work_unit.trust_boundary}."
+                ],
+                scenario_summary=hit.claimed_cause,
+                reproduction_steps=[
+                    f"Inspect {rel_path} line {hit.line} in scope {hit.symbol}."
+                ],
+                security_impact=hit.impact,
+                evidence_refs=[f"{rel_path}:{hit.line}"],
+                discovery_provenance=DiscoveryProvenance(
+                    agent_id=hunter_id,
+                    role=AuditRole.HUNTER.value,
+                    run_id=audit_run_id,
+                    timestamp=_utc_now(),
+                    method="static_ast" if rel_path.endswith(".py") else "structural_source",
+                    session_id=session_id,
+                    runtime_id=runtime_id,
+                    pid=pid,
+                ),
+                verification_provenance=None,
+                verification_status="not_verified",
+                lifecycle_state="candidate",
+                confidence_score="medium",
+                confidence_reason="Static AST/structural sink candidate awaiting verification.",
+                uncertainty_notes=list(blockers),
+                severity=None,
+                root_cause=None,
+                claimed_root_cause=hit.claimed_cause,
+                remediation=None,
+                unresolved_blockers=blockers,
+                validation_plan=(
+                    {
+                        "owner_deployment_check": (
+                            "Verify cluster admission policy in deployment environment."
+                        )
+                    }
+                    if blockers
+                    else None
+                ),
+                rejection_reason=None,
+                related_rules=list(cls_def.related_rules),
+                related_requirements=[],
+                commit_sha=commit_sha,
+                first_seen_run=audit_run_id,
+                last_seen_run=audit_run_id,
+                first_seen_commit=commit_sha,
+                last_seen_commit=commit_sha,
+                state_history=[
+                    {
+                        "state": "candidate",
+                        "run_id": audit_run_id,
+                        "commit_sha": commit_sha,
+                        "actor": hunter_id,
+                        "reason": "Discovered during Phase 2 coverage-led hunting.",
+                    }
+                ],
+            )
+            candidates.append(finding)
+            if fid not in unit_findings:
+                unit_findings.append(fid)
+            if fp not in unit_fps:
+                unit_fps.append(fp)
+
+    if not reviewed:
+        work_unit.status = "not_applicable"
+        work_unit.investigator_id = None
+        work_unit.limitations = ["No regular source files remained present for unit."]
+    else:
+        work_unit.reviewed_paths = sorted(set(reviewed))
+        work_unit.checks = [
+            CoverageCheck(
+                investigator_id=hunter_id,
+                method="source",
+                reviewed_paths=tuple(work_unit.reviewed_paths),
+                invariant=cls_def.defensive_invariants[0],
+                result=(
+                    f"Examined {len(work_unit.reviewed_paths)} file(s); "
+                    f"{len(unit_findings)} candidate(s) recorded."
+                ),
+                evidence_refs=tuple(work_unit.reviewed_paths),
+                artifact_path=None,
+                timestamp=_utc_now(),
+                session_id=session_id,
+                runtime_id=runtime_id,
+            )
+        ]
+        work_unit.finding_ids = sorted(unit_findings)
+        work_unit.candidate_fingerprints = sorted(unit_fps)
+        work_unit.limitations = []
+        work_unit.status = "examined"
+
+    return work_unit, candidates
+
+
 def execute_hunting_waves(
     *,
     project_root: Path,
@@ -544,151 +712,24 @@ def execute_hunting_waves(
             wave=unit.wave,
             targets=(unit.coverage_id,),
         )
-        unit.status = "in_progress"
-        unit.investigator_id = hunter_id
-
-        cls_def = taxonomy.require(unit.attack_class)
-        reviewed: list[str] = []
-        unit_findings: list[str] = []
-        unit_fps: list[str] = []
-
-        for rel_path in unit.starting_paths:
-            full_path = resolved / rel_path
-            if not full_path.is_file() or full_path.is_symlink():
-                continue
-            reviewed.append(rel_path)
-            text = full_path.read_text(encoding="utf-8", errors="replace")
-            raw_hits = (
-                _scan_python_ast(text, unit.attack_class)
-                if rel_path.endswith(".py")
-                else []
-            )
-            raw_hits.extend(_scan_structural_text(rel_path, text, unit.attack_class))
-
-            for hit in raw_hits:
-                fp = compute_finding_fingerprint(
-                    component=unit.component,
-                    attack_class=unit.attack_class,
-                    primary_file=rel_path,
-                    symbol=hit.symbol,
-                    invariant_key=hit.invariant_key,
-                )
-                fid = finding_id_from_fingerprint(fp)
-                dispatcher.register_discovery(fp, hunter_id)
-                blockers = (
-                    [
-                        "Cluster admission controller policy is outside repository source."
-                    ]
-                    if hit.needs_external_context
-                    else []
-                )
-                finding = SecurityFinding(
-                    finding_id=fid,
-                    fingerprint=fp,
-                    title=hit.title,
-                    description=f"{hit.claimed_cause} ({rel_path}:{hit.line})",
-                    attack_class=unit.attack_class,
-                    component=unit.component,
-                    affected_locations=[
-                        LocationRef(file=rel_path, line=hit.line, symbol=hit.symbol)
-                    ],
-                    trace=[
-                        TraceStep(
-                            kind="sink",
-                            file=rel_path,
-                            line=hit.line,
-                            scope=hit.symbol,
-                            description=hit.claimed_cause,
-                        )
-                    ],
-                    trust_boundary=unit.trust_boundary,
-                    entry_point=unit.entry_point,
-                    affected_principal_or_resource=f"{unit.component} runtime state",
-                    preconditions=[
-                        f"Caller reaches {unit.entry_point} across {unit.trust_boundary}."
-                    ],
-                    scenario_summary=hit.claimed_cause,
-                    reproduction_steps=[
-                        f"Inspect {rel_path} line {hit.line} in scope {hit.symbol}."
-                    ],
-                    security_impact=hit.impact,
-                    evidence_refs=[f"{rel_path}:{hit.line}"],
-                    discovery_provenance=DiscoveryProvenance(
-                        agent_id=hunter_id,
-                        role=AuditRole.HUNTER.value,
-                        run_id=ledger.audit_run_id,
-                        timestamp=_utc_now(),
-                        method="static_ast" if rel_path.endswith(".py") else "structural_source",
-                    ),
-                    verification_provenance=None,
-                    verification_status="not_verified",
-                    lifecycle_state="candidate",
-                    confidence_score="medium",
-                    confidence_reason="Static AST/structural sink candidate awaiting verification.",
-                    uncertainty_notes=list(blockers),
-                    severity=None,
-                    root_cause=None,
-                    claimed_root_cause=hit.claimed_cause,
-                    remediation=None,
-                    unresolved_blockers=blockers,
-                    validation_plan=(
-                        {
-                            "owner_deployment_check": (
-                                "Verify cluster admission policy in deployment environment."
-                            )
-                        }
-                        if blockers
-                        else None
-                    ),
-                    rejection_reason=None,
-                    related_rules=list(cls_def.related_rules),
-                    related_requirements=[],
-                    commit_sha=ledger.commit_sha,
-                    first_seen_run=ledger.audit_run_id,
-                    last_seen_run=ledger.audit_run_id,
-                    first_seen_commit=ledger.commit_sha,
-                    last_seen_commit=ledger.commit_sha,
-                    state_history=[
-                        {
-                            "state": "candidate",
-                            "run_id": ledger.audit_run_id,
-                            "commit_sha": ledger.commit_sha,
-                            "actor": hunter_id,
-                            "reason": "Discovered during Phase 2 coverage-led hunting.",
-                        }
-                    ],
-                )
-                candidates.append(finding)
-                if fid not in unit_findings:
-                    unit_findings.append(fid)
-                if fp not in unit_fps:
-                    unit_fps.append(fp)
-
-        if not reviewed:
-            unit.status = "not_applicable"
-            unit.investigator_id = None
-            unit.limitations = ["No regular source files remained present for unit."]
-        else:
-            unit.reviewed_paths = sorted(set(reviewed))
-            unit.checks = [
-                CoverageCheck(
-                    investigator_id=hunter_id,
-                    method="source",
-                    reviewed_paths=tuple(unit.reviewed_paths),
-                    invariant=cls_def.defensive_invariants[0],
-                    result=(
-                        f"Examined {len(unit.reviewed_paths)} file(s); "
-                        f"{len(unit_findings)} candidate(s) recorded."
-                    ),
-                    evidence_refs=tuple(unit.reviewed_paths),
-                    artifact_path=None,
-                    timestamp=_utc_now(),
-                )
-            ]
-            unit.finding_ids = sorted(unit_findings)
-            unit.candidate_fingerprints = sorted(unit_fps)
-            unit.limitations = []
-            unit.status = "examined"
+        updated_unit, unit_candidates = hunt_coverage_unit(
+            project_root=resolved,
+            unit=unit,
+            hunter_id=hunter_id,
+            audit_run_id=ledger.audit_run_id,
+            commit_sha=ledger.commit_sha,
+            taxonomy=taxonomy,
+        )
+        unit.status = updated_unit.status
+        unit.investigator_id = updated_unit.investigator_id
+        unit.reviewed_paths = updated_unit.reviewed_paths
+        unit.checks = updated_unit.checks
+        unit.finding_ids = updated_unit.finding_ids
+        unit.candidate_fingerprints = updated_unit.candidate_fingerprints
+        unit.limitations = updated_unit.limitations
+        for cand in unit_candidates:
+            dispatcher.register_discovery(cand.fingerprint, hunter_id)
+            candidates.append(cand)
 
     critic_report = run_coverage_critic(project_root=resolved, ledger=ledger, dispatcher=dispatcher)
     comp = ledger.compute_completeness()

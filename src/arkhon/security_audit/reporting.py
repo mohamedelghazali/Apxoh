@@ -121,7 +121,14 @@ def build_security_audit_report(
         limitations.append(f"Coverage gap [{gap['status']}] {gap['coverage_id']}: {gap['reason']}")
 
     run_suffix = ledger.audit_run_id.removeprefix("AUDIT-")
-    return {
+    orch_summary: dict[str, Any] | None = None
+    if ledger.orchestration is not None:
+        orch_summary = {
+            k: v
+            for k, v in ledger.orchestration.items()
+            if k != "sessions"
+        }
+    report_payload: dict[str, Any] = {
         "schema_version": REPORT_SCHEMA_VERSION,
         "report_id": f"SEC-REP-{run_suffix}",
         "audit_run_id": ledger.audit_run_id,
@@ -151,6 +158,9 @@ def build_security_audit_report(
         "limitations": limitations,
         "governance_gate_status": compute_governance_gate_status(ledger, findings),
     }
+    if orch_summary is not None:
+        report_payload["orchestration_summary"] = orch_summary
+    return report_payload
 
 
 def render_markdown_audit_report(report: dict[str, Any]) -> str:
@@ -167,6 +177,16 @@ def render_markdown_audit_report(report: dict[str, Any]) -> str:
         f"- **Profile**: `{report['profile']}`",
         f"- **Audit Status**: `{report['audit_status']}`",
         f"- **Execution Mode**: `{report['execution_mode']}`",
+        *(
+            [
+                f"- **Multi-Agent Runtime**: "
+                f"`{report['orchestration_summary']['runtime_id']}` "
+                f"(sessions={report['orchestration_summary']['session_count']}, "
+                f"distinct_pids={report['orchestration_summary']['distinct_pids']})"
+            ]
+            if report.get("orchestration_summary")
+            else []
+        ),
         f"- **Sandbox Posture**: `{report['sandbox_summary']['details']}`",
         f"- **Governance Gate Verdict**: `{report['governance_gate_status']}`",
         "",

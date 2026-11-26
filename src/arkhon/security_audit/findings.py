@@ -151,15 +151,25 @@ class DiscoveryProvenance:
     run_id: str
     timestamp: str
     method: str
+    session_id: str | None = None
+    runtime_id: str | None = None
+    pid: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "agent_id": self.agent_id,
             "role": self.role,
             "run_id": self.run_id,
             "timestamp": self.timestamp,
             "method": self.method,
         }
+        if self.session_id is not None:
+            out["session_id"] = self.session_id
+        if self.runtime_id is not None:
+            out["runtime_id"] = self.runtime_id
+        if self.pid is not None:
+            out["pid"] = self.pid
+        return out
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> DiscoveryProvenance:
@@ -169,6 +179,13 @@ class DiscoveryProvenance:
             run_id=str(payload["run_id"]),
             timestamp=str(payload["timestamp"]),
             method=str(payload["method"]),
+            session_id=(
+                None if payload.get("session_id") is None else str(payload["session_id"])
+            ),
+            runtime_id=(
+                None if payload.get("runtime_id") is None else str(payload["runtime_id"])
+            ),
+            pid=None if payload.get("pid") is None else int(payload["pid"]),
         )
 
 
@@ -182,9 +199,14 @@ class VerificationProvenance:
     supporting_evidence: tuple[str, ...]
     contradictory_evidence: tuple[str, ...]
     disprove_attempts: tuple[str, ...]
+    session_id: str | None = None
+    runtime_id: str | None = None
+    pid: int | None = None
+    record_verifier_id: str | None = None
+    record_verifier_session_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "verifier_id": self.verifier_id,
             "role": self.role,
             "run_id": self.run_id,
@@ -194,6 +216,17 @@ class VerificationProvenance:
             "contradictory_evidence": list(self.contradictory_evidence),
             "disprove_attempts": list(self.disprove_attempts),
         }
+        if self.session_id is not None:
+            out["session_id"] = self.session_id
+        if self.runtime_id is not None:
+            out["runtime_id"] = self.runtime_id
+        if self.pid is not None:
+            out["pid"] = self.pid
+        if self.record_verifier_id is not None:
+            out["record_verifier_id"] = self.record_verifier_id
+        if self.record_verifier_session_id is not None:
+            out["record_verifier_session_id"] = self.record_verifier_session_id
+        return out
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> VerificationProvenance:
@@ -208,6 +241,23 @@ class VerificationProvenance:
                 str(x) for x in payload["contradictory_evidence"]
             ),
             disprove_attempts=tuple(str(x) for x in payload["disprove_attempts"]),
+            session_id=(
+                None if payload.get("session_id") is None else str(payload["session_id"])
+            ),
+            runtime_id=(
+                None if payload.get("runtime_id") is None else str(payload["runtime_id"])
+            ),
+            pid=None if payload.get("pid") is None else int(payload["pid"]),
+            record_verifier_id=(
+                None
+                if payload.get("record_verifier_id") is None
+                else str(payload["record_verifier_id"])
+            ),
+            record_verifier_session_id=(
+                None
+                if payload.get("record_verifier_session_id") is None
+                else str(payload["record_verifier_session_id"])
+            ),
         )
 
 
@@ -338,6 +388,14 @@ class SecurityFinding:
                 raise ValueError("confirmed findings require independent verification_provenance")
             if self.verification_provenance.verifier_id == self.discovery_provenance.agent_id:
                 raise ValueError("discovering agent may never self-confirm its own finding")
+        if (
+            self.verification_provenance is not None
+            and self.discovery_provenance.session_id is not None
+            and self.verification_provenance.session_id is not None
+            and self.discovery_provenance.session_id
+            == self.verification_provenance.session_id
+        ):
+            raise ValueError("discovering session may never verify its own finding")
 
     def transition_to(
         self,

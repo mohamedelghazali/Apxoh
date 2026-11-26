@@ -237,6 +237,21 @@ def validate_coverage_ledger_data(payload: Any) -> ArtifactValidationResult:
         if inv is not None and inv in seen_owners:
             errors.append(f"units[{idx}]: live investigator {inv!r} reused from prior wave")
 
+    if payload["execution_mode"] == "multi_agent_independent_sessions":
+        orch = payload.get("orchestration")
+        if not isinstance(orch, dict) or not orch.get("independent_sessions_verified"):
+            errors.append(
+                "multi_agent_independent_sessions ledger requires verified orchestration"
+            )
+        else:
+            sess_ids = {
+                s["session_id"] for s in orch["sessions"] if s["status"] == "completed"
+            }
+            if len(sess_ids) < 2 or orch["distinct_session_ids"] != len(sess_ids):
+                errors.append(
+                    "multi_agent_independent_sessions requires >=2 distinct session_ids"
+                )
+
     comp = payload["completeness"]
     incomplete = (
         counts["planned"]
@@ -303,6 +318,15 @@ def validate_findings_data(payload: Any) -> ArtifactValidationResult:
 
         if vprov is not None and vprov["verifier_id"] == dprov["agent_id"]:
             errors.append(f"records[{idx}]: self-confirmation forbidden ({dprov['agent_id']!r})")
+        if (
+            vprov is not None
+            and dprov.get("session_id") is not None
+            and vprov.get("session_id") is not None
+            and dprov.get("session_id") == vprov.get("session_id")
+        ):
+            errors.append(
+                f"records[{idx}]: discovering session cannot verify its own finding"
+            )
 
         if vstatus == "confirmed":
             if sev is None or rec["root_cause"] is None or rec["remediation"] is None:
@@ -449,6 +473,22 @@ def validate_audit_directory(audit_dir: Path) -> ArtifactValidationResult:
                     if not art_file.is_file() or art_file.is_symlink():
                         errors.append(f"promoted check artifact missing or symlink: {art!r}")
 
+        if ledger_data["execution_mode"] == "multi_agent_independent_sessions":
+            for rec in findings_data["records"]:
+                if rec["lifecycle_state"] == "remediated":
+                    continue
+                vp_rec = rec["verification_provenance"]
+                dp_rec = rec["discovery_provenance"]
+                if vp_rec is not None and (
+                    not dp_rec.get("session_id")
+                    or not vp_rec.get("session_id")
+                    or dp_rec.get("session_id") == vp_rec.get("session_id")
+                ):
+                    errors.append(
+                        f"finding {rec['finding_id']!r} lacks distinct multi-agent "
+                        "discovery/verification session_ids"
+                    )
+
         for fid, rec in records_by_id.items():
             if rec["lifecycle_state"] != "remediated" and fid not in referenced_ids:
                 errors.append(f"finding {fid!r} is not linked to any coverage unit")
@@ -458,6 +498,8 @@ def validate_audit_directory(audit_dir: Path) -> ArtifactValidationResult:
                 errors.append("report commit_sha disagrees with coverage-ledger")
             if report_data["audit_status"] != ledger_data["audit_status"]:
                 errors.append("report audit_status disagrees with coverage-ledger")
+            if report_data["execution_mode"] != ledger_data["execution_mode"]:
+                errors.append("report execution_mode disagrees with coverage-ledger")
             if report_data["coverage_summary"] != ledger_data["completeness"]:
                 errors.append("report coverage_summary disagrees with coverage-ledger")
             expected_confirmed = [

@@ -1,6 +1,6 @@
 ---
 name: security-audit
-version: 1.0.0
+version: 1.1.0
 description: >
   Conduct coverage-led, independently verified, target-neutral source security audits
   using Apxoh's coverage ledger, 19-class taxonomy, sandbox, and artifact validators.
@@ -70,3 +70,14 @@ requires:
   and never claim sandboxed verification occurred.
 - Never convert `needs_validation`, `not_verified`, `blocked`, or partial coverage into
   `PASS` in `EvidenceStore` or release gates.
+
+## Multi-Agent Independent Sessions
+
+- Probe available external/isolated runtimes with `arkhon audit runtimes --json`.
+- Run independent OS-isolated discovery, coverage-critic, candidate-verification, and
+  record-verification sessions with:
+  `arkhon audit run <project> --execution-mode multi_agent_independent_sessions --runtime auto --max-workers 4`.
+- Resume an interrupted multi-agent audit checkpoint safely without repeating verified
+  work via `arkhon audit resume <project> --audit-dir <dir>`.
+- Never claim `multi_agent_independent_sessions` unless distinct OS sessions (`session_id`
+  and `pid`) actually executed and verified findings independently of their discoverer.

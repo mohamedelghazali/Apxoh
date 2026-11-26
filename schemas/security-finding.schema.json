@@ -129,8 +129,30 @@
           "enum": [
             "static_ast",
             "structural_source",
-            "sandbox_local"
+            "sandbox_local",
+            "external_agent_session"
           ]
+        },
+        "session_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "runtime_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "pid": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
         }
       }
     },
@@ -168,7 +190,8 @@
           "type": "string",
           "enum": [
             "independent_source_review",
-            "independent_sandbox_check"
+            "independent_sandbox_check",
+            "independent_external_session"
           ]
         },
         "supporting_evidence": {
@@ -192,6 +215,41 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "session_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "runtime_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "pid": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "record_verifier_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "record_verifier_session_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
         }
       }
     },

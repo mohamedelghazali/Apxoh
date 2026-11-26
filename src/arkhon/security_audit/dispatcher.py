@@ -38,7 +38,13 @@ class AuditRole(StrEnum):
     REMEDIATION_VERIFIER = "remediation-verification-agent"
 
 
-EXECUTION_MODES = frozenset({"single_process_deterministic", "multi_agent_delegated"})
+EXECUTION_MODES = frozenset(
+    {
+        "single_process_deterministic",
+        "multi_agent_independent_sessions",
+        "multi_agent_delegated",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -62,6 +68,8 @@ class SecurityAuditTaskDispatcher:
     assignments: list[AgentAssignment] = field(default_factory=list)
     _unit_wave_owners: dict[tuple[str, int], str] = field(default_factory=dict)
     _finding_discoverers: dict[str, str] = field(default_factory=dict)
+    _finding_discoverer_sessions: dict[str, str] = field(default_factory=dict)
+    _external_sessions: dict[str, dict[str, object]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.execution_mode not in EXECUTION_MODES:
@@ -116,14 +124,52 @@ class SecurityAuditTaskDispatcher:
         self.assignments.append(record)
         return record
 
-    def register_discovery(self, fingerprint: str, agent_id: str) -> None:
-        """Record which hunter/specialist discovered a candidate fingerprint."""
+    def register_external_session(
+        self,
+        *,
+        session_id: str,
+        agent_id: str,
+        role: AuditRole,
+        runtime_id: str,
+        pid: int,
+        wave: int = 1,
+        status: str = "completed",
+    ) -> None:
+        """Record an actually executed isolated external agent session."""
+        if not session_id or not _is_valid_agent_id(agent_id):
+            raise ValueError("session_id and canonical agent_id are required")
+        self._external_sessions[session_id] = {
+            "session_id": session_id,
+            "agent_id": agent_id,
+            "role": role.value,
+            "runtime_id": runtime_id,
+            "pid": pid,
+            "wave": wave,
+            "status": status,
+        }
+
+    def register_discovery(
+        self,
+        fingerprint: str,
+        agent_id: str,
+        *,
+        session_id: str | None = None,
+    ) -> None:
+        """Record which hunter/specialist and session discovered a candidate fingerprint."""
         if not _is_valid_agent_id(agent_id):
             raise ValueError(f"invalid canonical agent_id: {agent_id!r}")
         self._finding_discoverers.setdefault(fingerprint, agent_id)
+        if session_id is not None:
+            self._finding_discoverer_sessions.setdefault(fingerprint, session_id)
 
-    def assert_independent_verifier(self, fingerprint: str, verifier_id: str) -> None:
-        """Verify that verifier_id is canonical and distinct from the discovering agent."""
+    def assert_independent_verifier(
+        self,
+        fingerprint: str,
+        verifier_id: str,
+        *,
+        verifier_session_id: str | None = None,
+    ) -> None:
+        """Verify that verifier_id and session_id are distinct from the discoverer."""
         if not _is_valid_agent_id(verifier_id):
             raise ValueError(f"invalid canonical verifier_id: {verifier_id!r}")
         discoverer = self._finding_discoverers.get(fingerprint)
@@ -131,15 +177,27 @@ class SecurityAuditTaskDispatcher:
             raise ValueError(
                 f"verifier {verifier_id!r} cannot independently verify its own discovery"
             )
+        disc_session = self._finding_discoverer_sessions.get(fingerprint)
+        if (
+            verifier_session_id is not None
+            and disc_session is not None
+            and verifier_session_id == disc_session
+        ):
+            raise ValueError(
+                f"session {verifier_session_id!r} cannot verify its own discovery"
+            )
 
     def provenance_summary(self) -> dict[str, object]:
         """Return honest orchestration metadata without claiming external agents when local."""
+        verified_independent = (
+            self.execution_mode == "multi_agent_independent_sessions"
+            and len(self._external_sessions) >= 2
+        )
         return {
             "execution_mode": self.execution_mode,
-            "multi_agent_independent_sessions": (
-                self.execution_mode == "multi_agent_delegated"
-            ),
+            "multi_agent_independent_sessions": verified_independent,
             "assignment_count": len(self.assignments),
+            "external_session_count": len(self._external_sessions),
             "roles_invoked": sorted({a.role.value for a in self.assignments}),
         }
 
