@@ -129,7 +129,8 @@
           "enum": [
             "static_ast",
             "structural_source",
-            "sandbox_local"
+            "sandbox_local",
+            "external_agent_session"
           ]
         },
         "session_id": {
@@ -189,7 +190,8 @@
           "type": "string",
           "enum": [
             "independent_source_review",
-            "independent_sandbox_check"
+            "independent_sandbox_check",
+            "independent_external_session"
           ]
         },
         "supporting_evidence": {
@@ -213,8 +215,7 @@
             "type": "string",
             "minLength": 1
           }
-        }
-      },
+        },
         "session_id": {
           "type": [
             "string",
@@ -250,6 +251,7 @@
           ],
           "minLength": 1
         }
+      }
     },
     "severity_score": {
       "type": "object",
