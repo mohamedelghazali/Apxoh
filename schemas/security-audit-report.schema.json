@@ -74,6 +74,7 @@
       "type": "string",
       "enum": [
         "single_process_deterministic",
+        "multi_agent_independent_sessions",
         "multi_agent_delegated"
       ]
     },
@@ -323,6 +324,60 @@
         "BLOCKED",
         "NOT_APPLICABLE"
       ]
+    },
+    "orchestration_summary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "runtime_id",
+        "independent_sessions_verified",
+        "session_count",
+        "distinct_session_ids",
+        "distinct_pids"
+      ],
+      "properties": {
+        "runtime_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "independent_sessions_verified": {
+          "type": "boolean"
+        },
+        "max_workers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "session_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "distinct_session_ids": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "distinct_pids": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retried_tasks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timed_out_tasks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cancelled_tasks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resumed": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }
