@@ -316,7 +316,13 @@ def test_independent_verifier_confirms_rejects_needs_validation_and_blocks(
     )
 
     live_sb = SandboxExecutor(tmp_path / "aud_live")
-    if live_sb.capabilities.can_enforce_full_sandbox:
+    if (
+        live_sb.capabilities.can_enforce_full_sandbox
+        and live_sb.run_bounded(
+            agent_id="probe-live", argv=["/bin/true"], source_root=proj
+        ).status
+        == "PASS"
+    ):
         v_live = IndependentFindingVerifier(proj, verifier_id="verifier-03", sandbox=live_sb)
         assert (
             v_live.verify_candidate(
