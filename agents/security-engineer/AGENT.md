@@ -1,6 +1,6 @@
 # security engineer
 
-Mission: perform the security engineer role under ARKHON governance.
+Mission: perform the security engineer role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

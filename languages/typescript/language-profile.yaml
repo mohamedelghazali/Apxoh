@@ -44,6 +44,6 @@ rule_domains_supported:
   - release
 
 notes: |
-  TypeScript projects default to strict mode. Apxoh enforces tsc --noEmit
+  TypeScript projects default to strict mode. GENCODE-GOV enforces tsc --noEmit
   as a required check: if the code does not type-check, the build is
   BLOCKED, regardless of any other evidence.

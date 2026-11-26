@@ -1,6 +1,6 @@
 # test engineer
 
-Mission: perform the test engineer role under ARKHON governance.
+Mission: perform the test engineer role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

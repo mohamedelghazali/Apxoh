@@ -87,9 +87,9 @@ Describe changes intended to prevent recurrence:
 
 Record the assumptions that changed, what was learned, and what should be done differently. Avoid unsupported universal claims.
 
-## 11. Apxoh-Specific Impact
+## 11. GENCODE-GOV-Specific Impact
 
-Complete this section when Apxoh governance, rules, evidence, integrations, or release gates were involved.
+Complete this section when GENCODE-GOV governance, rules, evidence, integrations, or release gates were involved.
 
 - **Which gates failed to catch the issue?** [IDs or none; explain]
 - **Was evidence fabricated, missing, invalid, or stale?** [details]

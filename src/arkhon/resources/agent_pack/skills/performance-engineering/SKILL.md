@@ -49,7 +49,7 @@ and defended against regression — not assumed.
 - `latency-instrumentation-catalog` & `performance-regression-comparison-report` (`SE-PRF-002`)
 - `degradation-alert-rules-and-owners` & `alert-delivery-verification-report` (`SE-PRF-002`)
 
-## Interaction with Apxoh
+## Interaction with GENCODE-GOV
 
 - Rule domain: `performance` (`SE-PRF-001`, `SE-PRF-002`)
 - Gate: `performance_gate`

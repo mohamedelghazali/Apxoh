@@ -1,4 +1,4 @@
-# Apxoh Threat Model
+# GENCODE-GOV Threat Model
 
 **Version:** 1.0
 **Status:** Active
@@ -14,18 +14,18 @@
 
 | Product | Role | Runtime |
 | :--- | :--- | :--- |
-| **Apxoh Core** | Local governance and verification engine | Python 3.11+, CLI |
-| **Apxoh Agent Governance** | Instructions and skills for AI coding agents | Markdown + YAML |
-| **Apxoh Assurance** | Independent verification, evidence, release gating | Local CLI + CI |
+| **GENCODE-GOV Core** | Local governance and verification engine | Python 3.11+, CLI |
+| **GENCODE-GOV Agent Governance** | Instructions and skills for AI coding agents | Markdown + YAML |
+| **GENCODE-GOV Assurance** | Independent verification, evidence, release gating | Local CLI + CI |
 
 **Central principle:** *Evidence Before Approval. Verification Before Release.*
 
 ### 1.2 System Boundaries
 
 **In scope:**
-- The Apxoh repository (code, rules, schemas, documentation)
-- The Apxoh CLI and engine
-- Evidence artifacts produced by Apxoh
+- The GENCODE-GOV repository (code, rules, schemas, documentation)
+- The GENCODE-GOV CLI and engine
+- Evidence artifacts produced by GENCODE-GOV
 - Release gating decisions
 - The contract with TSAR (delegated security authority)
 - The 8 model integrations and 1 platform integration
@@ -34,7 +34,7 @@
 - AI model providers (Anthropic, OpenAI, DeepSeek, Google, Meta, Alibaba, Moonshot)
 - Platform providers (GitHub Copilot)
 - Security scanners (owned by TSAR)
-- The projects Apxoh governs
+- The projects GENCODE-GOV governs
 - The human developer's local environment
 
 ### 1.3 Core Components
@@ -60,7 +60,7 @@ Developer / AI Agent
    ┌─────────┐
    │ Project │
    └────┬────┘
-        │ `arkhon verify`
+        │ `gencode-gov verify`
         ▼
    ┌──────────────┐
    │ Verification │ ← runs pytest, ruff, mypy, TSAR
@@ -72,13 +72,13 @@ Developer / AI Agent
    │   Evidence   │ ← SHA-256, sigstore, commit-bound
    │    Store     │
    └──────┬───────┘
-          │ `arkhon assess`
+          │ `gencode-gov assess`
           ▼
    ┌──────────────┐
    │  Assessment  │ ← score, gates, decision
    │   Engine     │
    └──────┬───────┘
-          │ `arkhon report`
+          │ `gencode-gov report`
           ▼
    ┌──────────────┐
    │    Report    │ ← JSON + Markdown
@@ -147,9 +147,9 @@ Developer / AI Agent
 
 ## 4. Trust Boundaries
 
-### 4.1 Between Apxoh and Model Providers
+### 4.1 Between GENCODE-GOV and Model Providers
 
-- **Direction:** Apxoh → Provider → Apxoh
+- **Direction:** GENCODE-GOV → Provider → GENCODE-GOV
 - **Risk:** Provider sees sensitive code; provider returns poisoned output
 - **Control:** No secrets in prompts; treat all responses as untrusted; verify outputs independently
 
@@ -171,9 +171,9 @@ Developer / AI Agent
 - **Risk:** Local success ≠ production safety
 - **Control:** Same verification in both environments; reproducible builds; SLSA provenance
 
-### 4.5 Between TSAR and Apxoh
+### 4.5 Between TSAR and GENCODE-GOV
 
-- **Direction:** Apxoh → TSAR → Apxoh
+- **Direction:** GENCODE-GOV → TSAR → GENCODE-GOV
 - **Risk:** TSAR compromised; evidence forged or tampered
 - **Control:** Full evidence verification (commit match, freshness, version, hashes, required rules); fail-closed on any check
 
@@ -186,7 +186,7 @@ Developer / AI Agent
 | Threat | Impact | Likelihood |
 | :--- | :--- | :--- |
 | Agent impersonates another agent | Medium | Medium |
-| Attacker impersonates Apxoh release | High | Low |
+| Attacker impersonates GENCODE-GOV release | High | Low |
 | Fake TSAR evidence | Critical | Medium |
 | Forged user identity in commits | High | Medium |
 
@@ -293,7 +293,7 @@ Developer / AI Agent
 
 ### 6.8 Hostile Agent
 
-**Scenario:** Malicious agent attempts to undermine Apxoh.
+**Scenario:** Malicious agent attempts to undermine GENCODE-GOV.
 
 **Impact:** Critical.
 
@@ -356,7 +356,7 @@ Developer / AI Agent
 
 ## 8. Residual Risks
 
-### 8.1 What Apxoh Cannot Defend Against
+### 8.1 What GENCODE-GOV Cannot Defend Against
 
 - **Compromised provider:** Verification is independent; a compromised provider cannot forge signed evidence.
 - **Compromised maintainer:** sigstore requires OIDC; multiple maintainers for critical changes.
@@ -367,7 +367,7 @@ Developer / AI Agent
 
 | Risk | Rationale | Review date |
 | :--- | :--- | :--- |
-| Local environment compromise | Outside Apxoh's scope | Every release |
+| Local environment compromise | Outside GENCODE-GOV's scope | Every release |
 | Provider policy changes | Cannot control external providers | Every release |
 | Timing side channels | sigstore limitation | 2027-01-01 |
 
@@ -383,7 +383,7 @@ Developer / AI Agent
 
 ## 9. References
 
-### Apxoh Documents
+### GENCODE-GOV Documents
 - `SECURITY.md` — vulnerability reporting
 - `SECURITY_AGENTS.md` — hostile agent threat model
 - `GOVERNANCE.md` — decision-making

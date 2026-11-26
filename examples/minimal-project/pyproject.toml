@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "minimal-project"
 version = "0.1.0"
-description = "Small Python project used to demonstrate Apxoh workflows"
+description = "Small Python project used to demonstrate GENCODE-GOV workflows"
 requires-python = ">=3.11"
 
 [project.optional-dependencies]

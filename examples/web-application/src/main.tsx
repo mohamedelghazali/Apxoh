@@ -10,6 +10,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <React.StrictMode>
-    <Greeting name="Apxoh" />
+    <Greeting name="GENCODE-GOV" />
   </React.StrictMode>,
 );

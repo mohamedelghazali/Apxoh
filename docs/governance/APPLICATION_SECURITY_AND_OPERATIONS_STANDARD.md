@@ -4,7 +4,7 @@
 **Audience:** AI coding agents, reviewers, release managers, security engineers, SREs  
 **Purpose:** Define the minimum secure engineering and operational work an agent must
 perform when creating or modifying software. This standard governs target projects; it
-does not claim that Apxoh itself is a web application.
+does not claim that GENCODE-GOV itself is a web application.
 
 ## 1. Required agent behavior
 

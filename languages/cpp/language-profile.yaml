@@ -41,6 +41,6 @@ rule_domains_supported:
   - release
 
 notes: |
-  C++ requires careful memory management. Apxoh enforces that manual
+  C++ requires careful memory management. GENCODE-GOV enforces that manual
   memory management (new/delete) is minimized, smart pointers are used,
   and every allocation has a documented ownership model.

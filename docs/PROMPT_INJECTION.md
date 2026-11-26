@@ -1,4 +1,4 @@
-# Apxoh Prompt Injection Threat Model and Defenses
+# GENCODE-GOV Prompt Injection Threat Model and Defenses
 
 **Version:** 1.0
 **Status:** Security baseline — adapter controls require implementation and testing
@@ -12,7 +12,7 @@
 
 Prompt injection is an attack where untrusted content (a file, a web page, a dependency, or tool output) contains instructions intended to cause an AI agent to deviate from its authorized task or security constraints.
 
-**In Apxoh's context:** a prompt injection attack succeeds when it causes an agent or connected workflow to bypass governance, disclose protected information, falsify or corrupt evidence, or introduce unsafe changes that evade required verification.
+**In GENCODE-GOV's context:** a prompt injection attack succeeds when it causes an agent or connected workflow to bypass governance, disclose protected information, falsify or corrupt evidence, or introduce unsafe changes that evade required verification.
 
 ---
 
@@ -55,7 +55,7 @@ A prompt injection can attempt to cause an agent to:
 
 ## 4. Defense-in-Depth
 
-Apxoh relies on **structural defenses** rather than prompt-level instructions alone. Prompt instructions are useful but cannot serve as the sole security boundary.
+GENCODE-GOV relies on **structural defenses** rather than prompt-level instructions alone. Prompt instructions are useful but cannot serve as the sole security boundary.
 
 ### 4.1 Layer 1 — Structural Trust Boundary
 
@@ -71,7 +71,7 @@ These restrictions must be enforced by runtime permissions, repository protectio
 
 ### 4.2 Layer 2 — Independent Verification
 
-Agent output is not authoritative evidence. Apxoh should:
+Agent output is not authoritative evidence. GENCODE-GOV should:
 
 - Run tests through a trusted runner rather than accept an agent's statement that tests passed.
 - Invoke security tools through controlled integrations, including TSAR only when configured and its result is validated.
@@ -82,11 +82,11 @@ A separate process is not automatically independent if the agent can alter its e
 
 ### 4.3 Layer 3 — Instruction Precedence
 
-The agent must follow the host platform's system, developer, and execution-environment security requirements. Within those constraints, Apxoh project instructions should establish this precedence:
+The agent must follow the host platform's system, developer, and execution-environment security requirements. Within those constraints, GENCODE-GOV project instructions should establish this precedence:
 
 ```
 1. Host platform and execution-environment security requirements
-2. Apxoh security and governance requirements
+2. GENCODE-GOV security and governance requirements
    - SECURITY_AGENTS.md
    - AGENTS.md
    - system/charter/ENGINEERING_CHARTER.md
@@ -117,7 +117,7 @@ Plain-text delimiters are not a security boundary and may not be interpreted con
 
 ### 4.5 Layer 5 — Detection Signals
 
-Apxoh should detect and investigate signals such as:
+GENCODE-GOV should detect and investigate signals such as:
 
 | Signal | Intended detection |
 | :--- | :--- |
@@ -136,7 +136,7 @@ Heuristics and string searches are supplemental signals, not complete detection 
 
 Each model and platform integration requires a mitigation profile based on tested capabilities and the actual adapter implementation. The table below defines required assessment areas; it does not assign unverified security ratings to providers.
 
-| Integration | Assessment required | Minimum Apxoh control |
+| Integration | Assessment required | Minimum GENCODE-GOV control |
 | :--- | :--- | :--- |
 | Claude (Anthropic) | System instruction handling, tool boundaries, content delimiting | Independent verification and least-privilege tools |
 | OpenAI reasoning models | Instruction handling, tool boundaries, refusal and untrusted-input behavior | Independent verification and least-privilege tools |
@@ -152,16 +152,16 @@ A model's general ability to follow instructions is not proof that it is resista
 
 ### 5.1 Per-Integration Notes
 
-- **Hosted model providers:** Provider-side safeguards may reduce risk but do not replace Apxoh controls. Provider identity, model version, data handling, and tool access should be recorded where available.
+- **Hosted model providers:** Provider-side safeguards may reduce risk but do not replace GENCODE-GOV controls. Provider identity, model version, data handling, and tool access should be recorded where available.
 - **Local models:** Local execution may reduce external data transfer but does not eliminate malicious model behavior, compromised weights, unsafe tools, or injected context.
-- **GitHub Copilot:** Apxoh may have limited visibility into internal platform behavior. It must verify repository-side changes and must not claim to inspect hidden model reasoning or internal tool activity.
-- **All integrations:** No provider or model receives authority to approve exceptions, sign Apxoh evidence, or waive blocking policy solely by virtue of model identity.
+- **GitHub Copilot:** GENCODE-GOV may have limited visibility into internal platform behavior. It must verify repository-side changes and must not claim to inspect hidden model reasoning or internal tool activity.
+- **All integrations:** No provider or model receives authority to approve exceptions, sign GENCODE-GOV evidence, or waive blocking policy solely by virtue of model identity.
 
 ---
 
 ## 6. Residual Risks
 
-Apxoh cannot guarantee protection against every prompt injection or model failure. Residual risks include:
+GENCODE-GOV cannot guarantee protection against every prompt injection or model failure. Residual risks include:
 
 | Risk | Why it remains |
 | :--- | :--- |
@@ -199,7 +199,7 @@ A signal is not automatically proof of malicious intent. Preserve relevant recor
 - NIST AI Risk Management Framework — Generative AI Profile
 - Simon Willison, "Prompt Injection" series (informative)
 - `SECURITY_AGENTS.md` — agent threat model
-- `docs/threat-model/ARKHON_THREAT_MODEL.md` — system-wide threat model
+- `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` — system-wide threat model
 
 ---
 

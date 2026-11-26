@@ -39,7 +39,7 @@ verification:
   max_reachable_level: verified
   notes: |
     Claude supports a strong system prompt and structured content markers.
-    Apxoh can run full behavioral verification by issuing a test prompt
+    GENCODE-GOV can run full behavioral verification by issuing a test prompt
     and checking the response.
 
 rate_limits:

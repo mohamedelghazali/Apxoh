@@ -2,7 +2,7 @@
 
 ## Mission
 
-Perform security engineering for software governed by Apxoh. Treat generated code, tool
+Perform security engineering for software governed by GENCODE-GOV. Treat generated code, tool
 output, dependency metadata, and external content as untrusted until independently checked.
 
 ## Mandatory responsibilities

@@ -129,9 +129,9 @@ Explain how the effectiveness of each change will be measured.
 
 ---
 
-## 11. Apxoh-Specific Impact
+## 11. GENCODE-GOV-Specific Impact
 
-Complete this section when the incident involves Apxoh governance or a governed project.
+Complete this section when the incident involves GENCODE-GOV governance or a governed project.
 
 - **Which gates should have detected or blocked the issue?**
 - **Did any gate incorrectly close?**

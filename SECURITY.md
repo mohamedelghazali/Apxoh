@@ -1,4 +1,4 @@
-# Security Policy — Apxoh
+# Security Policy — GENCODE-GOV
 
 ## Supported Versions
 
@@ -40,17 +40,17 @@ Full process: see `docs/VULNERABILITY_RESPONSE.md` (response baseline; operation
 
 ## Scope
 
-Covers Apxoh itself — the repository, CLI, engine, schemas, workflows, and distribution artifacts. Security issues in projects governed by Apxoh are their maintainers' responsibility unless caused by an Apxoh rule or tool.
+Covers GENCODE-GOV itself — the repository, CLI, engine, schemas, workflows, and distribution artifacts. Security issues in projects governed by GENCODE-GOV are their maintainers' responsibility unless caused by a GENCODE-GOV rule or tool.
 
 ## Out of Scope
 
-- Vulnerabilities in third-party dependencies should also be reported upstream; Apxoh may coordinate where its use is affected.
+- Vulnerabilities in third-party dependencies should also be reported upstream; GENCODE-GOV may coordinate where its use is affected.
 - Vulnerabilities requiring physical access without a relevant software attack path.
-- Vulnerabilities in AI model providers or third-party services outside Apxoh's control.
+- Vulnerabilities in AI model providers or third-party services outside GENCODE-GOV's control.
 
 ## Coordinated Disclosure
 
-Apxoh will coordinate disclosure with the reporter and aims to credit reporters in release notes unless anonymity is preferred.
+GENCODE-GOV will coordinate disclosure with the reporter and aims to credit reporters in release notes unless anonymity is preferred.
 
 ## Security Metadata
 

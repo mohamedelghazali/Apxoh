@@ -1,4 +1,4 @@
-# Apxoh Evidence Model
+# GENCODE-GOV Evidence Model
 
 **Version:** 1.0  
 **Status:** Active — specification; implementation must be verified  
@@ -8,7 +8,7 @@
 
 ## 1. What is Evidence
 
-**Evidence** is an artifact or record used by Apxoh to evaluate a rule, close a gate, or inform a release decision.
+**Evidence** is an artifact or record used by GENCODE-GOV to evaluate a rule, close a gate, or inform a release decision.
 
 Evidence is not an agent's opinion or an unsupported claim. A trustworthy evidence record should identify its producer, bind its results to a specific commit, preserve artifact integrity, and be independently re-verifiable.
 
@@ -94,7 +94,7 @@ Produce  →  Hash  →  Sign (when configured)  →  Store  →  Verify  →  U
 
 ### 5.1 Produce
 
-A controlled runner invokes a verification tool and captures its outputs. Apxoh may orchestrate the process, but it must not invent tool results or treat an agent's narrative as tool output.
+A controlled runner invokes a verification tool and captures its outputs. GENCODE-GOV may orchestrate the process, but it must not invent tool results or treat an agent's narrative as tool output.
 
 ### 5.2 Hash
 
@@ -224,7 +224,7 @@ Quarantine must preserve the original bytes and relevant metadata. The implement
 
 An AI agent is not an evidence authority. It may propose code or request checks, but it must not fabricate runner output, sign evidence on behalf of an authorized identity, or self-approve a release.
 
-Apxoh should invoke independent verification tools and preserve their actual outputs. The verification engine must distinguish a successful tool execution from an unavailable, crashed, skipped, or inconclusive check.
+GENCODE-GOV should invoke independent verification tools and preserve their actual outputs. The verification engine must distinguish a successful tool execution from an unavailable, crashed, skipped, or inconclusive check.
 
 ---
 

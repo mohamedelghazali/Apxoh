@@ -8,15 +8,15 @@
 
 ## 1. Purpose and trust boundary
 
-TSAR is the delegated security-scanning authority. Apxoh invokes TSAR, receives its output, validates the output and referenced artifacts, and then translates the verified result into a verification outcome.
+TSAR is the delegated security-scanning authority. GENCODE-GOV invokes TSAR, receives its output, validates the output and referenced artifacts, and then translates the verified result into a verification outcome.
 
-Apxoh retains ownership of policy, evidence acceptance, gate placement, and release decisions. TSAR output is untrusted input until Apxoh has checked it.
+GENCODE-GOV retains ownership of policy, evidence acceptance, gate placement, and release decisions. TSAR output is untrusted input until GENCODE-GOV has checked it.
 
 If TSAR is unavailable, its version is incompatible, required evidence is missing, or verification cannot complete, the security result is **BLOCKED**, never PASS.
 
 ## 2. Responsibility split
 
-| Apxoh owns | TSAR supplies |
+| GENCODE-GOV owns | TSAR supplies |
 | --- | --- |
 | When security verification is required | Scanner execution and raw findings |
 | Which project rules and gates apply | TSAR rule identifiers and scan metadata |
@@ -61,11 +61,11 @@ The verifier rejects artifact paths that escape the project evidence root and re
 
 ## 6. Rule mapping
 
-integrations/tsar/evidence-mapping.yaml maps TSAR rule identifiers to Apxoh rule identifiers. The mapping preserves the original TSAR finding; it does not imply that Apxoh independently re-ran the scanner rule.
+integrations/tsar/evidence-mapping.yaml maps TSAR rule identifiers to GENCODE-GOV rule identifiers. The mapping preserves the original TSAR finding; it does not imply that GENCODE-GOV independently re-ran the scanner rule.
 
-A TSAR finding without a mapping must not silently disappear from governance evaluation. The original SARIF rule ID and finding are retained. Apxoh does not invent a mapping for rules absent from its verified mapping registry.
+A TSAR finding without a mapping must not silently disappear from governance evaluation. The original SARIF rule ID and finding are retained. GENCODE-GOV does not invent a mapping for rules absent from its verified mapping registry.
 
-The mapping identifiers are proposed integration data and must be checked against the actual TSAR rule catalogue and Apxoh rule registry before production use.
+The mapping identifiers are proposed integration data and must be checked against the actual TSAR rule catalogue and GENCODE-GOV rule registry before production use.
 
 ## 7. Freshness
 
@@ -94,7 +94,7 @@ The `tsar-e2e` workflow job installs the pinned TSAR source checkout, runs the a
 - src/arkhon/integrations/tsar/adapter.py — CLI adapter
 - src/arkhon/integrations/tsar/verifier.py — evidence verifier
 - src/arkhon/verification/runners/tsar_runner.py — verification runner
-- docs/threat-model/ARKHON_THREAT_MODEL.md — trust-boundary baseline
+- docs/threat-model/GENCODE_GOV_THREAT_MODEL.md — trust-boundary baseline
 - SECURITY_AGENTS.md — agent and evidence-tampering threat model
 
 ---

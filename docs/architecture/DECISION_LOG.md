@@ -1,4 +1,4 @@
-# Apxoh Architecture Decision Log
+# GENCODE-GOV Architecture Decision Log
 
 **Version:** 1.1  
 **Status:** Accepted design record with implementation notes  
@@ -9,14 +9,14 @@ This log records architectural choices and their rationale. An accepted design d
 ## ADR-001 — Separate Product Name and Technical Identifier
 
 **Status:** Accepted  
-**Decision:** Use **Apxoh** as the product/system name, arkhon as the Python package and CLI identifier, and **АРХОН** only as a Cyrillic visual-identity reference.  
+**Decision:** Use **GENCODE-GOV** as the product/system name, arkhon as the Python package and CLI identifier, and **GENCODE-GOV** only as a Cyrillic visual-identity reference.  
 **Rationale:** Product identity can remain stable while technical identifiers follow package and tooling conventions.  
 **Implementation note:** Package metadata and CLI use arkhon; visual identity usage is a documentation/brand convention.
 
 ## ADR-002 — Delegate Security Authority to TSAR
 
 **Status:** Accepted; integration contract proposed  
-**Decision:** Apxoh owns governance policy, gate placement, evidence acceptance, and release decisions. TSAR is the delegated authority for the security checks specified by the integration contract.  
+**Decision:** GENCODE-GOV owns governance policy, gate placement, evidence acceptance, and release decisions. TSAR is the delegated authority for the security checks specified by the integration contract.  
 **Rationale:** Keep governance orchestration separate from specialized security analysis.  
 **Implementation note:** The repository contains a TSAR adapter, verifier, contract, and offline contract tests. The contract is marked proposed; these files do not prove that an external TSAR binary is available in a deployment. Required security checks remain BLOCKED when the authority or its evidence is unavailable.
 

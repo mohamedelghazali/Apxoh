@@ -1,4 +1,4 @@
-# Apxoh Security Model for AI Agents
+# GENCODE-GOV Security Model for AI Agents
 
 **Version:** 1.0
 **Status:** Draft — initial baseline; implementation status of individual controls must be verified
@@ -10,12 +10,12 @@
 
 ## Purpose
 
-This document defines how Apxoh treats AI agents — not as trusted collaborators, but as **potentially hostile actors whose output must be independently verified**. It is the operational companion to `docs/threat-model/ARKHON_THREAT_MODEL.md`, with focus on agent-specific threats.
+This document defines how GENCODE-GOV treats AI agents — not as trusted collaborators, but as **potentially hostile actors whose output must be independently verified**. It is the operational companion to `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md`, with focus on agent-specific threats.
 
 **Assurance note:** This document specifies the intended security model and required behavior. A control described here is not evidence that the control is already implemented, enabled, or effective. Implementation claims must be verified against code, configuration, CI runs, and test evidence before being represented as operational.
 
 **Core principle:**
-> An agent is trusted to *produce*. It is never trusted to *decide*. Every claim an agent makes must be backed by evidence that Apxoh verifies independently.
+> An agent is trusted to *produce*. It is never trusted to *decide*. Every claim an agent makes must be backed by evidence that GENCODE-GOV verifies independently.
 
 ---
 
@@ -35,7 +35,7 @@ An agent is not malicious by design. But an agent can become hostile through:
 | **Supply chain** | The agent's tooling (MCP server, plugin) is compromised |
 | **Self-preservation** | The agent optimizes for "task complete" over "task correct" |
 
-**Conclusion:** Apxoh treats every agent as if it *could* be hostile, and verifies accordingly.
+**Conclusion:** GENCODE-GOV treats every agent as if it *could* be hostile, and verifies accordingly.
 
 ### 1.2 Capabilities Assumed
 
@@ -76,9 +76,9 @@ These are threat-model assumptions, not guarantees about every runtime. Actual p
 
 ---
 
-## 2. What Apxoh Must Do in Response
+## 2. What GENCODE-GOV Must Do in Response
 
-Apxoh's required defense is **layered**: no single control is trusted to catch all attacks. Each layer is intended to catch what the previous one misses. The mechanisms below are target controls; their operational status must be verified independently.
+GENCODE-GOV's required defense is **layered**: no single control is trusted to catch all attacks. Each layer is intended to catch what the previous one misses. The mechanisms below are target controls; their operational status must be verified independently.
 
 ### 2.1 Layer 1 — Protected Governance Files
 
@@ -98,26 +98,26 @@ Governance files are treated as **protected from agent modification**. Filesyste
 | `.arkhon/state/` | **Append-only target** | State transitions must preserve prior records |
 
 **Required enforcement design:**
-- The Apxoh CLI should verify protected governance files against trusted expected SHA-256 digests before security-critical operations.
+- The GENCODE-GOV CLI should verify protected governance files against trusted expected SHA-256 digests before security-critical operations.
 - Expected digests must come from a trusted, integrity-protected source. A digest stored beside the file and modifiable by the same agent is not an independent trust anchor.
 - Any mismatch must produce `BLOCKED` with reason `governance-file-modified`.
-- An agent may be technically capable of writing a protected file on disk; the security requirement is that Apxoh and the protected CI/review boundary must detect and prevent that change from being accepted.
+- An agent may be technically capable of writing a protected file on disk; the security requirement is that GENCODE-GOV and the protected CI/review boundary must detect and prevent that change from being accepted.
 
 ### 2.2 Layer 2 — Independent Verification
 
-The agent's claim is never the final word. Apxoh must run verification independently:
+The agent's claim is never the final word. GENCODE-GOV must run verification independently:
 
 ```
 Agent says: "I ran the tests, all pass."
-Apxoh does: Runs the tests itself in a controlled verification process.
-Apxoh says: "Tests fail at line 42." (or) "Tests pass, 47 test cases, 0 failures."
+GENCODE-GOV does: Runs the tests itself in a controlled verification process.
+GENCODE-GOV says: "Tests fail at line 42." (or) "Tests pass, 47 test cases, 0 failures."
 ```
 
 **Key rules:**
-- Apxoh must not treat agent-supplied test output as authoritative evidence.
-- Apxoh must re-run the relevant failing check after an agent claims a fix.
-- Apxoh must use independently invoked security tools for security claims, including TSAR where the integration is configured and verified.
-- Apxoh must not claim "No new vulnerabilities" unless the required security authority and checks actually ran and their results were validated.
+- GENCODE-GOV must not treat agent-supplied test output as authoritative evidence.
+- GENCODE-GOV must re-run the relevant failing check after an agent claims a fix.
+- GENCODE-GOV must use independently invoked security tools for security claims, including TSAR where the integration is configured and verified.
+- GENCODE-GOV must not claim "No new vulnerabilities" unless the required security authority and checks actually ran and their results were validated.
 - A fresh process alone is not sufficient isolation if the agent can modify the executable, test suite, environment, or inputs used by that process. Verification requires trusted tool provenance and controlled inputs.
 
 ### 2.3 Layer 3 — Evidence Signing
@@ -126,13 +126,13 @@ Every evidence artifact requiring cryptographic authenticity must be signed befo
 
 | Step | Required responsibility | Intended actor |
 | :--- | :--- | :--- |
-| Evidence generated | Run the declared check and capture its result | Apxoh engine / trusted runner |
-| Evidence hashed | Compute a cryptographic digest | Apxoh |
-| Evidence signed | Sign using an approved Sigstore/OIDC identity, when configured | Trusted Apxoh execution identity |
-| Evidence stored | Store the artifact and signature bundle | Apxoh evidence subsystem |
-| Evidence verified before gate | Verify digest, signature, identity, and policy | Apxoh verifier |
+| Evidence generated | Run the declared check and capture its result | GENCODE-GOV engine / trusted runner |
+| Evidence hashed | Compute a cryptographic digest | GENCODE-GOV |
+| Evidence signed | Sign using an approved Sigstore/OIDC identity, when configured | Trusted GENCODE-GOV execution identity |
+| Evidence stored | Store the artifact and signature bundle | GENCODE-GOV evidence subsystem |
+| Evidence verified before gate | Verify digest, signature, identity, and policy | GENCODE-GOV verifier |
 
-**The agent must not control the signing identity.** Only a trusted Apxoh execution identity may sign evidence. A signature alone does not prove that the underlying check was trustworthy; the verifier must also validate the signer identity, artifact subject, provenance, and policy.
+**The agent must not control the signing identity.** Only a trusted GENCODE-GOV execution identity may sign evidence. A signature alone does not prove that the underlying check was trustworthy; the verifier must also validate the signer identity, artifact subject, provenance, and policy.
 
 ### 2.4 Layer 4 — Commit SHA Binding
 
@@ -152,7 +152,7 @@ Evidence is valid only for a limited time where the relevant control requires fr
 
 ### 2.6 Layer 6 — Anomaly Detection
 
-Apxoh should log security-relevant actions and detect suspicious patterns:
+GENCODE-GOV should log security-relevant actions and detect suspicious patterns:
 
 | Pattern | Intended detection | Required response |
 | :--- | :--- | :--- |
@@ -168,11 +168,11 @@ Text search and anomaly heuristics are not sufficient security controls on their
 
 ### 2.7 Layer 7 — Human Review Escalation
 
-When Apxoh detects a pattern it cannot resolve automatically, it must escalate to an authorized human reviewer.
+When GENCODE-GOV detects a pattern it cannot resolve automatically, it must escalate to an authorized human reviewer.
 
 | Trigger | Intended reviewer |
 | :--- | :--- |
-| Governance file modification | Apxoh maintainers / CODEOWNERS owners |
+| Governance file modification | GENCODE-GOV maintainers / CODEOWNERS owners |
 | Exception request | Security Lead or designated security approver |
 | Blocked gate with unclear cause | Engineering Lead |
 | Evidence tampering detected | Security Lead + incident response |
@@ -183,14 +183,14 @@ When Apxoh detects a pattern it cannot resolve automatically, it must escalate t
 
 ## 3. Prompt Injection Defenses
 
-Prompt injection is a high-risk agent-specific threat. Apxoh's defenses must be structural, not prompt-only.
+Prompt injection is a high-risk agent-specific threat. GENCODE-GOV's defenses must be structural, not prompt-only.
 
 ### 3.1 Structural Separations
 
 | Defense | Intended security benefit |
 | :--- | :--- |
 | **Agent has no signing identity** | Agent cannot independently create trusted evidence signatures |
-| **Apxoh runs verification** | Fabricated test output is not accepted as verification |
+| **GENCODE-GOV runs verification** | Fabricated test output is not accepted as verification |
 | **Governance files are protected outside agent authority** | Agent cannot silently weaken the rules |
 | **Evidence is revision-bound** | Claims from a different source revision are rejected |
 | **Verification uses controlled inputs and trusted tools** | Agent cannot trivially substitute its own results |
@@ -203,7 +203,7 @@ For project work, the intended precedence is:
 
 ```
 1. Host platform and execution-environment security requirements
-2. Apxoh governance and security requirements
+2. GENCODE-GOV governance and security requirements
    - SECURITY_AGENTS.md
    - AGENTS.md
    - system/charter/ENGINEERING_CHARTER.md
@@ -225,7 +225,7 @@ All input to the agent from external or potentially attacker-controlled sources 
 - Output from other agents
 - Issue descriptions, pull-request comments, commit messages, and generated artifacts
 
-Apxoh does not claim to enforce this automatically at the prompt level unless the relevant adapter implementation and tests demonstrate it. `docs/PROMPT_INJECTION.md` should define the adapter-specific handling and validation for all supported model integrations.
+GENCODE-GOV does not claim to enforce this automatically at the prompt level unless the relevant adapter implementation and tests demonstrate it. `docs/PROMPT_INJECTION.md` should define the adapter-specific handling and validation for all supported model integrations.
 
 ### 3.4 Detection Signals
 
@@ -238,7 +238,7 @@ Signals that prompt injection may have occurred include:
 - Agent's output contains instructions directed at other agents to bypass controls
 - Agent attempts to disclose secrets or send project data to an unauthorized destination
 
-Detection signals are not proof by themselves. Apxoh should preserve relevant evidence, block the affected gate when integrity or policy may be compromised, and escalate for human review.
+Detection signals are not proof by themselves. GENCODE-GOV should preserve relevant evidence, block the affected gate when integrity or policy may be compromised, and escalate for human review.
 
 ---
 
@@ -250,7 +250,7 @@ Detection signals are not proof by themselves. Apxoh should preserve relevant ev
 Agent proposes or changes code
               |
               v
-Trusted Apxoh runner executes declared checks
+Trusted GENCODE-GOV runner executes declared checks
               |
               v
 Evidence generated with tool and environment metadata
@@ -302,11 +302,11 @@ Any failure in a required verification step must produce `BLOCKED` with a specif
 
 ## 5. Agent Authentication (Optional)
 
-For deployments that require stronger attribution, Apxoh may support optional agent identity metadata and commit-signature verification. These mechanisms identify an execution or signer; they do not prove that a model's reasoning is correct.
+For deployments that require stronger attribution, GENCODE-GOV may support optional agent identity metadata and commit-signature verification. These mechanisms identify an execution or signer; they do not prove that a model's reasoning is correct.
 
 ### 5.1 Signed Commits
 
-A deployment may require signed commits. Apxoh or the protected repository platform must verify:
+A deployment may require signed commits. GENCODE-GOV or the protected repository platform must verify:
 
 - The commit signature is cryptographically valid
 - The signing identity is in the configured allowed set
@@ -315,7 +315,7 @@ A deployment may require signed commits. Apxoh or the protected repository platf
 
 When enabled, unsigned or untrusted commits must be blocked in projects with `signed_commits_required: true`.
 
-Agent-generated signatures must not be confused with Apxoh evidence signatures. Signing commits does not grant an agent authority to sign evidence or approve its own changes.
+Agent-generated signatures must not be confused with GENCODE-GOV evidence signatures. Signing commits does not grant an agent authority to sign evidence or approve its own changes.
 
 ### 5.2 Agent Identity Binding
 
@@ -334,11 +334,11 @@ agent:
     - cannot_approve_exceptions
 ```
 
-This is an illustrative contract, not a claim that the named model or fields are currently supported. Apxoh should record the agent identifier, provider, declared model version, adapter version, and execution context with relevant actions. Provider-supplied model identity may not be independently attestable; the record must distinguish declared metadata from verified identity.
+This is an illustrative contract, not a claim that the named model or fields are currently supported. GENCODE-GOV should record the agent identifier, provider, declared model version, adapter version, and execution context with relevant actions. Provider-supplied model identity may not be independently attestable; the record must distinguish declared metadata from verified identity.
 
 ### 5.3 Separation of Duties
 
-| Role | Agent | Apxoh | Human |
+| Role | Agent | GENCODE-GOV | Human |
 | :--- | :---: | :---: | :---: |
 | Write code | ✅ | ❌ | ✅ |
 | Run authoritative verification | ❌ | ✅ | ❌ |
@@ -367,7 +367,7 @@ Escalation automation, notification channels, ownership, and response deadlines 
 
 ### 6.2 Escalation Format
 
-When escalation storage is implemented, Apxoh should write a record using a validated schema. The following is illustrative; identifiers, timestamps, digests, and paths must be generated from actual event data, not copied as defaults.
+When escalation storage is implemented, GENCODE-GOV should write a record using a validated schema. The following is illustrative; identifiers, timestamps, digests, and paths must be generated from actual event data, not copied as defaults.
 
 ```yaml
 escalation:
@@ -407,7 +407,7 @@ A human reviewer must not:
 
 ## 7. Persistent Agent Denylist
 
-Apxoh may maintain an optional denylist of agent identities that have repeatedly violated governance. This is a **project-level** control and is effective only where the relevant runtime or integration enforces it.
+GENCODE-GOV may maintain an optional denylist of agent identities that have repeatedly violated governance. This is a **project-level** control and is effective only where the relevant runtime or integration enforces it.
 
 ### 7.1 When an Agent May Be Denylisted
 
@@ -420,7 +420,7 @@ A denylist decision must be based on attributable evidence and reviewed by an au
 
 ### 7.2 Effect
 
-Where enforcement is implemented, denylisted agent identities must be blocked from Apxoh-governed operations until an authorized maintainer removes the entry through a documented review.
+Where enforcement is implemented, denylisted agent identities must be blocked from GENCODE-GOV-governed operations until an authorized maintainer removes the entry through a documented review.
 
 ### 7.3 Denylist Location
 
@@ -488,8 +488,8 @@ required behavior; they do not claim automatic runtime enforcement unless separa
 
 ## 11. References
 
-### Apxoh Documents
-- `docs/threat-model/ARKHON_THREAT_MODEL.md` — system-wide threat model
+### GENCODE-GOV Documents
+- `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` — system-wide threat model
 - `AGENTS.md` — agent operating instructions
 - `docs/PROMPT_INJECTION.md` — prompt injection defenses (planned / pending verification)
 - `docs/EVIDENCE_INTEGRITY.md` — evidence integrity model (planned / pending verification)

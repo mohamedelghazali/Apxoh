@@ -1,4 +1,4 @@
-# Postmortem: Apxoh Bootstrap — Founding Scope Expanded to Three Products
+# Postmortem: GENCODE-GOV Bootstrap — Founding Scope Expanded to Three Products
 
 **Incident ID:** INC-2026-11-01-001  
 **Severity:** Medium (process/design retrospective)  
@@ -14,7 +14,7 @@
 
 ## 1. Summary
 
-During Apxoh's founding, the scope expanded from a single CLI focused on enforcing rules to three related products: Core, Agent Governance, and Assurance. This was a planned design expansion, not an operational incident. It is recorded because it changed the repository structure, manifest, milestones, and intended users, and therefore required explicit architectural documentation.
+During GENCODE-GOV's founding, the scope expanded from a single CLI focused on enforcing rules to three related products: Core, Agent Governance, and Assurance. This was a planned design expansion, not an operational incident. It is recorded because it changed the repository structure, manifest, milestones, and intended users, and therefore required explicit architectural documentation.
 
 The founding discussion identified AI coding agents as direct participants in software production and governance, alongside developers and reviewers.
 
@@ -48,7 +48,7 @@ That framing was too narrow for the intended governance problem: instructions an
 
 ## 5. Contributing Factors
 
-- Founding discussions initially emphasized what Apxoh should do more than which actors and workflows it should govern.
+- Founding discussions initially emphasized what GENCODE-GOV should do more than which actors and workflows it should govern.
 - The initial specification did not contain explicit user personas.
 - The first manifest design preceded the three-product model.
 
@@ -94,7 +94,7 @@ This was a deliberate founding decision, not a failure discovered through monito
 2. **User personas should be explicit.** "Developers" alone does not describe the different needs of developers, AI agents, reviewers, and release decision-makers.
 3. **Decision logs preserve reasoning.** Recording the rationale makes later changes reviewable and reduces ambiguity about why the architecture exists.
 
-## 11. Apxoh-Specific Impact
+## 11. GENCODE-GOV-Specific Impact
 
 - **Which gates failed to catch it?** None. This was a design-scope decision, not a gate failure.
 - **Was evidence fabricated, missing, or stale?** Not applicable to the founding decision. Implementation claims still require independent evidence.
@@ -108,6 +108,6 @@ This postmortem is blameless. The initial developer-first framing was a reasonab
 
 ## 13. Attachments
 
-- docs/architecture/DECISION_LOG.md — ADR-002 (Apxoh and TSAR have separate responsibilities)
+- docs/architecture/DECISION_LOG.md — ADR-002 (GENCODE-GOV and TSAR have separate responsibilities)
 - docs/architecture/SYSTEM_OVERVIEW.md — product model and working personas
 - ROADMAP.md — product milestones and target personas

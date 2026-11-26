@@ -1,4 +1,4 @@
-# Apxoh Versioning Policy
+# GENCODE-GOV Versioning Policy
 
 **Version:** 1.0
 **Status:** Active
@@ -8,7 +8,7 @@
 
 ## 1. Scope
 
-This document defines how Apxoh versions:
+This document defines how GENCODE-GOV versions:
 
 - The engine and CLI (`arkhon` Python package)
 - The rule catalog (`rules/`, `languages/*/rules/`)
@@ -23,7 +23,7 @@ Each artifact has its own version, following the same principles, but with its o
 
 ## 2. Semantic Versioning
 
-Apxoh uses **Semantic Versioning 2.0.0** for all artifacts:
+GENCODE-GOV uses **Semantic Versioning 2.0.0** for all artifacts:
 
 ```
 MAJOR.MINOR.PATCH[-pre-release][+build]
@@ -41,7 +41,7 @@ MAJOR.MINOR.PATCH[-pre-release][+build]
 
 ### 2.2 Pre-1.0 Versions
 
-Before `1.0.0`, Apxoh uses **development-stage pre-release versions**:
+Before `1.0.0`, GENCODE-GOV uses **development-stage pre-release versions**:
 
 ```
 0.1.0-dev.1
@@ -71,7 +71,7 @@ Breaking changes are allowed at any pre-1.0 version. A published `0.1.0` is an o
 
 ### 3.3 Schemas
 
-- Each schema file has `$id` with a version, e.g., `https://apxoh.dev/schemas/rule/1.0.0`
+- Each schema file has `$id` with a version, e.g., `https://github.com/mohamedelghazali/GENCODE-GOV/schemas/rule/1.0.0`
 - The version is bumped when the schema is broken (major) or extended (minor).
 - **Rule:** a schema bump requires a migration in `migrations/schemas/`.
 
@@ -84,7 +84,7 @@ Breaking changes are allowed at any pre-1.0 version. A published `0.1.0` is an o
 ### 3.5 Integrations
 
 - Each integration has its own version in `config.yaml`
-- **Rule:** integration version is independent of Apxoh version.
+- **Rule:** integration version is independent of GENCODE-GOV version.
 - Compatibility matrix is in `manifest/compatibility.yaml`.
 
 ### 3.6 Report Templates
@@ -141,7 +141,7 @@ git add VERSION pyproject.toml src/arkhon/__init__.py CHANGELOG.md
 git commit -m "release: v0.1.0"
 
 # 5. Tag
-git tag -s v0.1.0 -m "Apxoh v0.1.0"
+git tag -s v0.1.0 -m "GENCODE-GOV v0.1.0"
 
 # 6. Push tag (triggers slsa-release.yml)
 git push origin v0.1.0
@@ -187,7 +187,7 @@ Removal requires:
 
 ### 7.1 Public API
 
-From `1.0.0` onward, Apxoh guarantees:
+From `1.0.0` onward, GENCODE-GOV guarantees:
 
 - **CLI:** command names and arguments are stable within a major version
 - **Python API:** `arkhon.*` public functions are stable within a major version
@@ -226,7 +226,7 @@ At any time, versions can be discovered:
 
 ```bash
 # Engine
-arkhon version
+gencode-gov version
 cat VERSION
 python -c "import arkhon; print(arkhon.__version__)"
 

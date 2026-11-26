@@ -1,12 +1,12 @@
-# Apxoh Project Governance
+# GENCODE-GOV Project Governance
 
-**Project:** Apxoh — Software Engineering Governance & Assurance System  
-**Repository identifier:** `arkhon`  
+**Project:** GENCODE-GOV — Software Engineering Governance & Assurance System  
+**Repository identifier:** `gencode-gov`  
 **Status:** Governance policy; repository settings must be checked independently.
 
 ## 1. Purpose
 
-This document describes how changes to Apxoh are proposed, reviewed, accepted, and maintained. It does not itself configure GitHub branch protection, CODEOWNERS enforcement, mandatory reviews, or access controls. Those controls are effective only when configured in the repository and independently checked.
+This document describes how changes to GENCODE-GOV are proposed, reviewed, accepted, and maintained. It does not itself configure GitHub branch protection, CODEOWNERS enforcement, mandatory reviews, or access controls. Those controls are effective only when configured in the repository and independently checked.
 
 The governing principles are:
 

@@ -1,4 +1,4 @@
-# Apxoh Security Audit Subsystem
+# GENCODE-GOV Security Audit Subsystem
 
 **Version:** 1.1.0
 **Package:** `src/arkhon/security_audit/`
@@ -6,8 +6,8 @@
 
 ## Overview
 
-The Apxoh Security Audit Subsystem provides deterministic, coverage-led, independently
-verified, target-neutral source security auditing integrated directly with Apxoh's
+The GENCODE-GOV Security Audit Subsystem provides deterministic, coverage-led, independently
+verified, target-neutral source security auditing integrated directly with GENCODE-GOV's
 `EvidenceStore`, `VerificationEngine`, `SE-*` rule catalog, and release gates. It
 complements (and never replaces) external TSAR authority (`SE-SEC-GOV-001`).
 
@@ -44,9 +44,9 @@ complements (and never replaces) external TSAR authority (`SE-SEC-GOV-001`).
 8. **Target-Neutral Reporting & Reassessment (`reporting.py`, `reassessment.py`)**:
    Produces `security-audit-report.json`, `SECURITY-AUDIT-REPORT.md`, `FINDINGS-DETAIL.md`,
    and `NEEDS-VALIDATION.md`, and tracks remediations and reopened regressions across Git
-   commits via `arkhon audit reassess`.
+   commits via `gencode-gov audit reassess`.
 9. **Governance & CLI Bridge (`governance_bridge.py`, `cli_dispatch.py`)**: Connects audit
    runs to `.arkhon/evidence/software-security/` (`PASS`, `FAIL`, `BLOCKED`,
-   `NOT_APPLICABLE`) and exposes `arkhon audit plan|run|status|coverage|verify-findings|validate|report|compare|reassess`
-   backward-compatibly alongside legacy `arkhon audit [project] --domain <domain>`.
-10. **Provider-Neutral Multi-Agent Runtime & Orchestrator (`runtime.py`, `worker_entry.py`, `orchestrator.py`)**: Detects external CLI runtimes (`claude-cli`, `codex-cli`, `gemini-cli`, `command`) and isolated Python worker processes (`python-isolated-worker`), executes dependency-aware waves across bounded parallel OS processes with per-agent `0700` scratch workspaces and `O_NOFOLLOW` promotion, coordinates atomic updates via `LockedCoverageLedgerStore`, enforces distinct discovery vs. verification `session_id`s, and supports timeouts, cancellation, bounded retries, and checkpoint resumption (`arkhon audit resume`).
+   `NOT_APPLICABLE`) and exposes `gencode-gov audit plan|run|status|coverage|verify-findings|validate|report|compare|reassess`
+   backward-compatibly alongside legacy `gencode-gov audit [project] --domain <domain>`.
+10. **Provider-Neutral Multi-Agent Runtime & Orchestrator (`runtime.py`, `worker_entry.py`, `orchestrator.py`)**: Detects external CLI runtimes (`claude-cli`, `codex-cli`, `gemini-cli`, `command`) and isolated Python worker processes (`python-isolated-worker`), executes dependency-aware waves across bounded parallel OS processes with per-agent `0700` scratch workspaces and `O_NOFOLLOW` promotion, coordinates atomic updates via `LockedCoverageLedgerStore`, enforces distinct discovery vs. verification `session_id`s, and supports timeouts, cancellation, bounded retries, and checkpoint resumption (`gencode-gov audit resume`).

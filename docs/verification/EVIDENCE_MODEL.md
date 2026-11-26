@@ -1,4 +1,4 @@
-# Apxoh Evidence Model
+# GENCODE-GOV Evidence Model
 
 **Version:** 1.0
 **Status:** Active — source SBOM and release-attestation gates are implemented; release-tag signing/provenance is verified only when the tag-triggered workflow completes.
@@ -8,7 +8,7 @@
 
 ## 1. What Evidence Is
 
-Evidence is an artifact that Apxoh may use to evaluate a rule, close a
+Evidence is an artifact that GENCODE-GOV may use to evaluate a rule, close a
 gate, or support a release decision.
 
 Evidence is not opinion, an agent's claim, or an unverified summary. A
@@ -26,7 +26,7 @@ or whether the artifact supports the claim.
 
 | Type | Potential producer | Possible use |
 | :--- | :--- | :--- |
-| Test result | Test runner executed by Apxoh | Testing gate |
+| Test result | Test runner executed by GENCODE-GOV | Testing gate |
 | Security scan | TSAR or another configured scanner | Security gate |
 | Dependency audit | Configured dependency auditor | Supply-chain gate |
 | SBOM | Configured SBOM generator | Supply-chain gate |

@@ -1,4 +1,4 @@
-# How to Write an Apxoh Rule
+# How to Write a GENCODE-GOV Rule
 
 **Audience:** Contributors adding or modifying rules in `rules/`.
 **Last updated:** 2026-11-01
@@ -146,7 +146,7 @@ Every production rule should have:
 From the repository checkout, run:
 
 ~~~bash
-arkhon validate
+gencode-gov validate
 pytest
 ~~~
 
@@ -179,7 +179,7 @@ Use the actual public API and fixtures present in the codebase. These snippets a
 - [ ] Failure behavior is implemented, not merely declared.
 - [ ] Positive, negative, and regression tests exist.
 - [ ] No duplicate or conflicting rule exists.
-- [ ] `arkhon validate` and relevant tests pass.
+- [ ] `gencode-gov validate` and relevant tests pass.
 - [ ] Rule changelog is updated if that changelog is maintained.
 
 ## 8. References

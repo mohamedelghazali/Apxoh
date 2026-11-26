@@ -1,4 +1,4 @@
-# Apxoh Component Map
+# GENCODE-GOV Component Map
 
 **Version:** 1.0
 **Status:** Active
@@ -178,9 +178,9 @@
 
 ### 3.8 `.arkhon/`
 
-- `project.yaml` — Apxoh's own project declaration (self-governance).
-- `config.yaml` — Apxoh's own runtime config.
-- `evidence/` — where Apxoh's own evidence goes.
+- `project.yaml` — GENCODE-GOV's own project declaration (self-governance).
+- `config.yaml` — GENCODE-GOV's own runtime config.
+- `evidence/` — where GENCODE-GOV's own evidence goes.
 - `state/` — append-only state log.
 
 ---
@@ -196,7 +196,7 @@
 | What are the 16 quality documents? | `reports/templates/engineering-quality/` |
 | What are the 9 schemas? | `schemas/*.json` |
 | What is the TSAR contract? | `integrations/tsar/contract.yaml` |
-| What is the threat model? | `docs/threat-model/ARKHON_THREAT_MODEL.md` |
+| What is the threat model? | `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` |
 | What is the score model? | `src/arkhon/assessment/scorer.py` |
 
 ---

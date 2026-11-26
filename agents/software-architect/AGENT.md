@@ -1,6 +1,6 @@
 # software architect
 
-Mission: perform the software architect role under ARKHON governance.
+Mission: perform the software architect role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

@@ -1,1 +1,1 @@
-Follow applicable ARKHON charter, policies, and rules. Never fabricate verification.
+Follow applicable GENCODE-GOV charter, policies, and rules. Never fabricate verification.

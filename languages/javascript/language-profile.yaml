@@ -45,5 +45,5 @@ rule_domains_supported:
 
 notes: |
   JavaScript and TypeScript are related but distinct. A project using both
-  is detected as both; Apxoh runs the JavaScript profile for .js files and
+  is detected as both; GENCODE-GOV runs the JavaScript profile for .js files and
   the TypeScript profile for .ts files.

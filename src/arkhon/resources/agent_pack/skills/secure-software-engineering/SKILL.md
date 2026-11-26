@@ -1,7 +1,7 @@
 ---
 name: secure-software-engineering
 description: >
-  Apply Apxoh application-security rules to software built by AI agents.
+  Apply GENCODE-GOV application-security rules to software built by AI agents.
   Produce threat models, security tests, remediation evidence, and honest gate outcomes.
   TSAR is one delegated scanner, not the complete security program.
 version: 1.1.0
@@ -14,7 +14,7 @@ delegates_to: tsar
 
 ## Purpose
 
-Apxoh defines security requirements; the agent implements and verifies them. TSAR provides
+GENCODE-GOV defines security requirements; the agent implements and verifies them. TSAR provides
 only the capabilities declared in integrations/tsar/contract.yaml. It does not replace
 application security design, authorization testing, DAST, SCA, TLS review, privacy review,
 or qualified human review.
@@ -58,7 +58,7 @@ or qualified human review.
 
 ## TSAR scope
 
-Run arkhon verify --domain software-security for security-relevant changes and release.
+Run gencode-gov verify --domain software-security for security-relevant changes and release.
 Validate TSAR version, evidence schema, target commit, freshness, and hashes. The current
 TSAR contract covers secret scanning and static security review only; it does not prove
 SCA, DAST, cryptographic inventory, or ASVS compliance. If required TSAR is unavailable

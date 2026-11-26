@@ -1,6 +1,6 @@
 # Rule Catalog Changelog
 
-This file records changes to the Apxoh rule catalog. The YAML rule files remain authoritative for each rule's metadata, scope, verification, acceptance criteria, evidence, and failure behavior.
+This file records changes to the GENCODE-GOV rule catalog. The YAML rule files remain authoritative for each rule's metadata, scope, verification, acceptance criteria, evidence, and failure behavior.
 
 Rule versioning follows docs/VERSIONING.md §3.4. The lifecycle is described in docs/rule-authoring/RULE_LIFECYCLE.md.
 

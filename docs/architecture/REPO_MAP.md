@@ -1,4 +1,4 @@
-# Apxoh Repository Map
+# GENCODE-GOV Repository Map
 
 **Version:** 1.1  
 **Status:** Active  
@@ -11,7 +11,7 @@ This map describes repository paths present in the current source tree. It is a 
 ## 1. Top-Level Structure
 
 ~~~text
-Apxoh/
+GENCODE-GOV/
 ├── .arkhon/                 # Repository self-governance configuration/state
 ├── .devcontainer/           # Development-container configuration
 ├── .github/                 # Workflows, templates, CODEOWNERS and automation
@@ -100,7 +100,7 @@ The package is under src/arkhon/:
 | integrations/ | Agent/model adapters and TSAR adapter/verifier |
 | reporting/ | JSON, Markdown, HTML reporting and templates |
 
-The package exposes the arkhon command through pyproject.toml. Apxoh is the product name; arkhon is the Python package and CLI identifier.
+The package exposes the arkhon command through pyproject.toml. GENCODE-GOV is the product name; arkhon is the Python package and CLI identifier.
 
 ## 7. Agent Skills, Roles, and Integrations
 

@@ -4,7 +4,7 @@
 
 ---
 
-# البدء السريع — АРХОН
+# البدء السريع — GENCODE-GOV
 
 ## المتطلبات
 
@@ -18,8 +18,8 @@
 ### Linux وmacOS
 
 ```bash
-git clone https://github.com/mohamedelghazali/Apxoh.git
-cd Apxoh
+git clone https://github.com/mohamedelghazali/GENCODE-GOV.git
+cd GENCODE-GOV
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
@@ -28,8 +28,8 @@ python -m pip install -e ".[dev]"
 ### Windows PowerShell
 
 ```powershell
-git clone https://github.com/mohamedelghazali/Apxoh.git
-Set-Location Apxoh
+git clone https://github.com/mohamedelghazali/GENCODE-GOV.git
+Set-Location GENCODE-GOV
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
@@ -38,8 +38,8 @@ python -m pip install -e ".[dev]"
 ## التحقق من التثبيت
 
 ```bash
-arkhon version
-arkhon validate
+gencode-gov version
+gencode-gov validate
 ```
 
 يعرض الأمر الأول إصدار CLI. ويتحقق الأمر الثاني من عناصر التحقق التي يدعمها الإصدار المثبت؛ ولا يعني نجاحه وحده أن المشروع اجتاز جميع بوابات الجودة أو الأمن أو الجاهزية للإنتاج.
@@ -49,7 +49,7 @@ arkhon validate
 ### 1. استكشف مشروعاً
 
 ```bash
-arkhon inspect /path/to/project
+gencode-gov inspect /path/to/project
 ```
 
 استبدل المسار بمجلد المشروع المستهدف. استخدم `.` لفحص مجلد العمل الحالي.
@@ -57,14 +57,14 @@ arkhon inspect /path/to/project
 ### 2. تحقق من نطاق محدد
 
 ```bash
-arkhon verify /path/to/project --domain testing
+gencode-gov verify /path/to/project --domain testing
 ```
 
 نفّذ ذلك بعد مراجعة الخيارات المتاحة في إصدار CLI المثبت. نتيجة التحقق تخص الأدوات والأدلة التي نُفذت فعلياً فقط.
 
 ### 3. التقييم والتقرير
 
-توجد في المشروع مكونات للتقييم وإنتاج التقارير، لكن تفاصيل الخيارات والمخرجات تعتمد على إصدار CLI؛ راجع `arkhon --help` و`arkhon assess --help` و`arkhon report --help` قبل الاعتماد على أي مسار أو صيغة إخراج.
+توجد في المشروع مكونات للتقييم وإنتاج التقارير، لكن تفاصيل الخيارات والمخرجات تعتمد على إصدار CLI؛ راجع `gencode-gov --help` و`gencode-gov assess --help` و`gencode-gov report --help` قبل الاعتماد على أي مسار أو صيغة إخراج.
 
 ## المفاهيم الأساسية
 
@@ -85,8 +85,8 @@ arkhon verify /path/to/project --domain testing
 | المعمارية | `docs/architecture/SYSTEM_OVERVIEW.md` |
 | كتابة قاعدة | `docs/rule-authoring/HOW_TO_WRITE_A_RULE.md` |
 | أمثلة القواعد | `docs/rule-authoring/EXAMPLES.md` |
-| تبنّي АРХОН في وكيل | `docs/agent-adoption/ADOPTION_GUIDE.md` |
-| نموذج التهديد | `docs/threat-model/ARKHON_THREAT_MODEL.md` |
+| تبنّي GENCODE-GOV في وكيل | `docs/agent-adoption/ADOPTION_GUIDE.md` |
+| نموذج التهديد | `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` |
 | المصطلحات | `docs/architecture/GLOSSARY.md` |
 
 ---

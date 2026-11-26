@@ -59,7 +59,7 @@ A passing test suite that tests nothing is worse than no test suite — it gives
 - `critical-functionality-test-matrix` — mapping critical workflows to automated tests
 - `coverage-report` — line and branch coverage
 
-## Interaction with Apxoh
+## Interaction with GENCODE-GOV
 
 - Rule domain: `testing` (`SE-TST-001` through `SE-TST-004`)
 - Gate: `testing_gate`

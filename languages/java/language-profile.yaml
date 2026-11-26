@@ -48,6 +48,6 @@ rule_domains_supported:
   - release
 
 notes: |
-  Java projects depend on the JVM. Apxoh verifies the targeted JDK version
+  Java projects depend on the JVM. GENCODE-GOV verifies the targeted JDK version
   via the pom.xml/gradle file, and checks that the build runs against that
   JDK. Bytecode level must match the target.

@@ -1,16 +1,16 @@
 ---
 name: arkhon-governance
 description: >
-  Apply the Apxoh software engineering governance charter throughout
+  Apply the GENCODE-GOV software engineering governance charter throughout
   software planning, implementation, verification, maintenance, and release.
   Use this skill when writing, modifying, reviewing, or verifying code in a
-  project governed by Apxoh.
+  project governed by GENCODE-GOV.
 version: 1.0.0
 applicable_to: [all-projects]
 requires: [arkhon-core]
 ---
 
-# Apxoh Governance Skill
+# GENCODE-GOV Governance Skill
 
 ## Mandatory Operating Principles
 
@@ -44,7 +44,7 @@ Governance is the discipline of:
 - **Recording** the proof (evidence).
 - **Deciding** whether to release (assessment).
 
-Each step should leave a trace that Apxoh can inspect. A trace is not proof until its integrity, provenance, and relevance have been checked.
+Each step should leave a trace that GENCODE-GOV can inspect. A trace is not proof until its integrity, provenance, and relevance have been checked.
 
 ## Failure Handling
 
@@ -58,7 +58,7 @@ A false PASS is more serious than an honest BLOCKED.
 
 - Never claim verification without evidence.
 - Never bypass a critical gate.
-- Never sign evidence unless an authorized Apxoh signing component performs the operation.
+- Never sign evidence unless an authorized GENCODE-GOV signing component performs the operation.
 - Never merge without required checks passing.
 - Never claim that a prompt alone enforces filesystem or repository permissions.
 - Never reimplement delegated security decisions in place of TSAR.

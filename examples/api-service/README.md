@@ -1,11 +1,11 @@
 # API Service Example
 
-A minimal Go HTTP API governed by Apxoh.
+A minimal Go HTTP API governed by GENCODE-GOV.
 
 Demonstrates:
 - Health endpoint (required by `SE-OBS-001`)
 - Handler with tests
-- Apxoh profile: `api-service`
+- GENCODE-GOV profile: `api-service`
 - Security gate remains blocked when required TSAR evidence is unavailable
 
 ## Structure
@@ -30,10 +30,10 @@ go test ./...
 go run .
 ```
 
-## Apxoh
+## GENCODE-GOV
 
 ```bash
-arkhon verify examples/api-service --domain testing
+gencode-gov verify examples/api-service --domain testing
 ```
 
 Testing results depend on actual execution and evidence collection. Security must remain `BLOCKED` if required TSAR evidence is missing.

@@ -1,20 +1,20 @@
 # AGENTS.md — Instructions for AI Agents
 
-This file is the entry point for any AI coding agent that encounters the Apxoh repository or a project governed by Apxoh.
+This file is the entry point for any AI coding agent that encounters the GENCODE-GOV repository or a project governed by GENCODE-GOV.
 
 **Read this file completely before taking action.**
 
-## 1. What Apxoh Is
+## 1. What GENCODE-GOV Is
 
-Apxoh is a Software Engineering Governance & Assurance System.
+GENCODE-GOV is a Software Engineering Governance & Assurance System.
 
 > **Evidence Before Approval. Verification Before Release.**
 
-The AI agent writes the software. Apxoh is intended to verify it independently.
+The AI agent writes the software. GENCODE-GOV is intended to verify it independently.
 
 ## 2. Mandatory Operating Principles
 
-Every agent operating under Apxoh must:
+Every agent operating under GENCODE-GOV must:
 
 1. Read the applicable engineering charter before acting.
 2. Identify the project profile before proposing changes.
@@ -42,7 +42,7 @@ These instructions do not themselves enforce filesystem permissions or branch pr
 - Do not claim support for a language, framework, or AI provider without a verification mechanism.
 - Do not merge into main without all required checks passing.
 - Do not claim verification on behalf of another agent.
-- Do not sign evidence unless an explicitly authorized Apxoh signing component performs the operation.
+- Do not sign evidence unless an explicitly authorized GENCODE-GOV signing component performs the operation.
 
 If a requirement cannot be satisfied, say so explicitly. A false PASS is more serious than an honest BLOCKED.
 
@@ -72,12 +72,12 @@ If remediation is not possible, escalate to a human reviewer. Missing required e
 
 ## 6. Security Delegation to TSAR
 
-Apxoh's intended security architecture delegates security decisions to TSAR, including vulnerability, cryptography, secret, dependency, and applicable compliance checks.
+GENCODE-GOV's intended security architecture delegates security decisions to TSAR, including vulnerability, cryptography, secret, dependency, and applicable compliance checks.
 
 When code touches security:
 
 1. Do not claim the change is secure merely from code inspection.
-2. Run the configured Apxoh software-security verification path.
+2. Run the configured GENCODE-GOV software-security verification path.
 3. Require valid TSAR evidence for the applicable gate.
 4. If TSAR is unavailable, the security gate is BLOCKED.
 
@@ -90,7 +90,7 @@ The presence of a TSAR adapter or documentation does not prove that TSAR is inst
 | `README.md` | Project overview |
 | `SECURITY_AGENTS.md` | Hostile agent threat model |
 | `SECURITY.md` | Vulnerability reporting |
-| `docs/threat-model/ARKHON_THREAT_MODEL.md` | System-wide threat model |
+| `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` | System-wide threat model |
 | `docs/SUPPLY_CHAIN.md` | Supply chain policy |
 | `docs/PROMPT_INJECTION.md` | Prompt injection defenses |
 | `docs/EVIDENCE_INTEGRITY.md` | Evidence integrity model |
@@ -130,9 +130,9 @@ See `docs/agent-adoption/ADOPTION_GUIDE.md` for the adoption process.
 
 ## 10. Self-Governance of This Repository
 
-Apxoh is intended to apply its governance rules to itself. The required release checks include:
+GENCODE-GOV is intended to apply its governance rules to itself. The required release checks include:
 
-- Rule validation (`arkhon validate`).
+- Rule validation (`gencode-gov validate`).
 - Schema validation.
 - Unit and integration tests.
 - Security scanning through the configured TSAR integration.
@@ -185,8 +185,8 @@ Before high-risk production changes, verify a suitable pre-change recovery point
 integrity, RPO/RTO, and tested application/database rollback or forward-recovery steps.
 Do not claim monitoring, backup, logging, or rollback readiness without current evidence.
 
-For structured source-code security reviews, use `arkhon audit plan`,
-`arkhon audit run`, `arkhon audit validate`, and `arkhon audit reassess` with the
+For structured source-code security reviews, use `gencode-gov audit plan`,
+`gencode-gov audit run`, `gencode-gov audit validate`, and `gencode-gov audit reassess` with the
 `security-audit` skill. Never allow a discovering agent to self-confirm a finding,
 never assign severity to `needs_validation` leads, and never convert `BLOCKED` or
 `needs_validation` outcomes into `PASS`.

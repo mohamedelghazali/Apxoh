@@ -1,4 +1,4 @@
-# Apxoh Incident Response Plan
+# GENCODE-GOV Incident Response Plan
 
 **Version:** 1.0  
 **Status:** Response guidance; no 24/7 on-call service or response-time commitment is implied  
@@ -6,7 +6,7 @@
 
 ## 1. Purpose and Scope
 
-This document defines a repeatable response approach for suspected compromise, evidence tampering, security-gate failure, malicious agent behavior, and failures in required security integrations affecting Apxoh or a project governed by it.
+This document defines a repeatable response approach for suspected compromise, evidence tampering, security-gate failure, malicious agent behavior, and failures in required security integrations affecting GENCODE-GOV or a project governed by it.
 
 It is a procedural guide. It does not establish a staffed incident-response team, automated alerting, immutable log service, or guaranteed response time. Deployment owners must assign responders and verify their contact paths.
 

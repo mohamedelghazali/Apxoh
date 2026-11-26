@@ -1,6 +1,6 @@
-# Apxoh Examples
+# GENCODE-GOV Examples
 
-This directory is reserved for small, reviewable projects that demonstrate how Apxoh profiles and governance rules can be applied. Language detection fixtures remain under `tests/languages/fixtures/`; examples are intended to demonstrate project scenarios rather than language detection.
+This directory is reserved for small, reviewable projects that demonstrate how GENCODE-GOV profiles and governance rules can be applied. Language detection fixtures remain under `tests/languages/fixtures/`; examples are intended to demonstrate project scenarios rather than language detection.
 
 ## Planned Example Scenarios
 
@@ -15,16 +15,16 @@ The following are proposed example directories. A row is not evidence that the p
 
 ## Using an Example
 
-After an example project has been added, run commands supported by the installed Apxoh version. For the current CLI, typical commands include:
+After an example project has been added, run commands supported by the installed GENCODE-GOV version. For the current CLI, typical commands include:
 
 ```bash
-arkhon inspect path/to/example
-arkhon verify path/to/example --domain testing
-arkhon assess path/to/example
-arkhon report path/to/example --format markdown
+gencode-gov inspect path/to/example
+gencode-gov verify path/to/example --domain testing
+gencode-gov assess path/to/example
+gencode-gov report path/to/example --format markdown
 ```
 
-Check `arkhon --help` and the installed release before relying on a command or option. A successful inspection is not the same as a passing verification gate.
+Check `gencode-gov --help` and the installed release before relying on a command or option. A successful inspection is not the same as a passing verification gate.
 
 ## Security Gate Expectations
 
