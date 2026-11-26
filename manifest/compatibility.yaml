@@ -61,7 +61,7 @@ schemas:
     version: "1.0.0"
     path: "schemas/security-finding.schema.json"
 
-  integrations:
+integrations:
     
   - id: tsar
     minimum_version: "1.1.0"
