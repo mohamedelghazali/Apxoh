@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import shutil
-import uuid
 from pathlib import Path
 from typing import Any
 
+from arkhon import __version__
 from arkhon.core.constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_NOT_APPLICABLE, STATUS_PASS
-from arkhon.evidence.collector import Artifact, EvidenceCollector, EvidenceDraft
-from arkhon.evidence.integrity import sha256_of
+from arkhon.evidence.collector import EvidenceCollector
 from arkhon.evidence.store import EvidenceStore
 from arkhon.security_audit.coverage import CoverageLedger
 from arkhon.security_audit.findings import FindingsCollection
@@ -36,53 +35,45 @@ def record_security_audit_evidence(
     findings = FindingsCollection.load(audit_dir / "findings.json")
     gate_status = compute_governance_gate_status(ledger, findings)
 
-    evidence_id = f"EVID-SECAUD-{uuid.uuid4().hex[:10].upper()}"
+    collector = EvidenceCollector(root=resolved_project)
+    comp = ledger.compute_completeness()
+    draft = collector.new_evidence(
+        source="arkhon",
+        source_version=__version__,
+        commit_sha=commit_sha,
+        status=gate_status,
+    )
+    evidence_id = draft.evidence_id
     artifact_stage = (
         resolved_project / ".arkhon" / "evidence" / "software-security" / "artifacts" / evidence_id
     )
     artifact_stage.mkdir(parents=True, exist_ok=True)
 
-    copied_artifacts: list[Artifact] = []
     for filename in ("coverage-ledger.json", "findings.json", "security-audit-report.json"):
         src = audit_dir / filename
         if src.is_file() and not src.is_symlink():
             dst = artifact_stage / filename
             shutil.copyfile(src, dst)
-            rel = str(dst.relative_to(resolved_project)).replace("\\", "/")
-            copied_artifacts.append(Artifact(path=rel, sha256=sha256_of(dst)))
+            draft.add_artifact(dst)
 
-    collector = EvidenceCollector(root=resolved_project)
-    comp = ledger.compute_completeness()
-    draft = EvidenceDraft(
-        domain="software-security",
-        evidence_id=evidence_id,
-        status=gate_status,
-        commit_sha=commit_sha,
-        artifacts=tuple(copied_artifacts),
-        summary={
-            "subsystem": "security-audit",
-            "audit_run_id": ledger.audit_run_id,
-            "audit_status": ledger.audit_status,
-            "examined_units": comp["examined"],
-            "total_units": comp["total_units"],
-            "confirmed_findings": sum(
-                1
-                for r in findings.records
-                if r.verification_status == "confirmed" and r.lifecycle_state != "remediated"
-            ),
-            "needs_validation": sum(
-                1
-                for r in findings.records
-                if r.verification_status == "needs_validation"
-                and r.lifecycle_state != "remediated"
-            ),
-        },
-        command="arkhon audit run",
-        exit_code=0 if gate_status in {STATUS_PASS, STATUS_NOT_APPLICABLE} else 1,
-    )
-    record_payload = collector.new_evidence(draft)
+    draft.summary = {
+        "examined_units": int(comp["examined"]),
+        "total_units": int(comp["total_units"]),
+        "confirmed_findings": sum(
+            1
+            for r in findings.records
+            if r.verification_status == "confirmed" and r.lifecycle_state != "remediated"
+        ),
+        "needs_validation": sum(
+            1
+            for r in findings.records
+            if r.verification_status == "needs_validation" and r.lifecycle_state != "remediated"
+        ),
+    }
+    draft.rule_ids = sorted(derive_rule_outcomes_from_audit(ledger, findings).keys())
+    draft.notes = f"security-audit run {ledger.audit_run_id} ({ledger.audit_status})"
     store = EvidenceStore(resolved_project)
-    written_path = store.write("software-security", record_payload)
+    written_path = store.write("software-security", draft.to_evidence())
     return evidence_id, written_path, gate_status
 
 
@@ -132,7 +123,7 @@ class SecurityAuditRunner(Runner):
 
     def run(self, project_root: Path, artifact_dir: Path | None = None) -> RunnerResult:
         from arkhon.cli import _commit_sha
-        from arkhon.orchestrator.task_dispatcher import SecurityAuditTaskDispatcher
+        from arkhon.security_audit.dispatcher import SecurityAuditTaskDispatcher
         from arkhon.security_audit.hunting import (
             discover_architecture,
             execute_hunting_waves,
@@ -150,7 +141,7 @@ class SecurityAuditRunner(Runner):
                 runner=self.name,
                 outcome=RunnerOutcome.BLOCKED,
                 reason="project does not have a resolvable Git HEAD commit SHA",
-                artifacts=(),
+                artifacts=[],
             )
         out_dir = (
             artifact_dir.resolve()
@@ -188,7 +179,7 @@ class SecurityAuditRunner(Runner):
                 runner=self.name,
                 outcome=RunnerOutcome.BLOCKED,
                 reason=f"artifact validation failed: {'; '.join(val.errors[:3])}",
-                artifacts=(),
+                artifacts=[],
             )
         gate_verdict = compute_governance_gate_status(ledger, verified)
         outcome_map = {
@@ -197,11 +188,11 @@ class SecurityAuditRunner(Runner):
             STATUS_FAIL: RunnerOutcome.FAIL,
             STATUS_BLOCKED: RunnerOutcome.BLOCKED,
         }
-        attached = (
-            str(out_dir / "coverage-ledger.json"),
-            str(out_dir / "findings.json"),
-            str(reports["json"]),
-        )
+        attached: list[Path] = [
+            out_dir / "coverage-ledger.json",
+            out_dir / "findings.json",
+            reports["json"],
+        ]
         return RunnerResult(
             runner=self.name,
             outcome=outcome_map[gate_verdict],
