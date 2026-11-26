@@ -104,7 +104,7 @@ def _valid_bundle(audit_dir: Path) -> tuple[CoverageLedger, FindingsCollection]:
         first_seen_run="AUDIT-0010",
         last_seen_run="AUDIT-0010",
         first_seen_commit=SHA,
-        first_seen_commit=SHA,
+        last_seen_commit=SHA,
         state_history=[
             {
                 "state": "candidate",
