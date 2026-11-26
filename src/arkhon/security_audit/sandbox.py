@@ -156,7 +156,7 @@ class SandboxLimits:
     memory_bytes: int = 512 * 1024 * 1024
     max_file_bytes: int = 2 * 1024 * 1024
     max_cumulative_artifact_bytes: int = 8 * 1024 * 1024
-    max_processes: int = 32
+    max_processes: int = 4096
     max_open_files: int = 128
 
 
