@@ -37,6 +37,7 @@ jobs:
           fi
           python -m pip install --upgrade pip --quiet
           pip install -e .
+          gencode-gov version
           arkhon version
           arkhon doctor || true
           arkhon validate
@@ -56,6 +57,7 @@ jobs:
           python -m venv .venv-wheel
           source .venv-wheel/bin/activate
           pip install dist/*.whl
+          gencode-gov version
           arkhon version
           arkhon doctor || true
           project_dir="$(mktemp -d)"
@@ -79,6 +81,7 @@ jobs:
       - run: pip install -e .
       - name: Verify core commands work without network
         run: |
+          gencode-gov version
           arkhon version
           arkhon doctor || true
           arkhon validate
