@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from arkhon.core.constants import STATUS_NOT_APPLICABLE, STATUS_PASS
-from arkhon.orchestrator.task_dispatcher import SecurityAuditTaskDispatcher
 from arkhon.security_audit.coverage import CoverageLedger, compare_coverage_ledgers
+from arkhon.security_audit.dispatcher import SecurityAuditTaskDispatcher
 from arkhon.security_audit.findings import FindingsCollection
 from arkhon.security_audit.governance_bridge import (
     record_security_audit_evidence,
@@ -116,14 +116,14 @@ def dispatch_security_audit(
         FindingsCollection(audit_run_id=run_id, commit_sha=commit_sha, records=[]).save(
             out_dir / "findings.json"
         )
-        payload = {
+        plan_payload: dict[str, Any] = {
             "action": "plan",
             "audit_run_id": run_id,
             "audit_dir": str(out_dir),
             "audit_status": ledger.audit_status,
             "completeness": ledger.compute_completeness(),
         }
-        _emit(payload, as_json, f"[OK] security audit plan written to {out_dir}")
+        _emit(plan_payload, as_json, f"[OK] security audit plan written to {out_dir}")
         return 0
 
     if action == "run":
@@ -183,7 +183,7 @@ def dispatch_security_audit(
             )
 
         gate = compute_governance_gate_status(ledger, verified)
-        payload = {
+        run_payload: dict[str, Any] = {
             "action": "run",
             "audit_run_id": run_id,
             "audit_dir": str(out_dir),
@@ -193,7 +193,7 @@ def dispatch_security_audit(
             "completeness": ledger.compute_completeness(),
         }
         _emit(
-            payload,
+            run_payload,
             as_json,
             f"[{gate}] security audit {run_id} written to {out_dir}",
         )
@@ -208,9 +208,9 @@ def dispatch_security_audit(
 
         if action == "validate":
             val = validate_audit_directory(audit_dir)
-            payload = {"valid": val.ok, "errors": list(val.errors)}
+            val_payload: dict[str, Any] = {"valid": val.ok, "errors": list(val.errors)}
             _emit(
-                payload,
+                val_payload,
                 as_json,
                 "[OK] audit artifacts valid"
                 if val.ok
