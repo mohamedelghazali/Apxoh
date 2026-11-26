@@ -7,6 +7,7 @@ from arkhon.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
+    LockedCoverageLedgerStore,
     build_canonical_coverage_id,
     compare_coverage_ledgers,
 )
@@ -35,9 +36,15 @@ from arkhon.security_audit.hunting import (
     DiscoveredSurface,
     discover_architecture,
     execute_hunting_waves,
+    hunt_coverage_unit,
     run_coverage_critic,
     seed_coverage_ledger,
     write_reconnaissance_artifacts,
+)
+from arkhon.security_audit.orchestrator import (
+    MultiAgentAuditOrchestrator,
+    MultiAgentRunOutcome,
+    OrchestrationConfig,
 )
 from arkhon.security_audit.reassessment import (
     ReassessmentDelta,
@@ -51,6 +58,16 @@ from arkhon.security_audit.reporting import (
     render_markdown_audit_report,
     render_needs_validation_markdown,
     write_audit_reports,
+)
+from arkhon.security_audit.runtime import (
+    AgentRuntimeAdapter,
+    AgentSessionResult,
+    AgentTaskSpec,
+    ExternalCliAgentRuntime,
+    IsolatedSubprocessWorkerRuntime,
+    RuntimeDescriptor,
+    detect_available_runtimes,
+    resolve_runtime_adapter,
 )
 from arkhon.security_audit.sandbox import (
     PromotionResult,
@@ -86,6 +103,9 @@ from arkhon.security_audit.verifier import (
 
 __all__ = [
     "DEFAULT_TAXONOMY",
+    "AgentRuntimeAdapter",
+    "AgentSessionResult",
+    "AgentTaskSpec",
     "ArchitectureInventory",
     "ArtifactValidationResult",
     "AttackClassDefinition",
@@ -97,12 +117,19 @@ __all__ = [
     "CoverageUnit",
     "DiscoveredSurface",
     "DiscoveryProvenance",
+    "ExternalCliAgentRuntime",
     "FindingsCollection",
     "IndependentFindingVerifier",
+    "IsolatedSubprocessWorkerRuntime",
     "LocationRef",
+    "LockedCoverageLedgerStore",
+    "MultiAgentAuditOrchestrator",
+    "MultiAgentRunOutcome",
+    "OrchestrationConfig",
     "PromotionResult",
     "ReassessmentDelta",
     "RemediationGuidance",
+    "RuntimeDescriptor",
     "SandboxCapabilities",
     "SandboxExecutor",
     "SandboxLimits",
@@ -120,10 +147,12 @@ __all__ = [
     "compute_finding_fingerprint",
     "compute_governance_gate_status",
     "derive_rule_outcomes_from_audit",
+    "detect_available_runtimes",
     "discover_architecture",
     "evaluate_security_audit_method",
     "execute_hunting_waves",
     "finding_id_from_fingerprint",
+    "hunt_coverage_unit",
     "is_safe_relative_path",
     "probe_sandbox_capabilities",
     "promote_agent_artifacts",
@@ -132,6 +161,7 @@ __all__ = [
     "render_findings_detail_markdown",
     "render_markdown_audit_report",
     "render_needs_validation_markdown",
+    "resolve_runtime_adapter",
     "run_coverage_critic",
     "seed_coverage_ledger",
     "summarize_audit_status",
