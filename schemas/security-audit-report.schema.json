@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apxoh:schemas:security-audit-report:1.0.0",
+  "title": "Apxoh Security Audit Report",
+  "description": "Target-neutral machine-readable security audit report derived from verified findings and coverage ledger.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "report_id",
+    "audit_run_id",
+    "project",
+    "commit_sha",
+    "generated_at",
+    "profile",
+    "audit_status",
+    "execution_mode",
+    "sandbox_summary",
+    "coverage_summary",
+    "confirmed_findings",
+    "needs_validation_leads",
+    "blocked_items",
+    "not_verified_items",
+    "rejected_count",
+    "remediated_count",
+    "reopened_count",
+    "hardening_notes",
+    "limitations",
+    "governance_gate_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "report_id": {
+      "type": "string",
+      "pattern": "^SEC-REP-[A-Za-z0-9_-]{4,64}$"
+    },
+    "audit_run_id": {
+      "type": "string",
+      "pattern": "^AUDIT-[A-Za-z0-9_-]{4,64}$"
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "quick",
+        "standard",
+        "deep"
+      ]
+    },
+    "audit_status": {
+      "type": "string",
+      "enum": [
+        "initiated",
+        "partially_completed",
+        "completed",
+        "blocked"
+      ]
+    },
+    "execution_mode": {
+      "type": "string",
+      "enum": [
+        "single_process_deterministic",
+        "multi_agent_delegated"
+      ]
+    },
+    "sandbox_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "network_isolated",
+        "backend",
+        "details"
+      ],
+      "properties": {
+        "network_isolated": {
+          "type": "boolean"
+        },
+        "backend": {
+          "type": "string",
+          "minLength": 1
+        },
+        "details": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "coverage_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_units",
+        "examined",
+        "partially_examined",
+        "planned",
+        "in_progress",
+        "not_examined",
+        "blocked",
+        "not_applicable",
+        "is_complete"
+      ],
+      "properties": {
+        "total_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "examined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "partially_examined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "planned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "in_progress": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_examined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_applicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "is_complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "confirmed_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "finding_id",
+          "fingerprint",
+          "title",
+          "severity",
+          "component",
+          "attack_class",
+          "trust_boundary",
+          "primary_location",
+          "remediation_strategy",
+          "related_rules"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^SEC-FIND-[A-F0-9]{8}$"
+          },
+          "fingerprint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "informational",
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "component": {
+            "type": "string",
+            "minLength": 1
+          },
+          "attack_class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trust_boundary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "primary_location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "remediation_strategy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "related_rules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "needs_validation_leads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "finding_id",
+          "fingerprint",
+          "title",
+          "component",
+          "attack_class",
+          "primary_location",
+          "unresolved_blockers",
+          "validation_plan"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^SEC-FIND-[A-F0-9]{8}$"
+          },
+          "fingerprint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "component": {
+            "type": "string",
+            "minLength": 1
+          },
+          "attack_class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "primary_location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unresolved_blockers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "validation_plan": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "blocked_items": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "not_verified_items": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rejected_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "remediated_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reopened_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "hardening_notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "governance_gate_status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "NOT_APPLICABLE"
+      ]
+    }
+  }
+}

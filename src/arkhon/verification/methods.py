@@ -72,6 +72,12 @@ METHOD_REGISTRY: Mapping[str, MethodImplementation] = MappingProxyType(
             "test-suite",
             frozenset({"observability"}),
         ),
+        "security-audit-artifact-verification": MethodImplementation(
+            "security-audit-artifact-verification",
+            "evaluate_security_audit_method",
+            "security-audit",
+            frozenset({"software-security"}),
+        ),
         "tsar-audit-invocation": MethodImplementation(
             "tsar-audit-invocation", "TsarRunner", "tsar", frozenset({"software-security"})
         ),

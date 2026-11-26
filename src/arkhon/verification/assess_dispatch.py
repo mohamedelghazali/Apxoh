@@ -26,6 +26,10 @@ def create_assess_runner(runner_name: str) -> Runner | None:
         from arkhon.verification.runners.ruff_runner import RuffRunner
 
         return RuffRunner()
+    if runner_name == "security-audit":
+        from arkhon.security_audit.governance_bridge import SecurityAuditRunner
+
+        return SecurityAuditRunner()
     return None
 
 
@@ -58,9 +62,14 @@ def evaluate_extended_method(
     result: RunnerResult,
     project_root: Path,
 ) -> tuple[str, str] | None:
-    """Evaluate language-neutral test, scenario-traceability, observability, and lint methods."""
+    """Evaluate language-neutral test, scenario, security-audit, observability, and lint methods."""
     if result.outcome == RunnerOutcome.BLOCKED:
         return STATUS_BLOCKED, result.reason or "verification runner was blocked"
+
+    if method_id == "security-audit-artifact-verification":
+        from arkhon.security_audit.governance_bridge import evaluate_security_audit_method
+
+        return evaluate_security_audit_method(result)
 
     if method_id == "negative-security-scenario-traceability":
         return verify_negative_security_scenarios(project_root)
@@ -106,13 +115,12 @@ def evaluate_extended_method(
                     f"{adapter} reported 0 failures and 0 errors across {total} tests",
                 )
             return STATUS_FAIL, f"{adapter} reported {failed} failure(s) and {errors} error(s)"
-        if method_id == "skip-marker-detection":
-            if skipped == 0:
-                return (
-                    STATUS_PASS,
-                    f"{adapter} recorded 0 skipped tests across {total} tests",
-                )
-            return STATUS_FAIL, f"{adapter} recorded {skipped} skipped test(s)"
+        if skipped == 0:
+            return (
+                STATUS_PASS,
+                f"{adapter} recorded 0 skipped tests across {total} tests",
+            )
+        return STATUS_FAIL, f"{adapter} recorded {skipped} skipped test(s)"
 
     if method_id in {"static-lint-execution", "zero-lint-errors-check"}:
         json_files = [Path(p) for p in result.artifacts if str(p).endswith(".json")]

@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apxoh:schemas:security-coverage-ledger:1.0.0",
+  "title": "Apxoh Security Coverage Ledger",
+  "description": "Persistent machine-readable ledger of security audit coverage units, checks, and wave history.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ledger_id",
+    "audit_run_id",
+    "project",
+    "commit_sha",
+    "profile",
+    "audit_status",
+    "execution_mode",
+    "scope_paths",
+    "units",
+    "completeness"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "ledger_id": {
+      "type": "string",
+      "pattern": "^LEDGER-[A-Za-z0-9_-]{4,64}$"
+    },
+    "audit_run_id": {
+      "type": "string",
+      "pattern": "^AUDIT-[A-Za-z0-9_-]{4,64}$"
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "quick",
+        "standard",
+        "deep"
+      ]
+    },
+    "audit_status": {
+      "type": "string",
+      "enum": [
+        "initiated",
+        "partially_completed",
+        "completed",
+        "blocked"
+      ]
+    },
+    "execution_mode": {
+      "type": "string",
+      "enum": [
+        "single_process_deterministic",
+        "multi_agent_delegated"
+      ]
+    },
+    "scope_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "units": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/coverage_unit"
+      }
+    },
+    "completeness": {
+      "$ref": "#/$defs/completeness_summary"
+    }
+  },
+  "$defs": {
+    "coverage_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "investigator_id",
+        "method",
+        "reviewed_paths",
+        "invariant",
+        "result",
+        "evidence_refs",
+        "artifact_path",
+        "timestamp"
+      ],
+      "properties": {
+        "investigator_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "source",
+            "sandbox_local"
+          ]
+        },
+        "reviewed_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "invariant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "artifact_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timestamp": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "coverage_attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wave",
+        "status",
+        "investigator_id",
+        "reviewed_paths",
+        "checks",
+        "finding_ids",
+        "candidate_fingerprints",
+        "limitations",
+        "reassignment_reason"
+      ],
+      "properties": {
+        "wave": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "examined",
+            "partially_examined",
+            "blocked"
+          ]
+        },
+        "investigator_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "reviewed_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/coverage_check"
+          }
+        },
+        "finding_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "candidate_fingerprints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reassignment_reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "coverage_unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage_id",
+        "component",
+        "attack_class",
+        "trust_boundary",
+        "entry_point",
+        "interface",
+        "starting_paths",
+        "status",
+        "prior_status",
+        "wave",
+        "investigator_id",
+        "reviewed_paths",
+        "checks",
+        "finding_ids",
+        "candidate_fingerprints",
+        "limitations",
+        "attempts"
+      ],
+      "properties": {
+        "coverage_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attack_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trust_boundary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry_point": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "starting_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "planned",
+            "in_progress",
+            "examined",
+            "partially_examined",
+            "not_examined",
+            "blocked",
+            "not_applicable"
+          ]
+        },
+        "prior_status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "new",
+            "prior_examined_same_source",
+            "prior_examined_changed_source",
+            "prior_confirmed_same_source",
+            "prior_confirmed_changed_source",
+            "prior_needs_validation",
+            "prior_partially_examined",
+            "prior_not_examined",
+            "prior_blocked"
+          ]
+        },
+        "wave": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "investigator_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "reviewed_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/coverage_check"
+          }
+        },
+        "finding_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^SEC-FIND-[A-F0-9]{8}$"
+          }
+        },
+        "candidate_fingerprints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/coverage_attempt"
+          }
+        }
+      }
+    },
+    "completeness_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_units",
+        "examined",
+        "partially_examined",
+        "planned",
+        "in_progress",
+        "not_examined",
+        "blocked",
+        "not_applicable",
+        "is_complete"
+      ],
+      "properties": {
+        "total_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "examined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "partially_examined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "planned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "in_progress": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_examined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_applicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "is_complete": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -184,6 +184,18 @@ def _working_tree_clean(project: Path) -> bool:
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
+    from arkhon.security_audit.cli_dispatch import (
+        SECURITY_AUDIT_ACTIONS,
+        dispatch_security_audit,
+    )
+
+    first_arg = getattr(args, "project", ".")
+    if isinstance(first_arg, str) and first_arg in SECURITY_AUDIT_ACTIONS:
+        return dispatch_security_audit(first_arg, args, commit_resolver=_commit_sha)
+
+    if getattr(args, "project_flag", None):
+        args.project = args.project_flag
+
     from arkhon.rules.loader import load_rules_dir
 
     rules_result = load_rules_dir(_repo_root() / "rules")
@@ -973,6 +985,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 def cmd_verify(args: argparse.Namespace) -> int:
     from arkhon.evidence.collector import EvidenceCollector
     from arkhon.evidence.store import EvidenceStore
+    from arkhon.security_audit.governance_bridge import SecurityAuditRunner
     from arkhon.verification.engine import VerificationEngine
     from arkhon.verification.runners.base import Runner
     from arkhon.verification.runners.mypy_runner import MypyRunner
@@ -993,6 +1006,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
         "testing": (PytestRunner(),),
         "code-quality": (RuffRunner(), MypyRunner()),
         "software-security": (TsarRunner(),),
+        "security-audit": (SecurityAuditRunner(),),
         "supply-chain": (SyftRunner(),),
         "release-attestations": (SupplyChainAttestationRunner(),)
     }
@@ -1051,9 +1065,41 @@ def build_parser() -> argparse.ArgumentParser:
     inspect.add_argument("project", nargs="?", default=".")
     inspect.add_argument("--json", action="store_true")
     inspect.set_defaults(func=cmd_inspect)
-    audit = sub.add_parser("audit", help="Run verification for a specific domain")
+    audit = sub.add_parser(
+        "audit",
+        help="Run domain verification or coverage-led security audit subcommands",
+    )
     audit.add_argument("project", nargs="?", default=".")
+    audit.add_argument("audit_target", nargs="?", default=None)
+    audit.add_argument("--project", dest="project_flag", default=None)
     audit.add_argument("--domain", default="testing")
+    audit.add_argument(
+        "--profile",
+        choices=["quick", "standard", "deep"],
+        default="standard",
+    )
+    audit.add_argument("--scope", action="append", default=None)
+    audit.add_argument("--output-dir", default=None)
+    audit.add_argument("--audit-dir", default=None)
+    audit.add_argument("--prior-dir", default=None)
+    audit.add_argument("--current-dir", default=None)
+    audit.add_argument("--verifier-id", default="independent-verifier-01")
+    audit.add_argument("--base-commit", default=None)
+    audit.add_argument("--head-commit", default=None)
+    audit.add_argument("--max-units", type=int, default=None)
+    audit.add_argument(
+        "--sandbox-mode",
+        choices=["auto", "required", "disabled"],
+        default="auto",
+    )
+    audit.add_argument(
+        "--format",
+        dest="report_format",
+        choices=["all", "json", "markdown"],
+        default="all",
+    )
+    audit.add_argument("--record-evidence", action="store_true")
+    audit.add_argument("--json", action="store_true")
     audit.set_defaults(func=cmd_audit)
     assess = sub.add_parser("assess", help="Compute engineering score and gate status")
     assess.add_argument("project", nargs="?", default=".")

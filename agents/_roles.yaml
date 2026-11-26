@@ -2,7 +2,7 @@
 # Roles reference skills and rule domains; this file is declarative and
 # does not itself enforce runtime permissions.
 
-version: "1.1.0"
+version: "1.2.0"
 
 roles:
   - id: requirements-engineer
@@ -15,7 +15,7 @@ roles:
   - id: software-architect
     display_name: "Software Architect"
     description: "Designs architecture, documents decisions, produces threat and data models."
-    skills: [arkhon-governance, architecture-engineering, secure-software-engineering, application-security]
+    skills: [arkhon-governance, architecture-engineering, secure-software-engineering, application-security, security-audit]
     rule_domains: [architecture, software-security, database, api-integration, scalability, privacy-compliance]
     outputs: [architecture-decision-records, threat-model, component-diagram]
 
@@ -29,7 +29,7 @@ roles:
   - id: code-reviewer
     display_name: "Code Reviewer"
     description: "Reviews code, migrations, and configurations for correctness and compliance."
-    skills: [arkhon-governance, secure-software-engineering, application-security, software-testing]
+    skills: [arkhon-governance, secure-software-engineering, application-security, security-audit, software-testing]
     rule_domains: [code-quality, software-security, database, observability, performance, testing]
     outputs: [review-findings, compliance-checklist]
 
@@ -42,10 +42,10 @@ roles:
 
   - id: security-engineer
     display_name: "Security Engineer"
-    description: "Performs application security governance, negative verification, and TSAR audits."
-    skills: [arkhon-governance, secure-software-engineering, application-security]
+    description: "Performs application security governance, coverage-led security audits, negative verification, and TSAR audits."
+    skills: [arkhon-governance, secure-software-engineering, application-security, security-audit]
     rule_domains: [software-security, database, privacy-compliance, observability, testing]
-    outputs: [tsar-evidence, security-findings, threat-model, access-control-test-report]
+    outputs: [tsar-evidence, security-findings, security-coverage-ledger, threat-model, access-control-test-report]
 
   - id: performance-engineer
     display_name: "Performance Engineer"
@@ -74,6 +74,7 @@ constraints:
     - modify_governance_files
     - bypass_critical_gate
     - claim_verification_without_evidence
+    - self_confirm_security_finding
   only_release_manager_may:
     - issue_release_decision
   only_security_engineer_may:
