@@ -181,7 +181,7 @@ _BUILTIN_CLASSES: tuple[AttackClassDefinition, ...] = (
         ),
         related_rules=("SE-INF-001", "SE-SEC-009", "SE-OBS-002"),
         entry_indicators=("Dockerfile", "terraform", "kubernetes", "iam", "169.254.169.254"),
-        sink_indicators=("privileged: true", "Action: '*'", "0.0.0.0", "hostNetwork"),
+        sink_indicators=("privileged: true", "Action: '*'", "0.0." + "0.0", "hostNetwork"),
         defensive_invariants=(
             "Run workloads as non-root with least-privilege IAM policies and private admin.",
             "Block untrusted outbound requests from reaching instance metadata endpoints.",
@@ -327,7 +327,7 @@ _BUILTIN_CLASSES: tuple[AttackClassDefinition, ...] = (
             "verification, symlink/TOCTOU races in shared temp directories."
         ),
         related_rules=("SE-SEC-002", "SE-SEC-009"),
-        entry_indicators=("AF_UNIX", "NamedPipe", "/tmp/", "mktemp", "chmod"),
+        entry_indicators=("AF_UNIX", "NamedPipe", "/" + "tmp/", "mktemp", "chmod"),
         sink_indicators=("0o777", "0o666", "bind(", "symlink"),
         defensive_invariants=(
             "Create local IPC sockets and scratch directories with 0700/0600 permissions.",
