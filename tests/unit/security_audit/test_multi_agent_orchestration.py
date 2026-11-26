@@ -1558,7 +1558,7 @@ def test_orchestrator_exhaustive_failure_cancel_critic_and_reverify_branches(
         audit_dir=part_dir,
         audit_run_id="AUDIT-PR1",
         commit_sha=vuln_sha,
-        runtime=_InProcFakeAdapter(),
+        runtime=_InProcessFakeAdapter(),
         config=OrchestrationConfig(max_workers=1, max_retries=0),
     ).run(resume=True)
 
