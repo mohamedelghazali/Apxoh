@@ -1101,7 +1101,7 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--record-evidence", action="store_true")
     audit.add_argument("--json", action="store_true")
     audit.set_defaults(func=cmd_audit)
-        assess = sub.add_parser("assess", help="Compute engineering score and gate status")
+    assess = sub.add_parser("assess", help="Compute engineering score and gate status")
     assess.add_argument("project", nargs="?", default=".")
     assess.set_defaults(func=cmd_assess)
     install = sub.add_parser("install", help="Stage the agent governance pack")
