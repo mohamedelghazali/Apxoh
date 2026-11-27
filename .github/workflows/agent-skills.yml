@@ -6,13 +6,13 @@ on:
     paths:
       - "skills/**"
       - "agents/**"
-      - "src/arkhon/integrations/models/**/prompts/**"
+      - "src/gencode_gov/integrations/models/**/prompts/**"
   pull_request:
     branches: [main]
     paths:
       - "skills/**"
       - "agents/**"
-      - "src/arkhon/integrations/models/**/prompts/**"
+      - "src/gencode_gov/integrations/models/**/prompts/**"
 
 permissions:
   contents: read
@@ -101,7 +101,7 @@ jobs:
           from pathlib import Path
 
           missing = []
-          for base in Path("src/arkhon/integrations/models").iterdir():
+          for base in Path("src/gencode_gov/integrations/models").iterdir():
               if not base.is_dir() or base.name.startswith("_"):
                   continue
               prompts = base / "prompts"
