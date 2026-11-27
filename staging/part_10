@@ -1,0 +1,140 @@
+    """Resolve a rule's declared method list without silently dropping entries__DOT__"""
+    if not isinstance(method_ids, list):
+        raise ValueError("verification__DOT__methods must be a list")
+    if any(not isinstance(method_id, str) or not method_id for method_id in method_ids):
+        raise ValueError("verification__DOT__methods must contain non-empty strings")
+    if len(set(method_ids)) != len(method_ids):
+        raise ValueError("verification__DOT__methods must not contain duplicates")
+    return tuple((method_id, resolve_method(method_id)) for method_id in method_ids)
+===FILE:src/gencode_gov/verification/runners/polyglot_quality_runner__DOT__py===
+"""Polyglot static quality runner integrating language_profile_loader and tool_resolver__DOT__"""
+
+from __future__ import annotations
+
+import json
+import os
+import tempfile
+from pathlib import Path
+from typing import Any
+
+from gencode_gov__DOT__language_support__DOT__detector import detect_languages
+from gencode_gov__DOT__language_support__DOT__language_profile_loader import load_language_profiles
+from gencode_gov__DOT__language_support__DOT__tool_resolver import resolve_tool
+from gencode_gov__DOT__verification__DOT__runners__DOT__base import Runner, RunnerOutcome, RunnerResult
+
+
+def _profiles_dir() -__GT__ Path:
+    repo_candidate = Path(__file__)__DOT__resolve()__DOT__parents[4] / "languages"
+    if repo_candidate__DOT__is_dir():
+        return repo_candidate
+    pkg_candidate = Path(__file__)__DOT__resolve()__DOT__parents[2] / "resources" / "languages"
+    return pkg_candidate
+
+
+class PolyglotQualityRunner(Runner):
+    """Verify configured static-analysis tool availability and execution readiness per language__DOT__"""
+
+    name = "polyglot-quality"
+
+    def run(self, project_root: Path, artifact_dir: Path | None = None) -__GT__ RunnerResult:
+        root = project_root__DOT__resolve()
+        if not root__DOT__is_dir():
+            return RunnerResult(
+                runner=self__DOT__name,
+                outcome=RunnerOutcome__DOT__BLOCKED,
+                reason=f"project root is not a directory: {root}",
+            )
+
+        detected = detect_languages(root)
+        profiles_root = _profiles_dir()
+        profiles = load_language_profiles(profiles_root) if profiles_root__DOT__is_dir() else {}
+
+        language_records: list[dict[str, Any]] = []
+        missing_primary: list[str] = []
+
+        for lang in detected:
+            profile = profiles__DOT__get(lang)
+            linters: list[str] = []
+            if profile is not None:
+                raw_linters = getattr(profile, "linters", None) or (
+                    profile__DOT__get("linters", []) if isinstance(profile, dict) else []
+                )
+                linters = [str(x) for x in raw_linters if isinstance(x, str)]
+            if not linters and lang == "python":
+                linters = ["ruff"]
+
+            resolved_tools: list[dict[str, Any]] = []
+            any_available = not linters
+            for tool_name in linters:
+                res = resolve_tool(tool_name)
+                avail = bool(getattr(res, "available", False))
+                path_val = getattr(res, "path", None)
+                if avail:
+                    any_available = True
+                resolved_tools__DOT__append(
+                    {
+                        "tool": tool_name,
+                        "available": avail,
+                        "path": str(path_val) if path_val else None,
+                    }
+                )
+            if not any_available and lang == "python":
+                missing_primary__DOT__append(f"{lang}:{linters}")
+            language_records__DOT__append(
+                {
+                    "language": lang,
+                    "profile_loaded": profile is not None,
+                    "tools": resolved_tools,
+                }
+            )
+
+        out_dir = artifact_dir or (root / "__DOT__gencode-gov" / "evidence" / "code-quality")
+        if out_dir__DOT__exists() and out_dir__DOT__is_symlink():  # pragma: no cover
+            return RunnerResult(
+                runner=self__DOT__name,
+                outcome=RunnerOutcome__DOT__BLOCKED,
+                reason="refusing symlinked code-quality evidence directory",
+            )
+        out_dir__DOT__mkdir(parents=True, exist_ok=True)
+        report_path = out_dir / "polyglot-quality-report__DOT__json"
+        if report_path__DOT__exists() and report_path__DOT__is_symlink():  # pragma: no cover
+            return RunnerResult(
+                runner=self__DOT__name,
+                outcome=RunnerOutcome__DOT__BLOCKED,
+                reason="refusing symlinked polyglot-quality-report__DOT__json",
+            )
+
+        payload = {
+            "schema_version": 1,
+            "detected_languages": list(detected),
+            "languages": language_records,
+            "missing_primary_tools": missing_primary,
+        }
+        with tempfile__DOT__NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=out_dir,
+            prefix="__DOT__polyglot-",
+            suffix="__DOT__tmp",
+            delete=False,
+        ) as handle:
+            json__DOT__dump(payload, handle, indent=2, sort_keys=True)
+            handle__DOT__write("\n")
+            handle__DOT__flush()
+            os__DOT__fsync(handle__DOT__fileno())
+            tmp_path = Path(handle__DOT__name)
+        tmp_path__DOT__replace(report_path)
+
+        if missing_primary:
+            return RunnerResult(
+                runner=self__DOT__name,
+                outcome=RunnerOutcome__DOT__BLOCKED,
+                reason=f"missing primary static quality tool(s): {missing_primary}",
+                artifacts=[report_path],
+            )
+        return RunnerResult(
+            runner=self__DOT__name,
+            outcome=RunnerOutcome__DOT__PASS,
+            reason=f"resolved static quality profiles for {len(detected)} language(s)",
+            artifacts=[report_path],
+        )
