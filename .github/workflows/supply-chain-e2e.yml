@@ -38,8 +38,8 @@ jobs:
           python - <<'PY'
           import subprocess
           from pathlib import Path
-          from arkhon.evidence.store import EvidenceStore
-          from arkhon.evidence.supply_chain import verify_cyclonedx_sbom
+          from gencode_gov.evidence.store import EvidenceStore
+          from gencode_gov.evidence.supply_chain import verify_cyclonedx_sbom
 
           root = Path.cwd()
           commit = subprocess.run(
