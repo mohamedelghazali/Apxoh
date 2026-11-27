@@ -21,9 +21,18 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Set up supported Python versions (3.12 primary, plus 3.11 and 3.13)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: |
+            3.12
+            3.11
+            3.13
+
       - name: Validate staged parts, integrate onto feat/integrate-staged-governance, verify all gates, and record evidence
         run: |
           set -uo pipefail
+          set +e
           git config user.name "github-actions"
           git config user.email "github-actions-bot"
           git fetch origin main feat/integrate-staged-governance chore/verify-staged-integration
@@ -39,6 +48,10 @@ jobs:
           echo "- Python: $(python3 --version)" >> "$REPORT"
           echo "- Node / npx: $(node --version) / $(npx --version)" >> "$REPORT"
           echo "- arkhon CLI on runner PATH: $(command -v arkhon || echo 'NOT_INSTALLED')" >> "$REPORT"
+          # Create Python 3.12 virtualenv first so pyyaml/jsonschema are available for bundle verification
+          python3.12 -m venv /tmp/gov_venv
+          source /tmp/gov_venv/bin/activate
+          pip install -q --upgrade pip build pyyaml jsonschema || FAIL=1
 
           # Copy all 14 staged parts from chore/verify-staged-integration into /tmp/staged_parts
           rm -rf /tmp/staged_parts /tmp/decoded_stage
@@ -179,15 +192,12 @@ jobs:
           print(f"\nDecoded `__UPGRADER__` + {len(parsed)} validated files with 0 duplicates and 0 syntax/schema errors.")
           PYDECODE
 
-          # Set up isolated Python virtual environment and inspect origin/main baseline
-          python3 -m venv /tmp/gov_venv
-          source /tmp/gov_venv/bin/activate
-          pip install -q --upgrade pip build
+          # Install repository dev dependencies on origin/main baseline inside Python 3.12 venv
           git checkout -f origin/main
           if [ -f requirements-dev.lock ]; then
             pip install -q -r requirements-dev.lock || true
           fi
-          pip install -q -e ".[dev]"
+          pip install -q -e ".[dev]" || FAIL=1
 
           echo "" >> "$REPORT"
           echo "## 2. Baseline Reconnaissance on origin/main" >> "$REPORT"
@@ -554,6 +564,18 @@ jobs:
             /tmp/wheel_venv/bin/gencode-gov drift /tmp --no-persist --json
           '
 
+          run_gate "17b. Cross-Python Wheel & Test Compatibility (Python 3.11 & 3.13)" bash -c '
+            for pybin in python3.11 python3.13; do
+              echo "=== Verifying on $($pybin --version) ===" &&
+              vdir="/tmp/venv_${pybin}" &&
+              "$pybin" -m venv "$vdir" &&
+              "$vdir/bin/pip" install -q /tmp/dist_wheel/*.whl pytest &&
+              "$vdir/bin/gencode-gov" version &&
+              "$vdir/bin/gencode-gov" validate . --json &&
+              "$vdir/bin/pytest" -q tests/unit/verification/test_engineering_governance_upgrades.py tests/integration/test_end_to_end_governance_excellence.py || exit 1
+            done
+          '
+          
           run_gate "18. Agent Skills Discovery (npx skills)" npx --yes skills add . --list
 
           run_gate "19. Post-Implementation Diff & Security Audit vs origin/main" python3 -c '
