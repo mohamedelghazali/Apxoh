@@ -1,24 +1,40 @@
-"""Regression and compatibility tests for the GENCODE-GOV identity migration."""
+"""Repository-wide GENCODE-GOV identity, zero-legacy-token, and Agent Skills tests."""
 
 from __future__ import annotations
 
 import json
+import os
+import re
+import shutil
+import subprocess
 import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 
-from arkhon.cli import build_parser, main
-from arkhon.config import find_repo_root, get_manifest, load_manifest
-from arkhon.core.errors import ManifestError
-from arkhon.reporting.markdown_reporter import MarkdownReporter
-from arkhon.security_audit.runtime import detect_available_runtimes, resolve_runtime_adapter
+from gencode_gov.cli import build_parser, main
+from gencode_gov.config import find_repo_root, get_manifest, load_manifest
+from gencode_gov.core.errors import GencodeGovError, ManifestError
+from gencode_gov.reporting.markdown_reporter import MarkdownReporter
+from gencode_gov.security_audit.runtime import (
+    detect_available_runtimes,
+    resolve_runtime_adapter,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_REPO = "https://github.com/mohamedelghazali/GENCODE-GOV"
 
 
-def test_manifest_declares_gencode_gov_identity() -> None:
+def _legacy_pattern() -> re.Pattern[str]:
+    t1 = "".join(map(chr, (97, 114, 107, 111, 110)))
+    t2 = "".join(map(chr, (97, 114, 107, 104, 111, 110)))
+    t3 = "".join(map(chr, (97, 112, 120, 111, 104)))
+    t4 = "".join(map(chr, (0x0430, 0x0440, 0x0445, 0x043E, 0x043D)))
+    return re.compile(rf"(?i)(?:{t1}|{t2}|{t3}|{t4})")
+
+
+def test_manifest_and_pyproject_declare_pure_gencode_gov_identity() -> None:
     get_manifest.cache_clear()
     manifest = load_manifest(REPO_ROOT)
     assert manifest.name == "GENCODE-GOV"
@@ -27,101 +43,147 @@ def test_manifest_declares_gencode_gov_identity() -> None:
     assert sys_meta["display_name"] == "GENCODE-GOV"
     assert sys_meta["subtitle"] == "AI-Agent-Generated Software Governance"
     assert sys_meta["slogan"] == "Govern AI-Generated Code. Assure Engineering Integrity."
-    assert "AI Coding Agents" in sys_meta["description"]
-    assert "cyrillic_reference" not in sys_meta
+    assert "legacy_package_namespace" not in sys_meta
     assert manifest.system["identity"]["repository"] == EXPECTED_REPO
 
-
-def test_pyproject_exposes_gencode_gov_and_legacy_arkhon_cli_alias() -> None:
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert pyproject["project"]["name"] == "gencode-gov"
     scripts = pyproject["project"]["scripts"]
-    assert scripts["gencode-gov"] == "arkhon.cli:main"
-    assert scripts["arkhon"] == "arkhon.cli:main"
-    for url in pyproject["project"]["urls"].values():
-        assert "mohamedelghazali/GENCODE-GOV" in url
+    assert list(scripts.keys()) == ["gencode-gov"]
+    assert scripts["gencode-gov"] == "gencode_gov.cli:main"
 
 
-def test_cli_parser_version_and_doctor_use_gencode_gov(
+def test_cli_version_doctor_and_errors_use_gencode_gov(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    assert issubclass(ManifestError, GencodeGovError)
     parser = build_parser()
     assert parser.prog == "gencode-gov"
-    assert "GENCODE-GOV" in (parser.description or "")
 
     assert main(["version"]) == 0
-    plain = capsys.readouterr().out.strip()
-    assert plain.startswith("GENCODE-GOV ")
+    assert capsys.readouterr().out.strip().startswith("GENCODE-GOV ")
 
     assert main(["version", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["name"] == "GENCODE-GOV"
     assert payload["identifier"] == "gencode-gov"
-    assert payload["package"] == "arkhon"
+    assert payload["package"] == "gencode_gov"
 
     assert main(["doctor"]) == 0
-    assert "GENCODE-GOV doctor" in capsys.readouterr().out
+    doc_out = capsys.readouterr().out
+    assert "GENCODE-GOV doctor" in doc_out and "OK" in doc_out
 
 
-def test_find_repo_root_prefers_gencode_gov_root_and_preserves_legacy_fallback(
+def test_repo_root_runtime_env_and_reporter_use_gencode_gov(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert find_repo_root() == REPO_ROOT
-
     bad_dir = tmp_path / "missing_manifest"
     bad_dir.mkdir()
     monkeypatch.setenv("GENCODE_GOV_ROOT", str(bad_dir))
     with pytest.raises(ManifestError, match="GENCODE_GOV_ROOT"):
         find_repo_root()
-
     monkeypatch.setenv("GENCODE_GOV_ROOT", str(REPO_ROOT))
-    monkeypatch.setenv("APXOH_ROOT", str(bad_dir))
     assert find_repo_root() == REPO_ROOT
 
-
-def test_runtime_env_and_markdown_reporter_backward_compatibility(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
     script = tmp_path / "ext_agent.py"
     script.write_text("x = 1", encoding="utf-8")
     monkeypatch.setenv("GENCODE_GOV_AGENT_CMD", str(script))
     adapter = resolve_runtime_adapter("auto")
     assert adapter.runtime_id == "command"
-    assert any(
-        d.runtime_id == "command" and d.available for d in detect_available_runtimes()
-    )
+    assert any(d.runtime_id == "command" and d.available for d in detect_available_runtimes())
 
-    legacy_report = {
-        "report_id": "REP-LEGACY",
+    sample_report = {
+        "report_id": "REP-GENCODE-GOV",
         "project": "demo",
         "commit_sha": "a" * 40,
-        "generated_at": "2026-11-26T00:00:00Z",
-        "apxoh_version": "0.1.0",
+        "generated_at": "2026-11-27T00:00:00Z",
+        "gencode_gov_version": "0.1.0",
         "sections": {},
         "final_decision": "PENDING_EVIDENCE",
     }
-    rendered = MarkdownReporter().render(legacy_report)
+    rendered = MarkdownReporter().render(sample_report)
     assert "- **GENCODE-GOV:** 0.1.0" in rendered
     assert "Generated by GENCODE-GOV" in rendered
 
 
-def test_no_stale_legacy_project_identity_in_active_governance_surfaces() -> None:
-    stale_dom = "apxoh." + "de" + "v"
-    forbidden = (
-        "mohamedelghazali/Apxoh",
-        stale_dom,
-        "urn:apxoh:",
-        "".join(chr(c) for c in (0x0410, 0x0420, 0x0425, 0x041E, 0x041D)),
+def test_gencode_gov_primary_skill_and_readme_adoption_section() -> None:
+    skill_dir = REPO_ROOT / "skills" / "gencode-gov"
+    skill_md = skill_dir / "SKILL.md"
+    assert skill_md.is_file()
+    raw_lines = skill_md.read_text(encoding="utf-8").splitlines()
+    assert raw_lines[0] == "---"
+    end_idx = raw_lines[1:].index("---") + 1
+    meta = yaml.safe_load("\n".join(raw_lines[1:end_idx]))
+    assert meta["name"] == "gencode-gov"
+    assert "GENCODE-GOV" in meta["description"]
+
+    expected_refs = (
+        "README.md",
+        "OPERATIONAL_CONTRACT.md",
+        "SECURITY_POSTURE.md",
+        "ENGINEERING_CHARTER_AND_DOMAINS.md",
+        "VERIFICATION_AND_ADOPTION.md",
     )
-    checked_dirs = ("manifest", "schemas", "rules", "skills", "agents", ".github")
-    for rel_dir in checked_dirs:
-        for path in (REPO_ROOT / rel_dir).rglob("*"):
-            if not path.is_file():
-                continue
-            text = path.read_text(encoding="utf-8", errors="replace")
-            for token in forbidden:
-                assert token not in text, f"stale legacy token {token!r} in {path}"
+    for ref_name in expected_refs:
+        ref_path = skill_dir / "references" / ref_name
+        assert ref_path.is_file() and not ref_path.is_symlink()
+        pkg_skill = (
+            REPO_ROOT
+            / "src"
+            / "gencode_gov"
+            / "resources"
+            / "agent_pack"
+            / "skills"
+            / "gencode-gov"
+            / "SKILL.md"
+        )
+        assert pkg_skill.read_bytes() == skill_md.read_bytes()
+
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    assert "# GENCODE-GOV" in readme
-    assert "AI-Agent-Generated Software Governance" in readme
-    assert "Govern AI-Generated Code. Assure Engineering Integrity." in readme
+    assert "Adopting GENCODE-GOV in AI Agent Workflows" in readme
+    assert "### A. Persistent Installation" in readme
+    assert f"npx skills add {EXPECTED_REPO}" in readme
+    assert "### B. Conversation-Only Adoption" in readme
+    assert f"Adopt GENCODE-GOV: {EXPECTED_REPO}" in readme
+
+
+def test_zero_legacy_directories_filenames_or_tracked_contents() -> None:
+    pat = _legacy_pattern()
+    ignored_roots = {
+        ".git",
+        ".venv",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        "build",
+        "dist",
+    }
+    for root, dirs, files in os.walk(REPO_ROOT):
+        dirs[:] = [
+            d
+            for d in dirs
+            if d not in ignored_roots and not d.endswith(".egg-info") and d != "__pycache__"
+        ]
+        rel_root = Path(root).relative_to(REPO_ROOT)
+        for d in dirs:
+            assert not pat.search(d), f"legacy directory remains: {rel_root / d}"
+        for fn in files:
+            assert not pat.search(fn), f"legacy filename remains: {rel_root / fn}"
+
+    git_bin = shutil.which("git")
+    assert git_bin is not None
+    tracked = subprocess.run(  # noqa: S603
+        [git_bin, "ls-files"],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    for rel_path in tracked:
+        fp = REPO_ROOT / rel_path
+        if not fp.is_file():
+            continue
+        content = fp.read_text(encoding="utf-8", errors="replace")
+        match = pat.search(content)
+        assert match is None, f"legacy token {match.group(0)!r} found in {rel_path}"

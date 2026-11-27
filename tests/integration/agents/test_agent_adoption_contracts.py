@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from arkhon.core.constants import ALL_RULE_DOMAINS
+from gencode_gov.core.constants import ALL_RULE_DOMAINS
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -73,7 +73,7 @@ def test_application_security_rules_are_present_and_agent_pack_is_synchronized()
         assert len(list(directory.glob(f"{rule_id}-*.yaml"))) == 1, rule_id
 
     canonical_skills = sorted(p.name for p in (ROOT / "skills").iterdir() if p.is_dir())
-    packaged_root = ROOT / "src" / "arkhon" / "resources" / "agent_pack" / "skills"
+    packaged_root = ROOT / "src" / "gencode_gov" / "resources" / "agent_pack" / "skills"
     packaged_skills = sorted(p.name for p in packaged_root.iterdir() if p.is_dir())
     assert canonical_skills == packaged_skills
     for name in canonical_skills:
@@ -85,9 +85,9 @@ def test_application_security_rules_are_present_and_agent_pack_is_synchronized()
 
     for doc_name in ("AGENTS.md", "SECURITY_AGENTS.md"):
         root_doc = (ROOT / doc_name).read_text(encoding="utf-8")
-        pack_doc = (
-            ROOT / "src" / "arkhon" / "resources" / "agent_pack" / doc_name
-        ).read_text(encoding="utf-8")
+        pack_doc = (ROOT / "src" / "gencode_gov" / "resources" / "agent_pack" / doc_name).read_text(
+            encoding="utf-8"
+        )
         assert root_doc == pack_doc, doc_name
 
     agent_instructions = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -105,8 +105,14 @@ def test_application_security_rules_are_present_and_agent_pack_is_synchronized()
     )
 
     security_agent = (
-        ROOT / "src" / "arkhon" / "resources" / "agent_pack"
-        / "agents" / "security-engineer" / "AGENT.md"
+        ROOT
+        / "src"
+        / "gencode_gov"
+        / "resources"
+        / "agent_pack"
+        / "agents"
+        / "security-engineer"
+        / "AGENT.md"
     ).read_text(encoding="utf-8")
     for required_id in ("SE-SEC-001", "SE-OBS-003", "SE-PRF-002", "SE-TST-004"):
         assert required_id in security_agent, required_id

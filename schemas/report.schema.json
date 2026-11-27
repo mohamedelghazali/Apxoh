@@ -32,9 +32,6 @@
     "gencode_gov_version": {
       "type": "string"
     },
-    "apxoh_version": {
-      "type": "string"
-    },
     "assessment_id": {
       "type": "string",
       "pattern": "^ASSESS-[A-Z0-9-]+$"

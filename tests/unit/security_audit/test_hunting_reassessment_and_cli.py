@@ -7,20 +7,20 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from arkhon.security_audit.cli_dispatch import dispatch_security_audit
-from arkhon.security_audit.governance_bridge import (
+from gencode_gov.security_audit.cli_dispatch import dispatch_security_audit
+from gencode_gov.security_audit.governance_bridge import (
     SecurityAuditRunner,
     derive_rule_outcomes_from_audit,
     evaluate_security_audit_method,
     record_security_audit_evidence,
     summarize_audit_status,
 )
-from arkhon.verification.assess_dispatch import (
+from gencode_gov.verification.assess_dispatch import (
     create_assess_runner,
     evaluate_extended_method,
 )
-from arkhon.verification.methods import resolve_method
-from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
+from gencode_gov.verification.methods import resolve_method
+from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
 
 _GIT = shutil.which("git") or "/usr/bin/git"
 
@@ -127,25 +127,37 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
         commit_resolver=resolve_sha,
     )
     assert rc_run1 == 1
-    assert dispatch_security_audit(
-        "validate", _ns(audit_dir=str(run1_dir)), commit_resolver=resolve_sha
-    ) == 0
-    assert dispatch_security_audit(
-        "status", _ns(audit_dir=str(run1_dir), json=False), commit_resolver=resolve_sha
-    ) == 0
-    assert dispatch_security_audit(
-        "verify-findings",
-        _ns(audit_target=str(proj), audit_dir=str(run1_dir)),
-        commit_resolver=resolve_sha,
-    ) == 0
-    assert dispatch_security_audit(
-        "report",
-        _ns(audit_dir=str(run1_dir), report_format="all"),
-        commit_resolver=resolve_sha,
-    ) == 0
+    assert (
+        dispatch_security_audit(
+            "validate", _ns(audit_dir=str(run1_dir)), commit_resolver=resolve_sha
+        )
+        == 0
+    )
+    assert (
+        dispatch_security_audit(
+            "status", _ns(audit_dir=str(run1_dir), json=False), commit_resolver=resolve_sha
+        )
+        == 0
+    )
+    assert (
+        dispatch_security_audit(
+            "verify-findings",
+            _ns(audit_target=str(proj), audit_dir=str(run1_dir)),
+            commit_resolver=resolve_sha,
+        )
+        == 0
+    )
+    assert (
+        dispatch_security_audit(
+            "report",
+            _ns(audit_dir=str(run1_dir), report_format="all"),
+            commit_resolver=resolve_sha,
+        )
+        == 0
+    )
 
     # Verify EvidenceStore received a commit-bound FAIL/BLOCKED record (never false PASS)
-    evid_files = list((proj / ".arkhon" / "evidence" / "software-security").glob("*.json"))
+    evid_files = list((proj / ".gencode-gov" / "evidence" / "software-security").glob("*.json"))
     assert len(evid_files) == 1
 
     # 3. Remediate vulnerabilities in commit 2 and run change-aware reassessment
@@ -181,11 +193,14 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
     assert s2["finding_counts"]["confirmed"] == 0
     assert s2["finding_counts"]["remediated"] >= 1
 
-    assert dispatch_security_audit(
-        "compare",
-        _ns(prior_dir=str(run1_dir), current_dir=str(run2_dir)),
-        commit_resolver=resolve_sha,
-    ) == 0
+    assert (
+        dispatch_security_audit(
+            "compare",
+            _ns(prior_dir=str(run1_dir), current_dir=str(run2_dir)),
+            commit_resolver=resolve_sha,
+        )
+        == 0
+    )
 
     # 4. Reintroduce a vulnerability in commit 3 -> regression reopened!
     (proj / "src" / "service" / "api.py").write_text(
@@ -221,9 +236,10 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
         reason="clean",
         artifacts=[run2_dir / "security-audit-report.json"],
     )
-    assert evaluate_extended_method(
-        "security-audit-artifact-verification", pass_res, proj
-    ) == ("PASS", "Verified security-audit coverage ledger, findings, and report")
+    assert evaluate_extended_method("security-audit-artifact-verification", pass_res, proj) == (
+        "PASS",
+        "Verified security-audit coverage ledger, findings, and report",
+    )
 
     fail_res = RunnerResult(
         runner="security-audit",
@@ -232,13 +248,16 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
         artifacts=[run3_dir / "security-audit-report.json"],
     )
     assert evaluate_security_audit_method(fail_res)[0] == "FAIL"
-    assert evaluate_security_audit_method(
-        RunnerResult(runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=[])
-    )[0] == "BLOCKED"
+    assert (
+        evaluate_security_audit_method(
+            RunnerResult(runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=[])
+        )[0]
+        == "BLOCKED"
+    )
 
     # Rule outcomes derivation & invalid bundle refusal
-    from arkhon.security_audit.coverage import CoverageLedger
-    from arkhon.security_audit.findings import FindingsCollection
+    from gencode_gov.security_audit.coverage import CoverageLedger
+    from gencode_gov.security_audit.findings import FindingsCollection
 
     outcomes = derive_rule_outcomes_from_audit(
         CoverageLedger.load(run3_dir / "coverage-ledger.json"),
@@ -254,15 +273,22 @@ def test_end_to_end_cli_plan_run_validate_reassess_remediation_and_regression(
     assert gate_st == "PASS"
 
     # Error handling on missing CLI flags / non-existent dirs / sandbox-mode=required when disabled
-    assert dispatch_security_audit(
-        "status", _ns(audit_dir=None), commit_resolver=resolve_sha
-    ) == 1
-    assert dispatch_security_audit(
-        "compare", _ns(prior_dir=None, current_dir=None), commit_resolver=resolve_sha
-    ) == 1
-    assert dispatch_security_audit(
-        "reassess", _ns(audit_target=str(proj), prior_dir=None), commit_resolver=resolve_sha
-    ) == 1
-    assert dispatch_security_audit(
-        "plan", _ns(audit_target=str(tmp_path / "no_such_dir")), commit_resolver=resolve_sha
-    ) == 1
+    assert dispatch_security_audit("status", _ns(audit_dir=None), commit_resolver=resolve_sha) == 1
+    assert (
+        dispatch_security_audit(
+            "compare", _ns(prior_dir=None, current_dir=None), commit_resolver=resolve_sha
+        )
+        == 1
+    )
+    assert (
+        dispatch_security_audit(
+            "reassess", _ns(audit_target=str(proj), prior_dir=None), commit_resolver=resolve_sha
+        )
+        == 1
+    )
+    assert (
+        dispatch_security_audit(
+            "plan", _ns(audit_target=str(tmp_path / "no_such_dir")), commit_resolver=resolve_sha
+        )
+        == 1
+    )

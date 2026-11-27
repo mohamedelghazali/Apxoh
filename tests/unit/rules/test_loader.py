@@ -1,4 +1,4 @@
-"""Tests for arkhon.rules.loader."""
+"""Tests for gencode_gov.rules.loader."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.core.errors import RuleDuplicateError, RuleError, RuleValidationError
-from arkhon.rules.loader import Rule, load_rule_file, load_rules_dir
+from gencode_gov.core.errors import RuleDuplicateError, RuleError, RuleValidationError
+from gencode_gov.rules.loader import Rule, load_rule_file, load_rules_dir
 
 VALID_RULE = {
     "id": "SE-REQ-001",

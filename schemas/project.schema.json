@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/project/1.0.0",
   "title": "GENCODE-GOV Project Declaration",
-  "description": "The .arkhon/project.yaml declaration for a governed project.",
+  "description": "The .gencode-gov/project.yaml declaration for a governed project.",
   "type": "object",
   "required": [
     "project",

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.cli import main
+from gencode_gov.cli import main
 
 
 def test_version_default(capsys: pytest.CaptureFixture[str]) -> None:
@@ -52,16 +52,16 @@ def test_inspect_on_project(capsys: pytest.CaptureFixture[str], tmp_path: Path) 
 def test_report_writes_json(
     capsys: pytest.CaptureFixture[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     artifact = tmp_path / "x"
     artifact.write_text("report artifact", encoding="utf-8")
-    evidence = tmp_path / ".arkhon" / "evidence" / "testing"
+    evidence = tmp_path / ".gencode-gov" / "evidence" / "testing"
     evidence.mkdir(parents=True)
     (evidence / "EVID-A.json").write_text(
         json.dumps(
             {
                 "evidence_id": "EVID-A",
-                "source": "arkhon",
+                "source": "gencode-gov",
                 "source_version": "0.1.0.dev1",
                 "commit_sha": "a" * 40,
                 "executed_at": "2026-11-01T00:00:00Z",

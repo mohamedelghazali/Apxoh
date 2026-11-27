@@ -10,7 +10,7 @@
 
 This document defines how GENCODE-GOV versions:
 
-- The engine and CLI (`arkhon` Python package)
+- The engine and CLI (`gencode-gov` Python package)
 - The rule catalog (`rules/`, `languages/*/rules/`)
 - The schemas (`schemas/`)
 - The manifest (`manifest/`)
@@ -56,11 +56,11 @@ Breaking changes are allowed at any pre-1.0 version. A published `0.1.0` is an o
 
 ## 3. Version Format per Artifact
 
-### 3.1 Engine (`arkhon` package)
+### 3.1 Engine (`gencode-gov` package)
 
 - **File:** `VERSION` (plain text, canonical PEP 440 form, e.g., `0.1.0`)
 - **File:** `pyproject.toml` (`version = "0.1.0"`, PEP 440)
-- **File:** `src/arkhon/__init__.py` (`__version__ = "0.1.0"`)
+- **File:** `src/gencode_gov/__init__.py` (`__version__ = "0.1.0"`)
 - **Rule:** `VERSION`, `pyproject.toml`, and `__version__` use the same canonical PEP 440 value. The manifest keeps its SemVer-style display version. Enforced by release checks.
 
 ### 3.2 Manifest
@@ -137,7 +137,7 @@ echo "0.1.0" > VERSION
 make release-check
 
 # 4. Commit
-git add VERSION pyproject.toml src/arkhon/__init__.py CHANGELOG.md
+git add VERSION pyproject.toml src/gencode_gov/__init__.py CHANGELOG.md
 git commit -m "release: v0.1.0"
 
 # 5. Tag
@@ -190,7 +190,7 @@ Removal requires:
 From `1.0.0` onward, GENCODE-GOV guarantees:
 
 - **CLI:** command names and arguments are stable within a major version
-- **Python API:** `arkhon.*` public functions are stable within a major version
+- **Python API:** `gencode-gov.*` public functions are stable within a major version
 - **Schemas:** schema `$id` versions are immutable; breaking changes require a new `$id`
 - **Rules:** rule IDs are permanent; a rule can be deprecated but never reused for a different meaning
 
@@ -202,7 +202,7 @@ From `1.0.0` onward, GENCODE-GOV guarantees:
 
 ### 7.3 Configuration
 
-- `.arkhon/config.yaml`: unknown keys are ignored with a warning, never fatal
+- `.gencode-gov/config.yaml`: unknown keys are ignored with a warning, never fatal
 - `manifest/*.yaml`: unknown keys are fatal (strict)
 
 ---
@@ -228,7 +228,7 @@ At any time, versions can be discovered:
 # Engine
 gencode-gov version
 cat VERSION
-python -c "import arkhon; print(arkhon.__version__)"
+python -c "import gencode_gov; print(gencode_gov.__version__)"
 
 # Manifest
 grep manifest_version manifest/index.yaml

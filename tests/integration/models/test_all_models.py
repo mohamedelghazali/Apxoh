@@ -17,7 +17,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-MODELS_DIR = REPO_ROOT / "src" / "arkhon" / "integrations" / "models"
+MODELS_DIR = REPO_ROOT / "src" / "gencode_gov" / "integrations" / "models"
 
 MODEL_IDS = [
     "claude",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from arkhon.reporting.markdown_reporter import MarkdownReporter
+from gencode_gov.reporting.markdown_reporter import MarkdownReporter
 
 
 def test_markdown_reporter_renders_statuses_and_unknown_values() -> None:
@@ -34,10 +34,10 @@ def test_markdown_reporter_defaults_and_write(tmp_path: Path, monkeypatch) -> No
         "report_id": "R-2",
         "commit_sha": "b" * 40,
         "generated_at": "now",
-        "apxoh_version": "1.0",
+        "gencode_gov_version": "1.0",
     }
     monkeypatch.setattr(
-        "arkhon.reporting.markdown_reporter.JsonReporter.build",
+        "gencode_gov.reporting.markdown_reporter.JsonReporter.build",
         lambda _self, _root, **_kwargs: report,
     )
     output = tmp_path / "reports"

@@ -12,7 +12,7 @@ Demonstrates:
 
 ```
 web-application/
-├── .arkhon/project.yaml
+├── .gencode-gov/project.yaml
 ├── index.html
 ├── package.json
 ├── tsconfig.json

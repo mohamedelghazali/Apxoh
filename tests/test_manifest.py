@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from arkhon.config import load_manifest
+from gencode_gov.config import load_manifest
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 

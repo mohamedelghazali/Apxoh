@@ -9,8 +9,8 @@ from typing import Any
 
 import yaml
 
-from arkhon.rules.loader import Rule
-from arkhon.rules.validator import validate_against_schema, validate_rule, validate_semantics
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.validator import validate_against_schema, validate_rule, validate_semantics
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_PATH = REPO_ROOT / "schemas" / "rule.schema.json"

@@ -6,7 +6,7 @@ description: >
   TSAR is one delegated scanner, not the complete security program.
 version: 1.1.0
 applicable_to: [all-projects]
-requires: [arkhon-governance]
+requires: [gencode-gov]
 delegates_to: tsar
 ---
 

@@ -4,7 +4,6 @@ system:
   name: "GENCODE-GOV"
   display_name: "GENCODE-GOV"
   identifier: "gencode-gov"
-  legacy_package_namespace: "arkhon"
   tagline: "AI-Agent-Generated Software Governance"
   subtitle: "AI-Agent-Generated Software Governance"
   slogan: "Govern AI-Generated Code. Assure Engineering Integrity."
@@ -19,7 +18,7 @@ identity:
   license_url: "https://opensource.org/licenses/MIT"
   maintainer: "mohamedelghazali"
   created: "2026-11-01"
-  last_updated: "2026-11-26"
+  last_updated: "2026-11-27"
 
 founding_decisions:
   relation_to_tsar: "separate"

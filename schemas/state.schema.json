@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/state/1.0.0",
   "title": "GENCODE-GOV State Record",
-  "description": "A state event record stored under .arkhon/state/.",
+  "description": "A state event record stored under .gencode-gov/state/.",
   "type": "object",
   "required": [
     "record_id",

@@ -8,14 +8,14 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-import arkhon.cli as cli_mod
-import arkhon.verification.assess_dispatch as ad_mod
-from arkhon.rules.loader import load_rule_file
-from arkhon.rules.validator import validate_rule
-from arkhon.verification.methods import resolve_method, resolve_methods
-from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-from arkhon.verification.runners.mypy_runner import MypyRunner
-from arkhon.verification.runners.tsar_runner import TsarRunner
+import gencode_gov.cli as cli_mod
+import gencode_gov.verification.assess_dispatch as ad_mod
+from gencode_gov.rules.loader import load_rule_file
+from gencode_gov.rules.validator import validate_rule
+from gencode_gov.verification.methods import resolve_method, resolve_methods
+from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+from gencode_gov.verification.runners.mypy_runner import MypyRunner
+from gencode_gov.verification.runners.tsar_runner import TsarRunner
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_PATH = REPO_ROOT / "schemas" / "rule.schema.json"
@@ -104,7 +104,7 @@ def test_cli_assess_dispatches_language_neutral_runner_outcome(
 
     def _stub_run(project_root: Path) -> RunnerResult:
         invoked.append(True)
-        ev_dir = project_root / ".arkhon" / "evidence" / "testing"
+        ev_dir = project_root / ".gencode-gov" / "evidence" / "testing"
         ev_dir.mkdir(parents=True, exist_ok=True)
         rep = ev_dir / "test-execution-report.json"
         payload = {

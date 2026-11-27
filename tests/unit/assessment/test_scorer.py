@@ -1,16 +1,16 @@
-"""Tests for arkhon.assessment.scorer."""
+"""Tests for gencode_gov.assessment.scorer."""
 
 from __future__ import annotations
 
 import pytest
 
-from arkhon.assessment.scorer import (
+from gencode_gov.assessment.scorer import (
     TOTAL_WEIGHT,
     WEIGHTS,
     score_from_outcomes,
     score_from_ratios,
 )
-from arkhon.core.errors import AssessmentError
+from gencode_gov.core.errors import AssessmentError
 
 
 def _all(ratio: float) -> dict[str, float]:

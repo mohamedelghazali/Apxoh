@@ -10,17 +10,17 @@ import json
 import sys
 from pathlib import Path
 
-from arkhon.config import find_repo_root, load_manifest
-from arkhon.core.errors import ArkhonError
-from arkhon.rules.loader import load_rules_dir
-from arkhon.rules.validator import validate_rule
+from gencode_gov.config import find_repo_root, load_manifest
+from gencode_gov.core.errors import GencodeGovError
+from gencode_gov.rules.loader import load_rules_dir
+from gencode_gov.rules.validator import validate_rule
 
 
 def validate_manifest(root: Path) -> list[str]:
     try:
         manifest = load_manifest(root)
         _ = (manifest.name, manifest.identifier, manifest.version)
-    except ArkhonError as exc:
+    except GencodeGovError as exc:
         return [f"manifest: {exc}"]
     return []
 
@@ -34,7 +34,7 @@ def validate_json_schema_file(path: Path) -> list[str]:
     try:
         import jsonschema
     except ImportError:
-        return [f"{path.name}: jsonschema dependency is missing; install arkhon[dev]"]
+        return [f"{path.name}: jsonschema dependency is missing; install gencode-gov[dev]"]
     try:
         jsonschema.Draft202012Validator.check_schema(schema)
     except jsonschema.SchemaError as exc:
@@ -62,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     del argv
     try:
         root = find_repo_root()
-    except ArkhonError as exc:
+    except GencodeGovError as exc:
         print(f"[FAIL] {exc}", file=sys.stderr)
         return 2
 

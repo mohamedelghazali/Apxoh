@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.rules.loader import load_rule_file
-from arkhon.rules.validator import validate_rule
+from gencode_gov.rules.loader import load_rule_file
+from gencode_gov.rules.validator import validate_rule
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA = REPO_ROOT / "schemas" / "rule.schema.json"
@@ -44,15 +44,15 @@ def test_rule_validates(rule_path: Path) -> None:
 
 @pytest.mark.parametrize("rule_path", RULES, ids=lambda path: path.name)
 def test_rule_id_matches_domain(rule_path: Path) -> None:
-    from arkhon.core.constants import DOMAIN_RULE_PREFIX
+    from gencode_gov.core.constants import DOMAIN_RULE_PREFIX
 
     rule = load_rule_file(rule_path)
     domain = rule.domain
     if domain in DOMAIN_RULE_PREFIX:
         expected = DOMAIN_RULE_PREFIX[domain]
-        assert rule.id.startswith(
-            expected
-        ), f"{rule_path}: id {rule.id} does not match domain {domain} ({expected})"
+        assert rule.id.startswith(expected), (
+            f"{rule_path}: id {rule.id} does not match domain {domain} ({expected})"
+        )
 
 
 def test_at_least_15_rules_present() -> None:

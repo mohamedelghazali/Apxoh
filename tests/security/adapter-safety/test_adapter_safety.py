@@ -15,8 +15,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[3]
 
 ADAPTER_GLOBS = (
-    "src/arkhon/integrations/**/adapter.py",
-    "src/arkhon/integrations/**/verifier.py",
+    "src/gencode_gov/integrations/**/adapter.py",
+    "src/gencode_gov/integrations/**/verifier.py",
     "integrations/**/adapter.py",
     "integrations/**/verifier.py",
 )
@@ -104,14 +104,14 @@ def test_adapter_does_not_log_secrets(adapter_source: tuple[Path, str]) -> None:
 
 
 def test_tsar_adapter_present() -> None:
-    tsar_adapter = ROOT / "src" / "arkhon" / "integrations" / "tsar" / "adapter.py"
+    tsar_adapter = ROOT / "src" / "gencode_gov" / "integrations" / "tsar" / "adapter.py"
     assert tsar_adapter.is_file(), "TSAR adapter missing"
 
 
 def test_openai_compatible_rejects_non_http_endpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from arkhon.integrations.models._openai_compatible import (
+    from gencode_gov.integrations.models._openai_compatible import (
         OpenAICompatibleAdapter,
         OpenAICompatibleConfig,
     )
@@ -138,7 +138,7 @@ def test_openai_compatible_rejects_non_http_endpoint(
 def test_claude_rejects_non_https_endpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from arkhon.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
+    from gencode_gov.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
 
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     adapter = ClaudeAdapter(ClaudeConfig(endpoint="file:///etc/passwd"))
@@ -161,7 +161,7 @@ def test_gemini_rejects_unsafe_endpoint_or_model(
     endpoint: str,
     model: str,
 ) -> None:
-    from arkhon.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
+    from gencode_gov.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
 
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
     adapter = GeminiAdapter(GeminiConfig(endpoint=endpoint, model=model))
@@ -190,7 +190,7 @@ def test_model_adapters_reject_invalid_endpoint_ports(
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
 
     if adapter_kind == "openai":
-        from arkhon.integrations.models._openai_compatible import (
+        from gencode_gov.integrations.models._openai_compatible import (
             OpenAICompatibleAdapter,
             OpenAICompatibleConfig,
         )
@@ -208,11 +208,11 @@ def test_model_adapters_reject_invalid_endpoint_ports(
         )
         result = OpenAICompatibleAdapter(config).send("hello")
     elif adapter_kind == "claude":
-        from arkhon.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
+        from gencode_gov.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
 
         result = ClaudeAdapter(ClaudeConfig(endpoint=endpoint)).send("hello")
     else:
-        from arkhon.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
+        from gencode_gov.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
 
         result = GeminiAdapter(GeminiConfig(endpoint=endpoint)).send("hello")
 

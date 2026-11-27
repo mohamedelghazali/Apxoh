@@ -9,7 +9,7 @@
 
 Answer these questions first:
 
-1. **What domain does this rule belong to?** Choose one of the domains declared by the manifest and implemented in `src/arkhon/core/constants.py`.
+1. **What domain does this rule belong to?** Choose one of the domains declared by the manifest and implemented in `src/gencode_gov/core/constants.py`.
 2. **What does it enforce?** State the requirement in one sentence with a measurable acceptance criterion.
 3. **How is it verified?** Choose deterministic, assisted, human, delegated, or hybrid verification.
 4. **What evidence does it require?** Name the artifacts that must be produced and checked.
@@ -64,7 +64,7 @@ tests:
   regression: required
 ~~~
 
-The actual accepted fields and constraints are defined by `schemas/rule.schema.json` and semantic validation in `src/arkhon/rules/validator.py`. Treat the schema and validator as authoritative if this guide differs.
+The actual accepted fields and constraints are defined by `schemas/rule.schema.json` and semantic validation in `src/gencode_gov/rules/validator.py`. Treat the schema and validator as authoritative if this guide differs.
 
 ## 4. Field-by-Field Guidance
 
@@ -186,8 +186,8 @@ Use the actual public API and fixtures present in the codebase. These snippets a
 
 - `schemas/rule.schema.json` — machine-readable rule contract.
 - `docs/rule-authoring/RULE_LIFECYCLE.md` — lifecycle and review process.
-- `src/arkhon/rules/validator.py` — semantic validation.
-- `src/arkhon/rules/registry.py` — rule indexing and lookup.
+- `src/gencode_gov/rules/validator.py` — semantic validation.
+- `src/gencode_gov/rules/registry.py` — rule indexing and lookup.
 
 ---
 

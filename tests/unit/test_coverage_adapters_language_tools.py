@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import ConfigError
-from arkhon.integrations.platforms.github_copilot.adapter import GitHubCopilotAdapter
-from arkhon.language_support.detector import _should_skip, detect_languages
-from arkhon.language_support.registry import _parse_language
-from arkhon.language_support.tool_resolver import ToolStatus, _check_tool, resolve_tools
+from gencode_gov.core.errors import ConfigError
+from gencode_gov.integrations.platforms.github_copilot.adapter import GitHubCopilotAdapter
+from gencode_gov.language_support.detector import _should_skip, detect_languages
+from gencode_gov.language_support.registry import _parse_language
+from gencode_gov.language_support.tool_resolver import ToolStatus, _check_tool, resolve_tools
 
 
 def test_github_copilot_install_verify_and_preserve_user_changes(tmp_path: Path) -> None:
@@ -43,7 +43,7 @@ def test_language_detector_skip_and_sample_validation(tmp_path: Path, monkeypatc
     link.unlink()
     huge = root / "huge.py"
     huge.write_text("12345", encoding="utf-8")
-    monkeypatch.setattr("arkhon.language_support.detector.MAX_FILE_SIZE", 1)
+    monkeypatch.setattr("gencode_gov.language_support.detector.MAX_FILE_SIZE", 1)
     assert _should_skip(huge, root)
     with pytest.raises(ValueError, match="max_samples"):
         detect_languages(root, max_samples=-1)
@@ -71,28 +71,28 @@ def test_language_registry_rejects_bad_planned_tools_and_milestone() -> None:
 
 
 def test_tool_resolver_missing_unknown_and_available(monkeypatch) -> None:
-    monkeypatch.setattr("arkhon.language_support.tool_resolver.shutil.which", lambda _n: None)
+    monkeypatch.setattr("gencode_gov.language_support.tool_resolver.shutil.which", lambda _n: None)
     assert _check_tool("missing").status == ToolStatus.MISSING
     monkeypatch.setattr(
-        "arkhon.language_support.tool_resolver.shutil.which", lambda _n: "/usr/bin/tool"
+        "gencode_gov.language_support.tool_resolver.shutil.which", lambda _n: "/usr/bin/tool"
     )
     monkeypatch.setattr(
-        "arkhon.language_support.tool_resolver.subprocess.run",
+        "gencode_gov.language_support.tool_resolver.subprocess.run",
         lambda *a, **k: (_ for _ in ()).throw(subprocess.TimeoutExpired("tool", 1)),
     )
     assert _check_tool("tool").status == ToolStatus.VERSION_UNKNOWN
     monkeypatch.setattr(
-        "arkhon.language_support.tool_resolver.subprocess.run",
+        "gencode_gov.language_support.tool_resolver.subprocess.run",
         lambda *a, **k: (_ for _ in ()).throw(OSError("cannot execute")),
     )
     assert _check_tool("tool").status == ToolStatus.VERSION_UNKNOWN
     monkeypatch.setattr(
-        "arkhon.language_support.tool_resolver.subprocess.run",
+        "gencode_gov.language_support.tool_resolver.subprocess.run",
         lambda command, **kwargs: subprocess.CompletedProcess(command, 1, "", "error"),
     )
     assert _check_tool("tool").status == ToolStatus.VERSION_UNKNOWN
     monkeypatch.setattr(
-        "arkhon.language_support.tool_resolver.subprocess.run",
+        "gencode_gov.language_support.tool_resolver.subprocess.run",
         lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "Tool 1.2", ""),
     )
     result = resolve_tools("python", ["tool"])

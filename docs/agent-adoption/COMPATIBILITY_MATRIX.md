@@ -10,14 +10,14 @@ This matrix records the integrations declared by the repository. A registry entr
 
 | Model family | Provider | Runtime adapter | Evidence-backed adoption level | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| Claude | Anthropic | `src/arkhon/integrations/models/claude/` | Not established here | Verify exact model and API configuration |
-| OpenAI o | OpenAI | `src/arkhon/integrations/models/openai-o/` | Not established here | Do not generalize across model versions |
-| DeepSeek-Coder | DeepSeek | `src/arkhon/integrations/models/deepseek-coder/` | Not established here | Configuration is not behavioral verification |
-| GPT | OpenAI | `src/arkhon/integrations/models/gpt/` | Not established here | Keep distinct from reasoning-model aliases |
-| Gemini | Google | `src/arkhon/integrations/models/gemini/` | Not established here | Verify API and prompt behavior |
-| Code Llama | Meta | `src/arkhon/integrations/models/code-llama/` | Not established here | Verify local runtime and exact model |
-| Qwen-Coder | Alibaba | `src/arkhon/integrations/models/qwen-coder/` | Not established here | Verify exact model and deployment |
-| Kimi | Moonshot | `src/arkhon/integrations/models/kimi/` | Not established here | Verify exact model and deployment |
+| Claude | Anthropic | `src/gencode_gov/integrations/models/claude/` | Not established here | Verify exact model and API configuration |
+| OpenAI o | OpenAI | `src/gencode_gov/integrations/models/openai-o/` | Not established here | Do not generalize across model versions |
+| DeepSeek-Coder | DeepSeek | `src/gencode_gov/integrations/models/deepseek-coder/` | Not established here | Configuration is not behavioral verification |
+| GPT | OpenAI | `src/gencode_gov/integrations/models/gpt/` | Not established here | Keep distinct from reasoning-model aliases |
+| Gemini | Google | `src/gencode_gov/integrations/models/gemini/` | Not established here | Verify API and prompt behavior |
+| Code Llama | Meta | `src/gencode_gov/integrations/models/code-llama/` | Not established here | Verify local runtime and exact model |
+| Qwen-Coder | Alibaba | `src/gencode_gov/integrations/models/qwen-coder/` | Not established here | Verify exact model and deployment |
+| Kimi | Moonshot | `src/gencode_gov/integrations/models/kimi/` | Not established here | Verify exact model and deployment |
 
 The repository's structural contract tests are under `tests/integration/models/`. They establish repository contracts only, not end-to-end provider behavior.
 
@@ -25,7 +25,7 @@ The repository's structural contract tests are under `tests/integration/models/`
 
 | Platform | Provider | Declared in manifest | Runtime adapter | Evidence-backed adoption level | Notes |
 | :--- | :--- | :---: | :--- | :--- | :--- |
-| GitHub Copilot | GitHub / Microsoft | Yes | `src/arkhon/integrations/platforms/github_copilot/` | Installed/configuration file only; external activation unverified | GENCODE-GOV cannot pin or observe the model selected internally by the platform |
+| GitHub Copilot | GitHub / Microsoft | Yes | `src/gencode_gov/integrations/platforms/github_copilot/` | Installed/configuration file only; external activation unverified | GENCODE-GOV cannot pin or observe the model selected internally by the platform |
 
 The Copilot adapter installs a project instruction file and verifies its exact content. It does not connect to Copilot or prove that Copilot loaded or followed the instructions.
 
@@ -62,7 +62,7 @@ Open an issue with the integration identifier, exact version, claimed level, ver
 ## 8. References
 
 - `docs/agent-adoption/ADOPTION_GUIDE.md`
-- `src/arkhon/integrations/models/*/README.md` where present
+- `src/gencode_gov/integrations/models/*/README.md` where present
 - `integrations/platforms/*/README.md`
 - `manifest/integrations.yaml`
 - `tests/integration/models/`

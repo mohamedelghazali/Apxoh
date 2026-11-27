@@ -12,26 +12,26 @@ from typing import Any
 
 import yaml
 
-import arkhon.verification.runners.pytest_runner as pr_mod
-import arkhon.verification.runners.test_suite_runner as tsr_mod
-import arkhon.verification.scenario_verifier as sv_mod
-from arkhon.core.errors import ConfigError
-from arkhon.verification.assess_dispatch import (
+import gencode_gov.verification.runners.pytest_runner as pr_mod
+import gencode_gov.verification.runners.test_suite_runner as tsr_mod
+import gencode_gov.verification.scenario_verifier as sv_mod
+from gencode_gov.core.errors import ConfigError
+from gencode_gov.verification.assess_dispatch import (
     create_assess_runner,
     evaluate_extended_method,
     inspect_junit_artifact,
 )
-from arkhon.verification.methods import resolve_method, resolve_methods
-from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-from arkhon.verification.runners.pytest_runner import PytestRunner
-from arkhon.verification.runners.test_suite_runner import (
+from gencode_gov.verification.methods import resolve_method, resolve_methods
+from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+from gencode_gov.verification.runners.pytest_runner import PytestRunner
+from gencode_gov.verification.runners.test_suite_runner import (
     LanguageNeutralTestRunner,
     _declared_primary_language,
     _parse_junit_cases,
     _persist_normalized_report,
     resolve_project_language,
 )
-from arkhon.verification.scenario_verifier import (
+from gencode_gov.verification.scenario_verifier import (
     REQUIRED_SECURITY_SCENARIOS,
     _build_executed_lookup,
     _detect_attack_surface,
@@ -70,7 +70,7 @@ def test_language_resolution_and_report_persistence_edge_cases(
     assert runner.run(empty_dir).outcome == RunnerOutcome.BLOCKED
 
     assert _declared_primary_language(empty_dir) is None
-    ark_dir = empty_dir / ".arkhon"
+    ark_dir = empty_dir / ".gencode-gov"
     ark_dir.mkdir(exist_ok=True)
     proj_yaml = ark_dir / "project.yaml"
     proj_yaml.write_text("\t: [unclosed", encoding="utf-8")
@@ -82,11 +82,14 @@ def test_language_resolution_and_report_persistence_edge_cases(
     proj_yaml.write_text("languages:\n  primary: '   '\n", encoding="utf-8")
     assert _declared_primary_language(empty_dir) is None
     proj_yaml.write_text("languages:\n  primary: Python\n", encoding="utf-8")
-    assert resolve_project_language(empty_dir) == ("python", "declared in .arkhon/project.yaml")
+    assert resolve_project_language(empty_dir) == (
+        "python",
+        "declared in .gencode-gov/project.yaml",
+    )
     proj_yaml.write_text("languages:\n  primary: elixir\n", encoding="utf-8")
     assert resolve_project_language(empty_dir) == (
         "elixir",
-        "unregistered language declared in .arkhon/project.yaml",
+        "unregistered language declared in .gencode-gov/project.yaml",
     )
 
     cs_dir = tmp_path / "cs_proj"
@@ -107,16 +110,16 @@ def test_language_resolution_and_report_persistence_edge_cases(
     assert resolve_project_language(ext_dir)[0] == "ruby"
 
     sym_proj = tmp_path / "sym_proj"
-    (sym_proj / ".arkhon/evidence/testing").mkdir(parents=True)
+    (sym_proj / ".gencode-gov/evidence/testing").mkdir(parents=True)
     target_dummy = tmp_path / "dummy.json"
     target_dummy.write_text("{}", encoding="utf-8")
-    (sym_proj / ".arkhon/evidence/testing/test-execution-report.json").symlink_to(target_dummy)
+    (sym_proj / ".gencode-gov/evidence/testing/test-execution-report.json").symlink_to(target_dummy)
     assert _persist_normalized_report(sym_proj, {"a": 1}) is None
     assert runner.run(sym_proj).outcome == RunnerOutcome.BLOCKED
 
     file_blocker = tmp_path / "blocker_proj"
     file_blocker.mkdir()
-    (file_blocker / ".arkhon").write_text("not-a-dir", encoding="utf-8")
+    (file_blocker / ".gencode-gov").write_text("not-a-dir", encoding="utf-8")
     assert _persist_normalized_report(file_blocker, {"a": 1}) is None
 
 
@@ -251,8 +254,8 @@ def test_go_rust_js_ts_adapters_all_outcomes(tmp_path: Path, monkeypatch: Any) -
     assert runner.run(go_proj).outcome == RunnerOutcome.BLOCKED
 
     rs_proj = tmp_path / "rs_svc"
-    (rs_proj / ".arkhon").mkdir(parents=True)
-    (rs_proj / ".arkhon/project.yaml").write_text(
+    (rs_proj / ".gencode-gov").mkdir(parents=True)
+    (rs_proj / ".gencode-gov/project.yaml").write_text(
         "languages:\n  primary: rust\n", encoding="utf-8"
     )
     assert runner.run(rs_proj).outcome == RunnerOutcome.BLOCKED
@@ -389,19 +392,19 @@ def test_assess_dispatch_and_cli_extended_method_outcomes(tmp_path: Path) -> Non
 def test_cli_cmd_assess_exercises_extended_method_return_line(
     tmp_path: Path, monkeypatch: Any
 ) -> None:
-    import arkhon.cli as cli_mod
-    import arkhon.verification.assess_dispatch as ad_mod
+    import gencode_gov.cli as cli_mod
+    import gencode_gov.verification.assess_dispatch as ad_mod
 
     proj = tmp_path / "governed_proj"
-    (proj / ".arkhon").mkdir(parents=True)
-    (proj / ".arkhon/project.yaml").write_text(
+    (proj / ".gencode-gov").mkdir(parents=True)
+    (proj / ".gencode-gov/project.yaml").write_text(
         "project:\n  name: demo\n  profile: cli-tool\nlanguages:\n  primary: python\n",
         encoding="utf-8",
     )
 
     class _StubSuiteRunner(LanguageNeutralTestRunner):
         def run(self, project_root: Path) -> RunnerResult:
-            ev = project_root / ".arkhon/evidence/testing"
+            ev = project_root / ".gencode-gov/evidence/testing"
             ev.mkdir(parents=True, exist_ok=True)
             rp = ev / "test-execution-report.json"
             rp.write_text(
@@ -434,8 +437,8 @@ def test_cli_cmd_assess_exercises_extended_method_return_line(
     if hasattr(cli_mod, "cmd_assess"):
         ns = argparse.Namespace(project=str(proj))
         with contextlib.suppress(ImportError, SystemExit):
-            from arkhon.verification.runners.mypy_runner import MypyRunner
-            from arkhon.verification.runners.tsar_runner import TsarRunner
+            from gencode_gov.verification.runners.mypy_runner import MypyRunner
+            from gencode_gov.verification.runners.tsar_runner import TsarRunner
 
             monkeypatch.setattr(
                 MypyRunner,
@@ -454,8 +457,8 @@ def test_cli_cmd_assess_exercises_extended_method_return_line(
 
 def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypatch: Any) -> None:
     proj = tmp_path / "web_proj"
-    (proj / ".arkhon/evidence/testing").mkdir(parents=True)
-    (proj / ".arkhon/project.yaml").write_text(
+    (proj / ".gencode-gov/evidence/testing").mkdir(parents=True)
+    (proj / ".gencode-gov/project.yaml").write_text(
         "project:\n  profile: web-application\nlanguages:\n  primary: python\n",
         encoding="utf-8",
     )
@@ -508,17 +511,9 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
 
     assert not _verify_python_test_quality("def broken(:\n", "broken")[0]
     assert not _verify_python_test_quality("def other():\n    assert 1 == 2\n", "missing_fn")[0]
-    tautological = (
-        "def test_weak():\n"
-        "    assert True\n"
-        "    assert isinstance(1, int)\n"
-    )
+    tautological = "def test_weak():\n    assert True\n    assert isinstance(1, int)\n"
     assert not _verify_python_test_quality(tautological, "test_weak")[0]
-    raises_call = (
-        "def test_raises():\n"
-        "    with pytest.raises(ValueError):\n"
-        "        pass\n"
-    )
+    raises_call = "def test_raises():\n    with pytest.raises(ValueError):\n        pass\n"
     assert _verify_python_test_quality(raises_call, "test_raises")[0]
 
     (proj / "tests").mkdir()
@@ -549,20 +544,20 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
     assert not _verify_test_source_and_execution(proj, "tests/bad.py", "t", lookup)[0]
     assert not _verify_test_source_and_execution(proj, "tests/ok_test.go", "MissingGo", lookup)[0]
     assert not _verify_test_source_and_execution(proj, "tests/mock_test.go", "TestM", lookup)[0]
-    assert not _verify_test_source_and_execution(
-        proj, "tests/sec_test.go", "TestNoAssert", lookup
-    )[0]
+    assert not _verify_test_source_and_execution(proj, "tests/sec_test.go", "TestNoAssert", lookup)[
+        0
+    ]
     assert _verify_test_source_and_execution(proj, "tests/ok_test.go", "TestAuthGo", lookup)[0]
     go_unrun = proj / "tests/unrun_test.go"
     go_unrun.write_text("package sec\nfunc TestUnrun() { t.Fatal() }\n", encoding="utf-8")
-    assert not _verify_test_source_and_execution(
-        proj, "tests/unrun_test.go", "TestUnrun", lookup
-    )[0]
+    assert not _verify_test_source_and_execution(proj, "tests/unrun_test.go", "TestUnrun", lookup)[
+        0
+    ]
     assert not _verify_test_source_and_execution(
         proj, "tests/skip_test.go", "TestSkippedGo", lookup
     )[0]
 
-    rep_file = proj / ".arkhon/evidence/testing/test-execution-report.json"
+    rep_file = proj / ".gencode-gov/evidence/testing/test-execution-report.json"
     assert _load_execution_report(proj)[0] is None
     assert verify_negative_security_scenarios(proj)[0] == "BLOCKED"
     assert verify_observability_and_crash_dump_controls(proj)[0] == "BLOCKED"
@@ -613,7 +608,7 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
     assert verify_negative_security_scenarios(proj)[0] == "BLOCKED"
     assert verify_observability_and_crash_dump_controls(proj)[0] == "BLOCKED"
 
-    matrix_path = proj / ".arkhon/security-test-matrix.yaml"
+    matrix_path = proj / ".gencode-gov/security-test-matrix.yaml"
     matrix_path.write_text("\t: [unclosed", encoding="utf-8")
     assert verify_negative_security_scenarios(proj)[0] == "FAIL"
     matrix_path.write_text("not_scenarios: 1\n", encoding="utf-8")
@@ -622,11 +617,11 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
     assert verify_negative_security_scenarios(proj)[0] == "FAIL"
 
     cli_proj = tmp_path / "cli_proj"
-    (cli_proj / ".arkhon/evidence/testing").mkdir(parents=True)
-    (cli_proj / ".arkhon/project.yaml").write_text(
+    (cli_proj / ".gencode-gov/evidence/testing").mkdir(parents=True)
+    (cli_proj / ".gencode-gov/project.yaml").write_text(
         "project:\n  profile: cli-tool\n", encoding="utf-8"
     )
-    (cli_proj / ".arkhon/evidence/testing/test-execution-report.json").write_text(
+    (cli_proj / ".gencode-gov/evidence/testing/test-execution-report.json").write_text(
         rep_file.read_text(encoding="utf-8"), encoding="utf-8"
     )
     bad_specs: dict[str, Any] = {
@@ -648,7 +643,7 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
             "justification": "Stateless local CLI processor without authentication tokens.",
         },
     }
-    (cli_proj / ".arkhon/security-test-matrix.yaml").write_text(
+    (cli_proj / ".gencode-gov/security-test-matrix.yaml").write_text(
         yaml.safe_dump({"scenarios": bad_specs}), encoding="utf-8"
     )
     assert verify_negative_security_scenarios(cli_proj)[0] == "FAIL"
@@ -685,7 +680,7 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
     matrix_path.write_text(yaml.safe_dump(mock_mat), encoding="utf-8")
     assert verify_negative_security_scenarios(proj)[0] == "FAIL"
 
-    obs_yaml = cli_proj / ".arkhon/observability-verification.yaml"
+    obs_yaml = cli_proj / ".gencode-gov/observability-verification.yaml"
     obs_yaml.write_text("\t: [unclosed", encoding="utf-8")
     assert verify_observability_and_crash_dump_controls(cli_proj)[0] == "FAIL"
     obs_yaml.write_text("- not-a-dict\n", encoding="utf-8")
@@ -711,7 +706,7 @@ def test_scenario_verifier_all_branches_and_edge_cases(tmp_path: Path, monkeypat
         "def test_c():\n    assert 3 == 3\n",
         encoding="utf-8",
     )
-    (cli_proj / ".arkhon/evidence/testing/test-execution-report.json").write_text(
+    (cli_proj / ".gencode-gov/evidence/testing/test-execution-report.json").write_text(
         json.dumps(
             {
                 "schema_version": 1,
@@ -863,4 +858,4 @@ def test_pytest_runner_direct_xxe_dtd_network_and_malformed_xml_regression(
         assert result.outcome == RunnerOutcome.BLOCKED, f"{label}: {result}"
         assert "invalid JUnit XML" in result.reason, f"{label}: {result.reason}"
         assert "TOP_SECRET_CANARY_VALUE_9912" not in result.reason
-        assert not (proj / ".arkhon" / "evidence" / "testing" / "pytest.xml").exists()
+        assert not (proj / ".gencode-gov" / "evidence" / "testing" / "pytest.xml").exists()

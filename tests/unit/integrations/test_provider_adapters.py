@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
-from arkhon.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
+from gencode_gov.integrations.models.claude.adapter import ClaudeAdapter, ClaudeConfig
+from gencode_gov.integrations.models.gemini.adapter import GeminiAdapter, GeminiConfig
 
 
 class _Response:
@@ -85,7 +85,7 @@ def test_claude_rejects_unsafe_endpoints(endpoint: str, monkeypatch: pytest.Monk
 
 def test_claude_success_and_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
-    module = "arkhon.integrations.models.claude.adapter"
+    module = "gencode_gov.integrations.models.claude.adapter"
     connection = _Connection(
         _Response(
             json.dumps(
@@ -118,7 +118,7 @@ def test_claude_transport_errors(
     monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
     _patch_connection(
         monkeypatch,
-        "arkhon.integrations.models.claude.adapter",
+        "gencode_gov.integrations.models.claude.adapter",
         _Connection(_Response(""), error),
     )
     result = ClaudeAdapter().send("prompt")
@@ -130,7 +130,7 @@ def test_claude_rejects_invalid_response_json(monkeypatch: pytest.MonkeyPatch, b
     monkeypatch.setenv("ANTHROPIC_API_KEY", "secret")
     _patch_connection(
         monkeypatch,
-        "arkhon.integrations.models.claude.adapter",
+        "gencode_gov.integrations.models.claude.adapter",
         _Connection(_Response(body)),
     )
     assert not ClaudeAdapter().send("prompt").ok
@@ -175,7 +175,7 @@ def test_gemini_rejects_unsafe_configuration(
 
 def test_gemini_success_and_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
-    module = "arkhon.integrations.models.gemini.adapter"
+    module = "gencode_gov.integrations.models.gemini.adapter"
     connection = _Connection(
         _Response(
             json.dumps(
@@ -214,7 +214,7 @@ def test_gemini_transport_errors(
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
     _patch_connection(
         monkeypatch,
-        "arkhon.integrations.models.gemini.adapter",
+        "gencode_gov.integrations.models.gemini.adapter",
         _Connection(_Response(""), error),
     )
     result = GeminiAdapter().send("prompt")
@@ -226,11 +226,10 @@ def test_gemini_rejects_invalid_response_json(monkeypatch: pytest.MonkeyPatch, b
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
     _patch_connection(
         monkeypatch,
-        "arkhon.integrations.models.gemini.adapter",
+        "gencode_gov.integrations.models.gemini.adapter",
         _Connection(_Response(body)),
     )
     assert not GeminiAdapter().send("prompt").ok
-
 
 
 @pytest.mark.parametrize(

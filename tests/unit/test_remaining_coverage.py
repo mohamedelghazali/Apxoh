@@ -9,32 +9,32 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from arkhon.core.constants import language_ids, model_ids, platform_ids, product_ids
-from arkhon.core.errors import (
+from gencode_gov.core.constants import language_ids, model_ids, platform_ids, product_ids
+from gencode_gov.core.errors import (
     ConfigError,
     EvidenceError,
     EvidenceTamperedError,
     GovernanceError,
 )
-from arkhon.evidence.integrity import (
+from gencode_gov.evidence.integrity import (
     verify_artifact,
     verify_bundle,
     verify_freshness,
 )
-from arkhon.governance.charter_loader import (
+from gencode_gov.governance.charter_loader import (
     _load_yaml as load_charter_yaml,
     _parse_principles,
     load_charter,
 )
-from arkhon.language_support.registry import _parse_language, load_registry
-from arkhon.policies.exceptions import (
+from gencode_gov.language_support.registry import _parse_language, load_registry
+from gencode_gov.policies.exceptions import (
     Exception as PolicyException,
     ExceptionRegistry,
     add_exception,
     load_exceptions,
 )
-from arkhon.rules.loader import Rule
-from arkhon.rules.validator import validate_against_schema, validate_semantics
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.validator import validate_against_schema, validate_semantics
 
 
 def test_manifest_derived_identifier_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -48,7 +48,7 @@ def test_manifest_derived_identifier_helpers(monkeypatch: pytest.MonkeyPatch) ->
         languages={"supported": [{"id": "python"}]},
         products={"products": [{"id": "cli"}]},
     )
-    monkeypatch.setattr("arkhon.core.constants.get_manifest", lambda: fake)
+    monkeypatch.setattr("gencode_gov.core.constants.get_manifest", lambda: fake)
     assert model_ids() == ["model-a"]
     assert platform_ids() == ["platform-a"]
     assert language_ids() == ["python"]
@@ -272,7 +272,7 @@ def test_language_registry_rejects_yaml_duplicates_and_extensions(tmp_path: Path
 
 
 def test_detector_skips_symlinks_large_files_and_unclassified_files(tmp_path: Path) -> None:
-    from arkhon.language_support.detector import detect_languages
+    from gencode_gov.language_support.detector import detect_languages
 
     source = tmp_path / "main.py"
     source.write_text("x = 1", encoding="utf-8")
@@ -297,7 +297,7 @@ def test_detector_skips_symlinks_large_files_and_unclassified_files(tmp_path: Pa
 def test_rule_loader_handles_non_directory_yaml_errors_and_nonrecursive(
     tmp_path: Path,
 ) -> None:
-    from arkhon.rules.loader import load_rules_dir
+    from gencode_gov.rules.loader import load_rules_dir
 
     file_path = tmp_path / "file"
     file_path.write_text("x", encoding="utf-8")

@@ -5,7 +5,7 @@ description: >
   requirement has a measurable acceptance criterion before implementation.
 version: 1.0.0
 applicable_to: [all-projects]
-requires: [arkhon-governance]
+requires: [gencode-gov]
 ---
 
 # Requirements Engineering Skill
@@ -48,7 +48,7 @@ Collect  →  Clarify  →  Specify  →  Validate  →  Baseline  →  Track
 - Rule domain: `requirements`
 - Gate: `requirements_gate`
 - Evidence type: `requirements-register`, `validation-report`
-- Output goes to `.arkhon/evidence/requirements/`
+- Output goes to `.gencode-gov/evidence/requirements/`
 
 ## Reference
 

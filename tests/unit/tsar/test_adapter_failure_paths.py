@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.integrations.tsar.adapter import TsarAdapter
+from gencode_gov.integrations.tsar.adapter import TsarAdapter
 
 SHA = "a" * 40
 
@@ -27,7 +27,7 @@ def _sarif() -> dict:
 
 def _configure(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+        "gencode_gov.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
     )
 
     def fake_run(command, **kwargs):
@@ -36,7 +36,7 @@ def _configure(monkeypatch: pytest.MonkeyPatch) -> None:
         )
         return subprocess.CompletedProcess(command, 0, "", "")
 
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fake_run)
+    monkeypatch.setattr("gencode_gov.integrations.tsar.adapter.subprocess.run", fake_run)
 
 
 def test_audit_reports_evidence_directory_creation_failure(

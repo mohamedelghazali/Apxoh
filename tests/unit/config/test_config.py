@@ -1,4 +1,4 @@
-"""Tests for arkhon.config."""
+"""Tests for gencode_gov.config."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.config import Manifest, find_repo_root, get_manifest, load_manifest
-from arkhon.core.errors import ManifestError
+from gencode_gov.config import Manifest, find_repo_root, get_manifest, load_manifest
+from gencode_gov.core.errors import ManifestError
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -36,9 +36,9 @@ def test_manifest_has_three_products() -> None:
     products = load_manifest().products["products"]
     assert len(products) == 3
     assert {item["id"] for item in products} == {
-        "arkhon-core",
-        "arkhon-agent-governance",
-        "arkhon-assurance",
+        "gencode-gov-core",
+        "gencode-gov-agent-governance",
+        "gencode-gov-assurance",
     }
 
 

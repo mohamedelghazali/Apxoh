@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from arkhon.security_audit.sandbox import (
+from gencode_gov.security_audit.sandbox import (
     SandboxCapabilities,
     SandboxExecutor,
     SandboxLimits,
@@ -81,7 +81,7 @@ def test_sandbox_capability_probing_and_isolated_execution(tmp_path: Path) -> No
         argv=[
             sys.executable,
             "-c",
-            "import os; assert 'SECRET' not in os.environ; print(os.environ['ARKHON_SANDBOX'])",
+            "import os; assert 'SECRET' not in os.environ; print(os.environ['GENCODE_GOV_SANDBOX'])",  # noqa: E501
         ],
         source_root=src_root,
         extra_env={"PYTHONPATH": str(src_root)},
@@ -108,7 +108,7 @@ def test_sandbox_capability_probing_and_isolated_execution(tmp_path: Path) -> No
     # Missing executable handling
     os_err = blocked_exec.run_bounded(
         agent_id="hunter-01",
-        argv=["/nonexistent/binary/arkhon_nope"],
+        argv=["/nonexistent/binary/gencode_gov_nope"],
         source_root=src_root,
         require_network_isolation=False,
     )

@@ -5,7 +5,7 @@ description: >
   scenario-traced negative security tests without false-assurance shortcuts.
 version: 1.1.0
 applicable_to: [all-projects]
-requires: [arkhon-governance]
+requires: [gencode-gov]
 ---
 # Software Testing Skill
 
@@ -22,7 +22,7 @@ A passing test suite that tests nothing is worse than no test suite — it gives
 2. Every public function and critical user or API workflow requires automated behavioral tests.
 3. Every bug fix includes a regression test (`SE-TST-002`).
 4. Production branches exclude undocumented skipped tests (`SE-TST-003`).
-5. Scenario-level traceability in `.arkhon/security-test-matrix.yaml` (`SE-TST-004`) maps each
+5. Scenario-level traceability in `.gencode-gov/security-test-matrix.yaml` (`SE-TST-004`) maps each
    applicable adversarial scenario — unauthenticated requests, horizontal and vertical privilege
    escalation, IDOR, cross-user and cross-tenant isolation, SQL and command and template
    injection, CSRF on cookie-authenticated state changes, rate-limit abuse, and expired or
@@ -54,8 +54,8 @@ A passing test suite that tests nothing is worse than no test suite — it gives
 
 ## Evidence Required
 
-- `normalized-test-execution-report` — `.arkhon/evidence/testing/test-execution-report.json`
-- `security-scenario-traceability-report` — `.arkhon/evidence/testing/security-scenario-traceability.json`
+- `normalized-test-execution-report` — `.gencode-gov/evidence/testing/test-execution-report.json`
+- `security-scenario-traceability-report` — `.gencode-gov/evidence/testing/security-scenario-traceability.json`
 - `critical-functionality-test-matrix` — mapping critical workflows to automated tests
 - `coverage-report` — line and branch coverage
 
@@ -63,12 +63,12 @@ A passing test suite that tests nothing is worse than no test suite — it gives
 
 - Rule domain: `testing` (`SE-TST-001` through `SE-TST-004`)
 - Gate: `testing_gate`
-- Evidence output: `.arkhon/evidence/testing/`
+- Evidence output: `.gencode-gov/evidence/testing/`
 
 ## Reference
 
-- `src/arkhon/verification/runners/test_suite_runner.py` — cross-language test runner
-- `src/arkhon/verification/scenario_verifier.py` — negative-security scenario verifier
+- `src/gencode_gov/verification/runners/test_suite_runner.py` — cross-language test runner
+- `src/gencode_gov/verification/scenario_verifier.py` — negative-security scenario verifier
 - `docs/verification/VERIFICATION_PROFILES.md` — which tests are required per profile
 
 ## Version History

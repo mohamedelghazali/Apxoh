@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.security_audit.coverage import (
+from gencode_gov.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
     build_canonical_coverage_id,
     compare_coverage_ledgers,
 )
-from arkhon.security_audit.taxonomy import (
+from gencode_gov.security_audit.taxonomy import (
     DEFAULT_TAXONOMY,
     AttackClassDefinition,
     AttackClassRegistry,
@@ -184,4 +184,3 @@ def test_coverage_ledger_canonical_ids_reassignment_completeness_and_comparison(
     assert len(delta["status_transitions"]) == 1
     assert delta["status_transitions"][0]["from_status"] == "planned"
     assert delta["status_transitions"][0]["to_status"] == "examined"
-

@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import VerificationError
-from arkhon.evidence.collector import EvidenceCollector
-from arkhon.evidence.store import EvidenceStore
-from arkhon.verification.engine import VerificationEngine
-from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
+from gencode_gov.core.errors import VerificationError
+from gencode_gov.evidence.collector import EvidenceCollector
+from gencode_gov.evidence.store import EvidenceStore
+from gencode_gov.verification.engine import VerificationEngine
+from gencode_gov.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
 
 class FakePassRunner(Runner):
@@ -55,7 +55,7 @@ class FakeCrashedRunner(Runner):
 
 @pytest.fixture
 def project(tmp_path: Path) -> Path:
-    (tmp_path / ".arkhon" / "evidence").mkdir(parents=True)
+    (tmp_path / ".gencode-gov" / "evidence").mkdir(parents=True)
     return tmp_path
 
 
@@ -128,8 +128,8 @@ def test_engine_writes_evidence(engine: VerificationEngine, project: Path) -> No
         runners=[FakePassRunner()],
         project_root=project,
     )
-    assert run.evidence_id.startswith("EVID-ARKHON-")
-    assert list((project / ".arkhon" / "evidence" / "testing").glob("*.json"))
+    assert run.evidence_id.startswith("EVID-GENCODE-GOV-")
+    assert list((project / ".gencode-gov" / "evidence" / "testing").glob("*.json"))
 
 
 class FakeInvalidResultRunner(Runner):
@@ -152,7 +152,7 @@ def test_engine_blocks_invalid_runner_result_and_persists_diagnostic(
     )
     assert run.status == "BLOCKED"
     assert "invalid result object" in run.results[0].reason
-    diagnostics = list((project / ".arkhon" / "reports" / "verification").glob("*.json"))
+    diagnostics = list((project / ".gencode-gov" / "reports" / "verification").glob("*.json"))
     assert diagnostics
 
 

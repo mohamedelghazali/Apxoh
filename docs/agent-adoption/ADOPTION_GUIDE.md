@@ -25,7 +25,7 @@ GENCODE-GOV must not claim an integration is verified merely because configurati
 ## 2. Prerequisites
 
 - GENCODE-GOV CLI installed from the repository root.
-- A valid `.arkhon/project.yaml` in the governed project.
+- A valid `.gencode-gov/project.yaml` in the governed project.
 - TSAR available for security verification where the security gate requires it.
 
 The `doctor` command checks installation prerequisites; a successful doctor run alone does not prove agent adoption or behavioral compliance.
@@ -34,7 +34,7 @@ The `doctor` command checks installation prerequisites; a successful doctor run 
 
 ### 3.1 Models
 
-Model runtime adapters and their prompt resources are packaged under `src/arkhon/integrations/models/<model>/`. Registry paths must point to these runtime adapters. Provider connectivity and model behavior must be tested separately for an exact model/version and configuration.
+Model runtime adapters and their prompt resources are packaged under `src/gencode_gov/integrations/models/<model>/`. Registry paths must point to these runtime adapters. Provider connectivity and model behavior must be tested separately for an exact model/version and configuration.
 
 Adoption procedure, where the integration exists:
 
@@ -75,7 +75,7 @@ GENCODE-GOV is designed to provide independent verification, structured remediat
 
 ## 6. Adoption Checklist
 
-- [ ] `.arkhon/project.yaml` exists and is valid.
+- [ ] `.gencode-gov/project.yaml` exists and is valid.
 - [ ] Project profile is explicitly chosen or resolved by a verified mechanism.
 - [ ] `AGENTS.md` is present where required.
 - [ ] `SECURITY_AGENTS.md` is present where required.
@@ -92,7 +92,7 @@ GENCODE-GOV is designed to provide independent verification, structured remediat
 - `docs/agent-adoption/COMPATIBILITY_MATRIX.md`
 - `AGENTS.md`
 - `SECURITY_AGENTS.md`
-- `src/arkhon/integrations/models/<model>/README.md` (if present)
+- `src/gencode_gov/integrations/models/<model>/README.md` (if present)
 - `integrations/platforms/github-copilot/README.md`
 
 ---

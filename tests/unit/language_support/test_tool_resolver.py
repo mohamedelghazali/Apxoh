@@ -1,10 +1,10 @@
-"""Tests for arkhon.language_support.tool_resolver."""
+"""Tests for gencode_gov.language_support.tool_resolver."""
 
 from __future__ import annotations
 
 from unittest.mock import patch
 
-from arkhon.language_support.tool_resolver import (
+from gencode_gov.language_support.tool_resolver import (
     ToolStatus,
     _check_tool,
     resolve_tools,
@@ -41,8 +41,8 @@ def test_check_tool_version_unknown() -> None:
 
 
 def test_resolve_tools_aggregates() -> None:
-    with patch("arkhon.language_support.tool_resolver._check_tool") as mock_check:
-        from arkhon.language_support.tool_resolver import ToolCheck
+    with patch("gencode_gov.language_support.tool_resolver._check_tool") as mock_check:
+        from gencode_gov.language_support.tool_resolver import ToolCheck
 
         mock_check.side_effect = [
             ToolCheck(name="a", status=ToolStatus.AVAILABLE, version="1.0"),
@@ -56,8 +56,8 @@ def test_resolve_tools_aggregates() -> None:
 
 
 def test_resolve_tools_all_available() -> None:
-    with patch("arkhon.language_support.tool_resolver._check_tool") as mock_check:
-        from arkhon.language_support.tool_resolver import ToolCheck
+    with patch("gencode_gov.language_support.tool_resolver._check_tool") as mock_check:
+        from gencode_gov.language_support.tool_resolver import ToolCheck
 
         mock_check.side_effect = [
             ToolCheck(name="a", status=ToolStatus.AVAILABLE, version="1.0"),
@@ -69,8 +69,8 @@ def test_resolve_tools_all_available() -> None:
 
 
 def test_get_by_name() -> None:
-    with patch("arkhon.language_support.tool_resolver._check_tool") as mock_check:
-        from arkhon.language_support.tool_resolver import ToolCheck
+    with patch("gencode_gov.language_support.tool_resolver._check_tool") as mock_check:
+        from gencode_gov.language_support.tool_resolver import ToolCheck
 
         mock_check.return_value = ToolCheck(name="ruff", status=ToolStatus.AVAILABLE, version="0.7")
         result = resolve_tools("python", ["ruff"])

@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.cli import main
-from arkhon.evidence.store import EvidenceStore
+from gencode_gov.cli import main
+from gencode_gov.evidence.store import EvidenceStore
 
 
 def _exception(
@@ -56,7 +56,7 @@ def test_status_text_summarizes_evidence(
             domain,
             {
                 "evidence_id": evidence_id,
-                "source": "arkhon",
+                "source": "gencode-gov",
                 "source_version": "0.1.0",
                 "commit_sha": "a" * 40,
                 "executed_at": "2026-11-01T00:00:00Z",
@@ -78,9 +78,7 @@ def test_status_text_summarizes_evidence(
     assert "other: 1" in output
 
 
-def test_status_rejects_missing_project(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_status_rejects_missing_project(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["status", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
 
@@ -88,7 +86,7 @@ def test_status_rejects_missing_project(
 def test_status_fails_closed_on_tampered_evidence(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    evidence = tmp_path / ".arkhon" / "evidence" / "testing"
+    evidence = tmp_path / ".gencode-gov" / "evidence" / "testing"
     evidence.mkdir(parents=True)
     (evidence / "EVID-INVALID!.json").write_text("{}", encoding="utf-8")
     assert main(["status", str(tmp_path)]) == 1
@@ -98,24 +96,20 @@ def test_status_fails_closed_on_tampered_evidence(
 def test_status_reports_invalid_project_declaration(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    declaration = tmp_path / ".arkhon" / "project.yaml"
+    declaration = tmp_path / ".gencode-gov" / "project.yaml"
     declaration.parent.mkdir()
     declaration.write_text("[", encoding="utf-8")
     assert main(["status", str(tmp_path)]) == 1
     assert "could not be computed" in capsys.readouterr().err
 
 
-def test_exceptions_list_empty_registry(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_exceptions_list_empty_registry(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     registry = tmp_path / "empty.yaml"
     assert main(["exceptions", "list", "--registry", str(registry)]) == 0
     assert "No exceptions registered" in capsys.readouterr().out
 
 
-def test_exceptions_list_json_and_text(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_exceptions_list_json_and_text(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     registry = tmp_path / "registry.yaml"
     registry.write_text(
         yaml.safe_dump(
@@ -131,9 +125,7 @@ def test_exceptions_list_json_and_text(
     )
     assert main(["exceptions", "list", "--registry", str(registry), "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
-    assert [item["status"] for item in data["exceptions"]] == [
-        "active", "expired", "revoked"
-    ]
+    assert [item["status"] for item in data["exceptions"]] == ["active", "expired", "revoked"]
     assert data["exceptions"][0]["active"] is True
     assert data["exceptions"][1]["active"] is False
     assert main(["exceptions", "list", "--registry", str(registry)]) == 0
@@ -151,7 +143,7 @@ def test_exceptions_list_uses_repository_default(
     path = tmp_path / "system" / "policies" / "exceptions" / "registry.yaml"
     path.parent.mkdir(parents=True)
     path.write_text("version: 1\nexceptions: []\n", encoding="utf-8")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: tmp_path)
     assert main(["exceptions", "list"]) == 0
     assert "No exceptions registered" in capsys.readouterr().out
 
@@ -163,7 +155,6 @@ def test_exceptions_list_rejects_invalid_yaml(
     registry.write_text("exceptions: [", encoding="utf-8")
     assert main(["exceptions", "list", "--registry", str(registry)]) == 1
     assert "cannot load exception registry" in capsys.readouterr().err
-
 
 
 def test_exceptions_list_rejects_non_mapping_registry(

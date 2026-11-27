@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from arkhon.integrations.models import (
+from gencode_gov.integrations.models import (
     get_model_adapter,
     list_models,
 )
-from arkhon.integrations.platforms import (
+from gencode_gov.integrations.platforms import (
     get_platform_adapter,
     list_platforms,
 )

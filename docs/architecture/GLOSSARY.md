@@ -178,7 +178,7 @@ A level must be supported by evidence. It must not be inferred from a manifest e
 
 **`schemas/`** — JSON Schemas for rules, evidence, findings, projects, and related documents.
 
-**`src/arkhon/`** — The Python engine and CLI package.
+**`src/gencode_gov/`** — The Python engine and CLI package.
 
 **`skills/`** — Reusable capabilities and instructions for AI agents.
 
@@ -188,7 +188,7 @@ A level must be supported by evidence. It must not be inferred from a manifest e
 
 **`tests/`** — Unit, integration, security, language, and fixture tests.
 
-**`.arkhon/`** — GENCODE-GOV's project-local governance state and evidence area. Runtime-generated evidence should not be treated as immutable merely because it is stored here.
+**`.gencode-gov/`** — GENCODE-GOV's project-local governance state and evidence area. Runtime-generated evidence should not be treated as immutable merely because it is stored here.
 
 ---
 

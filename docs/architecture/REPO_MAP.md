@@ -12,7 +12,7 @@ This map describes repository paths present in the current source tree. It is a 
 
 ~~~text
 GENCODE-GOV/
-├── .arkhon/                 # Repository self-governance configuration/state
+├── .gencode-gov/                 # Repository self-governance configuration/state
 ├── .devcontainer/           # Development-container configuration
 ├── .github/                 # Workflows, templates, CODEOWNERS and automation
 ├── agents/                  # Agent role definitions and bindings
@@ -30,7 +30,7 @@ GENCODE-GOV/
 ├── schemas/                 # JSON Schema contracts
 ├── scripts/                 # Validation and maintenance automation
 ├── skills/                  # Reusable agent-consumed skills
-├── src/arkhon/              # Python package and CLI implementation
+├── src/gencode_gov/              # Python package and CLI implementation
 ├── standards/               # Standards references
 ├── system/                  # Charter, governance, lifecycle and policies
 ├── tests/                   # Unit, integration, security and language tests
@@ -83,7 +83,7 @@ The repository's rule test currently discovers rules under rules/; do not infer 
 
 ## 6. Python Implementation
 
-The package is under src/arkhon/:
+The package is under src/gencode_gov/:
 
 | Package | Responsibility |
 | :--- | :--- |
@@ -100,13 +100,13 @@ The package is under src/arkhon/:
 | integrations/ | Agent/model adapters and TSAR adapter/verifier |
 | reporting/ | JSON, Markdown, HTML reporting and templates |
 
-The package exposes the arkhon command through pyproject.toml. GENCODE-GOV is the product name; arkhon is the Python package and CLI identifier.
+The package exposes the gencode-gov command through pyproject.toml. GENCODE-GOV is the product name; gencode-gov is the Python package and CLI identifier.
 
 ## 7. Agent Skills, Roles, and Integrations
 
 - skills/ contains eight skill directories covering governance, requirements, architecture, secure engineering, testing, performance, reliability, and release readiness.
 - agents/ contains nine role directories, plus the role registry.
-- integrations/models/ contains model-provider integration packages, including Gemini and GPT; the eight-model implementation registry is maintained separately in src/arkhon/integrations/models/.
+- integrations/models/ contains model-provider integration packages, including Gemini and GPT; the eight-model implementation registry is maintained separately in src/gencode_gov/integrations/models/.
 - integrations/platforms/ contains platform integrations such as GitHub Copilot.
 - integrations/generic-agents/ contains generic-agent guidance and the provider/tool adapters grouped by agent: Aider, Amazon Q, Claude Code, Cline, Codex OpenAI, Continue, Cursor, Devin, Gemini CLI, JetBrains AI, Replit Agent, Sourcegraph Cody, Tabnine, and Windsurf.
 - integrations/tsar/ contains the separately versioned TSAR security-authority contract, adapter, verifier, and integration tests.

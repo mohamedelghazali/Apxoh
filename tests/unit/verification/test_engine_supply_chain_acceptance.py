@@ -10,15 +10,15 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.evidence.collector import EvidenceCollector
-from arkhon.evidence.store import EvidenceStore
-from arkhon.evidence.supply_chain import (
+from gencode_gov.evidence.collector import EvidenceCollector
+from gencode_gov.evidence.store import EvidenceStore
+from gencode_gov.evidence.supply_chain import (
     identity_regexp_for_tag,
     OIDC_ISSUER,
     SOURCE_URI,
 )
-from arkhon.verification.engine import VerificationEngine
-from arkhon.verification.runners.base import Runner, RunnerOutcome, RunnerResult
+from gencode_gov.verification.engine import VerificationEngine
+from gencode_gov.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
 COMMIT = "a" * 40
 SOURCE_TAG = "v1.2.3"
@@ -40,7 +40,7 @@ def _fixture(root: Path) -> list[Path]:
         path.write_text(value, encoding="utf-8")
         files[key] = path
 
-    sbom = root / ".arkhon" / "reports" / "supply-chain" / f"sbom-{COMMIT[:12]}.cdx.json"
+    sbom = root / ".gencode-gov" / "reports" / "supply-chain" / f"sbom-{COMMIT[:12]}.cdx.json"
     sbom.parent.mkdir(parents=True, exist_ok=True)
     sbom.write_text(
         json.dumps(
@@ -52,7 +52,7 @@ def _fixture(root: Path) -> list[Path]:
                     "component": {
                         "type": "application",
                         "name": "GENCODE-GOV",
-                        "properties": [{"name": "arkhon:commit-sha", "value": COMMIT}],
+                        "properties": [{"name": "gencode-gov:commit-sha", "value": COMMIT}],
                     }
                 },
             }
@@ -108,7 +108,7 @@ def _engine(root: Path) -> VerificationEngine:
 def _enable_verifiers(monkeypatch: pytest.MonkeyPatch, *, returncode: int = 0) -> list[list[str]]:
     calls: list[list[str]] = []
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.shutil.which",
+        "gencode_gov.evidence.supply_chain.shutil.which",
         lambda name: f"/usr/bin/{name}",
     )
 
@@ -120,7 +120,7 @@ def _enable_verifiers(monkeypatch: pytest.MonkeyPatch, *, returncode: int = 0) -
             command, returncode, "verified", "invalid" if returncode else ""
         )
 
-    monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
+    monkeypatch.setattr("gencode_gov.evidence.supply_chain.subprocess.run", run)
     return calls
 
 
@@ -188,7 +188,6 @@ def test_engine_blocks_when_crypto_verification_fails(
     assert run.status == "BLOCKED"
     assert record.status == "BLOCKED"
     assert record.data["summary"]["blocked"] == 1
-
 
 
 def test_engine_blocks_invalid_commit_bound_sbom(tmp_path: Path) -> None:

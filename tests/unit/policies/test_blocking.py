@@ -1,4 +1,4 @@
-"""Tests for arkhon.policies.blocking."""
+"""Tests for gencode_gov.policies.blocking."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import GovernanceError
-from arkhon.governance.policy_loader import Policy, PolicyRegistry
-from arkhon.policies.blocking import (
+from gencode_gov.core.errors import GovernanceError
+from gencode_gov.governance.policy_loader import Policy, PolicyRegistry
+from gencode_gov.policies.blocking import (
     BlockingPolicyEvaluator,
     BlockingResult,
     BlockingViolation,

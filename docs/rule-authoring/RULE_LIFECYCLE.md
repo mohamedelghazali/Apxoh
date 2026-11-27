@@ -160,8 +160,8 @@ Example format:
 
 - `docs/rule-authoring/HOW_TO_WRITE_A_RULE.md` — authoring guidance.
 - `schemas/rule.schema.json` — machine-readable rule contract.
-- `src/arkhon/rules/validator.py` — validation behavior.
-- `src/arkhon/rules/registry.py` — registry behavior.
+- `src/gencode_gov/rules/validator.py` — validation behavior.
+- `src/gencode_gov/rules/registry.py` — registry behavior.
 
 ---
 

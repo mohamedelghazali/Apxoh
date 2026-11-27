@@ -48,8 +48,8 @@ jobs:
           python - "$fixture" <<'PY'
           import sys
           from pathlib import Path
-          from arkhon.verification.runners.base import RunnerOutcome
-          from arkhon.verification.runners.tsar_runner import TsarRunner
+          from gencode_gov.verification.runners.base import RunnerOutcome
+          from gencode_gov.verification.runners.tsar_runner import TsarRunner
 
           root = Path(sys.argv[1]).resolve()
           result = TsarRunner().run(root)

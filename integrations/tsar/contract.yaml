@@ -14,7 +14,7 @@ provider:
     - static_security_review
 consumer:
   name: GENCODE-GOV
-  identifier: arkhon
+  identifier: gencode-gov
   role: "Governance and release decision authority"
   owns: [security_policy, gate_placement, evidence_acceptance, release_decision]
 handshake:

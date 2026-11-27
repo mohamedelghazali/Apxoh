@@ -37,7 +37,7 @@ The CLI invocation is exercised against the pinned TSAR source revision in the d
 1. Resolve the project commit from Git.
 2. Invoke TSAR with the project root using its supported `scan` command.
 3. Parse the generated SARIF 2.1.0 file and verify the driver identity and version.
-4. Persist the raw response under .arkhon/evidence/security/.
+4. Persist the raw response under .gencode-gov/evidence/security/.
 5. Validate required fields, commit binding, semantic version, timezone-aware timestamp, freshness, required rule IDs, artifact paths, and SHA-256 hashes.
 6. Reject unresolved critical or high findings.
 7. Only a verified PASS payload can produce a PASS runner outcome. TSAR FAIL remains FAIL; unavailable or unverifiable evidence remains BLOCKED.
@@ -91,9 +91,9 @@ The `tsar-e2e` workflow job installs the pinned TSAR source checkout, runs the a
 
 - integrations/tsar/contract.yaml — desired integration contract
 - integrations/tsar/evidence-mapping.yaml — proposed rule mapping
-- src/arkhon/integrations/tsar/adapter.py — CLI adapter
-- src/arkhon/integrations/tsar/verifier.py — evidence verifier
-- src/arkhon/verification/runners/tsar_runner.py — verification runner
+- src/gencode_gov/integrations/tsar/adapter.py — CLI adapter
+- src/gencode_gov/integrations/tsar/verifier.py — evidence verifier
+- src/gencode_gov/verification/runners/tsar_runner.py — verification runner
 - docs/threat-model/GENCODE_GOV_THREAT_MODEL.md — trust-boundary baseline
 - SECURITY_AGENTS.md — agent and evidence-tampering threat model
 

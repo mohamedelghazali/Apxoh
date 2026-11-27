@@ -4,7 +4,7 @@
 Usage:
     python scripts/release/release.py <version>
 
-Updates VERSION, pyproject.toml, src/arkhon/__init__.py, and CHANGELOG.md.
+Updates VERSION, pyproject.toml, src/gencode_gov/__init__.py, and CHANGELOG.md.
 It does not commit, tag, or push.
 """
 
@@ -21,7 +21,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERSION_FILE = REPO_ROOT / "VERSION"
 PYPROJECT = REPO_ROOT / "pyproject.toml"
-INIT_FILE = REPO_ROOT / "src" / "arkhon" / "__init__.py"
+INIT_FILE = REPO_ROOT / "src" / "gencode_gov" / "__init__.py"
 CHANGELOG = REPO_ROOT / "CHANGELOG.md"
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(-[a-z0-9.]+)?$")
 
@@ -66,7 +66,7 @@ def update_init(version: str) -> None:
         flags=re.MULTILINE,
     )
     if updated == text:
-        fail("could not update __version__ in src/arkhon/__init__.py")
+        fail("could not update __version__ in src/gencode_gov/__init__.py")
     INIT_FILE.write_text(updated, encoding="utf-8")
     print(f"[OK] __init__.py → {pep440(version)}")
 
@@ -107,7 +107,9 @@ def run_release_check() -> None:
 def print_next_steps(version: str) -> None:
     print("\nNext steps:")
     print("  1. Review changes: git diff")
-    print("  2. Add files:      git add VERSION pyproject.toml src/arkhon/__init__.py CHANGELOG.md")
+    print(
+        "  2. Add files:      git add VERSION pyproject.toml src/gencode_gov/__init__.py CHANGELOG.md"  # noqa: E501
+    )
     print(f'  3. Commit:         git commit -m "release: v{version}"')
     print(f'  4. Tag:            git tag -s v{version} -m "GENCODE-GOV v{version}"')
     print(f"  5. Push:           git push origin v{version}")

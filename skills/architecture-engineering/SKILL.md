@@ -5,7 +5,7 @@ description: >
   model. Ensures the architecture satisfies requirements and is defensible.
 version: 1.0.0
 applicable_to: [all-projects]
-requires: [arkhon-governance, requirements-engineering]
+requires: [gencode-gov, requirements-engineering]
 ---
 
 # Architecture Engineering Skill
@@ -62,7 +62,7 @@ A threat model must include:
 - Rule domain: `architecture`
 - Gate: `architecture_gate`
 - Evidence type: `architecture-review`, `threat-model`
-- Output goes to `.arkhon/evidence/architecture/`
+- Output goes to `.gencode-gov/evidence/architecture/`
 
 ## Reference
 

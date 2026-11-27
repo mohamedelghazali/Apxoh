@@ -41,7 +41,7 @@ An agent is not malicious by design. But an agent can become hostile through:
 
 A hostile agent is assumed to have, unless the deployment demonstrably restricts them:
 
-- **Filesystem access** — read and write to the project directory, potentially including `.arkhon/`, `rules/`, `system/`, and evidence locations
+- **Filesystem access** — read and write to the project directory, potentially including `.gencode-gov/`, `rules/`, `system/`, and evidence locations
 - **Network access** — the ability to reach external URLs
 - **Tool access** — the ability to invoke tools exposed by its execution environment (shell, git, package managers, MCP servers)
 - **Prompt understanding** — the ability to read, parse, and act on text it encounters
@@ -60,18 +60,18 @@ These are threat-model assumptions, not guarantees about every runtime. Actual p
 | :--- | :--- | :--- | :--- |
 | A1 | Modify a rule to weaken it | `rules/` | Low |
 | A2 | Add a rule that exempts itself | `rules/`, `system/policies/` | Low |
-| A3 | Modify evidence to flip `FAIL` → `PASS` | `.arkhon/evidence/` | Low |
+| A3 | Modify evidence to flip `FAIL` → `PASS` | `.gencode-gov/evidence/` | Low |
 | A4 | Delete a failing test | `tests/` | Low |
 | A5 | Delete a check from CI workflow | `.github/workflows/` | Low |
 | A6 | Modify a schema to allow invalid data | `schemas/` | Medium |
-| A7 | Fabricate a passing test report | `.arkhon/evidence/` | Medium |
+| A7 | Fabricate a passing test report | `.gencode-gov/evidence/` | Medium |
 | A8 | Bypass a blocking policy by editing it | `system/policies/blocking/` | Low |
 | A9 | Disable a security scanner | configuration files | Low |
 | A10 | Exfiltrate secrets via prompts or tools | environment / network | Medium |
 | A11 | Modify `manifest/` to change system identity | `manifest/` | Low |
 | A12 | Inject prompt instructions into a file | project files | Low |
 | A13 | Run `git push --force` to rewrite history | Git repository | Medium |
-| A14 | Delete or alter state records | `.arkhon/state/` | Low |
+| A14 | Delete or alter state records | `.gencode-gov/state/` | Low |
 | A15 | Modify `AGENTS.md` or `SECURITY_AGENTS.md` to remove constraints | root documentation | Low |
 
 ---
@@ -94,8 +94,8 @@ Governance files are treated as **protected from agent modification**. Filesyste
 | `AGENTS.md` | **Protected** | CODEOWNERS and maintainer review |
 | `SECURITY.md`, `SECURITY_AGENTS.md` | **Protected** | CODEOWNERS and maintainer review |
 | `.github/workflows/` | **Protected** | CODEOWNERS and protected-branch controls |
-| `.arkhon/evidence/` | **Append-only target** | Evidence records must be immutable or tamper-evident |
-| `.arkhon/state/` | **Append-only target** | State transitions must preserve prior records |
+| `.gencode-gov/evidence/` | **Append-only target** | Evidence records must be immutable or tamper-evident |
+| `.gencode-gov/state/` | **Append-only target** | State transitions must preserve prior records |
 
 **Required enforcement design:**
 - The GENCODE-GOV CLI should verify protected governance files against trusted expected SHA-256 digests before security-critical operations.
@@ -292,7 +292,7 @@ Any failure in a required verification step must produce `BLOCKED` with a specif
 ### 4.3 What Happens on Detection
 
 1. The affected gate becomes `BLOCKED`.
-2. A security incident record is created in the configured incident store (target path: `.arkhon/state/incidents.log`).
+2. A security incident record is created in the configured incident store (target path: `.gencode-gov/state/incidents.log`).
 3. The designated Security Lead is notified through a configured channel.
 4. Human review is required before the affected gate can be reconsidered.
 5. The potentially compromised revision is quarantined or marked as untrusted; it is not silently deleted.
@@ -377,7 +377,7 @@ escalation:
   severity: critical
   agent_id: declared-agent-identity
   evidence:
-    - path: .arkhon/evidence/security/tsar-scan.json
+    - path: .gencode-gov/evidence/security/tsar-scan.json
       expected_sha256: "<expected-digest>"
       actual_sha256: "<observed-digest>"
   required_reviewer: security-lead
@@ -424,7 +424,7 @@ Where enforcement is implemented, denylisted agent identities must be blocked fr
 
 ### 7.3 Denylist Location
 
-Illustrative configuration in `.arkhon/config.yaml`:
+Illustrative configuration in `.gencode-gov/config.yaml`:
 
 ```yaml
 agent_denylist:

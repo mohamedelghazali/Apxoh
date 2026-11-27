@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import ConfigError
-from arkhon.projects.matcher import (
+from gencode_gov.core.errors import ConfigError
+from gencode_gov.projects.matcher import (
     Match,
     _read_declared_profile,
     match_profile,
@@ -14,13 +14,13 @@ from arkhon.projects.matcher import (
 
 
 def test_match_profile_explicit_and_default(tmp_path: Path) -> None:
-    (tmp_path / ".arkhon").mkdir()
-    (tmp_path / ".arkhon" / "project.yaml").write_text(
+    (tmp_path / ".gencode-gov").mkdir()
+    (tmp_path / ".gencode-gov" / "project.yaml").write_text(
         "project:\n  profile: enterprise\n", encoding="utf-8"
     )
     explicit = match_profile(tmp_path)
-    assert explicit == Match("enterprise", "declared in .arkhon/project.yaml", True)
-    (tmp_path / ".arkhon" / "project.yaml").unlink()
+    assert explicit == Match("enterprise", "declared in .gencode-gov/project.yaml", True)
+    (tmp_path / ".gencode-gov" / "project.yaml").unlink()
     assert match_profile(tmp_path).profile == "universal"
 
 
@@ -52,7 +52,7 @@ def test_profile_inference_compose_and_openapi_variants(tmp_path: Path) -> None:
 
 
 def test_profile_declaration_errors_and_validation(tmp_path: Path) -> None:
-    folder = tmp_path / ".arkhon"
+    folder = tmp_path / ".gencode-gov"
     folder.mkdir()
     declaration = folder / "project.yaml"
     declaration.write_text("- invalid", encoding="utf-8")

@@ -7,17 +7,22 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.core.errors import ConfigError, EvidenceError, EvidenceTamperedError, GovernanceError
-from arkhon.evidence.store import EvidenceStore
-from arkhon.governance.enforcement import EnforcementEngine, RuleOutcome
-from arkhon.projects.loader import (
+from gencode_gov.core.errors import (
+    ConfigError,
+    EvidenceError,
+    EvidenceTamperedError,
+    GovernanceError,
+)
+from gencode_gov.evidence.store import EvidenceStore
+from gencode_gov.governance.enforcement import EnforcementEngine, RuleOutcome
+from gencode_gov.projects.loader import (
     _load_yaml,
     _validate_profile_data,
     list_profiles,
     load_profile,
 )
-from arkhon.rules.loader import Rule
-from arkhon.rules.registry import RuleRegistry
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.registry import RuleRegistry
 
 
 def _store_evidence(
@@ -30,7 +35,7 @@ def _store_evidence(
     artifact.write_text(f"evidence for {evidence_id}", encoding="utf-8")
     return {
         "evidence_id": evidence_id,
-        "source": "arkhon",
+        "source": "gencode-gov",
         "source_version": "0.1.0",
         "commit_sha": "a" * 40,
         "executed_at": executed_at,

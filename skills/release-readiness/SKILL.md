@@ -5,7 +5,7 @@ description: >
   observable, and recoverable software before release.
 version: 1.1.0
 applicable_to: [all-projects]
-requires: [arkhon-governance, software-testing, secure-software-engineering, reliability-engineering]
+requires: [gencode-gov, software-testing, secure-software-engineering, reliability-engineering]
 ---
 
 # Release Readiness Skill

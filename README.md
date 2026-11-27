@@ -11,24 +11,79 @@
 [![Self-Governance](https://github.com/mohamedelghazali/GENCODE-GOV/actions/workflows/self-test.yml/badge.svg?branch=main)](https://github.com/mohamedelghazali/GENCODE-GOV/actions/workflows/self-test.yml)
 [![Installation Test](https://github.com/mohamedelghazali/GENCODE-GOV/actions/workflows/installation-test.yml/badge.svg?branch=main)](https://github.com/mohamedelghazali/GENCODE-GOV/actions/workflows/installation-test.yml)
 
----
-
 ## 1. Overview
 
-**GENCODE-GOV** is a local-first and CI-enforced engineering governance, security auditing, and deterministic verification framework purpose-built for software authored, refactored, or maintained with AI coding agents. It pairs structured, machine-readable engineering rules, specialist agent role contracts, and reusable domain skills with an independent Python verification engine that binds every claim to tamper-evident, commit-pinned evidence before any governance gate can pass.
+**GENCODE-GOV** is a local-first and CI-enforced engineering governance, security auditing, and deterministic verification framework purpose-built for software authored, refactored, or maintained with AI coding agents. It pairs machine-readable engineering rules, portable Agent Skills, and specialist role contracts with an independent Python verification engine that binds every readiness claim to tamper-evident, commit-pinned evidence before any governance gate can pass.
 
-GENCODE-GOV governs itself under its own enterprise profile, schemas, rule catalog, and multi-platform CI gates.
+GENCODE-GOV governs itself under its own enterprise profile (`.gencode-gov/project.yaml`), JSON Schemas, rule catalog, and multi-platform CI gates.
 
-## 2. The Engineering Problem Addressed by AI-Generated Software
+## 2. Adopting GENCODE-GOV in AI Agent Workflows
 
-AI coding agents dramatically accelerate code generation, scaffolding, and refactoring across polyglot repositories, yet introduce recurring systemic engineering risks:
+You can adopt GENCODE-GOV in AI coding agents using either **Persistent Installation** (recommended for ongoing engineering work across repositories and sessions) or **Conversation-Only Adoption** (recommended for immediate, zero-install use in any chat or IDE session).
 
-- **Plausible Synthesis Without Proof**: Generated implementations frequently compile or pass superficial happy-path checks while omitting boundary validation, concurrency safety, error handling, or negative tests.
-- **Unverified Self-Attestation**: Coding agents routinely claim tests passed, security invariants hold, or all files were reviewed without independent execution evidence or complete scope tracking.
-- **Cross-Boundary Security Blind Spots**: Multi-file trust boundaries, unsafe deserialization/execution sinks, hardcoded credentials, CI workflow injection vectors, and supply-chain provenance require adversarial verification independent of the authoring session.
-- **Architectural & Governance Drift**: Without machine-validated schemas, commit-bound evidence, and fail-closed release gates, agent-generated changes erode architectural contracts, observability, and operational readiness over time.
+| Adoption Method | When to Use | Persistence Scope |
+| :--- | :--- | :--- |
+| **A. Persistent Installation** | Daily software development with Skills-compatible coding agents (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Cline, Windsurf, and others) or repositories standardized on GENCODE-GOV | Across future relevant conversations (global `-g`) or pinned per repository (`.agents/skills/` + `skills-lock.json`) |
+| **B. Conversation-Only Adoption** | Quick evaluations, locked-down environments without Node.js/CLI access, or web/chat agents without local skill directories | Current conversation only |
 
-## 3. Vision, Mission & Governance Philosophy
+### A. Persistent Installation
+
+GENCODE-GOV ships an open Agent Skills package (`skills/gencode-gov/` plus 9 domain-specialist skills) compatible with the Skills CLI (`npx skills`, requiring Node.js `>=22.20`). Installing the `gencode-gov` skill copies `SKILL.md` **together with its bundled governance references** (`references/OPERATIONAL_CONTRACT.md`, `references/SECURITY_POSTURE.md`, `references/ENGINEERING_CHARTER_AND_DOMAINS.md`, and `references/VERIFICATION_AND_ADOPTION.md`), exposing the actual operational contract, security rules, and fail-closed verification procedures rather than just this README.
+
+Run from a terminal:
+
+```bash
+# 1. Interactive installation (choose skills and target AI coding agents)
+npx skills add https://github.com/mohamedelghazali/GENCODE-GOV
+
+# 2. Persistent user-level (global) installation of the core GENCODE-GOV skill
+npx skills add https://github.com/mohamedelghazali/GENCODE-GOV --skill gencode-gov -g
+
+# 3. Install the complete 10-skill GENCODE-GOV governance & assurance suite globally
+npx skills add https://github.com/mohamedelghazali/GENCODE-GOV --skill '*' -g
+
+# 4. Non-interactive global install targeting specific coding agents
+npx skills add https://github.com/mohamedelghazali/GENCODE-GOV --skill '*' -a claude-code -a codex -a cursor -a gemini-cli -g -y
+
+# 5. Inspect available repository skills or update globally installed skills
+npx skills add https://github.com/mohamedelghazali/GENCODE-GOV --list
+npx skills list -g
+npx skills update -g
+```
+
+#### Maintaining Persistent Adoption Across Environments
+
+- **Global User-Scope Skills (`-g` / `--global`)**: Installs into user-level agent skill directories (such as `~/.claude/skills/gencode-gov`, `~/.codex/skills/gencode-gov`, `~/.cursor/skills/gencode-gov`, and `~/.gemini/skills/gencode-gov`), allowing compatible skill-aware agents to automatically discover and apply GENCODE-GOV across future relevant software engineering tasks and projects.
+- **Repository-Committed Skills (Project Scope)**: Omitting `-g` writes `.agents/skills/` and pins commit and content SHA-256 digests in `skills-lock.json` so every contributor and CI job shares the exact same governance skill version.
+- **Persistent Agent Instruction Files**: For agents that load workspace or user-level instruction files, stage the governance pack into a target repository with `gencode-gov install --scope project --project .` (creating `.gencode-gov/agent-pack/`) or reference GENCODE-GOV in root `AGENTS.md`, `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `.cursor/rules/`, or `.github/copilot-instructions.md`.
+- **Scope Honesty**: Persistent skill discovery and automatic activation depend on each coding agent's supported skill mechanism and local configuration. Agents that do not support the Agent Skills specification or persistent instruction files require explicit per-session prompting (Method B), and deterministic gate enforcement always requires running independent verification commands (`gencode-gov verify` / `assess` / `audit` or CI).
+
+### B. Conversation-Only Adoption
+
+Paste the following prompt into any AI coding agent at the start of a session to adopt GENCODE-GOV for the current conversation without installing anything permanently:
+
+```text
+Adopt GENCODE-GOV: https://github.com/mohamedelghazali/GENCODE-GOV
+
+Retrieve and consult the repository's official governance instructions and applicable engineering rules. Apply GENCODE-GOV throughout this engineering task, including planning, design, implementation, security, testing, independent verification, and reporting, as relevant to the task.
+
+Verify repository access and the applicable instructions before proceeding. Follow the framework's actual requirements, fail-closed controls, and verification procedures. Do not claim compliance, execution, or verification without evidence.
+
+Keep GENCODE-GOV active as the governing engineering framework throughout this conversation. If direct access is unavailable, report the limitation explicitly and do not fabricate compliance.
+```
+
+*(If Node.js `>=22.20` is available locally, you can also emit the compiled skill prompt directly without installing via `npx skills use https://github.com/mohamedelghazali/GENCODE-GOV --skill gencode-gov`.)*
+
+## 3. The Engineering Problem Addressed by AI-Generated Software
+
+AI coding agents accelerate code generation and refactoring across polyglot repositories, yet introduce recurring engineering risks:
+
+- **Plausible Synthesis Without Proof**: Generated implementations often pass happy-path checks while omitting boundary validation, concurrency safety, error handling, or negative security tests.
+- **Unverified Self-Attestation**: Coding agents frequently claim tests passed, security invariants hold, or all files were reviewed without independent execution evidence.
+- **Cross-Boundary Security Blind Spots**: Multi-file trust boundaries, unsafe deserialization or execution sinks, hardcoded credentials, CI injection vectors, and supply-chain provenance require adversarial verification independent of the authoring session.
+- **Architectural & Governance Drift**: Without machine-validated schemas, commit-bound evidence, and fail-closed release gates, agent-generated changes erode architectural contracts, observability, and operational readiness.
+
+## 4. Vision, Mission & Governance Philosophy
 
 - **Official Definition**: *An Engineering Governance and Deterministic Verification Framework for Code, Applications, and Systems Generated by AI Coding Agents.*
 - **Official Slogan**: *Govern AI-Generated Code. Assure Engineering Integrity.*
@@ -37,55 +92,58 @@ AI coding agents dramatically accelerate code generation, scaffolding, and refac
 
 ### Core Governance Principles
 
-1. **Evidence Before Approval**: No rule, gate, or readiness assessment passes on assertion; every outcome requires commit-bound artifacts hashed with SHA-256 in `.arkhon/evidence/`.
+1. **Evidence Before Approval**: Every readiness outcome requires commit-bound artifacts hashed with SHA-256 in `.gencode-gov/evidence/`.
 2. **Verification Before Release**: Linters, static type checkers, test suites, security auditors, SBOM generators, and SLSA/Sigstore verifiers execute out-of-band from the authoring agent.
 3. **Untrusted Producer Model**: AI coding agents are treated as untrusted producers whose code, patches, and candidate findings must be independently validated (`AGENTS.md`, `SECURITY_AGENTS.md`).
 4. **Fail-Closed Discipline**: Missing tools, dirty working trees, unpinned Git commits, stale or tampered evidence, unavailable OS sandboxes, or unavailable external runtimes resolve strictly to `BLOCKED` or `needs_validation`—never `PASS`.
 5. **Separation of Duties**: Security authority for governed SAST/ASVS gates is delegated to **TSAR** (`SE-SEC-GOV-001`), and within the built-in security audit subsystem, a discovering agent or session is structurally forbidden from verifying its own finding.
 
-## 4. Architecture Overview
+## 5. Architecture Overview
 
 GENCODE-GOV separates **normative governance definitions** (YAML/JSON/Markdown contracts) from **deterministic runtime enforcement** (Python verification, assessment, security-audit, and reporting engines):
 
-1. **Manifest & System Charter (`manifest/`, `system/`)**: Single-entry-point manifest (`manifest/index.yaml`) defining system identity, product tiers, 9 language profiles, 11 external/model/platform integrations, standards mappings, compatibility guarantees, risk classification, and exception governance.
+1. **Manifest & System Charter (`manifest/`, `system/`)**: Single-entry-point manifest (`manifest/index.yaml`) defining system identity, product tiers, 9 language profiles, external/model/platform integrations, standards mappings, compatibility guarantees, risk classification, and exception governance.
 2. **Domain Rule Catalog (`rules/`, `languages/`, `projects/`)**: Versioned `SE-*` YAML rules spanning 16 engineering domains, paired with 9 language profiles (`python`, `javascript`, `typescript`, `java`, `csharp`, `cpp`, `go`, `rust`, `ruby`) and 8 project profiles (`universal`, `api-service`, `web-application`, `mobile-application`, `desktop-application`, `distributed-system`, `enterprise`, `safety-critical`).
-3. **Verification, Evidence & Assessment Engine (`src/arkhon/verification/`, `evidence/`, `assessment/`)**: Executes registered tool runners (`pytest`, `ruff`, `mypy`, `tsar`, `security-audit`, `syft`, `supply-chain-attestations`), validates CycloneDX SBOM commit bindings and SLSA/Sigstore release bundles, writes SHA-256-pinned evidence records, evaluates blocking/critical/required/advisory gates, and computes readiness decisions only when commit-bound verification is complete.
-4. **Coverage-Led Security Audit & Multi-Agent Orchestrator (`src/arkhon/security_audit/`)**: Six-phase defensive source security auditing subsystem supporting both deterministic single-process execution and genuine OS-isolated multi-agent session orchestration across a 19-class attack taxonomy.
-5. **Agent Governance Pack (`AGENTS.md`, `SECURITY_AGENTS.md`, `agents/`, `skills/`, `integrations/`)**: Portable agent instructions, 9 specialist agent roles, 10 reusable engineering skills, model/platform adapters, and consent-gated generic coding agent scaffolds.
+3. **Verification, Evidence & Assessment Engine (`src/gencode_gov/verification/`, `evidence/`, `assessment/`)**: Executes registered tool runners (`pytest`, `ruff`, `mypy`, `tsar`, `security-audit`, `syft`, `supply-chain-attestations`), validates CycloneDX SBOM commit bindings and SLSA/Sigstore release bundles, writes SHA-256-pinned evidence records, and evaluates blocking/critical/required/advisory gates.
+4. **Coverage-Led Security Audit & Multi-Agent Orchestrator (`src/gencode_gov/security_audit/`)**: Six-phase defensive source security auditing subsystem supporting deterministic single-process execution and genuine OS-isolated multi-agent session orchestration across a 19-class attack taxonomy.
+5. **Agent Governance & Skills Pack (`AGENTS.md`, `SECURITY_AGENTS.md`, `agents/`, `skills/`, `integrations/`)**: Portable agent instructions, 9 specialist agent roles, 10 installable `SKILL.md` packages (headed by `skills/gencode-gov/` with bundled `references/`), model/platform adapters, and consent-gated generic coding agent scaffolds.
 
-## 5. Repository Structure
+## 6. Repository Structure
 
 ```text
 GENCODE-GOV/
 ├── AGENTS.md                        # Root operational contract for AI coding agents
 ├── SECURITY_AGENTS.md               # Untrusted-agent threat posture & security boundaries
-├── COMPATIBILITY.md                 # Runtime limits, sandbox posture & compatibility aliases
+├── COMPATIBILITY.md                 # Runtime limits, sandbox posture & compatibility matrix
 ├── GOVERNANCE.md                    # Governance model, decision authority & change control
 ├── INSTALL.md                       # Environment & package installation procedure
-├── pyproject.toml                   # Package metadata, pinned dependencies & CLI entrypoints
+├── pyproject.toml                   # Package metadata, pinned dependencies & `gencode-gov` CLI
 ├── Makefile                         # Local development, verification & release-check targets
-├── .arkhon/                         # Self-governance declaration (project.yaml, config.yaml)
+├── .gencode-gov/                    # Self-governance declaration (project.yaml, config.yaml)
 ├── .github/workflows/               # 21 CI, security, multi-OS install, SLSA & self-test workflows
 ├── manifest/                        # Authoritative system, product, language & integration index
-│   ├── index.yaml                   # Canonical manifest entrypoint
-│   ├── system.yaml                  # GENCODE-GOV system identity & runtime bounds
-│   ├── products.yaml                # Core, Agent Governance & Assurance product definitions
-│   ├── languages.yaml               # 9 supported target-project language definitions
-│   ├── integrations.yaml            # Models, platforms, TSAR & generic-agent registry
-│   ├── standards.yaml               # External standards index (ISO, OWASP, NIST, SLSA, SRE)
-│   └── compatibility.yaml           # Schema versions & frozen API compatibility contract
 ├── system/                          # Engineering charter, enforcement model, policies & risk criteria
 ├── rules/                           # Normative SE-* YAML rules across 16 engineering domains
 ├── schemas/                         # 12 Draft 2020-12 JSON Schemas (rules, evidence, security audit)
 ├── projects/                        # 8 project-type governance profiles, rule bindings & gates
 ├── languages/                       # 9 language profiles, tool resolvers & language-specific rules
 ├── agents/                          # 9 specialist agent roles (_roles.yaml, prompts & role specs)
-├── skills/                          # 10 portable engineering & security-audit SKILL.md modules
+├── skills/                          # 10 portable Agent Skills (`npx skills add` compatible)
+│   ├── gencode-gov/                 # Primary GENCODE-GOV governance skill + bundled references/
+│   ├── application-security/        # Threat modeling, authz/authn & negative security verification
+│   ├── architecture-engineering/    # ADR authoring, trust boundaries & component design
+│   ├── performance-engineering/     # Latency budgets, benchmarks & regression detection
+│   ├── release-readiness/           # Production Readiness Review & commit-bound gate checks
+│   ├── reliability-engineering/     # SLOs, restore drills & operational recovery verification
+│   ├── requirements-engineering/    # Traceable requirements & measurable acceptance criteria
+│   ├── secure-software-engineering/ # Secure coding invariants & delegated TSAR integration
+│   ├── security-audit/              # Coverage-led 6-phase source security auditing protocol
+│   └── software-testing/            # Cross-language functional & scenario-traced test suites
 ├── integrations/                    # Generic coding agent scaffolds, GitHub Copilot & TSAR contract
 ├── standards/                       # Non-reproductive standards mappings (ASVS, SAMM, ISO, SLSA)
 ├── reports/templates/               # Engineering quality report templates (Markdown, JSON, HTML)
-├── src/arkhon/                      # Core Python implementation (preserved import namespace)
-│   ├── cli.py                       # CLI router for `gencode-gov` (and legacy `arkhon` alias)
+├── src/gencode_gov/                 # Core Python implementation (`gencode_gov` package)
+│   ├── cli.py                       # CLI router for `gencode-gov`
 │   ├── config.py                    # Path-traversal-safe manifest loader & root discovery
 │   ├── core/                        # Protocol status/domain constants, error hierarchy & JSON logging
 │   ├── governance/                  # Charter loader, policy loader & enforcement evaluators
@@ -109,15 +167,13 @@ GENCODE-GOV/
 └── tests/                           # Unit, integration, schema, rule, language-fixture & security suites
 ```
 
-## 6. Core Governance Lifecycle & Verification Mechanisms
+## 7. Core Governance Lifecycle & Verification Mechanisms
 
 Every governed engineering task follows an eight-stage closed loop defined in `AGENTS.md`:
 
 ```text
 Inspect ──▶ Plan ──▶ Design ──▶ Implement ──▶ Verify ──▶ Remediate ──▶ Re-verify ──▶ Report
 ```
-
-### Verification Domains & Enforcement Levels
 
 GENCODE-GOV organizes normative `SE-*` rules across **16 engineering domains**:
 `requirements` (`SE-REQ`), `architecture` (`SE-ARC`), `code-quality` (`SE-CQ`), `software-security` (`SE-SEC`), `testing` (`SE-TST`), `performance` (`SE-PRF`), `reliability` (`SE-REL`), `database` (`SE-DB`), `api-integration` (`SE-API`), `devops` (`SE-DEV`), `observability` (`SE-OBS`), `privacy-compliance` (`SE-PRI`), `scalability` (`SE-SCL`), `infrastructure` (`SE-INF`), `maintenance` (`SE-MNT`), and `release` (`SE-REL`).
@@ -132,59 +188,42 @@ Rules declare one of four enforcement tiers (`advisory`, `required`, `blocking`,
 | `NOT_APPLICABLE` | Rule is outside the explicit project profile scope or no applicable units exist | Excluded from denominator without false `PASS` |
 | `ACCEPTED_RISK` | Time-bounded, owner-approved, non-critical exception in `system/policies/exceptions/registry.yaml` | Audited explicitly; forbidden for critical security |
 
-## 7. Security Audit Subsystem & Genuine Multi-Agent Orchestration
+## 8. Security Audit Subsystem & Genuine Multi-Agent Orchestration
 
-`src/arkhon/security_audit/` provides an evidence-driven, target-neutral source security auditing engine operating across a **19-class attack taxonomy** (`ai-llm-security`, `memory-binary-safety`, `web-protocol-security`, `authn-authz-boundaries`, `api-security`, `client-side-security`, `supply-chain-release`, `cloud-deployment-security`, `protocols-rpc-messaging`, `resource-exhaustion-availability`, `data-tenant-isolation`, `data-lifecycle-privacy`, `desktop-application-security`, `mobile-application-security`, `local-ipc-trust`, `cryptographic-implementation`, `secrets-credential-handling`, `injection-input-handling`, and `configuration-infrastructure`).
+`src/gencode_gov/security_audit/` provides an evidence-driven, target-neutral source security auditing engine across a **19-class attack taxonomy** (`ai-llm-security`, `memory-binary-safety`, `web-protocol-security`, `authn-authz-boundaries`, `api-security`, `client-side-security`, `supply-chain-release`, `cloud-deployment-security`, `protocols-rpc-messaging`, `resource-exhaustion-availability`, `data-tenant-isolation`, `data-lifecycle-privacy`, `desktop-application-security`, `mobile-application-security`, `local-ipc-trust`, `cryptographic-implementation`, `secrets-credential-handling`, `injection-input-handling`, and `configuration-infrastructure`).
 
 ### Six-Phase Defensive Audit Workflow
 
-1. **Phase 1 — Reconnaissance (`architecture.json`, `architecture.md`, `coverage-ledger.json`)**: Maps source entry points, interfaces, and trust boundaries into canonical RFC 3986 percent-encoded `coverage_id` units (`audit_status: initiated`). `planned` units never count as `examined`.
-2. **Phase 2 — Coverage-Led Hunting**: Examines planned units via Python AST sink inspection and structural invariant analysis, followed by an independent Coverage Analyst (`coverage-critic`) gap check and Wave 2 reassignment archiving prior attempts in `attempts[]`.
-3. **Phase 3 — Adversarial Candidate Verification**: Assigns every candidate finding to an independent verifier that inspects surrounding source controls to disprove false positives first. Calibrated severity (`overall_severity <= impact`) is permitted **exclusively** on `confirmed` findings; `needs_validation`, `blocked`, `rejected`, and `not_verified` records never carry severity scores.
+1. **Phase 1 — Reconnaissance**: Maps source entry points, interfaces, and trust boundaries into canonical RFC 3986 percent-encoded `coverage_id` units (`coverage-ledger.json`, `audit_status: initiated`). `planned` units never count as `examined`.
+2. **Phase 2 — Coverage-Led Hunting**: Examines planned units via AST sink inspection and structural invariant analysis, followed by an independent `coverage-critic` gap check and Wave 2 reassignment.
+3. **Phase 3 — Adversarial Candidate Verification**: Assigns every candidate finding to an independent verifier (`verifier_id != discovery_provenance.agent_id`). Calibrated severity (`overall_severity <= impact`) is permitted **exclusively** on `confirmed` findings.
 4. **Phase 4 — Deterministic Artifact Validation**: Enforces `O_NOFOLLOW`, regular-file checks, 5 MiB size bounds, 64-level JSON nesting caps, Draft 2020-12 JSON Schemas (`schemas/security-*.schema.json`), and cross-artifact consistency.
-5. **Phase 5 — Independent Record Verification**: Verifies that every `confirmed` and `needs_validation` location and trace step matches the exact Git `commit_sha`, triggering a second independent record-verification pass if a record's status materially changes.
-6. **Phase 6 — Target-Neutral Reporting & Git-Diff Reassessment**: Emits `security-audit-report.json`, `SECURITY-AUDIT-REPORT.md`, `FINDINGS-DETAIL.md`, and `NEEDS-VALIDATION.md` and tracks `remediated` vs. `reopened` findings across commits.
+5. **Phase 5 — Independent Record Verification**: Verifies that every `confirmed` and `needs_validation` location and trace step matches the exact Git `commit_sha`.
+6. **Phase 6 — Reporting & Git-Diff Reassessment**: Emits `security-audit-report.json`, `SECURITY-AUDIT-REPORT.md`, `FINDINGS-DETAIL.md`, and `NEEDS-VALIDATION.md` and tracks `remediated` vs. `reopened` findings across commits.
 
-### Genuine Multi-Agent Session Orchestration (`runtime.py`, `worker_entry.py`, `orchestrator.py`)
+### Genuine Multi-Agent Session Orchestration
 
 When invoked with `--execution-mode multi_agent_independent_sessions`:
 
 - **Provider-Neutral `AgentRuntimeAdapter`**: Supports `IsolatedSubprocessWorkerRuntime` (`python-isolated-worker`) and `ExternalCliAgentRuntime` (`command` via `--agent-cmd` or `GENCODE_GOV_AGENT_CMD`, plus capability detection for `claude-cli`, `codex-cli`, and `gemini-cli`).
-- **OS Process & Workspace Isolation**: Each session runs in a separate child OS process (`pid != os.getpid()`) with a unique `session_id`, isolated `0700` `agents/hunter-1/scratch` and `artifacts` directories, an allowlisted environment, SHA-256 target source-tree tamper checks, and parent-side `dir_fd` + `O_NOFOLLOW` regular-file (`st_nlink == 1`) artifact promotion.
-- **Session-Level Separation of Duties**: Enforces `verifier_id != discovery_provenance.agent_id`, `verification_provenance.session_id != discovery_provenance.session_id`, and independent Phase 5 `record_verifier_session_id`.
-- **Concurrency, Retries & Checkpoint Resumption**: Coordinates parallel workers (`--max-workers`) through `LockedCoverageLedgerStore` (`threading.RLock` + `O_CREAT | O_EXCL` lockfile + atomic rename), enforces per-task timeouts (`--task-timeout`) and bounded retries (`--max-retries`), and persists `orchestration-state.json` for safe resumption via `gencode-gov audit resume`.
-
-## 8. Evidence, Supply-Chain Assurance & Reporting
-
-- **Tamper-Evident Evidence Store (`.arkhon/evidence/testing/`)**: Records `evidence_id`, `source`, `source_version`, 40-char `commit_sha`, UTC timestamp, status, rule IDs, and SHA-256 digests of every referenced in-project artifact.
-- **Cryptographic Supply-Chain Re-Verification (`src/arkhon/evidence/supply_chain.py`)**:
-  - `SyftRunner` generates CycloneDX (`1.4`–`1.7`) SBOMs bound to the exact checked-out `commit_sha`.
-  - `SupplyChainAttestationRunner` and `JsonReporter` re-verify SLSA provenance (`slsa-verifier`) and keyless Sigstore bundles (`cosign`) pinned to https://github.com/mohamedelghazali/GENCODE-GOV and the GitHub Actions OIDC issuer before accepting `PASS` release evidence.
-- **Multi-Format Engineering Reports**: `gencode-gov report` aggregates integrity-checked, non-stale evidence for a single commit into `report.json` (`schemas/report.schema.json`) or `report.md`, folding unassessed sections to `BLOCKED` (`PENDING_EVIDENCE`) rather than `APPROVED`.
-
-## 9. Agent & Runtime Integration Architecture
-
-GENCODE-GOV tracks integration maturity across five explicit verification levels—`installed`, `discoverable`, `activated`, `configured`, and `verified`—without assuming that placing files on disk causes an external agent to obey them:
-
-- **Packaged Model Adapters (`src/arkhon/integrations/models/`)**: Stdlib-HTTP/HTTPS adapters with strict endpoint/port validation and structured input-boundary framing for `claude`, `openai-o`, `gpt`, `gemini`, `deepseek-coder`, `code-llama`, `qwen-coder`, and `kimi`.
-- **Platform & Generic Coding Agent Scaffolds (`integrations/`)**: GitHub Copilot instructions adapter (`scaffolded`) and 14 consent-requiring generic agent scaffolds (`aider`, `amazon-q`, `claude-code`, `cline`, `codex-openai`, `continue`, `cursor`, `devin`, `gemini-cli`, `jetbrains-ai`, `replit-agent`, `sourcegraph-cody`, `tabnine`, `windsurf`).
-- **Delegated Security Authority (`integrations/tsar/`)**: Validates SARIF outputs, tool versions, commit bindings, and signatures against `integrations/tsar/contract.yaml`.
-
-### Supported Security Audit Execution Modes
+- **OS Process & Workspace Isolation**: Each session runs in a child OS process (`pid != os.getpid()`) with a unique `session_id`, isolated `0700` scratch/artifact directories, an allowlisted environment, SHA-256 source-tree tamper checks, and `dir_fd` + `O_NOFOLLOW` regular-file promotion.
+- **Concurrency & Checkpoints**: Coordinates workers (`--max-workers`) via `LockedCoverageLedgerStore` and persists `orchestration-state.json` for resumption via `gencode-gov audit resume`.
 
 | Execution Mode | Isolation & Runtime | Honest Reporting & Fail-Closed Behavior |
 | :--- | :--- | :--- |
-| `single_process_deterministic` (Default) | Deterministic in-process role separation (`SecurityAuditTaskDispatcher`) | Records explicit single-process limitation in `security-audit-report.json`; never claims external multi-agent sessions |
-| `multi_agent_independent_sessions` | Parallel OS child processes via `python-isolated-worker`, `command` (`--agent-cmd`), or detected external CLI (`claude-cli`, `codex-cli`, `gemini-cli`) | Requires `>= 2` completed external OS sessions (`pid != os.getpid()`) and distinct discovery/verifier `session_id`s; fails closed (`BLOCKED`, exit `1`) if requested runtime is unavailable |
+| `single_process_deterministic` (Default) | Deterministic in-process role separation | Records explicit single-process limitation in `security-audit-report.json`; never claims external multi-agent sessions |
+| `multi_agent_independent_sessions` | Parallel OS child processes (`python-isolated-worker`, `command`, `claude-cli`, `codex-cli`, `gemini-cli`) | Requires `>= 2` completed external OS sessions (`pid != os.getpid()`) and distinct discovery/verifier `session_id`s; fails closed (`BLOCKED`, exit `1`) if unavailable |
 
-## 10. Installation & Quickstart
+## 9. Evidence, Supply-Chain Assurance & Reporting
 
-### Requirements
+- **Tamper-Evident Evidence Store (`.gencode-gov/evidence/`)**: Records `evidence_id` (`EVID-GENCODE-GOV-...`), `source` (`gencode-gov`, `tsar`, or `external-tool`), `source_version`, 40-char `commit_sha`, UTC timestamp, status, rule IDs, and SHA-256 artifact digests.
+- **Cryptographic Supply-Chain Re-Verification (`src/gencode_gov/evidence/supply_chain.py`)**: `SyftRunner` binds CycloneDX (`1.4`–`1.7`) SBOMs to `commit_sha` via `gencode-gov:commit-sha`, and `SupplyChainAttestationRunner` re-verifies SLSA provenance (`slsa-verifier`) and keyless Sigstore bundles (`cosign`) pinned to https://github.com/mohamedelghazali/GENCODE-GOV before accepting `PASS` release evidence.
+- **Multi-Format Engineering Reports**: `gencode-gov report` aggregates integrity-checked evidence for a single commit into `report.json` (`schemas/report.schema.json`) or `report.md`, folding unassessed sections to `BLOCKED` (`PENDING_EVIDENCE`).
 
-- **Python**: `>=3.11, <3.14` (tested continuously on Python `3.11`, `3.12`, and `3.13` across Linux, macOS, and Windows)
+## 10. Installation & Quickstart (Python Verification Engine)
+
+- **Python**: `>=3.11, <3.14` (`3.11`, `3.12`, and `3.13` across Linux, macOS, and Windows)
 - **Git**: Required on `PATH` for commit-SHA binding and working-tree cleanliness checks
-
-### Install from Repository Checkout
 
 ```bash
 git clone https://github.com/mohamedelghazali/GENCODE-GOV
@@ -193,21 +232,15 @@ python3 -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 python -m pip install --upgrade pip
 pip install -e ".[dev]"
-```
 
-Verify the installation:
-
-```bash
 gencode-gov version
 gencode-gov doctor
 gencode-gov validate
 ```
 
-*(For existing scripts and CI pipelines, the legacy `arkhon` CLI command is preserved as an identical entrypoint alias.)*
-
 ## 11. Verified CLI Usage Examples
 
-All commands below match the live CLI parser in `src/arkhon/cli.py`:
+All commands below match the live CLI parser in `src/gencode_gov/cli.py`:
 
 ```bash
 # 1. Inspect version, environment health, and repository governance schemas/rules
@@ -215,26 +248,26 @@ gencode-gov version --json
 gencode-gov doctor
 gencode-gov validate
 
-# 2. Initialize a governed target project (.arkhon/project.yaml) and stage the agent pack
-gencode-gov project init examples/minimal-python --name "Order Service" --type service --profile api-service --risk-level high
-gencode-gov install --scope project --project examples/minimal-python
+# 2. Initialize a governed target project (.gencode-gov/project.yaml) and stage the agent pack
+gencode-gov project init examples/minimal-project --name "Order Service" --type service --profile api-service --risk-level high
+gencode-gov install --scope project --project examples/minimal-project
 
 # 3. Inspect detected languages/profile and run domain verification runners
-gencode-gov inspect examples/minimal-python --json
-gencode-gov verify examples/minimal-python --domain testing
-gencode-gov verify examples/minimal-python --domain code-quality
+gencode-gov inspect examples/minimal-project --json
+gencode-gov verify examples/minimal-project --domain testing
+gencode-gov verify examples/minimal-project --domain code-quality
 
 # 4. Run commit-bound full rule assessment, inspect evidence status, and generate reports
-gencode-gov assess examples/minimal-python
-gencode-gov status examples/minimal-python --json
-gencode-gov report examples/minimal-python --format markdown
+gencode-gov assess examples/minimal-project
+gencode-gov status examples/minimal-project --json
+gencode-gov report examples/minimal-project --format markdown
 gencode-gov exceptions list --json
 
 # 5. Coverage-led Security Audit (deterministic single-process & genuine multi-agent modes)
 gencode-gov audit runtimes --json
-gencode-gov audit plan examples/minimal-python --profile standard --output-dir /tmp/sec-plan --json
-gencode-gov audit run examples/minimal-python --profile standard --output-dir /tmp/sec-det --record-evidence
-gencode-gov audit run examples/minimal-python \
+gencode-gov audit plan examples/minimal-project --profile standard --output-dir /tmp/sec-plan --json
+gencode-gov audit run examples/minimal-project --profile standard --output-dir /tmp/sec-det --record-evidence
+gencode-gov audit run examples/minimal-project \
   --execution-mode multi_agent_independent_sessions \
   --runtime python-isolated-worker \
   --max-workers 4 \
@@ -245,56 +278,32 @@ gencode-gov audit run examples/minimal-python \
   --json
 
 # 6. Resume an interrupted multi-agent audit, validate artifacts, compare runs & reassess diffs
-gencode-gov audit resume examples/minimal-python --audit-dir /tmp/sec-multi --runtime python-isolated-worker
+gencode-gov audit resume examples/minimal-project --audit-dir /tmp/sec-multi --runtime python-isolated-worker
 gencode-gov audit validate --audit-dir /tmp/sec-multi --json
 gencode-gov audit status --audit-dir /tmp/sec-multi --json
 gencode-gov audit compare --prior-dir /tmp/sec-det --current-dir /tmp/sec-multi --json
-gencode-gov audit reassess examples/minimal-python --prior-dir /tmp/sec-multi --output-dir /tmp/sec-reassess --record-evidence
+gencode-gov audit reassess examples/minimal-project --prior-dir /tmp/sec-multi --output-dir /tmp/sec-reassess --record-evidence
 ```
 
-## 12. Configuration, Customization & Extensibility
+## 12. Configuration, Compatibility & Testing
 
-- **Project Declaration (`.arkhon/project.yaml`)**: Validated against `schemas/project.schema.json`; configures `project.profile`, `risk_level`, `languages`, `lifecycle`, and required domain gates.
-- **Engine Configuration (`.arkhon/config.yaml`)**: Controls `fail_closed`, evidence retention and freshness windows (`168h` security/supply-chain, `720h` testing), TSAR contract paths, and exception limits.
-- **Repository Root Override**: Set `GENCODE_GOV_ROOT` (legacy `APXOH_ROOT` remains supported as a fallback) when invoking rule/manifest loaders outside a repository checkout.
-- **Extending Rules, Attack Classes & Runtimes**:
-  - Author new `SE-CQ-010` YAML rules under `rules/code-quality/` following `docs/rule-authoring/HOW_TO_WRITE_A_RULE.md` and validate with `gencode-gov validate`.
-  - Register custom security attack classes on `AttackClassRegistry` (`src/arkhon/security_audit/taxonomy.py`).
-  - Integrate custom external agent binaries via `--runtime command --agent-cmd ./bin/agent-worker` (or `GENCODE_GOV_AGENT_CMD`) or subclass `AgentRuntimeAdapter` in `src/arkhon/security_audit/runtime.py`.
-
-## 13. Compatibility & Known Limitations
-
-- **Intentional Backward-Compatibility Identifiers**: To preserve `manifest/compatibility.yaml` `frozen_apis`, existing Python imports, and SHA-256-bound evidence paths without duplicating modules, GENCODE-GOV retains the Python package namespace `arkhon` (`src/arkhon/`), the legacy `arkhon` CLI alias alongside `gencode-gov`, the `.arkhon/` workspace directory, `ArkhonError`, `source="arkhon"` / `EVID-ARKHON-*` evidence schema identifiers, `arkhon:commit-sha` CycloneDX properties, `skills/arkhon-governance`, and `APXOH_ROOT` / `ARKHON_*` environment fallbacks. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the complete compatibility table.
-- **External Tool & Sandbox Dependencies**:
-  - `SE-SEC-GOV-001` requires an installed TSAR CLI (`>=1.1.0`); when absent, security verification resolves truthfully to `BLOCKED`.
-  - Dynamic local sandboxing (`SandboxExecutor`) requires POSIX `O_NOFOLLOW`, `dir_fd`, `resource` rlimits, and Linux network-namespace isolation (`bwrap` or `unshare -r --net`). Hosts or containers denying network namespaces report `network_isolated=false` and fail closed to `BLOCKED` when `--sandbox-mode required` is set.
-  - External vendor CLIs (`claude-cli`, `codex-cli`, `gemini-cli`) require the respective vendor binaries and credentials on the host; when absent, GENCODE-GOV fails closed (`BLOCKED`) without simulating output.
-  - Generic coding agent directories under `integrations/generic-agents/` are consent-gated scaffolds (`status: scaffolded`) until product-specific behavioral activation is verified.
-
-## 14. Testing & Verification Approach
-
-GENCODE-GOV enforces strict automated verification across every pull request:
+- **Configuration**: Declare project profile and required gates in `.gencode-gov/project.yaml`, engine settings in `.gencode-gov/config.yaml`, and optional root override via `GENCODE_GOV_ROOT`.
+- **Compatibility & Honest Boundaries**: Missing external binaries (`tsar`, `claude-cli`, `codex-cli`, `gemini-cli`) or unavailable OS network-namespace sandboxes (`bwrap` / `unshare -r --net`) fail closed to `BLOCKED` without fabricating output (see [`COMPATIBILITY.md`](COMPATIBILITY.md)).
+- **Automated Verification Suite** (enforcing a **100.00% statement coverage** gate on `src/gencode_gov/`):
 
 ```bash
 ruff check src tests scripts
 mypy src
 bandit -r src/ -c pyproject.toml
-pytest -ra --cov=src/arkhon --cov-report=term-missing --cov-fail-under=100
+pytest -ra --cov=src/gencode_gov --cov-report=term-missing --cov-fail-under=100
 python scripts/validation/validate_all.py
 ```
 
-The test suite exercises unit, CLI, integration, positive/negative governance rule, JSON Schema, 9-language fixture, adapter-safety, secret-exposure, gate-bypass, evidence-tampering, and multi-process security-audit orchestration tests with a mandatory **100.00% statement coverage** gate on `src/arkhon/`.
-
-## 15. Documentation Index
+## 13. Documentation Index & License
 
 - **Governance & Agent Contracts**: [`AGENTS.md`](AGENTS.md) · [`SECURITY_AGENTS.md`](SECURITY_AGENTS.md) · [`GOVERNANCE.md`](GOVERNANCE.md) · [`COMPATIBILITY.md`](COMPATIBILITY.md) · [`system/charter/ENGINEERING_CHARTER.md`](system/charter/ENGINEERING_CHARTER.md)
-- **Installation & Operations**: [`INSTALL.md`](INSTALL.md) · [`ONBOARDING.md`](ONBOARDING.md) · [`VERIFY_INSTALLATION.md`](VERIFY_INSTALLATION.md) · [`docs/operations/RUNBOOK.md`](docs/operations/RUNBOOK.md)
-- **Architecture & Threat Modeling**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/architecture/SYSTEM_OVERVIEW.md`](docs/architecture/SYSTEM_OVERVIEW.md) · [`docs/threat-model/GENCODE_GOV_THREAT_MODEL.md`](docs/threat-model/GENCODE_GOV_THREAT_MODEL.md) · [`docs/PROMPT_INJECTION.md`](docs/PROMPT_INJECTION.md)
-- **Security Audit, Evidence & Supply Chain**: [`docs/SECURITY_AUDIT_SUBSYSTEM.md`](docs/SECURITY_AUDIT_SUBSYSTEM.md) · [`docs/EVIDENCE_INTEGRITY.md`](docs/EVIDENCE_INTEGRITY.md) · [`docs/SUPPLY_CHAIN.md`](docs/SUPPLY_CHAIN.md) · [`docs/VULNERABILITY_RESPONSE.md`](docs/VULNERABILITY_RESPONSE.md) · [`SECURITY.md`](SECURITY.md)
-- **Rule Authoring & Versioning**: [`docs/rule-authoring/HOW_TO_WRITE_A_RULE.md`](docs/rule-authoring/HOW_TO_WRITE_A_RULE.md) · [`docs/VERSIONING.md`](docs/VERSIONING.md) · [`ROADMAP.md`](ROADMAP.md)
-
-## 16. Contributing & License
-
-Contributions must follow the eight-stage verification workflow, maintain 100% statement coverage across `src/arkhon/`, pass `ruff`, `mypy --strict`, `bandit`, and `gencode-gov validate`, and preserve fail-closed governance semantics. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) before opening a pull request.
+- **Installation & Operations**: [`INSTALL.md`](INSTALL.md) · [`ONBOARDING.md`](ONBOARDING.md) · [`VERIFY_INSTALLATION.md`](VERIFY_INSTALLATION.md) · [`docs/operations/RUNBOOK.md`](docs/operations/RUNBOOK.md) · [`docs/agent-adoption/ADOPTION_GUIDE.md`](docs/agent-adoption/ADOPTION_GUIDE.md)
+- **Architecture, Threat Model & Security Audit**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/architecture/SYSTEM_OVERVIEW.md`](docs/architecture/SYSTEM_OVERVIEW.md) · [`docs/threat-model/GENCODE_GOV_THREAT_MODEL.md`](docs/threat-model/GENCODE_GOV_THREAT_MODEL.md) · [`docs/SECURITY_AUDIT_SUBSYSTEM.md`](docs/SECURITY_AUDIT_SUBSYSTEM.md) · [`docs/EVIDENCE_INTEGRITY.md`](docs/EVIDENCE_INTEGRITY.md) · [`docs/SUPPLY_CHAIN.md`](docs/SUPPLY_CHAIN.md) · [`SECURITY.md`](SECURITY.md)
+- **Rule Authoring & Contributing**: [`docs/rule-authoring/HOW_TO_WRITE_A_RULE.md`](docs/rule-authoring/HOW_TO_WRITE_A_RULE.md) · [`docs/VERSIONING.md`](docs/VERSIONING.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
 
 Released under the [MIT License](LICENSE).

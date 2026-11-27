@@ -26,7 +26,7 @@ requirement:
     operations, (7) login and password-recovery rate-limit abuse, and (8) expired, replayed,
     malformed, and revoked authentication/recovery tokens. Record the actual test file, test
     identifier, runner outcome, and commit-bound execution artifact in
-    .arkhon/security-test-matrix.yaml. Authorization boundaries must be exercised rather
+    .gencode-gov/security-test-matrix.yaml. Authorization boundaries must be exercised rather
     than mocked out or bypassed; documentation, generic test counts, skipped tests, or
     tautological assertions do not satisfy this rule.
 verification:

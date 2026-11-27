@@ -1,4 +1,4 @@
-"""Tests for arkhon.rules.registry."""
+"""Tests for gencode_gov.rules.registry."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import RuleError, RuleNotFoundError
-from arkhon.rules.loader import Rule
-from arkhon.rules.registry import RuleRegistry, build_registry
+from gencode_gov.core.errors import RuleError, RuleNotFoundError
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.registry import RuleRegistry, build_registry
 
 
 def _rule(

@@ -10,33 +10,33 @@ from typing import Any
 
 import pytest
 
-from arkhon.assessment.decision import decide
-from arkhon.assessment.gates import GateVerdict
-from arkhon.assessment.scorer import Score
-from arkhon.core.errors import (
+from gencode_gov.assessment.decision import decide
+from gencode_gov.assessment.gates import GateVerdict
+from gencode_gov.assessment.scorer import Score
+from gencode_gov.core.errors import (
     AssessmentError,
     ConfigError,
     EvidenceError,
     EvidenceTamperedError,
     GovernanceError,
 )
-from arkhon.core.logging import JsonFormatter, configure_logging, get_logger
-from arkhon.evidence.store import EvidenceStore
-from arkhon.governance.charter_loader import Principle, _parse_principles, load_charter
-from arkhon.governance.enforcement import EnforcementEngine, RuleOutcome
-from arkhon.governance.policy_loader import (
+from gencode_gov.core.logging import JsonFormatter, configure_logging, get_logger
+from gencode_gov.evidence.store import EvidenceStore
+from gencode_gov.governance.charter_loader import Principle, _parse_principles, load_charter
+from gencode_gov.governance.enforcement import EnforcementEngine, RuleOutcome
+from gencode_gov.governance.policy_loader import (
     Policy,
     PolicyLoadResult,
     PolicyRegistry,
     _load_policy_file,
     load_policies,
 )
-from arkhon.policies.advisory import AdvisoryPolicyEvaluator
-from arkhon.projects.loader import _load_yaml, list_profiles, load_profile
-from arkhon.verification.runners.base import RunnerOutcome
-from arkhon.verification.runners.mypy_runner import MypyRunner
-from arkhon.verification.runners.pytest_runner import PytestRunner
-from arkhon.verification.runners.ruff_runner import RuffRunner
+from gencode_gov.policies.advisory import AdvisoryPolicyEvaluator
+from gencode_gov.projects.loader import _load_yaml, list_profiles, load_profile
+from gencode_gov.verification.runners.base import RunnerOutcome
+from gencode_gov.verification.runners.mypy_runner import MypyRunner
+from gencode_gov.verification.runners.pytest_runner import PytestRunner
+from gencode_gov.verification.runners.ruff_runner import RuffRunner
 
 
 def score(value: float = 90) -> Score:
@@ -253,9 +253,10 @@ def test_enforcement_evidence_validation_and_path_safety(tmp_path: Path) -> None
     assert present.evidence_present
     assert engine.evaluate_rule(rule("R4", {"required": ["missing"]}), root).status == "BLOCKED"
     assert "escapes" in engine.evaluate_rule(rule("R5", {"required": ["../escape"]}), root).reason
-    assert engine.evaluate_rule(
-        rule("R6", {"required": [{"type": "proof"}]}), root
-    ).status == "BLOCKED"
+    assert (
+        engine.evaluate_rule(rule("R6", {"required": [{"type": "proof"}]}), root).status
+        == "BLOCKED"
+    )
     assert engine.evaluate_rule(rule("R7", {"required": [{"type": ""}]}), root).status == "BLOCKED"
     assert engine.evaluate_rule(rule("R8", {"required": [None]}), root).status == "BLOCKED"
 
@@ -281,7 +282,7 @@ def test_evidence_store_integrity_iteration_and_latest(tmp_path: Path) -> None:
     artifact.write_text("verified", encoding="utf-8")
     data = {
         "evidence_id": "EVID-1",
-        "source": "arkhon",
+        "source": "gencode-gov",
         "source_version": "0.1.0",
         "commit_sha": "a" * 40,
         "status": "PASS",
@@ -334,16 +335,16 @@ def test_logging_json_extras_exceptions_and_configuration() -> None:
         import sys
 
         record = logging.LogRecord(
-            "arkhon.test", logging.ERROR, __file__, 1, "message", (), sys.exc_info()
+            "gencode_gov.test", logging.ERROR, __file__, 1, "message", (), sys.exc_info()
         )
-    record.arkhon_extra = {"component": "test"}
+    record.gencode_gov_extra = {"component": "test"}
     payload = json.loads(JsonFormatter().format(record))
     assert payload["extra"]["component"] == "test"
     assert "RuntimeError" in payload["exception"]
     configure_logging("warning", "json")
     assert logging.getLogger().level == logging.WARNING
     assert isinstance(logging.getLogger().handlers[-1].formatter, JsonFormatter)
-    assert get_logger("unit").name == "arkhon.unit"
+    assert get_logger("unit").name == "gencode_gov.unit"
     with pytest.raises(ValueError):
         configure_logging("invalid")
     with pytest.raises(ValueError):
@@ -430,13 +431,15 @@ def test_pytest_runner_handles_timeout_start_failure_and_empty_xml(
     def timeout(*args: object, **kwargs: object) -> None:
         raise subprocess.TimeoutExpired("pytest", 1)
 
-    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", timeout)
+    monkeypatch.setattr("gencode_gov.verification.runners.pytest_runner.subprocess.run", timeout)
     assert PytestRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
     def start_error(*args: object, **kwargs: object) -> None:
         raise OSError("cannot start")
 
-    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", start_error)
+    monkeypatch.setattr(
+        "gencode_gov.verification.runners.pytest_runner.subprocess.run", start_error
+    )
     assert "failed to start" in PytestRunner().run(tmp_path).reason
 
     def empty_xml(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
@@ -444,7 +447,7 @@ def test_pytest_runner_handles_timeout_start_failure_and_empty_xml(
         junit.write_text('<testsuite tests="0"/>', encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, "", "")
 
-    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", empty_xml)
+    monkeypatch.setattr("gencode_gov.verification.runners.pytest_runner.subprocess.run", empty_xml)
     assert "collected no tests" in PytestRunner().run(tmp_path).reason
 
 
@@ -453,7 +456,7 @@ def test_pytest_runner_handles_missing_xml_and_copy_failure(
 ) -> None:
     (tmp_path / "tests").mkdir()
     monkeypatch.setattr(
-        "arkhon.verification.runners.pytest_runner.subprocess.run",
+        "gencode_gov.verification.runners.pytest_runner.subprocess.run",
         lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "", ""),
     )
     assert "no JUnit XML" in PytestRunner().run(tmp_path).reason
@@ -463,38 +466,38 @@ def test_pytest_runner_handles_missing_xml_and_copy_failure(
         junit.write_text('<testsuite tests="1"/>', encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, "", "")
 
-    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.subprocess.run", with_xml)
+    monkeypatch.setattr("gencode_gov.verification.runners.pytest_runner.subprocess.run", with_xml)
 
     def copy_error(*args: object, **kwargs: object) -> None:
         raise OSError("disk full")
 
-    monkeypatch.setattr("arkhon.verification.runners.pytest_runner.shutil.copy2", copy_error)
+    monkeypatch.setattr("gencode_gov.verification.runners.pytest_runner.shutil.copy2", copy_error)
     assert "cannot persist" in PytestRunner().run(tmp_path).reason
 
 
 def test_ruff_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.shutil.which", lambda _: None)
+    monkeypatch.setattr("gencode_gov.verification.runners.ruff_runner.shutil.which", lambda _: None)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
     monkeypatch.setattr(
-        "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
+        "gencode_gov.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
     )
 
     def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 0, "[]", "")
 
-    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", run)
+    monkeypatch.setattr("gencode_gov.verification.runners.ruff_runner.subprocess.run", run)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.PASS
 
     def issue(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 1, '[{"code":"E501"}]', "")
 
-    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", issue)
+    monkeypatch.setattr("gencode_gov.verification.runners.ruff_runner.subprocess.run", issue)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.FAIL
 
     def invalid(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 0, "{}", "")
 
-    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", invalid)
+    monkeypatch.setattr("gencode_gov.verification.runners.ruff_runner.subprocess.run", invalid)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
 
@@ -502,45 +505,45 @@ def test_ruff_runner_timeout_and_start_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        "arkhon.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
+        "gencode_gov.verification.runners.ruff_runner.shutil.which", lambda _: "/usr/bin/ruff"
     )
 
     def timeout(*args: object, **kwargs: object) -> None:
         raise subprocess.TimeoutExpired("ruff", 1)
 
-    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", timeout)
+    monkeypatch.setattr("gencode_gov.verification.runners.ruff_runner.subprocess.run", timeout)
     assert RuffRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
     def start_error(*args: object, **kwargs: object) -> None:
         raise OSError("no executable")
 
-    monkeypatch.setattr("arkhon.verification.runners.ruff_runner.subprocess.run", start_error)
+    monkeypatch.setattr("gencode_gov.verification.runners.ruff_runner.subprocess.run", start_error)
     assert "failed to start" in RuffRunner().run(tmp_path).reason
 
 
 def test_mypy_runner_outcomes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.shutil.which", lambda _: None)
+    monkeypatch.setattr("gencode_gov.verification.runners.mypy_runner.shutil.which", lambda _: None)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
     monkeypatch.setattr(
-        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
+        "gencode_gov.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
     )
 
     def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 0, "Success", "")
 
-    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", run)
+    monkeypatch.setattr("gencode_gov.verification.runners.mypy_runner.subprocess.run", run)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.PASS
 
     def fail(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 1, "type error", "")
 
-    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", fail)
+    monkeypatch.setattr("gencode_gov.verification.runners.mypy_runner.subprocess.run", fail)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.FAIL
 
     def blocked(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         return subprocess.CompletedProcess(command, 2, "", "crashed")
 
-    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", blocked)
+    monkeypatch.setattr("gencode_gov.verification.runners.mypy_runner.subprocess.run", blocked)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
 
@@ -548,21 +551,20 @@ def test_mypy_runner_timeout_and_start_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        "arkhon.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
+        "gencode_gov.verification.runners.mypy_runner.shutil.which", lambda _: "/usr/bin/mypy"
     )
 
     def timeout(*args: object, **kwargs: object) -> None:
         raise subprocess.TimeoutExpired("mypy", 1)
 
-    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", timeout)
+    monkeypatch.setattr("gencode_gov.verification.runners.mypy_runner.subprocess.run", timeout)
     assert MypyRunner().run(tmp_path).outcome == RunnerOutcome.BLOCKED
 
     def start_error(*args: object, **kwargs: object) -> None:
         raise OSError("no executable")
 
-    monkeypatch.setattr("arkhon.verification.runners.mypy_runner.subprocess.run", start_error)
+    monkeypatch.setattr("gencode_gov.verification.runners.mypy_runner.subprocess.run", start_error)
     assert "failed to start" in MypyRunner().run(tmp_path).reason
-
 
 
 def test_enforcement_gate_continues_for_non_blocking_outcome() -> None:

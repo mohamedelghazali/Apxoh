@@ -29,7 +29,7 @@ htmlcov/
 Thumbs.db
 
 # Runtime state and local credentials
-.arkhon/
+.gencode-gov/
 .env
 .env.*
 !.env.example

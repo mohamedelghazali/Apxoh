@@ -7,14 +7,14 @@ on:
       - "rules/**"
       - "languages/**/rules/**"
       - "schemas/rule.schema.json"
-      - "src/arkhon/rules/**"
+      - "src/gencode_gov/rules/**"
   pull_request:
     branches: [main]
     paths:
       - "rules/**"
       - "languages/**/rules/**"
       - "schemas/rule.schema.json"
-      - "src/arkhon/rules/**"
+      - "src/gencode_gov/rules/**"
 
 permissions:
   contents: read

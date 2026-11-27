@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from arkhon.config import find_repo_root
-from arkhon.core.errors import ManifestError
-from arkhon.core.logging import JsonFormatter, configure_logging, get_logger
+from gencode_gov.config import find_repo_root
+from gencode_gov.core.errors import ManifestError
+from gencode_gov.core.logging import JsonFormatter, configure_logging, get_logger
 
 
 def test_find_repo_root_handles_filesystem_root_without_manifest(
@@ -32,8 +32,7 @@ def test_find_repo_root_handles_filesystem_root_without_manifest(
             return False
 
     monkeypatch.delenv("GENCODE_GOV_ROOT", raising=False)
-    monkeypatch.delenv("APXOH_ROOT", raising=False)
-    monkeypatch.setattr("arkhon.config.Path", RootPath)
+    monkeypatch.setattr("gencode_gov.config.Path", RootPath)
     with pytest.raises(ManifestError, match="Could not locate"):
         find_repo_root()
 
@@ -45,9 +44,9 @@ def test_json_formatter_includes_exception_and_extra() -> None:
         import sys
 
         record = logging.LogRecord(
-            "arkhon.test", logging.ERROR, __file__, 1, "failed", (), sys.exc_info()
+            "gencode_gov.test", logging.ERROR, __file__, 1, "failed", (), sys.exc_info()
         )
-    record.arkhon_extra = {"component": "unit-test"}
+    record.gencode_gov_extra = {"component": "unit-test"}
     payload = json.loads(JsonFormatter().format(record))
     assert payload["message"] == "failed"
     assert "RuntimeError: diagnostic" in payload["exception"]
@@ -80,9 +79,9 @@ def test_configure_logging_rejects_bad_values_and_installs_json_handler(
         INFO=logging.INFO,
         DEBUG=logging.DEBUG,
     )
-    monkeypatch.setattr("arkhon.core.logging.logging", fake_logging)
+    monkeypatch.setattr("gencode_gov.core.logging.logging", fake_logging)
     configure_logging("debug", "json")
     logger = get_logger("coverage")
-    assert logger.name == "arkhon.coverage"
+    assert logger.name == "gencode_gov.coverage"
     assert fake_root.level == "DEBUG"
     assert isinstance(fake_root.handlers[-1].formatter, JsonFormatter)

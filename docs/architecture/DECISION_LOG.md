@@ -9,9 +9,9 @@ This log records architectural choices and their rationale. An accepted design d
 ## ADR-001 — Separate Product Name and Technical Identifier
 
 **Status:** Accepted  
-**Decision:** Use **GENCODE-GOV** as the product/system name, arkhon as the Python package and CLI identifier, and **GENCODE-GOV** only as a Cyrillic visual-identity reference.  
+**Decision:** Use **GENCODE-GOV** as the product/system name, gencode-gov as the Python package and CLI identifier, and **GENCODE-GOV** only as a Cyrillic visual-identity reference.  
 **Rationale:** Product identity can remain stable while technical identifiers follow package and tooling conventions.  
-**Implementation note:** Package metadata and CLI use arkhon; visual identity usage is a documentation/brand convention.
+**Implementation note:** Package metadata and CLI use gencode-gov; visual identity usage is a documentation/brand convention.
 
 ## ADR-002 — Delegate Security Authority to TSAR
 
@@ -67,7 +67,7 @@ This log records architectural choices and their rationale. An accepted design d
 **Status:** Accepted; lifecycle model implemented  
 **Decision:** Use ten ordered lifecycle stages from project initialization through post-release monitoring, with explicit entry/exit criteria and gates where applicable.  
 **Rationale:** A defined lifecycle makes handoffs and release readiness reviewable.  
-**Implementation note:** The ten-stage enum and stage definitions are present in src/arkhon/orchestrator/lifecycle.py; stage transition enforcement is implemented in stage_manager.py for the criteria currently encoded there. This does not imply every organizational process is automated.
+**Implementation note:** The ten-stage enum and stage definitions are present in src/gencode_gov/orchestrator/lifecycle.py; stage transition enforcement is implemented in stage_manager.py for the criteria currently encoded there. This does not imply every organizational process is automated.
 
 ## ADR-010 — Keep Repository Documentation in English by Default
 

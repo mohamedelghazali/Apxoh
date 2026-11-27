@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.integrations.models._openai_compatible import (
+from gencode_gov.integrations.models._openai_compatible import (
     OpenAICompatibleAdapter,
     OpenAICompatibleConfig,
 )
@@ -201,17 +201,11 @@ def test_endpoint_rejects_unsafe_urls(endpoint: str) -> None:
 
 def test_endpoint_allows_https_and_loopback_http() -> None:
     assert OpenAICompatibleAdapter(_config())._endpoint_is_allowed()
-    local = replace(
-        _config(api_key_required=False), endpoint="http://127.0.0.1:8080/v1"
-    )
+    local = replace(_config(api_key_required=False), endpoint="http://127.0.0.1:8080/v1")
     assert OpenAICompatibleAdapter(local)._endpoint_is_allowed()
-    ipv6_loopback = replace(
-        _config(api_key_required=False), endpoint="http://[::1]:8080/v1"
-    )
+    ipv6_loopback = replace(_config(api_key_required=False), endpoint="http://[::1]:8080/v1")
     assert OpenAICompatibleAdapter(ipv6_loopback)._endpoint_is_allowed()
-    localhost = replace(
-        _config(api_key_required=False), endpoint="http://localhost/v1"
-    )
+    localhost = replace(_config(api_key_required=False), endpoint="http://localhost/v1")
     assert not OpenAICompatibleAdapter(localhost)._endpoint_is_allowed()
 
 
@@ -243,7 +237,6 @@ def test_prompt_files_and_non_object_response(
         result = adapter.send("hi")
     assert not result.ok
     assert "expected JSON object" in result.reason
-
 
 
 @pytest.mark.parametrize(

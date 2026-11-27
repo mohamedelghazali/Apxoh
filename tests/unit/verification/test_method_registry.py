@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.verification.methods import METHOD_REGISTRY, resolve_method, resolve_methods
+from gencode_gov.verification.methods import METHOD_REGISTRY, resolve_method, resolve_methods
 
 
 def test_registry_contains_only_explicit_implementations() -> None:
@@ -61,7 +61,7 @@ def test_resolve_methods_rejects_malformed_lists(value: object, message: str) ->
 def test_assess_reports_implementation_coverage_but_never_passes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
     project.mkdir()
@@ -82,15 +82,15 @@ human_review:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
 
-    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
 
     def fake_mypy(self: MypyRunner, root: Path) -> RunnerResult:
-        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact = root / ".gencode-gov" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_text("Success: no issues found", encoding="utf-8")
         return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
@@ -108,7 +108,7 @@ human_review:
     assert "human-review-approval" in output
     assert "[BLOCKED] no score or readiness level has been computed" in output
 
-    from arkhon.evidence.store import EvidenceStore
+    from gencode_gov.evidence.store import EvidenceStore
 
     records = list(EvidenceStore(project).iter_records())
     assert len(records) == 1
@@ -120,7 +120,7 @@ human_review:
 def test_assess_blocks_malformed_method_declaration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
     project.mkdir()
@@ -140,8 +140,8 @@ human_review:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
 
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
@@ -153,7 +153,7 @@ human_review:
 def test_assess_rejects_invalid_rule_registry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
     project.mkdir()
@@ -161,7 +161,7 @@ def test_assess_rejects_invalid_rule_registry(
     rules = repository / "rules"
     rules.mkdir(parents=True)
     (rules / "broken.yaml").write_text("[", encoding="utf-8")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
 
     assert main(["assess", str(project)]) == 1
     assert "rule load errors" in capsys.readouterr().err
@@ -170,7 +170,7 @@ def test_assess_rejects_invalid_rule_registry(
 def test_assess_rejects_tampered_evidence_store(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
     project.mkdir()
@@ -187,13 +187,14 @@ verification:
 """,
         encoding="utf-8",
     )
-    evidence_dir = project / ".arkhon" / "evidence" / "testing"
+    evidence_dir = project / ".gencode-gov" / "evidence" / "testing"
     evidence_dir.mkdir(parents=True)
     (evidence_dir / "EVID-TAMPER.json").write_text("{", encoding="utf-8")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
 
     assert main(["assess", str(project)]) == 1
     assert "evidence integrity check failed" in capsys.readouterr().err
+
 
 def _write_assessment_rule(
     rules: Path,
@@ -226,9 +227,9 @@ human_review:
 def test_assess_distinguishes_tool_execution_from_zero_type_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
-    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.cli import main
+    from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
 
     project = tmp_path / "project"
     project.mkdir()
@@ -241,12 +242,12 @@ def test_assess_distinguishes_tool_execution_from_zero_type_errors(
         "code-quality",
         "[type-checker-execution, zero-type-errors-check]",
     )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
 
     def failed_mypy(self: MypyRunner, root: Path) -> RunnerResult:
-        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact = root / ".gencode-gov" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_text("src/app.py:1: error: incompatible type", encoding="utf-8")
         return RunnerResult(self.name, RunnerOutcome.FAIL, "mypy reported type errors", [artifact])
@@ -263,9 +264,9 @@ def test_assess_distinguishes_tool_execution_from_zero_type_errors(
 def test_assess_blocks_runner_exception_and_invalid_artifact(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
-    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.cli import main
+    from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
 
     project = tmp_path / "project"
     project.mkdir()
@@ -273,9 +274,9 @@ def test_assess_blocks_runner_exception_and_invalid_artifact(
     rules = repository / "rules"
     rules.mkdir(parents=True)
     _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
 
     def outside_artifact(self: MypyRunner, root: Path) -> RunnerResult:
         artifact = tmp_path / "outside.txt"
@@ -297,9 +298,9 @@ def test_assess_blocks_runner_exception_and_invalid_artifact(
 def test_assess_blocks_when_project_head_changes_during_verification(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
-    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.cli import main
+    from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
 
     project = tmp_path / "project"
     project.mkdir()
@@ -307,13 +308,13 @@ def test_assess_blocks_when_project_head_changes_during_verification(
     rules = repository / "rules"
     rules.mkdir(parents=True)
     _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
     commits = iter(["a" * 40, "b" * 40])
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: next(commits))
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: next(commits))
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
 
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
-        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact = root / ".gencode-gov" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_text("Success", encoding="utf-8")
         return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
@@ -329,11 +330,11 @@ def test_assess_blocks_when_project_head_changes_during_verification(
 def test_assess_marks_out_of_scope_rule_not_applicable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
-    (project / ".arkhon").mkdir(parents=True)
-    (project / ".arkhon" / "project.yaml").write_text(
+    (project / ".gencode-gov").mkdir(parents=True)
+    (project / ".gencode-gov" / "project.yaml").write_text(
         "project:\n  profile: web-application\n", encoding="utf-8"
     )
     repository = tmp_path / "repository"
@@ -342,9 +343,9 @@ def test_assess_marks_out_of_scope_rule_not_applicable(
     _write_assessment_rule(
         rules, "SE-API-001", "api-integration", "[api-contract-analysis]", scope="api-service"
     )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
 
     assert main(["assess", str(project)]) == 1
     assert "SE-API-001: NOT_APPLICABLE" in capsys.readouterr().out
@@ -353,10 +354,10 @@ def test_assess_marks_out_of_scope_rule_not_applicable(
 def test_assess_computes_score_only_after_all_rules_and_gates_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
-    from arkhon.verification.methods import MethodImplementation
-    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.cli import main
+    from gencode_gov.verification.methods import MethodImplementation
+    from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
 
     project = tmp_path / "project"
     project.mkdir()
@@ -374,27 +375,23 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
         "devops",
     ]
     for index, domain in enumerate(domains):
-        _write_assessment_rule(
-            rules, f"SE-TEST-{index:03d}", domain, "[type-checker-execution]"
-        )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+        _write_assessment_rule(rules, f"SE-TEST-{index:03d}", domain, "[type-checker-execution]")
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
     monkeypatch.setattr(
-        "arkhon.verification.methods.resolve_methods",
+        "gencode_gov.verification.methods.resolve_methods",
         lambda methods: tuple(
             (
                 method,
-                MethodImplementation(
-                    method, "MypyRunner", "mypy", frozenset(domains)
-                ),
+                MethodImplementation(method, "MypyRunner", "mypy", frozenset(domains)),
             )
             for method in methods
         ),
     )
 
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
-        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact = root / ".gencode-gov" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_text("Success", encoding="utf-8")
         return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
@@ -410,26 +407,27 @@ def test_assess_computes_score_only_after_all_rules_and_gates_pass(
 def test_assess_rejects_unknown_explicit_project_profile(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
-    (project / ".arkhon").mkdir(parents=True)
-    (project / ".arkhon" / "project.yaml").write_text(
+    (project / ".gencode-gov").mkdir(parents=True)
+    (project / ".gencode-gov" / "project.yaml").write_text(
         "project:\n  profile: invented-profile\n", encoding="utf-8"
     )
     repository = tmp_path / "repository"
     rules = repository / "rules"
     rules.mkdir(parents=True)
     _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
 
     assert main(["assess", str(project)]) == 1
     assert "unknown project profile" in capsys.readouterr().err
 
+
 def test_assess_does_not_exclude_rules_using_heuristic_profile(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
     (project / "public").mkdir(parents=True)
@@ -439,8 +437,8 @@ def test_assess_does_not_exclude_rules_using_heuristic_profile(
     _write_assessment_rule(
         rules, "SE-API-001", "api-integration", "[api-contract-analysis]", scope="api-service"
     )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
 
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
@@ -448,11 +446,12 @@ def test_assess_does_not_exclude_rules_using_heuristic_profile(
     assert "SE-API-001: BLOCKED" in output
     assert "NOT_APPLICABLE" not in output
 
+
 def test_assess_blocks_dirty_worktree_before_running_verifiers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
-    from arkhon.evidence.store import EvidenceStore
+    from gencode_gov.cli import main
+    from gencode_gov.evidence.store import EvidenceStore
 
     project = tmp_path / "project"
     project.mkdir()
@@ -460,9 +459,9 @@ def test_assess_blocks_dirty_worktree_before_running_verifiers(
     rules = repository / "rules"
     rules.mkdir(parents=True)
     _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: False)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: False)
 
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
@@ -476,9 +475,9 @@ def test_assess_blocks_dirty_worktree_before_running_verifiers(
 def test_assess_blocks_worktree_changed_while_runner_executes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
-    from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
-    from arkhon.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.cli import main
+    from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
 
     project = tmp_path / "project"
     project.mkdir()
@@ -486,15 +485,13 @@ def test_assess_blocks_worktree_changed_while_runner_executes(
     rules = repository / "rules"
     rules.mkdir(parents=True)
     _write_assessment_rule(rules, "SE-CQ-002", "code-quality", "[type-checker-execution]")
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     clean_states = iter([True, False])
-    monkeypatch.setattr(
-        "arkhon.cli._working_tree_clean", lambda _project: next(clean_states)
-    )
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: next(clean_states))
 
     def passing_mypy(self: MypyRunner, root: Path) -> RunnerResult:
-        artifact = root / ".arkhon" / "reports" / "mypy.txt"
+        artifact = root / ".gencode-gov" / "reports" / "mypy.txt"
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_text("Success", encoding="utf-8")
         return RunnerResult(self.name, RunnerOutcome.PASS, artifacts=[artifact])
@@ -505,10 +502,11 @@ def test_assess_blocks_worktree_changed_while_runner_executes(
     assert "Working tree clean: no" in output
     assert "project commit or working tree changed during assessment" in output
 
+
 def test_assess_rejects_verifier_used_outside_its_approved_domain(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from arkhon.cli import main
+    from gencode_gov.cli import main
 
     project = tmp_path / "project"
     project.mkdir()
@@ -521,12 +519,11 @@ def test_assess_rejects_verifier_used_outside_its_approved_domain(
         "software-security",
         "[type-checker-execution]",
     )
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: repository)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
-    monkeypatch.setattr("arkhon.cli._working_tree_clean", lambda _project: True)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: repository)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._working_tree_clean", lambda _project: True)
 
     assert main(["assess", str(project)]) == 1
     output = capsys.readouterr().out
     assert "SE-SEC-GOV-001: BLOCKED" in output
     assert "not approved for rule domain 'software-security'" in output
-

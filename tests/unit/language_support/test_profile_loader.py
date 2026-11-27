@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.core.errors import ConfigError
-from arkhon.language_support.language_profile_loader import load_language_profile
-from arkhon.language_support.registry import load_registry
+from gencode_gov.core.errors import ConfigError
+from gencode_gov.language_support.language_profile_loader import load_language_profile
+from gencode_gov.language_support.registry import load_registry
 
 
 def _repo(tmp_path: Path, profile: dict[str, object]) -> Path:
@@ -113,9 +113,7 @@ def test_rejects_unknown_language(tmp_path: Path) -> None:
         ("notes", 42),
     ],
 )
-def test_rejects_malformed_profile_fields(
-    tmp_path: Path, field: str, value: object
-) -> None:
+def test_rejects_malformed_profile_fields(tmp_path: Path, field: str, value: object) -> None:
     data = _valid_profile()
     data[field] = value
     with pytest.raises(ConfigError):
@@ -132,9 +130,7 @@ def test_rejects_missing_profile(tmp_path: Path) -> None:
 @pytest.mark.parametrize("contents", ["[not, a, mapping]", "not: [valid"])
 def test_rejects_non_mapping_or_invalid_yaml(tmp_path: Path, contents: str) -> None:
     root = _repo(tmp_path, _valid_profile())
-    (root / "languages" / "python" / "language-profile.yaml").write_text(
-        contents, encoding="utf-8"
-    )
+    (root / "languages" / "python" / "language-profile.yaml").write_text(contents, encoding="utf-8")
     with pytest.raises(ConfigError):
         load_language_profile("python", root)
 

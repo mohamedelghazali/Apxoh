@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.assessment.gates import GateVerdict, RuleOutcome, evaluate_gate
-from arkhon.orchestrator.lifecycle import (
+from gencode_gov.assessment.gates import GateVerdict, RuleOutcome, evaluate_gate
+from gencode_gov.orchestrator.lifecycle import (
     STAGE_ORDER,
     LifecycleState,
     Stage,
@@ -15,7 +15,7 @@ from arkhon.orchestrator.lifecycle import (
     previous_stage,
     stage_definition,
 )
-from arkhon.orchestrator.stage_manager import StageManager
+from gencode_gov.orchestrator.stage_manager import StageManager
 
 
 def test_stage_order_has_10_stages() -> None:
@@ -72,8 +72,8 @@ def _failing_gate(gate: str) -> GateVerdict:
 
 
 def test_stage_manager_allows_when_gate_passes(tmp_path: Path) -> None:
-    (tmp_path / ".arkhon").mkdir()
-    (tmp_path / ".arkhon" / "project.yaml").write_text("x: 1\n", encoding="utf-8")
+    (tmp_path / ".gencode-gov").mkdir()
+    (tmp_path / ".gencode-gov" / "project.yaml").write_text("x: 1\n", encoding="utf-8")
     state = LifecycleState(current=Stage.REQUIREMENTS)
     manager = StageManager(
         state, {"requirements_gate": _passing_gate("requirements_gate")}, tmp_path
@@ -99,7 +99,7 @@ def test_stage_manager_blocks_on_project_init_without_file(tmp_path: Path) -> No
     manager = StageManager(state, {}, tmp_path)
     check = manager.can_advance()
     assert not check.allowed
-    assert any(".arkhon/project.yaml" in item for item in check.missing_criteria)
+    assert any(".gencode-gov/project.yaml" in item for item in check.missing_criteria)
 
 
 def test_stage_manager_advance_raises_on_blocked(tmp_path: Path) -> None:

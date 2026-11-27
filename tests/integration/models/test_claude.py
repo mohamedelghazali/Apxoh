@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from arkhon.integrations.models.claude.adapter import (
+from gencode_gov.integrations.models.claude.adapter import (
     ClaudeAdapter,
     ClaudeConfig,
 )

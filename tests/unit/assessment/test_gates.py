@@ -1,16 +1,16 @@
-"""Tests for arkhon.assessment.gates."""
+"""Tests for gencode_gov.assessment.gates."""
 
 from __future__ import annotations
 
 import pytest
 
-from arkhon.assessment.gates import (
+from gencode_gov.assessment.gates import (
     GATE_DOMAINS,
     RuleOutcome,
     evaluate_all_gates,
     evaluate_gate,
 )
-from arkhon.core.errors import GateError
+from gencode_gov.core.errors import GateError
 
 
 def _outcome(rule_id: str, enforcement: str, status: str) -> RuleOutcome:

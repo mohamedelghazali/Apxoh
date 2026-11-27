@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from arkhon.rules.loader import Rule
-from arkhon.rules.validator import validate_semantics
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.validator import validate_semantics
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RULE_PATH = REPO_ROOT / "languages" / "python" / "rules" / "SE-REQ-001-verifiable-requirements.yaml"
