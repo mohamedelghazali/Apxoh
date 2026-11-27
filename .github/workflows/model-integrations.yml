@@ -27,7 +27,7 @@ jobs:
           import yaml
           manifest = yaml.safe_load(Path("manifest/integrations.yaml").read_text(encoding="utf-8"))
           declared = [item["id"] for item in manifest["integrations"]["models"]]
-          root = Path("src/arkhon/integrations/models")
+          root = Path("src/gencode_gov/integrations/models")
           implemented = sorted(
               path.parent.name for path in root.glob("*/adapter.py")
           ) if root.is_dir() else []
