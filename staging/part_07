@@ -1,0 +1,535 @@
+    head_ref: str
+    files_changed: int
+    protected_touched: tuple[str, __DOT____DOT____DOT__]
+    deleted_tests: tuple[str, __DOT____DOT____DOT__]
+    frozen_api_failures: tuple[str, __DOT____DOT____DOT__]
+    schema_breaking_changes: tuple[str, __DOT____DOT____DOT__]
+    reasons: tuple[str, __DOT____DOT____DOT__]
+
+    def to_dict(self) -__GT__ dict[str, Any]:
+        return {
+            "status": self__DOT__status,
+            "base_ref": self__DOT__base_ref,
+            "head_ref": self__DOT__head_ref,
+            "files_changed": self__DOT__files_changed,
+            "protected_touched": list(self__DOT__protected_touched),
+            "deleted_tests": list(self__DOT__deleted_tests),
+            "frozen_api_failures": list(self__DOT__frozen_api_failures),
+            "schema_breaking_changes": list(self__DOT__schema_breaking_changes),
+            "reasons": list(self__DOT__reasons),
+        }
+
+
+def _symbol_defined_in_python(py_file: Path, symbol: str) -__GT__ bool:
+    try:
+        tree = ast__DOT__parse(py_file__DOT__read_text(encoding="utf-8"), filename=str(py_file))
+    except (OSError, UnicodeDecodeError, SyntaxError):  # pragma: no cover
+        return False
+    for node in tree__DOT__body:
+        if isinstance(node, (ast__DOT__FunctionDef, ast__DOT__AsyncFunctionDef, ast__DOT__ClassDef)):
+            if node__DOT__name == symbol:
+                return True
+        elif isinstance(node, ast__DOT__Assign):
+            for target in node__DOT__targets:
+                if isinstance(target, ast__DOT__Name) and target__DOT__id == symbol:
+                    return True
+        elif isinstance(node, ast__DOT__ImportFrom):
+            for alias in node__DOT__names:
+                bound = alias__DOT__asname or alias__DOT__name
+                if bound == symbol:
+                    return True
+    return False
+
+
+def verify_frozen_apis(project_root: Path) -__GT__ tuple[str, str, tuple[str, __DOT____DOT____DOT__]]:
+    """Verify frozen_apis entrypoints declared in compatibility__DOT__yaml__DOT__"""
+    root = project_root__DOT__resolve()
+    compat_candidates = [
+        root / "manifest" / "compatibility__DOT__yaml",
+        root / "__DOT__gencode-gov" / "compatibility__DOT__yaml",
+    ]
+    compat_file = next((p for p in compat_candidates if p__DOT__is_file() and not p__DOT__is_symlink()), None)
+    if compat_file is None:
+        return STATUS_PASS, "no frozen_apis contract declared; skipping frozen API check", ()
+
+    try:
+        raw = yaml__DOT__safe_load(compat_file__DOT__read_text(encoding="utf-8"))
+    except (OSError, yaml__DOT__YAMLError) as exc:
+        return STATUS_BLOCKED, f"cannot parse {compat_file__DOT__name}: {exc}", ()
+    if not isinstance(raw, dict):
+        return STATUS_BLOCKED, f"{compat_file__DOT__name} must be a YAML mapping", ()
+
+    frozen = raw__DOT__get("frozen_apis", [])
+    if not isinstance(frozen, list):
+        return STATUS_BLOCKED, "frozen_apis must be a list", ()
+    if not frozen:
+        return STATUS_PASS, "0 frozen_apis declared", ()
+
+    failures: list[str] = []
+    for entry in frozen:
+        if not isinstance(entry, str) or "::" not in entry:
+            failures__DOT__append(f"malformed frozen_apis entry: {entry!r}")
+            continue
+        mod_spec, sym = entry__DOT__split("::", 1)
+        candidates = [root / mod_spec]
+        if not mod_spec__DOT__endswith("__DOT__py"):
+            normalized = mod_spec
+            if normalized__DOT__startswith("src/"):
+                pkg_part = normalized[4:]__DOT__replace("__DOT__", "/")
+                candidates__DOT__append(root / "src" / f"{pkg_part}__DOT__py")
+                candidates__DOT__append(root / "src" / pkg_part / "__init____DOT__py")
+            candidates__DOT__append(root / f"{mod_spec}__DOT__py")
+        found_path = next((c for c in candidates if c__DOT__is_file() and not c__DOT__is_symlink()), None)
+        if found_path is None:
+            failures__DOT__append(f"missing frozen API module for {entry!r}")
+            continue
+        try:
+            found_path__DOT__resolve()__DOT__relative_to(root)
+        except ValueError:  # pragma: no cover
+            failures__DOT__append(f"frozen API path escapes root: {entry!r}")
+            continue
+        if not _symbol_defined_in_python(found_path, sym):
+            failures__DOT__append(f"missing frozen symbol {sym!r} in {found_path__DOT__relative_to(root)}")
+
+    if failures:
+        return STATUS_FAIL, f"frozen API contract broken: {failures}", tuple(failures)
+    return STATUS_PASS, f"verified {len(frozen)} frozen_apis entrypoint(s)", ()
+
+
+def _compare_json_schemas(
+    old_schema: dict[str, Any],
+    new_schema: dict[str, Any],
+    name: str,
+) -__GT__ list[str]:
+    issues: list[str] = []
+    old_props = old_schema__DOT__get("properties", {})
+    new_props = new_schema__DOT__get("properties", {})
+    if isinstance(old_props, dict) and isinstance(new_props, dict):
+        removed = sorted(set(old_props) - set(new_props))
+        if removed:
+            issues__DOT__append(f"{name}: removed schema properties {removed}")
+        for prop_name in sorted(set(old_props) & set(new_props)):
+            old_p = old_props[prop_name]
+            new_p = new_props[prop_name]
+            if isinstance(old_p, dict) and isinstance(new_p, dict):
+                if isinstance(old_p__DOT__get("enum"), list) and isinstance(new_p__DOT__get("enum"), list):
+                    dropped_enum = sorted(set(old_p["enum"]) - set(new_p["enum"]))
+                    if dropped_enum:
+                        issues__DOT__append(f"{name}__DOT__{prop_name}: removed enum values {dropped_enum}")
+    return issues
+
+
+def evaluate_diff_governance(
+    project_root: Path,
+    *,
+    base_ref: str | None = None,
+    head_ref: str = "HEAD",
+    max_files: int = 500,
+    allow_protected: bool = False,
+) -__GT__ DiffGovernanceReport:
+    """Evaluate compatibility, protected files, and test integrity across a diff__DOT__"""
+    root = project_root__DOT__resolve()
+    frozen_status, frozen_reason, frozen_failures = verify_frozen_apis(root)
+    reasons: list[str] = []
+    if frozen_status != STATUS_PASS:
+        reasons__DOT__append(frozen_reason)
+
+    if not base_ref:
+        status = frozen_status
+        return DiffGovernanceReport(
+            status=status,
+            base_ref=None,
+            head_ref=head_ref,
+            files_changed=0,
+            protected_touched=(),
+            deleted_tests=(),
+            frozen_api_failures=frozen_failures,
+            schema_breaking_changes=(),
+            reasons=tuple(reasons),
+        )
+
+    git_bin = shutil__DOT__which("git")
+    if git_bin is None:  # pragma: no cover
+        return DiffGovernanceReport(
+            status=STATUS_BLOCKED,
+            base_ref=base_ref,
+            head_ref=head_ref,
+            files_changed=0,
+            protected_touched=(),
+            deleted_tests=(),
+            frozen_api_failures=frozen_failures,
+            schema_breaking_changes=(),
+            reasons=("git executable not found on PATH",),
+        )
+
+    diff_res = subprocess__DOT__run(  # noqa: S603
+        [git_bin, "diff", "--name-status", f"{base_ref}__DOT____DOT__{head_ref}"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    if diff_res__DOT__returncode != 0:
+        return DiffGovernanceReport(
+            status=STATUS_BLOCKED,
+            base_ref=base_ref,
+            head_ref=head_ref,
+            files_changed=0,
+            protected_touched=(),
+            deleted_tests=(),
+            frozen_api_failures=frozen_failures,
+            schema_breaking_changes=(),
+            reasons=(f"cannot compute git diff {base_ref}__DOT____DOT__{head_ref}: {diff_res__DOT__stderr__DOT__strip()}",),
+        )
+
+    read_only_prefixes: list[str] = []
+    proj_yaml = root / "__DOT__gencode-gov" / "project__DOT__yaml"
+    if proj_yaml__DOT__is_file() and not proj_yaml__DOT__is_symlink():
+        try:
+            pdata = yaml__DOT__safe_load(proj_yaml__DOT__read_text(encoding="utf-8"))
+            if isinstance(pdata, dict) and isinstance(pdata__DOT__get("governance_files"), dict):
+                ro = pdata["governance_files"]__DOT__get("read_only", [])
+                if isinstance(ro, list):
+                    read_only_prefixes = [str(x) for x in ro if isinstance(x, str)]
+        except (OSError, yaml__DOT__YAMLError):  # pragma: no cover
+            read_only_prefixes = []
+
+    changed_paths: list[tuple[str, str]] = []
+    for ln in diff_res__DOT__stdout__DOT__splitlines():
+        parts = ln__DOT__split("	")
+        if len(parts) __GT__= 2:
+            changed_paths__DOT__append((parts[0], parts[-1]))
+
+    protected_touched: list[str] = []
+    deleted_tests: list[str] = []
+    schema_breaks: list[str] = []
+
+    for mode, rel_path in changed_paths:
+        if any(
+            rel_path == pref__DOT__rstrip("/") or rel_path__DOT__startswith(pref__DOT__rstrip("/") + "/")
+            for pref in read_only_prefixes
+        ):
+            protected_touched__DOT__append(rel_path)
+        is_test_path = "tests/" in rel_path or Path(rel_path)__DOT__name__DOT__startswith("test_")
+        if mode__DOT__startswith("D") and is_test_path:
+            deleted_tests__DOT__append(rel_path)
+        if rel_path__DOT__startswith("schemas/") and rel_path__DOT__endswith("__DOT__json"):
+            if mode__DOT__startswith("D"):
+                schema_breaks__DOT__append(f"deleted schema file: {rel_path}")
+            elif mode__DOT__startswith("M"):
+                old_show = subprocess__DOT__run(  # noqa: S603
+                    [git_bin, "show", f"{base_ref}:{rel_path}"],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=10,
+                )
+                new_fp = root / rel_path
+                if old_show__DOT__returncode == 0 and new_fp__DOT__is_file():
+                    try:
+                        old_j = json__DOT__loads(old_show__DOT__stdout)
+                        new_j = json__DOT__loads(new_fp__DOT__read_text(encoding="utf-8"))
+                        if isinstance(old_j, dict) and isinstance(new_j, dict):
+                            schema_breaks__DOT__extend(_compare_json_schemas(old_j, new_j, rel_path))
+                    except (OSError, json__DOT__JSONDecodeError):
+                        schema_breaks__DOT__append(f"unparseable JSON schema change: {rel_path}")
+
+    if len(changed_paths) __GT__ max_files:
+        reasons__DOT__append(
+            f"diff blast radius ({len(changed_paths)} files) exceeds max_files={max_files}"
+        )
+    if protected_touched and not allow_protected:
+        reasons__DOT__append(
+            f"protected governance files modified without --allow-protected: {protected_touched}"
+        )
+    if deleted_tests:
+        reasons__DOT__append(f"regression test files deleted: {deleted_tests}")
+    if schema_breaks:
+        reasons__DOT__append(f"breaking schema changes: {schema_breaks}")
+
+    if frozen_status == STATUS_BLOCKED:
+        final_status = STATUS_BLOCKED
+    elif reasons:
+        final_status = STATUS_FAIL
+    else:
+        final_status = STATUS_PASS
+
+    return DiffGovernanceReport(
+        status=final_status,
+        base_ref=base_ref,
+        head_ref=head_ref,
+        files_changed=len(changed_paths),
+        protected_touched=tuple(sorted(set(protected_touched))),
+        deleted_tests=tuple(sorted(set(deleted_tests))),
+        frozen_api_failures=frozen_failures,
+        schema_breaking_changes=tuple(schema_breaks),
+        reasons=tuple(reasons),
+    )
+===FILE:src/gencode_gov/verification/domain_verifiers__DOT__py===
+"""Deterministic repository & artifact verifiers across all 16 GENCODE-GOV engineering domains__DOT__"""
+
+from __future__ import annotations
+
+import ast
+import json
+import re
+import shutil
+import subprocess
+import tomllib
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from gencode_gov__DOT__core__DOT__constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
+from gencode_gov__DOT__evidence__DOT__attestation import verify_human_attestation
+from gencode_gov__DOT__verification__DOT__architecture_verifier import verify_architecture_contracts
+from gencode_gov__DOT__verification__DOT__code_and_test_integrity import (
+    verify_code_integrity_method,
+    verify_test_adequacy_method,
+)
+from gencode_gov__DOT__verification__DOT__diff_governance import evaluate_diff_governance
+from gencode_gov__DOT__verification__DOT__runners__DOT__base import Runner, RunnerOutcome, RunnerResult
+
+_SHA40_RE = re__DOT__compile(r"^[0-9a-f]{40}$")
+_SECRET_ASSIGN_RE = re__DOT__compile(
+    r"""(?ix)
+    (?:api[_-]?key|secret[_-]?key|access[_-]?token|private[_-]?key|db[_-]?password)
+    \s*[:=]\s*['"]
+    (?:__T_SK__[A-Za-z0-9]{20,}|__T_GH__[A-Za-z0-9]{30,}|__T_AK__[0-9A-Z]{16}|__T_AI__[0-9A-Za-z_-]{35})['"]
+    """
+)
+_DESTRUCTIVE_SQL_RE = re__DOT__compile(
+    r"\b(__T_DR__\s+TABLE|__T_DR__\s+COLUMN|__T_TR__\s+TABLE|"
+    r"ALTER\s+TABLE\s+\S+\s+ALTER\s+COLUMN\s+\S+\s+TYPE)\b",
+    re__DOT__IGNORECASE,
+)
+_NON_CONCURRENT_INDEX_RE = re__DOT__compile(
+    r"\bCREATE\s+(?:UNIQUE\s+)?INDEX\s+(?!CONCURRENTLY\b)(?!IF\s+NOT\s+EXISTS\s+idx_sqlite)",
+    re__DOT__IGNORECASE,
+)
+_FORBIDDEN_LICENSES = frozenset({"AGPL-3__DOT__0", "AGPL-3__DOT__0-only", "AGPL-3__DOT__0-or-later", "SSPL-1__DOT__0"})
+_NETWORK_CALL_NAMES = frozenset(
+    {"get", "post", "put", "delete", "patch", "head", "request", "urlopen"}
+)
+_NETWORK_MODULES = frozenset({"requests", "httpx"})
+
+
+class GovernanceDomainRunner(Runner):
+    """Lightweight deterministic workspace inspector enabling multi-domain method evaluation__DOT__"""
+
+    name = "governance-domain"
+
+    def run(self, project_root: Path, artifact_dir: Path | None = None) -__GT__ RunnerResult:
+        _ = artifact_dir
+        root = project_root__DOT__resolve()
+        if not root__DOT__is_dir():
+            return RunnerResult(
+                runner=self__DOT__name,
+                outcome=RunnerOutcome__DOT__BLOCKED,
+                reason=f"project root does not exist: {root}",
+            )
+        return RunnerResult(
+            runner=self__DOT__name,
+            outcome=RunnerOutcome__DOT__PASS,
+            reason="workspace ready for deterministic domain method verification",
+        )
+
+
+class HumanAttestationRunner(Runner):
+    """Runner anchor for commit-bound human review attestation verification__DOT__"""
+
+    name = "human-attestation"
+
+    def run(self, project_root: Path, artifact_dir: Path | None = None) -__GT__ RunnerResult:
+        _ = artifact_dir
+        root = project_root__DOT__resolve()
+        if not root__DOT__is_dir():
+            return RunnerResult(
+                runner=self__DOT__name,
+                outcome=RunnerOutcome__DOT__BLOCKED,
+                reason=f"project root does not exist: {root}",
+            )
+        return RunnerResult(
+            runner=self__DOT__name,
+            outcome=RunnerOutcome__DOT__PASS,
+            reason="attestation store ready for per-rule verification",
+        )
+
+
+def _safe_file(root: Path, rel: str) -__GT__ Path | None:
+    cand = root / rel
+    if cand__DOT__is_symlink():  # pragma: no cover
+        return None  # pragma: no cover
+    try:
+        resolved = cand__DOT__resolve()
+        resolved__DOT__relative_to(root)
+    except (OSError, ValueError):  # pragma: no cover
+        return None
+    return resolved if resolved__DOT__is_file() else None
+
+
+def _load_yaml_safe(path: Path) -__GT__ dict[str, Any] | None:
+    try:
+        raw = yaml__DOT__safe_load(path__DOT__read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml__DOT__YAMLError):  # pragma: no cover
+        return None
+    return raw if isinstance(raw, dict) else None
+
+
+def _resolve_head_sha(root: Path) -__GT__ str | None:
+    git_bin = shutil__DOT__which("git")
+    if git_bin is None:  # pragma: no cover
+        return None
+    try:
+        res = subprocess__DOT__run(  # noqa: S603
+            [git_bin, "rev-parse", "HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=10,
+        )
+    except (OSError, subprocess__DOT__SubprocessError):  # pragma: no cover
+        return None
+    sha = res__DOT__stdout__DOT__strip()
+    return sha if res__DOT__returncode == 0 and _SHA40_RE__DOT__fullmatch(sha) else None
+
+
+def _verify_requirements_methods(method_id: str, root: Path) -__GT__ tuple[str, str]:
+    req_file = _safe_file(root, "__DOT__gencode-gov/requirements__DOT__yaml")
+    if req_file is None:
+        return (
+            STATUS_BLOCKED,
+            "missing __DOT__gencode-gov/requirements__DOT__yaml structured specification artifact",
+        )
+    doc = _load_yaml_safe(req_file)
+    if doc is None or not isinstance(doc__DOT__get("requirements"), list) or not doc["requirements"]:
+        return STATUS_FAIL, "requirements__DOT__yaml must define a non-empty 'requirements' list"
+
+    reqs = [r for r in doc["requirements"] if isinstance(r, dict)]
+    if len(reqs) != len(doc["requirements"]):
+        return STATUS_FAIL, "every requirement entry must be a mapping"
+
+    seen_ids: set[str] = set()
+    missing_ac: list[str] = []
+    conflicts: list[str] = []
+    untraced: list[str] = []
+    missing_tests: list[str] = []
+
+    for item in reqs:
+        rid = str(item__DOT__get("id", ""))__DOT__strip()
+        stmt = str(item__DOT__get("statement", ""))__DOT__strip()
+        if not rid or not stmt:
+            return STATUS_FAIL, "every requirement requires non-empty 'id' and 'statement'"
+        if rid in seen_ids:
+            conflicts__DOT__append(f"duplicate requirement id {rid}")
+        seen_ids__DOT__add(rid)
+        ac = item__DOT__get("acceptance_criteria")
+        if not isinstance(ac, list) or not ac:
+            missing_ac__DOT__append(rid)
+        if item__DOT__get("conflicts_with"):
+            conflicts__DOT__append(f"unresolved conflict declared on {rid}")
+        tests = item__DOT__get("tests")
+        if not isinstance(tests, list) or not tests:
+            untraced__DOT__append(rid)
+        else:
+            for tf in tests:
+                if not isinstance(tf, str) or _safe_file(root, tf) is None:
+                    missing_tests__DOT__append(f"{rid}-__GT__{tf}")
+
+    if method_id in {"schema-validation", "requirements-audit"}:
+        return STATUS_PASS, f"validated {len(reqs)} structured requirement record(s)"
+    if method_id == "acceptance-criteria-validation":
+        if missing_ac:
+            return STATUS_FAIL, f"requirements missing acceptance_criteria: {missing_ac}"
+        return STATUS_PASS, f"all {len(reqs)} requirements define testable acceptance_criteria"
+    if method_id == "requirements-conflict-analysis":
+        if conflicts:
+            return STATUS_FAIL, f"requirement conflicts detected: {conflicts}"
+        return STATUS_PASS, f"0 duplicate IDs or conflicts across {len(reqs)} requirements"
+    if method_id == "requirements-traceability-analysis":
+        if untraced:
+            return STATUS_FAIL, f"requirements missing test traceability links: {untraced}"
+        return STATUS_PASS, f"all {len(reqs)} requirements map to verification artifacts"
+    if missing_tests or untraced:
+        return STATUS_FAIL, f"missing or invalid traced test files: {untraced + missing_tests}"
+    return STATUS_PASS, f"verified on-disk test files for all {len(reqs)} requirements"
+
+
+def _verify_adr_methods(method_id: str, root: Path) -__GT__ tuple[str, str]:
+    adr_dirs = [root / "docs" / "adr", root / "docs" / "architecture" / "decisions"]
+    adr_files: list[Path] = []
+    for d in adr_dirs:
+        if d__DOT__is_dir() and not d__DOT__is_symlink():
+            adr_files__DOT__extend(
+                p
+                for p in sorted(d__DOT__glob("*__DOT__md"))
+                if not p__DOT__is_symlink() and p__DOT__name__DOT__lower() != "readme__DOT__md"
+            )
+    if not adr_files:
+        return STATUS_BLOCKED, "no ADRs found under docs/adr/ or docs/architecture/decisions/"
+    if method_id == "adr-presence-check":
+        return STATUS_PASS, f"found {len(adr_files)} ADR document(s)"
+
+    malformed: list[str] = []
+    for adr in adr_files:
+        txt = adr__DOT__read_text(encoding="utf-8", errors="ignore")__DOT__lower()
+        for section in ("status", "context", "decision", "consequences"):
+            has_sec = (
+                f"## {section}" in txt or f"# {section}" in txt or f"{section}:" in txt
+            )
+            if not has_sec:
+                malformed__DOT__append(f"{adr__DOT__name}:missing-{section}")
+                break
+    if malformed:
+        return STATUS_FAIL, f"ADR structure incomplete: {malformed[:5]}"
+    return STATUS_PASS, f"validated ADR structure across {len(adr_files)} ADR(s)"
+
+
+def _verify_database_methods(method_id: str, root: Path) -__GT__ tuple[str, str]:
+    sql_files = [
+        p
+        for p in sorted(root__DOT__rglob("*__DOT__sql"))
+        if not p__DOT__is_symlink()
+        and not ({"tests", "examples", "__DOT__venv"} & set(p__DOT__parts))
+    ]
+    migration_dirs = [
+        d
+        for d in (
+            root / "migrations",
+            root / "alembic" / "versions",
+            root / "prisma" / "migrations",
+        )
+        if d__DOT__is_dir()
+    ]
+    for md in migration_dirs:
+        sql_files__DOT__extend(p for p in sorted(md__DOT__rglob("*__DOT__py")) if not p__DOT__is_symlink())
+
+    if method_id in {"destructive-ddl-migration-scan", "concurrent-index-and-lock-check"}:
+        if not sql_files:
+            return STATUS_PASS, "0 SQL/ORM migration files present; no destructive DDL risk"
+        destructive_hits: list[str] = []
+        index_hits: list[str] = []
+        for sf in sql_files:
+            txt = sf__DOT__read_text(encoding="utf-8", errors="ignore")
+            if "gencode-gov:allow-destructive-migration" in txt:
+                continue
+            rel = sf__DOT__relative_to(root)__DOT__as_posix()
+            if _DESTRUCTIVE_SQL_RE__DOT__search(txt):
+                destructive_hits__DOT__append(rel)
+            if sf__DOT__suffix__DOT__lower() == "__DOT__sql" and _NON_CONCURRENT_INDEX_RE__DOT__search(txt):
+                index_hits__DOT__append(rel)
+        if method_id == "destructive-ddl-migration-scan":
+            if destructive_hits:
+                return STATUS_FAIL, f"unguarded destructive DDL: {destructive_hits[:5]}"
+            return STATUS_PASS, f"scanned {len(sql_files)} migration(s); 0 destructive DDL"
+        if index_hits:
+            return STATUS_FAIL, f"non-concurrent index build: {index_hits[:5]}"
+        return STATUS_PASS, f"scanned {len(sql_files)} migration(s); index locks safe"
+
+    db_gov = _safe_file(root, "__DOT__gencode-gov/database-governance__DOT__yaml")
+    if db_gov is None:
+        return STATUS_BLOCKED, f"missing database-governance__DOT__yaml evidence for {method_id}"
