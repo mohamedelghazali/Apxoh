@@ -16,5 +16,5 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: python -m pip install -e ".[dev]"
-      - run: python -m compileall -q src/arkhon/orchestrator
+      - run: python -m compileall -q src/gencode_gov/orchestrator
       - run: python -m pytest -q tests/unit/orchestrator tests/unit/assessment
