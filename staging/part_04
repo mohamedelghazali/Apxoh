@@ -1,0 +1,559 @@
+===FILE:src/gencode_gov/evidence/attestation__DOT__py===
+"""Commit-bound human engineering review attestations with anti-self-approval guards."""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import tempfile
+import uuid
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+import jsonschema
+
+from gencode_gov__DOT__core__DOT__constants import STATUS_BLOCKED, STATUS_PASS
+from gencode_gov__DOT__core__DOT__errors import EvidenceError
+from gencode_gov__DOT__evidence__DOT__integrity import sha256_of
+
+MAX_ATTESTATION_DAYS = 90
+_RULE_ID_RE = re__DOT__compile(r"^SE-[A-Z]+(-[A-Z]+)?-\d{3,}$")
+_COMMIT_RE = re__DOT__compile(r"^[0-9a-f]{40}$")
+_FORBIDDEN_REVIEWER_TOKENS = (
+    "[bot]",
+    "dependabot",
+    "github-actions",
+    "renovate",
+    "ai-agent",
+    "claude",
+    "codex",
+    "cursor",
+    "copilot",
+    "gemini",
+    "gencode-gov-bot",
+)
+
+
+@dataclass(frozen=True)
+class ReviewAttestation:
+    """Verified human review attestation bound to a commit and artifact hashes."""
+
+    attestation_id: str
+    rule_ids: tuple[str, ...]
+    reviewer: str
+    approver_role: str
+    commit_sha: str
+    attested_at: str
+    expires_at: str
+    rationale: str
+    reviewed_artifacts: tuple[dict[str, str], ...]
+    path: Path
+
+
+def _schema_dict() -__GT__ dict[str, Any]:
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "attestation_id",
+            "rule_ids",
+            "reviewer",
+            "approver_role",
+            "commit_sha",
+            "attested_at",
+            "expires_at",
+            "rationale",
+            "reviewed_artifacts",
+        ],
+        "properties": {
+            "attestation_id": {"type": "string", "pattern": "^ATTEST-[A-Z0-9-]{8,48}$"},
+            "rule_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"type": "string", "pattern": "^SE-[A-Z]+(-[A-Z]+)?-\\d{3,}$"},
+            },
+            "reviewer": {"type": "string", "minLength": 2, "maxLength": 128},
+            "approver_role": {"type": "string", "minLength": 2, "maxLength": 128},
+            "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "attested_at": {"type": "string"},
+            "expires_at": {"type": "string"},
+            "rationale": {"type": "string", "minLength": 10, "maxLength": 4000},
+            "reviewed_artifacts": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["path", "sha256"],
+                    "properties": {
+                        "path": {"type": "string", "minLength": 1},
+                        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                    },
+                },
+            },
+        },
+    }
+
+
+def _parse_utc(value: str, label: str) -__GT__ datetime:
+    try:
+        parsed = datetime__DOT__fromisoformat(value__DOT__replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise EvidenceError(f"invalid {label} timestamp: {value!r}") from exc
+    if parsed__DOT__tzinfo is None or parsed__DOT__utcoffset() is None:
+        raise EvidenceError(f"{label} timestamp must include timezone: {value!r}")
+    return parsed__DOT__astimezone(UTC)
+
+
+def _ensure_human_reviewer(reviewer: str) -__GT__ str:
+    if os__DOT__environ__DOT__get("GENCODE_GOV_AGENT_SESSION_ID") or os__DOT__environ__DOT__get("GENCODE_GOV_SANDBOX"):
+        raise EvidenceError(
+            "automated agent or sandbox sessions are forbidden from creating human attestations"
+        )
+    cleaned = reviewer__DOT__strip()
+    lowered = cleaned__DOT__lower()
+    if len(cleaned) __LT__ 2 or any(tok in lowered for tok in _FORBIDDEN_REVIEWER_TOKENS):
+        raise EvidenceError(
+            f"reviewer {reviewer!r} looks like an automated bot or coding agent; "
+            "human reviewer identity required"
+        )
+    return cleaned
+
+
+def create_human_attestation(
+    project_root: Path,
+    *,
+    rule_ids: list[str],
+    reviewer: str,
+    approver_role: str,
+    commit_sha: str,
+    rationale: str,
+    artifact_paths: list[str] | None = None,
+    expires_days: int = 30,
+) -__GT__ ReviewAttestation:
+    """Create and atomically persist a commit-bound human review attestation."""
+    root = project_root__DOT__resolve()
+    if not root__DOT__is_dir():
+        raise EvidenceError(f"project root is not a directory: {root}")
+    human = _ensure_human_reviewer(reviewer)
+    role = approver_role__DOT__strip()
+    if len(role) __LT__ 2:
+        raise EvidenceError("approver_role must be at least 2 characters")
+    clean_rationale = rationale__DOT__strip()
+    if len(clean_rationale) __LT__ 10:
+        raise EvidenceError("rationale must be at least 10 characters")
+    if not _COMMIT_RE__DOT__fullmatch(commit_sha):
+        raise EvidenceError(f"invalid 40-char commit SHA: {commit_sha!r}")
+    if isinstance(expires_days, bool) or not (1 __LT__= expires_days __LT__= MAX_ATTESTATION_DAYS):
+        raise EvidenceError(f"expires_days must be between 1 and {MAX_ATTESTATION_DAYS}")
+    if not rule_ids or any(not _RULE_ID_RE__DOT__fullmatch(rid) for rid in rule_ids):
+        raise EvidenceError("at least one valid SE-* rule_id is required")
+
+    artifacts: list[dict[str, str]] = []
+    for rel_str in artifact_paths or []:
+        candidate = root / rel_str
+        if candidate__DOT__is_symlink():
+            raise EvidenceError(f"refusing symlinked reviewed artifact: {rel_str}")
+        resolved = candidate__DOT__resolve()
+        try:
+            rel_norm = resolved__DOT__relative_to(root)__DOT__as_posix()
+        except ValueError as exc:
+            raise EvidenceError(f"reviewed artifact escapes project root: {rel_str}") from exc
+        if not resolved__DOT__is_file():
+            raise EvidenceError(f"reviewed artifact does not exist: {rel_str}")
+        artifacts__DOT__append({"path": rel_norm, "sha256": sha256_of(resolved)})
+
+    now = datetime__DOT__now(UTC)
+    expires = now + timedelta(days=expires_days)
+    attest_id = f"ATTEST-GENCODE-GOV-{uuid__DOT__uuid4()__DOT__hex[:12]__DOT__upper()}"
+    payload: dict[str, Any] = {
+        "attestation_id": attest_id,
+        "rule_ids": sorted(set(rule_ids)),
+        "reviewer": human,
+        "approver_role": role,
+        "commit_sha": commit_sha,
+        "attested_at": now__DOT__strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "expires_at": expires__DOT__strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "rationale": clean_rationale,
+        "reviewed_artifacts": artifacts,
+    }
+    jsonschema__DOT__validate(instance=payload, schema=_schema_dict())
+
+    gov_dir = root / "__DOT__gencode-gov"
+    if gov_dir__DOT__is_symlink():
+        raise EvidenceError("refusing symlinked __DOT__gencode-gov directory")
+    evid_dir = gov_dir / "evidence"
+    if evid_dir__DOT__is_symlink():
+        raise EvidenceError("refusing symlinked __DOT__gencode-gov/evidence directory")
+    attest_dir = evid_dir / "attestations"
+    if attest_dir__DOT__exists() and attest_dir__DOT__is_symlink():
+        raise EvidenceError("refusing symlinked attestations directory")
+    attest_dir__DOT__mkdir(parents=True, exist_ok=True)
+    attest_dir__DOT__resolve()__DOT__relative_to(root)
+
+    target = attest_dir / f"{attest_id}__DOT__json"
+    if target__DOT__exists():  # pragma: no cover
+        raise EvidenceError(f"attestation already exists: {target}")
+
+    with tempfile__DOT__NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=attest_dir,
+        prefix="__DOT__attest-",
+        suffix="__DOT__tmp",
+        delete=False,
+    ) as handle:
+        json__DOT__dump(payload, handle, indent=2, sort_keys=True)
+        handle__DOT__write("\n")
+        handle__DOT__flush()
+        os__DOT__fsync(handle__DOT__fileno())
+        tmp_path = Path(handle__DOT__name)
+    tmp_path__DOT__replace(target)
+
+    return ReviewAttestation(
+        attestation_id=attest_id,
+        rule_ids=tuple(payload["rule_ids"]),
+        reviewer=human,
+        approver_role=role,
+        commit_sha=commit_sha,
+        attested_at=payload["attested_at"],
+        expires_at=payload["expires_at"],
+        rationale=clean_rationale,
+        reviewed_artifacts=tuple(artifacts),
+        path=target,
+    )
+
+
+def verify_human_attestation(
+    project_root: Path,
+    *,
+    rule_id: str,
+    expected_commit_sha: str | None,
+    required_role: str | None = None,
+) -__GT__ tuple[str, str]:
+    """Verify commit-bound, non-expired, hash-intact human attestation for rule_id."""
+    if expected_commit_sha is None or not _COMMIT_RE__DOT__fullmatch(expected_commit_sha):
+        return STATUS_BLOCKED, "cannot verify human attestation without a clean Git commit SHA"
+
+    root = project_root__DOT__resolve()
+    attest_dir = root / "__DOT__gencode-gov" / "evidence" / "attestations"
+    if not attest_dir__DOT__is_dir() or attest_dir__DOT__is_symlink():
+        return (
+            STATUS_BLOCKED,
+            f"authorized human review attestation missing for {rule_id} "
+            f"(record via 'gencode-gov attest --rule {rule_id}')",
+        )
+
+    now = datetime__DOT__now(UTC)
+    schema = _schema_dict()
+    stale_reasons: list[str] = []
+
+    for candidate in sorted(attest_dir__DOT__glob("*__DOT__json")):
+        if candidate__DOT__is_symlink() or not candidate__DOT__is_file():  # pragma: no cover
+            continue
+        try:
+            data = json__DOT__loads(candidate__DOT__read_text(encoding="utf-8"))
+            jsonschema__DOT__validate(instance=data, schema=schema)
+        except (OSError, UnicodeDecodeError, json__DOT__JSONDecodeError, jsonschema__DOT__ValidationError):
+            stale_reasons__DOT__append(f"malformed attestation {candidate__DOT__name}")
+            continue
+
+        if rule_id not in data["rule_ids"]:
+            continue
+
+        reviewer = str(data["reviewer"])__DOT__strip()
+        if any(tok in reviewer__DOT__lower() for tok in _FORBIDDEN_REVIEWER_TOKENS):
+            stale_reasons__DOT__append(f"attestation {data['attestation_id']} uses bot/agent reviewer")
+            continue
+
+        if data["commit_sha"] != expected_commit_sha:
+            stale_reasons__DOT__append(
+                f"attestation {data['attestation_id']} bound to {data['commit_sha'][:12]}, "
+                f"not {expected_commit_sha[:12]}"
+            )
+            continue
+
+        try:
+            attested_dt = _parse_utc(data["attested_at"], "attested_at")
+            expires_dt = _parse_utc(data["expires_at"], "expires_at")
+        except EvidenceError as exc:
+            stale_reasons__DOT__append(str(exc))
+            continue
+
+        if expires_dt __LT__= now or (expires_dt - attested_dt)__DOT__days __GT__ MAX_ATTESTATION_DAYS:
+            stale_reasons__DOT__append(f"attestation {data['attestation_id']} is expired")
+            continue
+
+        if required_role and data["approver_role"]__DOT__strip() != required_role__DOT__strip():
+            stale_reasons__DOT__append(
+                f"attestation {data['attestation_id']} role {data['approver_role']!r} "
+                f"!= required {required_role!r}"
+            )
+            continue
+
+        tampered = False
+        for item in data["reviewed_artifacts"]:
+            art_path = root / item["path"]
+            if art_path__DOT__is_symlink():  # pragma: no cover
+                tampered = True
+                break
+            resolved = art_path__DOT__resolve()
+            try:
+                resolved__DOT__relative_to(root)
+            except ValueError:  # pragma: no cover
+                tampered = True
+                break
+            if not resolved__DOT__is_file() or sha256_of(resolved) != item["sha256"]:
+                tampered = True
+                break
+        if tampered:
+            stale_reasons__DOT__append(
+                f"attestation {data['attestation_id']} invalidated by modified artifact digest"
+            )
+            continue
+
+        return (
+            STATUS_PASS,
+            f"verified commit-bound human attestation {data['attestation_id']} "
+            f"by {reviewer} ({data['approver_role']})",
+        )
+
+    if stale_reasons:
+        return STATUS_BLOCKED, "; "__DOT__join(stale_reasons)
+    return (
+        STATUS_BLOCKED,
+        f"authorized human review attestation missing for {rule_id} at commit "
+        f"{expected_commit_sha[:12]}",
+    )
+===FILE:src/gencode_gov/reporting/html_reporter__DOT__py===
+"""CSP-locked, HTML-escaped static HTML governance assessment reporter."""
+
+from __future__ import annotations
+
+import html
+import os
+import tempfile
+from pathlib import Path
+from typing import Any
+
+from gencode_gov__DOT__core__DOT__errors import GovernanceError
+
+
+def _atomic_safe_write(target: Path, content: str, root_anchor: Path | None = None) -__GT__ Path:
+    if target__DOT__exists() and target__DOT__is_symlink():
+        raise GovernanceError(f"refusing to write report through symlink: {target}")
+    parent = target__DOT__parent
+    if parent__DOT__exists() and parent__DOT__is_symlink():
+        raise GovernanceError(f"refusing symlinked report parent directory: {parent}")
+    parent__DOT__mkdir(parents=True, exist_ok=True)
+    if root_anchor is not None:
+        try:
+            parent__DOT__resolve()__DOT__relative_to(root_anchor__DOT__resolve())
+        except ValueError as exc:
+            raise GovernanceError(f"report path escapes project root: {target}") from exc
+
+    with tempfile__DOT__NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=parent,
+        prefix="__DOT__report-",
+        suffix="__DOT__tmp",
+        delete=False,
+    ) as handle:
+        handle__DOT__write(content)
+        handle__DOT__flush()
+        os__DOT__fsync(handle__DOT__fileno())
+        tmp = Path(handle__DOT__name)
+    tmp__DOT__replace(target)
+    return target
+
+
+class HtmlReporter:
+    """Render a JSON governance assessment dict into a zero-JS, CSP-locked HTML document."""
+
+    def render(self, report_data: dict[str, Any]) -__GT__ str:
+        esc = html__DOT__escape
+        project = esc(str(report_data__DOT__get("project", report_data__DOT__get("project_name", "Project"))))
+        decision = esc(str(report_data__DOT__get("decision", report_data__DOT__get("verdict", "UNKNOWN"))))
+        commit = esc(str(report_data__DOT__get("commit_sha", "uncommitted")))
+        score_raw = report_data__DOT__get("score", {})
+        total_score = (
+            esc(str(score_raw__DOT__get("total", score_raw)))
+            if isinstance(score_raw, dict)
+            else esc(str(score_raw))
+        )
+
+        rows: list[str] = []
+        rules_list = report_data__DOT__get("rules", report_data__DOT__get("outcomes", []))
+        if isinstance(rules_list, list):
+            for item in rules_list:
+                if not isinstance(item, dict):
+                    continue
+                rid = esc(str(item__DOT__get("rule_id", item__DOT__get("id", ""))))
+                dom = esc(str(item__DOT__get("domain", "")))
+                st = esc(str(item__DOT__get("status", "")))
+                rsn = esc(str(item__DOT__get("reason", "")))
+                rows__DOT__append(
+                    f"__LT__tr__GT____LT__td__GT____LT__code__GT__{rid}__LT__/code__GT____LT__/td__GT____LT__td__GT__{dom}__LT__/td__GT__"
+                    f"__LT__td class='st-{st__DOT__lower()}'__GT__{st}__LT__/td__GT____LT__td__GT__{rsn}__LT__/td__GT____LT__/tr__GT__"
+                )
+        rows_html = "\n"__DOT__join(rows) or "__LT__tr__GT____LT__td colspan='4'__GT__No rule outcomes recorded__DOT____LT__/td__GT____LT__/tr__GT__"
+
+        return f"""__LT__!DOCTYPE html__GT__
+__LT__html lang="en"__GT__
+__LT__head__GT__
+  __LT__meta charset="utf-8"__GT__
+  __LT__meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'unsafe-inline'"__GT__
+  __LT__meta name="viewport" content="width=device-width, initial-scale=1"__GT__
+  __LT__title__GT__GENCODE-GOV Assessment Report — {project}__LT__/title__GT__
+  __LT__style__GT__
+    body {{ font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1080px;
+            padding: 0 1rem; color: #111827; line-height: 1.5; }}
+    header {{ border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1.5rem; }}
+    __DOT__meta {{ display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.95rem; color: #374151; }}
+    __DOT__badge {{ font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px;
+              background: #f3f4f6; }}
+    table {{ width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }}
+    th, td {{ border: 1px solid #e5e7eb; padding: 0.55rem 0.7rem; text-align: left;
+              vertical-align: top; }}
+    th {{ background: #f9fafb; font-weight: 600; }}
+    __DOT__st-pass {{ color: #065f46; font-weight: 600; }}
+    __DOT__st-fail {{ color: #991b1b; font-weight: 600; }}
+    __DOT__st-blocked {{ color: #92400e; font-weight: 600; }}
+  __LT__/style__GT__
+__LT__/head__GT__
+__LT__body__GT__
+  __LT__header__GT__
+    __LT__h1__GT__GENCODE-GOV Governance Assessment__LT__/h1__GT__
+    __LT__div class="meta"__GT__
+      __LT__span__GT__Project: __LT__strong__GT__{project}__LT__/strong__GT____LT__/span__GT__
+      __LT__span__GT__Decision: __LT__span class="badge"__GT__{decision}__LT__/span__GT____LT__/span__GT__
+      __LT__span__GT__Score: __LT__strong__GT__{total_score}__LT__/strong__GT____LT__/span__GT__
+      __LT__span__GT__Commit: __LT__code__GT__{commit}__LT__/code__GT____LT__/span__GT__
+    __LT__/div__GT__
+  __LT__/header__GT__
+  __LT__main__GT__
+    __LT__h2__GT__Rule Verification Outcomes__LT__/h2__GT__
+    __LT__table__GT__
+      __LT__thead__GT__
+        __LT__tr__GT____LT__th__GT__Rule ID__LT__/th__GT____LT__th__GT__Domain__LT__/th__GT____LT__th__GT__Status__LT__/th__GT____LT__th__GT__Verification Detail__LT__/th__GT____LT__/tr__GT__
+      __LT__/thead__GT__
+      __LT__tbody__GT__
+        {rows_html}
+      __LT__/tbody__GT__
+    __LT__/table__GT__
+  __LT__/main__GT__
+__LT__/body__GT__
+__LT__/html__GT__
+"""
+
+    def write(
+        self,
+        report_data: dict[str, Any],
+        target: Path,
+        *,
+        project_root: Path | None = None,
+    ) -__GT__ Path:
+        rendered = self__DOT__render(report_data)
+        return _atomic_safe_write(target, rendered, root_anchor=project_root)
+===FILE:src/gencode_gov/reporting/sarif_reporter__DOT__py===
+"""SARIF 2.1.0 governance report exporter for GitHub Code Scanning and IDE integration."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from gencode_gov import __version__
+from gencode_gov__DOT__reporting__DOT__html_reporter import _atomic_safe_write
+
+_SARIF_SCHEMA = (
+    "https" + "://json__DOT__schemastore__DOT__org/sarif-2.1.0__DOT__json"
+)
+
+
+class SarifReporter:
+    """Convert a GENCODE-GOV JSON assessment payload into OASIS SARIF 2.1.0."""
+
+    def to_sarif(self, report_data: dict[str, Any]) -__GT__ dict[str, Any]:
+        rules_meta: list[dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
+        seen_rules: set[str] = set()
+
+        raw_outcomes = report_data__DOT__get("rules", report_data__DOT__get("outcomes", []))
+        if isinstance(raw_outcomes, list):
+            for entry in raw_outcomes:
+                if not isinstance(entry, dict):
+                    continue
+                rid = str(entry__DOT__get("rule_id", entry__DOT__get("id", "SE-UNKNOWN")))
+                domain = str(entry__DOT__get("domain", "governance"))
+                status = str(entry__DOT__get("status", "BLOCKED"))
+                reason = str(entry__DOT__get("reason", status))
+
+                if rid not in seen_rules:
+                    seen_rules__DOT__add(rid)
+                    rules_meta__DOT__append(
+                        {
+                            "id": rid,
+                            "shortDescription": {
+                                "text": f"GENCODE-GOV {domain} governance rule {rid}"
+                            },
+                            "properties": {"tags": ["governance", domain]},
+                        }
+                    )
+
+                if status in {"PASS", "NOT_APPLICABLE"}:
+                    continue
+
+                level = "error" if status == "FAIL" else "warning"
+                results__DOT__append(
+                    {
+                        "ruleId": rid,
+                        "level": level,
+                        "message": {"text": f"[{status}] {reason}"},
+                        "locations": [
+                            {
+                                "physicalLocation": {
+                                    "artifactLocation": {"uri": "__DOT__gencode-gov/project__DOT__yaml"}
+                                }
+                            }
+                        ],
+                    }
+                )
+
+        return {
+            "$schema": _SARIF_SCHEMA,
+            "version": "2.1.0",
+            "runs": [
+                {
+                    "tool": {
+                        "driver": {
+                            "name": "GENCODE-GOV",
+                            "version": __version__,
+                            "informationUri": (
+                                "https" + "://github__DOT__com/mohamedelghazali/GENCODE-GOV"
+                            ),
+                            "rules": rules_meta,
+                        }
+                    },
+                    "results": results,
+                }
+            ],
+        }
+
+    def render(self, report_data: dict[str, Any]) -__GT__ str:
+        return json__DOT__dumps(self__DOT__to_sarif(report_data), indent=2, sort_keys=True) + "\n"
+
+    def write(
+        self,
+        report_data: dict[str, Any],
+        target: Path,
+        *,
+        project_root: Path | None = None,
+    ) -__GT__ Path:
+        return _atomic_safe_write(target, self__DOT__render(report_data), root_anchor=project_root)
