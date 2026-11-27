@@ -1,0 +1,536 @@
+===FILE:docs/governance/ENGINEERING_GAP_REGISTER__DOT__md===
+# GENCODE-GOV Independent Engineering Assessment & Gap Register
+
+This register records every deficiency, latent bug, security gap, verification weakness, disconnected subsystem, and capability gap uncovered during both the initial strategic Software Engineering Governance assessment and the subsequent independent repository-wide engineering audit of `GENCODE-GOV`, together with verified root causes, priority, implementation status, and deterministic verification evidence.
+
+## Summary Matrix
+
+| ID | Origin | Severity / Priority | Component / Area | Verified Root Cause | Status | Verification Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `GAP-01` | Independent Audit | **Critical (P0)** | `src/gencode_gov/verification/assess_dispatch__DOT__py` | Line 29 imported non-existent `gencode_gov__DOT__verification__DOT__security_audit__DOT__governance_bridge` instead of `gencode_gov__DOT__security_audit__DOT__governance_bridge`, crashing `create_assess_runner("security-audit")` with `ModuleNotFoundError`. | **Implemented** | Fixed import in `assess_dispatch__DOT__py`; verified by `tests/unit/verification/test_engineering_governance_upgrades__DOT__py`. |
+| `GAP-02` | Independent Audit | **Critical (P0)** | `src/gencode_gov/cli__DOT__py` | `score_domain_map` mapped `"performance": "reliability"` instead of `"performance": "performance"`, starving `scorer__DOT__py`'s 10-point `performance` bucket and capping max score at `90/100`. | **Implemented** | Corrected mapping in `cli__DOT__py`; verified full `100.0/100.0` scoring in `tests/integration/test_end_to_end_governance_excellence__DOT__py`. |
+| `GAP-03` | Independent Audit | **Critical (P0)** | `src/gencode_gov/cli__DOT__py` | `_working_tree_clean()` flagged `__DOT__gencode-gov/` runtime evidence/report artifacts as untracked dirty files in repositories without `__DOT__gitignore` exclusions, causing `assess` to self-invalidate mid-run. | **Implemented** | Filtered `__DOT__gencode-gov/` internal runtime paths in `_working_tree_clean()` while remaining strict for all tracked/source files; unit- and integration-tested. |
+| `GAP-04` | Assessment + Independent | **Critical (P0)** | `rules/evaluator__DOT__py`, `verification/methods__DOT__py`, `cli__DOT__py` | `rules/evaluator__DOT__py` was a 95-byte empty stub (`__all__ = []`), 35 of 39 `SE-*` rules (`90%`) referenced unregistered `verification__DOT__methods`, and `gencode-gov assess` lacked `--json`. | **Implemented** | Implemented `RuleEvaluator`, `domain_verifiers__DOT__py`, registered 100% of methods across all 47 rules in `METHOD_REGISTRY`, and added `--json` to `assess`. |
+| `GAP-05` | Assessment + Independent | **Critical (P0)** | `evidence/attestation__DOT__py`, `schemas/review-attestation__DOT__schema__DOT__json` | 15+ `hybrid` rules required `human-review` / `human-security-review` / `human-approval` with zero schema, verifier, CLI workflow, or anti-agent-self-approval guard, permanently deadlocking `hybrid` rules at `BLOCKED`. | **Implemented** | Built commit-bound, SHA-256 artifact-pinned `create_human_attestation` & `verify_human_attestation` + `gencode-gov attest`, blocking bot/agent identities and `GENCODE_GOV_AGENT_SESSION_ID`. |
+| `GAP-06` | Strategic Assessment | **Critical (P0)** | `SE-TST-005`, `code_and_test_integrity__DOT__py` | No AST detector for AI metric-gaming tests (`assert True`, hollow `pass` test functions) or diff-based deletion of existing regression test files. | **Implemented** | Added `SE-TST-005` (`assertion-adequacy-check`, `regression-tamper-diff-check`) in `code_and_test_integrity__DOT__py` + positive/negative tests. |
+| `GAP-07` | Strategic Assessment | **Critical (P0)** | `SE-CQ-003`, `code_and_test_integrity__DOT__py` | No deterministic gate catching fabricated `raise NotImplementedError` stubs in non-abstract production functions, silent `except Exception: pass` blocks, or unbounded function cyclomatic complexity. | **Implemented** | Added `SE-CQ-003` (`anti-fabrication-ast-check`, `exception-handling-safety-check`, `complexity-budget-check`, `polyglot-static-quality-check`). |
+| `GAP-08` | Independent Audit | **High (P1)** | `src/gencode_gov/validation__DOT__py`, `scripts/validation/validate_all__DOT__py` | `cmd_validate` imported `scripts__DOT__validation__DOT__validate_all` (absent from built wheels!), never invoked `rules/validator__DOT__py::validate_semantics` (`0` inbound imports!), skipped `languages/*/rules/`, never verified `METHOD_REGISTRY` completeness, and skipped Markdown relative links. | **Implemented** | Built packaged `gencode_gov__DOT__validation` (`validate_repository`), enforcing schema + `validate_semantics` + 100% `METHOD_REGISTRY` coverage + role/skill/link parity in both checkouts and wheels. |
+| `GAP-09` | Independent Security Audit | **High (P1)** | `reporting/*__DOT__py`, `policies/blocking__DOT__py` | `JsonReporter__DOT__write()` & `MarkdownReporter__DOT__write()` lacked symlink checks and atomic rename; `policies/blocking__DOT__py` allowed `..` / absolute glob patterns; `html_reporter__DOT__py` was a 95-byte empty stub despite config/manifest advertising `html`. | **Implemented** | Hardened `json_reporter__DOT__py`, `markdown_reporter__DOT__py`, and `policies/blocking__DOT__py`; implemented CSP-locked HTML-escaped `HtmlReporter` and OASIS `SarifReporter` (`--format html\|sarif`). |
+| `GAP-10` | Independent Audit | **High (P1)** | `agent_pack/skills/gencode-gov/`, `language_support/detector__DOT__py` | Bundled `agent_pack/skills/gencode-gov/SKILL__DOT__md` had 4 broken relative links because `references/*__DOT__md` was omitted from `agent_pack`; `detector__DOT__py` traversed nested subprojects (`examples/`, `tests/languages/fixtures/`), misclassifying Python repos as 9-language repos. | **Implemented** | Bundled all 5 `references/*__DOT__md` files into `agent_pack`, updated manifest tests, and isolated nested subprojects/fixtures in `detector__DOT__py`. |
+| `GAP-11` | Assessment + Independent | **High (P1)** | `language_profile_loader__DOT__py`, `tool_resolver__DOT__py`, `PolyglotQualityRunner` | `language_profile_loader__DOT__py` and `tool_resolver__DOT__py` had `0` runtime callers; `inspect` lacked `--tools`. | **Implemented** | Built `PolyglotQualityRunner` and `gencode-gov inspect --tools`, wiring both modules into active assessment and CLI inspection. |
+| `GAP-12` | Assessment + Independent | **High (P1)** | `manifest/compatibility__DOT__yaml`, `diff_governance__DOT__py`, `SE-API-002` | `manifest/compatibility__DOT__yaml` `frozen_apis` had drifted module paths/symbols (`config::load_manifest`, missing `read_evidence` & `evaluate` exports) and zero automated diff/API verifier. | **Implemented** | Reconciled `manifest/compatibility__DOT__yaml` + exported `read_evidence` and `evaluate`; added `SE-API-002` and `gencode-gov diff-check`. |
+| `GAP-13` | Strategic Assessment | **High (P1)** | `architecture_verifier__DOT__py`, `__DOT__gencode-gov/architecture-contracts__DOT__yaml`, `SE-ARC-002` | Architectural governance relied solely on prose ADRs without executable layer-import boundary or cycle-free DAG fitness functions. | **Implemented** | Implemented Tarjan SCC cycle detection + layer boundary contracts (`SE-ARC-002`), dogfooded on GENCODE-GOV via `__DOT__gencode-gov/architecture-contracts__DOT__yaml`. |
+| `GAP-14` | Strategic Assessment | **High (P1)** | `SE-DB-003`, `SE-REL-005`, `SE-DEV-002`, `SE-SEC-011` | Missing deterministic rules for expand-contract zero-downtime SQL migrations, outbound I/O timeout & bounded-retry AST checks, 40-char Action SHA + lockfile determinism, and CycloneDX SBOM license/CVE policy. | **Implemented** | Implemented all 4 rules and deterministic verifiers in `domain_verifiers__DOT__py` with full unit & integration tests. |
+| `GAP-15` | Strategic Assessment | **Medium (P2)** | `assessment/drift__DOT__py`, `schemas/drift-ledger__DOT__schema__DOT__json` | `__DOT__gencode-gov/state/` had zero implementation for tracking longitudinal complexity, coupling, dependency, or exception drift across commits. | **Implemented** | Implemented `gencode-gov drift` and `__DOT__gencode-gov/state/drift-ledger__DOT__jsonl` with symlink-safe atomic persistence and regression warnings. |
+| `GAP-16` | Independent Audit | **Medium (P2)** | `docs/evidence/EVIDENCE_MODEL__DOT__md`, `rules/README__DOT__md`, `__DOT__gencode-gov/project__DOT__yaml`, CI workflows | Duplicate `docs/evidence/EVIDENCE_MODEL__DOT__md`, missing `rules/README__DOT__md`, `TBD` stakeholder owners in `__DOT__gencode-gov/project__DOT__yaml`, and missing `workflow_dispatch` on path-filtered workflows (`agent-skills__DOT__yml`, `validate-rules__DOT__yml`). | **Implemented** | Deduplicated `docs/evidence/EVIDENCE_MODEL__DOT__md` to canonical pointer, authored `rules/README__DOT__md`, populated concrete roles in `__DOT__gencode-gov/project__DOT__yaml`, and added `workflow_dispatch`. |
+
+## Documented External Blockers & Deliberate Deferrals
+
+1. **External Proprietary `tsar` Binary (`SE-SEC-GOV-001`)**: `TsarRunner` invokes an external `tsar` binary when installed on `PATH`. Because `tsar` is not a public PyPI dependency, `SE-SEC-GOV-001` truthfully reports `BLOCKED` (`tsar executable not found on PATH`) when `tsar` is absent rather than fabricating a pass, preserving GENCODE-GOV's fail-closed evidence contract while `SE-SEC-GOV-002` (`SecurityAuditRunner`) and `SE-SEC-011` execute natively.
+2. **SLSA Reusable Workflow Tag Pinning (`slsa-release__DOT__yml`)**: `slsa-framework/slsa-github-generator` mandates an exact `@vX__DOT__Y__DOT__Z` tag reference (`@v2.1.0`) rather than a commit SHA so `slsa-verifier` can validate the builder's OIDC `job_workflow_ref` claim. `SE-DEV-002` (`github-actions-sha-pinning-scan`) explicitly enforces 40-character commit SHAs on all other external actions while honoring this upstream SLSA specification requirement.
+3. **Full Mutation-Testing Execution in Default `assess` Loop**: Running repository-wide AST mutation testing (`mutmut` / `cosmic-ray`) synchronously inside every `gencode-gov assess` invocation would add multi-minute latency per run; instead, `SE-TST-005` enforces fast deterministic AST assertion-adequacy and diff test-tampering checks synchronously, leaving full mutation campaigns as an optional CI stage.
+===FILE:rules/README__DOT__md===
+# GENCODE-GOV Engineering Governance Rule Catalog
+
+GENCODE-GOV enforces **47 active `SE-*` rules** across **16 software engineering domains** (`44` universal/domain rules under `rules/` plus `3` language-specific Python rules under `languages/python/rules/`).
+
+## Rule Domains & Prefixes
+
+| Domain | Prefix | Core Rules |
+| --- | --- | --- |
+| `architecture` | `SE-ARC-*` | `SE-ARC-001` (ADRs), `SE-ARC-002` (Executable Layering & Cycle-Free DAG) |
+| `api-integration` | `SE-API-*` | `SE-API-001` (Versioned Schemas/Contracts), `SE-API-002` (Frozen APIs & Schema Diff) |
+| `code-quality` | `SE-CQ-*` | `SE-CQ-001` (Python Lint/AST), `SE-CQ-002` (Static Lint & Types), `SE-CQ-003` (AI Anti-Fabrication, Exception Safety & Complexity) |
+| `database` | `SE-DB-*` | `SE-DB-001` (Reversible Migrations), `SE-DB-002` (Least Privilege & Isolation), `SE-DB-003` (Zero-Downtime Expand-Contract DDL) |
+| `devops` | `SE-DEV-*` | `SE-DEV-001` (CI Gates), `SE-DEV-002` (40-Char Action SHA Pinning & Deterministic Lockfiles) |
+| `infrastructure` | `SE-INF-*` | `SE-INF-001` (IaC Review & Drift Governance) |
+| `maintenance` | `SE-MNT-*` | `SE-MNT-001` (Keep-a-Changelog & Version Parity) |
+| `observability` | `SE-OBS-*` | `SE-OBS-001`..`003` (Health Endpoints, Telemetry, Redacted Structured Logging & Crash Dump Governance) |
+| `performance` | `SE-PRF-*` | `SE-PRF-001` (Load Benchmarks), `SE-PRF-002` (P50/P95/P99 Latency Regression & Alerting) |
+| `privacy-compliance` | `SE-PRI-*` | `SE-PRI-001` (Data Inventory & DPIA) |
+| `release` | `SE-REL-003` | `SE-REL-003` (Structured Release Notes) |
+| `reliability` | `SE-REL-*` | `SE-REL-001` (SLOs), `SE-REL-002` (Verified Restore), `SE-REL-004` (Rollback Readiness), `SE-REL-005` (Outbound Timeouts & Bounded Retries) |
+| `requirements` | `SE-REQ-*` | `SE-REQ-001`..`003` (Structured Specs, Conflict Analysis & Test Traceability) |
+| `scalability` | `SE-SCL-*` | `SE-SCL-001` (Horizontal/Load Targets) |
+| `software-security` | `SE-SEC-*` | `SE-SEC-001`..`011` (AuthN/Z, Injection, TLS/CORS/CSRF, Secrets, Abuse, Audit Logs, SCA, Hardening, Secret Remediation, SBOM Gate) + `SE-SEC-GOV-001`/`002` |
+| `testing` | `SE-TST-*` | `SE-TST-001`..`005` (Coverage, Regression, Polyglot Execution, Negative Security Scenarios, Anti-Tampering & Assertion Adequacy) |
+
+## Validation Contract
+
+Every rule file is validated by `gencode-gov validate` against:
+1. [`../schemas/rule__DOT__schema__DOT__json`](../schemas/rule__DOT__schema__DOT__json) (`additionalProperties: false` Draft 2020-12 JSON Schema).
+2. Semantic invariants in [`../src/gencode_gov/rules/validator__DOT__py`](../src/gencode_gov/rules/validator__DOT__py) (`validate_semantics`).
+3. 100% registration and domain authorization in [`../src/gencode_gov/verification/methods__DOT__py`](../src/gencode_gov/verification/methods__DOT__py) (`METHOD_REGISTRY`).
+===FILE:rules/api-integration/SE-API-002-frozen-api-and-schema-compatibility__DOT__yaml===
+id: SE-API-002
+metadata:
+  title: Frozen Public API Contract and Schema Backward-Compatibility Governance
+  domain: api-integration
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    Declared frozen public API entrypoints and published JSON schemas must remain
+    intact and backward-compatible across changes unless governed by a major release.
+scope:
+  project_types: [all]
+  lifecycle_stages: [design, implementation, verification, release]
+requirement:
+  statement: __GT__
+    Every module and symbol listed under frozen_apis in compatibility manifests
+    must resolve to an exported symbol on disk, and modifications to JSON Schema
+    contracts must not silently drop existing properties or enum values.
+verification:
+  mode: deterministic
+  methods:
+    - frozen-api-contract-check
+    - schema-compatibility-diff-check
+acceptance:
+  missing_frozen_api_symbols: 0
+  unapproved_breaking_schema_changes: 0
+evidence:
+  required:
+    - frozen-api-verification-report
+    - schema-compatibility-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/architecture/SE-ARC-002-executable-architecture-boundaries__DOT__yaml===
+id: SE-ARC-002
+metadata:
+  title: Executable Architectural Layering and Cycle-Free Module Dependency Governance
+  domain: architecture
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    Package subsystems must respect declared architectural layer import boundaries
+    and maintain a cycle-free top-level module dependency graph.
+scope:
+  project_types: [all]
+  lifecycle_stages: [architecture, implementation, verification, release]
+requirement:
+  statement: __GT__
+    Enforce machine-verifiable module layering contracts and import-time cycle
+    detection across internal packages so foundational layers never import CLI,
+    reporting, or orchestration layers, and top-level package imports remain
+    strictly acyclic.
+verification:
+  mode: deterministic
+  methods:
+    - architecture-layer-boundary-check
+    - module-cycle-detection
+acceptance:
+  forbidden_cross_layer_imports: 0
+  top_level_package_import_cycles: 0
+evidence:
+  required:
+    - architecture-boundary-verification-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/code-quality/SE-CQ-003-ai-anti-fabrication-and-complexity__DOT__yaml===
+id: SE-CQ-003
+metadata:
+  title: AI Anti-Fabrication, Exception Safety, and Function Complexity Governance
+  domain: code-quality
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    Production source code must be free of fabricated NotImplementedError stubs,
+    silent broad exception swallowing, functions exceeding the cyclomatic complexity
+    ceiling, and missing polyglot static quality tooling.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, release]
+requirement:
+  statement: __GT__
+    AI coding agents and contributors must never ship non-abstract production
+    functions whose bodies raise NotImplementedError as fabricated placeholders,
+    must never silently swallow broad Exception or BaseException handlers with a
+    bare pass statement, must keep every function's McCabe cyclomatic complexity
+    at or below the configured ceiling, and must verify static quality profiles
+    across detected repository languages.
+verification:
+  mode: deterministic
+  methods:
+    - anti-fabrication-ast-check
+    - exception-handling-safety-check
+    - complexity-budget-check
+    - polyglot-static-quality-check
+acceptance:
+  unimplemented_production_stubs: 0
+  silent_broad_exception_pass_handlers: 0
+  functions_exceeding_complexity_ceiling: 0
+evidence:
+  required:
+    - ast-integrity-audit-report
+    - polyglot-quality-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/database/SE-DB-003-zero-downtime-migration-safety__DOT__yaml===
+id: SE-DB-003
+metadata:
+  title: Expand-Contract Zero-Downtime Database Schema Migration Safety
+  domain: database
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    Database schema migrations must follow expand-contract discipline without
+    unguarded destructive DDL or table-locking non-concurrent index builds.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [implementation, deployment, release]
+requirement:
+  statement: __GT__
+    Database migration scripts must avoid unguarded DROP TABLE, DROP COLUMN,
+    TRUNCATE TABLE, incompatible in-place column type rewrites, and non-concurrent
+    index creation on live production tables unless explicitly governed by an
+    approved expand-contract migration waiver.
+verification:
+  mode: deterministic
+  methods:
+    - destructive-ddl-migration-scan
+    - concurrent-index-and-lock-check
+acceptance:
+  unguarded_destructive_ddl_statements: 0
+  non_concurrent_blocking_index_creations: 0
+evidence:
+  required:
+    - migration-ddl-safety-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/devops/SE-DEV-002-deterministic-dependency-and-action-pinning__DOT__yaml===
+id: SE-DEV-002
+metadata:
+  title: Deterministic Dependency Lockfile and Immutable CI Action SHA Pinning
+  domain: devops
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    CI/CD workflows must pin external GitHub Actions to full 40-character commit
+    SHAs and repositories must commit deterministic dependency lockfiles.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, deployment, release]
+requirement:
+  statement: __GT__
+    Pin every third-party GitHub Action in __DOT__github/workflows to an immutable
+    40-character commit SHA (except OIDC-mandated slsa-github-generator reusable
+    tags) and maintain committed deterministic dependency lockfiles so builds and
+    CI pipelines are reproducible and resistant to mutable-tag substitution.
+verification:
+  mode: deterministic
+  methods:
+    - github-actions-sha-pinning-scan
+    - dependency-lockfile-determinism-check
+acceptance:
+  unpinned_third_party_workflow_actions: 0
+  deterministic_lockfile_present: true
+evidence:
+  required:
+    - workflow-sha-pinning-report
+    - dependency-lockfile-inventory
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/reliability/SE-REL-005-outbound-timeout-and-bounded-retry__DOT__yaml===
+id: SE-REL-005
+metadata:
+  title: Outbound I/O Timeout Enforcement and Bounded Retry Loop Governance
+  domain: reliability
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    Production outbound network calls must specify explicit timeouts and retry or
+    polling loops must enforce deterministic termination bounds.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, operations, release]
+requirement:
+  statement: __GT__
+    Every outbound HTTP or URL request in production code must supply an explicit
+    timeout parameter so hung upstream dependencies cannot exhaust worker pools,
+    and every retry or polling loop must include an explicit exit bound.
+verification:
+  mode: deterministic
+  methods:
+    - outbound-timeout-enforcement-scan
+    - unbounded-retry-loop-scan
+acceptance:
+  outbound_network_calls_without_timeout: 0
+  unbounded_infinite_loops_in_production: 0
+evidence:
+  required:
+    - resilience-ast-audit-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/software-security/SE-SEC-011-sbom-license-and-vulnerability-gate__DOT__yaml===
+id: SE-SEC-011
+metadata:
+  title: CycloneDX SBOM Inventory, License Compliance, and Vulnerability Gate
+  domain: software-security
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: __GT__
+    Software supply-chain dependencies must be inventoried via CycloneDX SBOM or
+    pinned lockfiles and verified free of forbidden copyleft licenses and
+    unremediated critical/high vulnerabilities.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, release]
+requirement:
+  statement: __GT__
+    Maintain a verifiable component inventory via CycloneDX SBOM or deterministic
+    lockfiles, enforce license policy compliance rejecting unapproved AGPL/SSPL
+    dependencies, and block release when unresolved critical or high CVE ratings
+    are present.
+verification:
+  mode: deterministic
+  methods:
+    - sbom-component-inventory-check
+    - sbom-license-and-cve-policy-check
+acceptance:
+  forbidden_copyleft_dependencies: 0
+  unresolved_critical_or_high_sbom_vulns: 0
+evidence:
+  required:
+    - sbom-or-lockfile-compliance-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:rules/testing/SE-TST-005-test-assertion-adequacy-and-anti-tampering__DOT__yaml===
+id: SE-TST-005
+metadata:
+  title: Test Assertion Adequacy and Regression Anti-Tampering Governance
+  domain: testing
+  version: 1.0.0
+  status: critical
+  enforcement: critical
+  description: __GT__
+    Automated tests must contain genuine behavioral assertions rather than hollow
+    bodies or tautological assert True checks, and diffs must not delete existing
+    regression test files to mask failures.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, testing, verification, release]
+requirement:
+  statement: __GT__
+    Every automated test function must execute at least one non-tautological
+    assertion or verification helper rather than an empty pass body or literal
+    assert True metric-gaming placeholder, and change sets must preserve existing
+    regression test suites without deleting test files to force green builds.
+verification:
+  mode: deterministic
+  methods:
+    - assertion-adequacy-check
+    - regression-tamper-diff-check
+acceptance:
+  hollow_test_functions: 0
+  tautological_assert_true_tests: 0
+  deleted_regression_test_files: 0
+evidence:
+  required:
+    - test-assertion-adequacy-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
+===FILE:schemas/architecture-contracts__DOT__schema__DOT__json===
+{
+  "$schema": "__HTTPS__json-schema__DOT__org/draft/2020-12/schema",
+  "$id": "__HTTPS__github__DOT__com/mohamedelghazali/GENCODE-GOV/schemas/architecture-contracts/1.0.0",
+  "title": "GENCODE-GOV Executable Architecture Contracts",
+  "description": "Machine-verifiable module layering, import boundary, and cycle-freedom rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "package_root",
+    "max_cycles",
+    "layers"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "package_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "max_cycles": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "modules",
+          "forbidden_imports"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "modules": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "forbidden_imports": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}
+===FILE:schemas/drift-ledger__DOT__schema__DOT__json===
+{
+  "$schema": "__HTTPS__json-schema__DOT__org/draft/2020-12/schema",
+  "$id": "__HTTPS__github__DOT__com/mohamedelghazali/GENCODE-GOV/schemas/drift-ledger/1.0.0",
+  "title": "GENCODE-GOV Longitudinal Drift Ledger Entry",
+  "description": "Append-only structural complexity, coupling, dependency, and exception telemetry per commit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recorded_at",
+    "commit_sha",
+    "python_files",
+    "max_cyclomatic_complexity",
+    "mean_cyclomatic_complexity",
+    "internal_import_edges",
+    "declared_dependencies",
+    "active_exceptions"
+  ],
+  "properties": {
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "python_files": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_cyclomatic_complexity": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mean_cyclomatic_complexity": {
+      "type": "number",
+      "minimum": 0
+    },
+    "internal_import_edges": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "declared_dependencies": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "active_exceptions": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
