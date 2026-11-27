@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 import yaml
 
-from arkhon.integrations.platforms.github_copilot import adapter as copilot_adapter
+from gencode_gov.integrations.platforms.github_copilot import adapter as copilot_adapter
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -53,7 +53,6 @@ def test_install_creates_file(copilot_project: Path) -> None:
     assert target.stat().st_size > 0
 
 
-
 def test_install_is_idempotent(copilot_project: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
     first = adapter.install(copilot_project)
@@ -71,6 +70,7 @@ def test_install_preserves_existing_user_content(copilot_project: Path) -> None:
     assert not result.ok
     assert "refusing to overwrite" in result.reason
     assert target.read_text(encoding="utf-8") == original
+
 
 def test_verify_passes_after_install(copilot_project: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
@@ -130,9 +130,7 @@ def test_max_verification_is_configured() -> None:
     assert data["verification_level"]["max_reachable"] == "configured"
 
 
-def test_install_rejects_symlinked_github_directory(
-    copilot_project: Path, tmp_path: Path
-) -> None:
+def test_install_rejects_symlinked_github_directory(copilot_project: Path, tmp_path: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
     external = tmp_path / "external"
     external.mkdir()
@@ -153,9 +151,7 @@ def test_install_rejects_symlink_created_during_directory_creation(
     external.mkdir()
     original_mkdir = Path.mkdir
 
-    def replace_directory_with_symlink(
-        self: Path, *args: Any, **kwargs: Any
-    ) -> None:
+    def replace_directory_with_symlink(self: Path, *args: Any, **kwargs: Any) -> None:
         if self == target.parent:
             self.symlink_to(external, target_is_directory=True)
             return
@@ -170,9 +166,7 @@ def test_install_rejects_symlink_created_during_directory_creation(
     assert list(external.iterdir()) == []
 
 
-def test_install_rejects_symlinked_instructions_file(
-    copilot_project: Path, tmp_path: Path
-) -> None:
+def test_install_rejects_symlinked_instructions_file(copilot_project: Path, tmp_path: Path) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
@@ -222,9 +216,7 @@ def test_install_handles_concurrent_matching_file(
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_open = Path.open
 
-    def create_then_raise(
-        self: Path, mode: str = "r", *args: Any, **kwargs: Any
-    ) -> Any:
+    def create_then_raise(self: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(copilot_adapter._INSTRUCTIONS_CONTENT.encode("utf-8"))
@@ -244,9 +236,7 @@ def test_install_handles_concurrent_different_file(
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     original_open = Path.open
 
-    def create_then_raise(
-        self: Path, mode: str = "r", *args: Any, **kwargs: Any
-    ) -> Any:
+    def create_then_raise(self: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(b"user content")
@@ -269,9 +259,7 @@ def test_install_handles_unreadable_concurrent_file(
     original_open = Path.open
     original_read_bytes = Path.read_bytes
 
-    def create_then_raise(
-        self: Path, mode: str = "r", *args: Any, **kwargs: Any
-    ) -> Any:
+    def create_then_raise(self: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
         if self == target and mode == "xb":
             with original_open(self, "wb") as stream:
                 stream.write(b"user content")
@@ -292,9 +280,7 @@ def test_install_handles_unreadable_concurrent_file(
     assert "cannot verify instructions file" in result.reason
 
 
-def test_verify_rejects_symlinked_instructions_file(
-    copilot_project: Path, tmp_path: Path
-) -> None:
+def test_verify_rejects_symlinked_instructions_file(copilot_project: Path, tmp_path: Path) -> None:
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH
     target.parent.mkdir(parents=True)
     external = tmp_path / "instructions.md"
@@ -307,9 +293,7 @@ def test_verify_rejects_symlinked_instructions_file(
     assert "symlinked instructions" in result.reason
 
 
-def test_verify_reports_read_error(
-    copilot_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_verify_reports_read_error(copilot_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     adapter = copilot_adapter.GitHubCopilotAdapter()
     adapter.install(copilot_project)
     target = copilot_project / copilot_adapter.INSTRUCTIONS_REL_PATH

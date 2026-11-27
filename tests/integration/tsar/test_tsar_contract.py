@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.core.errors import EvidenceStaleError, EvidenceTamperedError, SecurityError
-from arkhon.evidence.integrity import sha256_of
-from arkhon.integrations.tsar.verifier import verify_tsar_evidence
+from gencode_gov.core.errors import EvidenceStaleError, EvidenceTamperedError, SecurityError
+from gencode_gov.evidence.integrity import sha256_of
+from gencode_gov.integrations.tsar.verifier import verify_tsar_evidence
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT = REPO_ROOT / "integrations" / "tsar" / "contract.yaml"

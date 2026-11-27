@@ -7,8 +7,8 @@ from typing import Any
 
 import yaml
 
-from arkhon.rules.loader import Rule
-from arkhon.rules.validator import validate_semantics
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.validator import validate_semantics
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RULE_PATH = REPO_ROOT / "rules" / "software-security" / "SE-SEC-GOV-001-tsar-audit-required.yaml"

@@ -76,10 +76,10 @@ formats:
   sbom: [cyclonedx-json, cyclonedx-xml]
 
 frozen_apis:
-  - "src/arkhon/cli.py::main"
-  - "src/arkhon.config::load_manifest"
-  - "src/arkhon.evidence.store::read_evidence"
-  - "src/arkhon.assessment.gates::evaluate"
+  - "src/gencode_gov/cli.py::main"
+  - "src/gencode_gov.config::load_manifest"
+  - "src/gencode_gov.evidence.store::read_evidence"
+  - "src/gencode_gov.assessment.gates::evaluate"
 
 policy: |
   Backward compatibility is promised within a major version.

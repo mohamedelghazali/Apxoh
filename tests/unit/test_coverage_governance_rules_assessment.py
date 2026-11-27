@@ -6,30 +6,30 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.assessment.decision import decide
-from arkhon.assessment.gates import (
+from gencode_gov.assessment.decision import decide
+from gencode_gov.assessment.gates import (
     GateVerdict,
     RuleOutcome as AssessmentOutcome,
     evaluate_all_gates,
     evaluate_gate,
 )
-from arkhon.assessment.scorer import Score, ScoreBreakdown, score_from_ratios
-from arkhon.core.errors import AssessmentError, GateError, GovernanceError, RuleError
-from arkhon.governance.charter_loader import (
+from gencode_gov.assessment.scorer import Score, ScoreBreakdown, score_from_ratios
+from gencode_gov.core.errors import AssessmentError, GateError, GovernanceError, RuleError
+from gencode_gov.governance.charter_loader import (
     Principle,
     _load_yaml as load_charter_yaml,
     _parse_principles,
     load_charter,
 )
-from arkhon.governance.policy_loader import (
+from gencode_gov.governance.policy_loader import (
     Policy,
     PolicyRegistry,
     _load_policy_file,
     load_policies,
 )
-from arkhon.orchestrator.lifecycle import LifecycleState, Stage, next_stage, previous_stage
-from arkhon.rules.loader import load_rules_dir
-from arkhon.rules.registry import RuleRegistry, build_registry
+from gencode_gov.orchestrator.lifecycle import LifecycleState, Stage, next_stage, previous_stage
+from gencode_gov.rules.loader import load_rules_dir
+from gencode_gov.rules.registry import RuleRegistry, build_registry
 
 
 def _charter_yaml(root: Path) -> Path:

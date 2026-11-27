@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import EvidenceTamperedError
-from arkhon.evidence.integrity import sha256_of, verify_bundle
+from gencode_gov.core.errors import EvidenceTamperedError
+from gencode_gov.evidence.integrity import sha256_of, verify_bundle
 
 
 def _bundle(tmp_path: Path, content: bytes = b"payload") -> tuple[Path, Path, str]:
@@ -20,7 +20,7 @@ def _bundle(tmp_path: Path, content: bytes = b"payload") -> tuple[Path, Path, st
         json.dumps(
             {
                 "evidence_id": "EVID-TEST-001",
-                "source": "arkhon",
+                "source": "gencode-gov",
                 "source_version": "0.1.0.dev1",
                 "commit_sha": commit,
                 "executed_at": "2026-11-01T00:00:00Z",
@@ -69,7 +69,7 @@ def test_artifact_path_traversal_is_rejected(tmp_path: Path) -> None:
         json.dumps(
             {
                 "evidence_id": "EVID-TEST-002",
-                "source": "arkhon",
+                "source": "gencode-gov",
                 "source_version": "0.1.0.dev1",
                 "commit_sha": "a" * 40,
                 "executed_at": "2026-11-01T00:00:00Z",
@@ -89,7 +89,7 @@ def test_empty_artifact_list_is_rejected(tmp_path: Path) -> None:
         json.dumps(
             {
                 "evidence_id": "EVID-TEST-003",
-                "source": "arkhon",
+                "source": "gencode-gov",
                 "source_version": "0.1.0.dev1",
                 "commit_sha": "a" * 40,
                 "executed_at": "2026-11-01T00:00:00Z",

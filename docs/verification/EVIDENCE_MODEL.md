@@ -63,8 +63,8 @@ Evidence bundles are intended to conform to
 
 ```json
 {
-  "evidence_id": "EVID-ARKHON-A3F2B1C4",
-  "source": "arkhon",
+  "evidence_id": "EVID-GENCODE-GOV-A3F2B1C4",
+  "source": "gencode-gov",
   "source_version": "0.1.0.dev1",
   "commit_sha": "a1b2c3d4e5f6...",
   "executed_at": "2026-11-01T14:30:00Z",
@@ -83,7 +83,7 @@ This example is illustrative and must be made schema-valid before use.
 | Field | Meaning |
 | :--- | :--- |
 | `evidence_id` | Unique identifier for this evidence record |
-| `source` | Producer, such as `arkhon`, `tsar`, or `external-tool` |
+| `source` | Producer, such as `gencode-gov`, `tsar`, or `external-tool` |
 | `source_version` | Version of the producing tool |
 | `commit_sha` | Exact commit to which the evidence applies |
 | `executed_at` | Execution timestamp |
@@ -126,7 +126,7 @@ that the evidence is correct or that the signer is trustworthy.
 
 The intended location is:
 
-`.arkhon/evidence/<domain>/<evidence_id>.json`
+`.gencode-gov/evidence/<domain>/<evidence_id>.json`
 
 Append-only storage, atomic writes, retention, encryption, and access
 controls are requirements to be implemented and verified. A directory
@@ -245,11 +245,11 @@ replacement for independently validated evidence.
 
 - `schemas/evidence.schema.json` — evidence contract
 - `docs/EVIDENCE_INTEGRITY.md` — integrity policy
-- `src/arkhon/evidence/collector.py` — evidence collection
-- `src/arkhon/evidence/integrity.py` — integrity verification
-- `src/arkhon/evidence/store.py` — evidence storage
-- `src/arkhon/verification/runners/supply_chain_runner.py` — Syft SBOM and release attestation runners
-- `src/arkhon/evidence/supply_chain.py` — CycloneDX, SLSA, and Sigstore evidence verification
+- `src/gencode_gov/evidence/collector.py` — evidence collection
+- `src/gencode_gov/evidence/integrity.py` — integrity verification
+- `src/gencode_gov/evidence/store.py` — evidence storage
+- `src/gencode_gov/verification/runners/supply_chain_runner.py` — Syft SBOM and release attestation runners
+- `src/gencode_gov/evidence/supply_chain.py` — CycloneDX, SLSA, and Sigstore evidence verification
 - `.github/workflows/supply-chain-e2e.yml` — real Syft SBOM and evidence acceptance test
 - `.github/workflows/slsa-release.yml` — release signing and SLSA provenance workflow
 

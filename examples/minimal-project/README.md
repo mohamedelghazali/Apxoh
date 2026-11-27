@@ -12,7 +12,7 @@ This example demonstrates:
 
 ```
 minimal-project/
-├── .arkhon/
+├── .gencode-gov/
 │   └── project.yaml
 ├── src/
 │   └── greeting.py

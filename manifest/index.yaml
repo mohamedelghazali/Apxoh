@@ -25,9 +25,9 @@ authoritative_for:
   - compatibility_matrix
 
 consumers:
-  - "src/arkhon/config.py"
-  - "src/arkhon/core/constants.py"
-  - "src/arkhon/cli.py"
+  - "src/gencode_gov/config.py"
+  - "src/gencode_gov/core/constants.py"
+  - "src/gencode_gov/cli.py"
   - "tests/test_manifest.py"
 
 notes: |

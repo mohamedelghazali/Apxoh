@@ -5,7 +5,7 @@ description: >
   and detect/alert on performance degradation with measured evidence.
 version: 1.1.0
 applicable_to: [all-projects]
-requires: [arkhon-governance]
+requires: [gencode-gov]
 ---
 # Performance Engineering Skill
 
@@ -54,7 +54,7 @@ and defended against regression — not assumed.
 - Rule domain: `performance` (`SE-PRF-001`, `SE-PRF-002`)
 - Gate: `performance_gate`
 - Evidence type: `benchmark_results`
-- Output goes to `.arkhon/evidence/performance/`
+- Output goes to `.gencode-gov/evidence/performance/`
 
 ## Reference
 

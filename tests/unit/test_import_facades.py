@@ -9,29 +9,29 @@ import pytest
 
 
 _EMPTY_MODULES = (
-    "arkhon.integrations.agents",
-    "arkhon.integrations.agents.aider",
-    "arkhon.integrations.agents.amazon_q",
-    "arkhon.integrations.agents.claude_code",
-    "arkhon.integrations.agents.cline",
-    "arkhon.integrations.agents.codex_openai",
-    "arkhon.integrations.agents.continue_agent",
-    "arkhon.integrations.agents.cursor",
-    "arkhon.integrations.agents.devin",
-    "arkhon.integrations.agents.gemini",
-    "arkhon.integrations.agents.gemini_cli",
-    "arkhon.integrations.agents.github_copilot",
-    "arkhon.integrations.agents.gpt",
-    "arkhon.integrations.agents.jetbrains_ai",
-    "arkhon.integrations.agents.replit_agent",
-    "arkhon.integrations.agents.sourcegraph_cody",
-    "arkhon.integrations.agents.tabnine",
-    "arkhon.integrations.agents.windsurf",
-    "arkhon.language_support.compatibility",
-    "arkhon.orchestrator.task_dispatcher",
-    "arkhon.reporting.html_reporter",
-    "arkhon.rules.evaluator",
-    "arkhon.verification.profiles",
+    "gencode_gov.integrations.agents",
+    "gencode_gov.integrations.agents.aider",
+    "gencode_gov.integrations.agents.amazon_q",
+    "gencode_gov.integrations.agents.claude_code",
+    "gencode_gov.integrations.agents.cline",
+    "gencode_gov.integrations.agents.codex_openai",
+    "gencode_gov.integrations.agents.continue_agent",
+    "gencode_gov.integrations.agents.cursor",
+    "gencode_gov.integrations.agents.devin",
+    "gencode_gov.integrations.agents.gemini",
+    "gencode_gov.integrations.agents.gemini_cli",
+    "gencode_gov.integrations.agents.github_copilot",
+    "gencode_gov.integrations.agents.gpt",
+    "gencode_gov.integrations.agents.jetbrains_ai",
+    "gencode_gov.integrations.agents.replit_agent",
+    "gencode_gov.integrations.agents.sourcegraph_cody",
+    "gencode_gov.integrations.agents.tabnine",
+    "gencode_gov.integrations.agents.windsurf",
+    "gencode_gov.language_support.compatibility",
+    "gencode_gov.orchestrator.task_dispatcher",
+    "gencode_gov.reporting.html_reporter",
+    "gencode_gov.rules.evaluator",
+    "gencode_gov.verification.profiles",
 )
 
 
@@ -53,14 +53,13 @@ def test_reserved_extension_modules_are_importable_and_empty(module_name: str) -
 def test_legacy_model_adapter_shims_export_internal_implementations(
     relative: str, export: str
 ) -> None:
-    root = Path(__file__).resolve().parents[2] / "src" / "arkhon"
+    root = Path(__file__).resolve().parents[2] / "src" / "gencode_gov"
     namespace = runpy.run_path(str(root / relative))
     assert export in namespace["__all__"]
     assert namespace[export].__name__ == export
 
 
-
 def test_language_profile_loader_exports_public_api() -> None:
-    module = importlib.import_module("arkhon.language_support.language_profile_loader")
+    module = importlib.import_module("gencode_gov.language_support.language_profile_loader")
     assert module.__all__ == ["LanguageProfile", "load_language_profile"]
     assert callable(module.load_language_profile)

@@ -16,7 +16,6 @@ PIP := $(BIN)/pip
 BANDIT := $(BIN)/bandit
 PIP_AUDIT := $(BIN)/pip-audit
 GENCODE_GOV := $(BIN)/gencode-gov
-ARKHON ?= $(GENCODE_GOV)
 
 help:
 	@echo "GENCODE-GOV — available targets:"
@@ -56,7 +55,7 @@ install-dev: $(VENV)
 	@if [ -x "$(BIN)/pre-commit" ]; then $(BIN)/pre-commit install; fi
 
 install-models:
-	@$(PYTHON) -c "from pathlib import Path; p=Path('src/arkhon/integrations/models'); print('Model integration directories:'); [print('  -', x.name) for x in sorted(p.iterdir()) if x.is_dir()] if p.is_dir() else print('No model integration directory found.')"
+	@$(PYTHON) -c "from pathlib import Path; p=Path('src/gencode_gov/integrations/models'); print('Model integration directories:'); [print('  -', x.name) for x in sorted(p.iterdir()) if x.is_dir()] if p.is_dir() else print('No model integration directory found.')"
 
 clean:
 	rm -rf build dist *.egg-info

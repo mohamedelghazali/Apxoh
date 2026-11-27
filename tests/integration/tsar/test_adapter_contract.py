@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from arkhon.integrations.tsar.adapter import TsarAdapter
+from gencode_gov.integrations.tsar.adapter import TsarAdapter
 
 
 def test_tsar_adapter_metadata() -> None:
@@ -15,7 +15,7 @@ def test_tsar_adapter_metadata() -> None:
 
 
 def test_missing_tsar_binary_is_unavailable(monkeypatch) -> None:
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.shutil.which", lambda _binary: None)
+    monkeypatch.setattr("gencode_gov.integrations.tsar.adapter.shutil.which", lambda _binary: None)
     assert TsarAdapter().health_check() is False
 
 

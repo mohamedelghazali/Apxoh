@@ -171,7 +171,7 @@ installed pack whenever the target project has an application-facing security su
 
 Do not treat TSAR, static linters, or generic test counts as complete coverage: follow
 integrations/tsar/contract.yaml and record scenario-level automated test traceability in
-.arkhon/security-test-matrix.yaml (unauthenticated access, privilege escalation, IDOR,
+.gencode-gov/security-test-matrix.yaml (unauthenticated access, privilege escalation, IDOR,
 cross-tenant isolation, injection, CSRF, rate-limit abuse, expired/replayed/revoked tokens)
 without mocking out authorization boundaries.
 

@@ -40,8 +40,7 @@ dev = [
 ]
 
 [project.scripts]
-gencode-gov = "arkhon.cli:main"
-arkhon = "arkhon.cli:main"
+gencode-gov = "gencode_gov.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/mohamedelghazali/GENCODE-GOV"
@@ -56,7 +55,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-arkhon = [
+gencode_gov = [
     "py.typed",
     "resources/agent_pack/*",
     "resources/agent_pack/**/*",
@@ -71,7 +70,7 @@ src = ["src", "."]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "S"]
 [tool.ruff.lint.isort]
-known-first-party = ["arkhon", "tests"]
+known-first-party = ["gencode_gov", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
@@ -84,7 +83,7 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 warn_unused_configs = true
 files = ["src", "tests", "scripts"]
-exclude = ["src/arkhon/integrations/models/(openai-o|deepseek-coder|code-llama|qwen-coder)/"]
+exclude = ["src/gencode_gov/integrations/models/(openai-o|deepseek-coder|code-llama|qwen-coder)/"]
 
 [[tool.mypy.overrides]]
 module = ["jsonschema", "jsonschema.*", "defusedxml", "defusedxml.*"]

@@ -1,4 +1,4 @@
-"""Tests for arkhon.integrations.base."""
+"""Tests for gencode_gov.integrations.base."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.integrations.base import (
+from gencode_gov.integrations.base import (
     Integration,
     IntegrationInfo,
     IntegrationResponse,

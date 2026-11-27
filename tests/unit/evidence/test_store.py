@@ -9,14 +9,14 @@ from typing import Any
 
 import pytest
 
-from arkhon.core.errors import EvidenceError, EvidenceTamperedError
-from arkhon.evidence.store import EvidenceStore
+from gencode_gov.core.errors import EvidenceError, EvidenceTamperedError
+from gencode_gov.evidence.store import EvidenceStore
 
 
 def _record(evidence_id: str = "EVID-TEST-0001") -> dict[str, str]:
     return {
         "evidence_id": evidence_id,
-        "source": "arkhon",
+        "source": "gencode-gov",
         "source_version": "0.1.0.dev1",
         "commit_sha": "a" * 40,
         "status": "PASS",
@@ -35,7 +35,7 @@ def test_write_rejects_domain_symlink_escape(tmp_path: Path) -> None:
     outside = tmp_path / "outside"
     project.mkdir()
     outside.mkdir()
-    evidence_root = project / ".arkhon" / "evidence"
+    evidence_root = project / ".gencode-gov" / "evidence"
     evidence_root.mkdir(parents=True)
     _symlink_or_skip(evidence_root / "security", outside, target_is_directory=True)
 
@@ -50,7 +50,7 @@ def test_write_rejects_evidence_root_symlink_escape(tmp_path: Path) -> None:
     outside = tmp_path / "outside"
     project.mkdir()
     outside.mkdir()
-    _symlink_or_skip(project / ".arkhon", outside, target_is_directory=True)
+    _symlink_or_skip(project / ".gencode-gov", outside, target_is_directory=True)
 
     store = EvidenceStore(project)
     with pytest.raises(EvidenceError, match="evidence root escapes project root"):
@@ -63,7 +63,7 @@ def test_read_rejects_symlinked_record(tmp_path: Path) -> None:
     outside = tmp_path / "outside.json"
     project.mkdir()
     outside.write_text('{"evidence_id":"EVID-OUTSIDE"}', encoding="utf-8")
-    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir = project / ".gencode-gov" / "evidence" / "security"
     evidence_dir.mkdir(parents=True)
     _symlink_or_skip(evidence_dir / "EVID-TEST-0001.json", outside)
 
@@ -76,7 +76,7 @@ def test_write_rejects_symlinked_record(tmp_path: Path) -> None:
     project.mkdir()
     outside = tmp_path / "outside.json"
     outside.write_text('{"evidence_id":"EVID-OUTSIDE"}', encoding="utf-8")
-    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir = project / ".gencode-gov" / "evidence" / "security"
     evidence_dir.mkdir(parents=True)
     _symlink_or_skip(evidence_dir / "EVID-TEST-0001.json", outside)
 
@@ -89,7 +89,7 @@ def test_iter_records_rejects_symlinked_record(tmp_path: Path) -> None:
     project.mkdir()
     outside = tmp_path / "outside.json"
     outside.write_text('{"evidence_id":"EVID-OUTSIDE"}', encoding="utf-8")
-    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir = project / ".gencode-gov" / "evidence" / "security"
     evidence_dir.mkdir(parents=True)
     _symlink_or_skip(evidence_dir / "EVID-TEST-0001.json", outside)
 
@@ -102,7 +102,7 @@ def test_iter_records_rejects_resolved_path_escape(
 ) -> None:
     project = tmp_path / "project"
     project.mkdir()
-    evidence_dir = project / ".arkhon" / "evidence" / "security"
+    evidence_dir = project / ".gencode-gov" / "evidence" / "security"
     evidence_dir.mkdir(parents=True)
     record = evidence_dir / "EVID-TEST.json"
     record.write_text('{"evidence_id":"EVID-TEST"}', encoding="utf-8")
@@ -118,12 +118,13 @@ def test_iter_records_rejects_resolved_path_escape(
     with pytest.raises(EvidenceTamperedError, match="escapes evidence root"):
         list(EvidenceStore(project).iter_records("security"))
 
+
 def _valid_record(project: Path, evidence_id: str = "EVID-TEST-0002") -> dict[str, Any]:
     artifact = project / "artifact.txt"
     artifact.write_text("verified evidence", encoding="utf-8")
     return {
         "evidence_id": evidence_id,
-        "source": "arkhon",
+        "source": "gencode-gov",
         "source_version": "0.1.0.dev1",
         "commit_sha": "a" * 40,
         "executed_at": datetime.now(UTC).isoformat(),
@@ -201,6 +202,7 @@ def test_read_rejects_missing_artifact(tmp_path: Path) -> None:
     with pytest.raises(EvidenceTamperedError, match="artifact missing"):
         store.read("testing", "EVID-TEST-0002")
 
+
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     [
@@ -244,9 +246,7 @@ def test_read_rejects_missing_required_evidence_field(tmp_path: Path) -> None:
         ({"tsar_version": "1.0", "rule_ids": []}, "invalid rule_ids"),
     ],
 )
-def test_read_rejects_invalid_tsar_metadata(
-    tmp_path: Path, metadata: object, message: str
-) -> None:
+def test_read_rejects_invalid_tsar_metadata(tmp_path: Path, metadata: object, message: str) -> None:
     store = EvidenceStore(tmp_path)
     record = _valid_record(tmp_path)
     record["source"] = "tsar"
@@ -256,6 +256,7 @@ def test_read_rejects_invalid_tsar_metadata(
 
     with pytest.raises(EvidenceTamperedError, match=message):
         store.read("security", "EVID-TEST-0002")
+
 
 @pytest.mark.parametrize(
     "rule_ids",
@@ -267,9 +268,7 @@ def test_read_rejects_invalid_tsar_metadata(
         [],
     ],
 )
-def test_read_rejects_invalid_rule_identifier_metadata(
-    tmp_path: Path, rule_ids: object
-) -> None:
+def test_read_rejects_invalid_rule_identifier_metadata(tmp_path: Path, rule_ids: object) -> None:
     store = EvidenceStore(tmp_path)
     record = _valid_record(tmp_path)
     record["rule_ids"] = rule_ids
@@ -277,7 +276,6 @@ def test_read_rejects_invalid_rule_identifier_metadata(
 
     with pytest.raises(EvidenceTamperedError, match="rule_ids"):
         store.read("testing", "EVID-TEST-0002")
-
 
 
 def test_write_wraps_directory_fsync_failure_and_cleans_temp_file(
@@ -302,5 +300,5 @@ def test_write_wraps_directory_fsync_failure_and_cleans_temp_file(
     with pytest.raises(EvidenceError, match="cannot atomically persist evidence record"):
         store.write("testing", record)
 
-    evidence_dir = tmp_path / ".arkhon" / "evidence" / "testing"
+    evidence_dir = tmp_path / ".gencode-gov" / "evidence" / "testing"
     assert list(evidence_dir.glob(".EVID-FSYNC-FAIL.*.tmp")) == []

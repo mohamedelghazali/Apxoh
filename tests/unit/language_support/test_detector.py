@@ -1,4 +1,4 @@
-"""Tests for arkhon.language_support.detector."""
+"""Tests for gencode_gov.language_support.detector."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.language_support.detector import detect_languages
+from gencode_gov.language_support.detector import detect_languages
 
 
 def _write(root: Path, rel: str, content: str = "x") -> Path:
@@ -82,7 +82,6 @@ def test_case_insensitive_extensions(tmp_path: Path) -> None:
     result = detect_languages(tmp_path)
     assert len(result.detected) == 1
     assert result.detected[0].definition.id == "python"
-
 
 
 @pytest.mark.parametrize("max_samples", [True, -1, 1.5, "2"])

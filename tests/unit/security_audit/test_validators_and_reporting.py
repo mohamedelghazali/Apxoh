@@ -6,13 +6,13 @@ import json
 import os
 from pathlib import Path
 
-from arkhon.security_audit.coverage import (
+from gencode_gov.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
     build_canonical_coverage_id,
 )
-from arkhon.security_audit.findings import (
+from gencode_gov.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
     LocationRef,
@@ -24,12 +24,12 @@ from arkhon.security_audit.findings import (
     compute_finding_fingerprint,
     finding_id_from_fingerprint,
 )
-from arkhon.security_audit.reporting import (
+from gencode_gov.security_audit.reporting import (
     compute_governance_gate_status,
     write_audit_reports,
 )
-from arkhon.security_audit.sandbox import SandboxCapabilities
-from arkhon.security_audit.validators import (
+from gencode_gov.security_audit.sandbox import SandboxCapabilities
+from gencode_gov.security_audit.validators import (
     is_safe_relative_path,
     validate_audit_directory,
     validate_audit_report_data,
@@ -177,7 +177,7 @@ def _valid_bundle(audit_dir: Path) -> tuple[CoverageLedger, FindingsCollection]:
 def test_validators_enforce_file_safety_schema_semantic_and_bundle_rules(
     tmp_path: Path,
 ) -> None:
-    assert is_safe_relative_path("src/arkhon/cli.py") is True
+    assert is_safe_relative_path("src/gencode_gov/cli.py") is True
     assert is_safe_relative_path("/etc/passwd") is False
     assert is_safe_relative_path("../up.py") is False
     assert is_safe_relative_path("bad\x07ctrl.py") is False

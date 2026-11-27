@@ -52,7 +52,7 @@ The intended evidence contract should include:
 Evidence is intended to be stored within the governed project:
 
 ```text
-<project>/.arkhon/evidence/
+<project>/.gencode-gov/evidence/
 ├── requirements/
 ├── architecture/
 ├── code-quality/
@@ -90,7 +90,7 @@ Sensitive scan output must be redacted before storage. Do not store secret value
 
 ### 2.4 `.gitignore` Policy
 
-Evidence persistence is a project decision governed by the project's configuration and audit needs. If `.arkhon/evidence/` is ignored, evidence will not be part of normal Git history unless explicitly included through an approved process.
+Evidence persistence is a project decision governed by the project's configuration and audit needs. If `.gencode-gov/evidence/` is ignored, evidence will not be part of normal Git history unless explicitly included through an approved process.
 
 Projects that commit evidence must assess repository visibility, size, sensitive-data exposure, and retention. GENCODE-GOV may publish aggregate reports while retaining raw evidence in a separately controlled store; this behavior must be verified for each deployment.
 
@@ -238,7 +238,7 @@ Every step should produce an auditable verification result. The gate must not in
 The runtime separates source inventory from release authenticity:
 
 - `gencode-gov verify <project> --domain supply-chain` runs Syft and writes a CycloneDX SBOM bound to the checked-out commit. CycloneDX versions 1.4–1.7 are accepted. The verification engine validates the commit binding before it records `PASS`.
-- `gencode-gov verify <project> --domain release-attestations` is an explicit release-only gate. `.arkhon/supply-chain.json` must identify in-project `artifact`, `provenance`, `signature_bundle`, and `source_tag` paths/values.
+- `gencode-gov verify <project> --domain release-attestations` is an explicit release-only gate. `.gencode-gov/supply-chain.json` must identify in-project `artifact`, `provenance`, `signature_bundle`, and `source_tag` paths/values.
 - The release tag must be a semantic version tag and must resolve to the exact checked-out `HEAD`. `slsa-verifier` checks both the repository URI and exact tag; Cosign checks the exact workflow/tag certificate identity and GitHub OIDC issuer.
 - The engine re-runs SLSA and Cosign verification before recording release-attestation `PASS`. The JSON reporter repeats cryptographic verification when consuming that evidence.
 - `gencode-gov verify <project> --domain all` includes local SBOM generation but intentionally excludes `release-attestations`, because ordinary source checkouts do not have release artifacts/provenance.
@@ -273,7 +273,7 @@ See `SECURITY_AGENTS.md` §4.1.
 ### 7.3 What Happens on Detection
 
 1. The affected gate becomes `BLOCKED`.
-2. A security incident record is created in the configured incident store (target path: `.arkhon/state/incidents.log`).
+2. A security incident record is created in the configured incident store (target path: `.gencode-gov/state/incidents.log`).
 3. The designated Security Lead is notified through a configured channel.
 4. Human review is required before the affected gate is reconsidered.
 5. The potentially compromised revision is marked or quarantined as untrusted; it is not silently deleted.
@@ -287,7 +287,7 @@ These actions are requirements; their implementation and notification paths must
 
 - `schemas/evidence.schema.json` — current evidence schema (minimal; does not yet express the full contract above)
 - `.github/workflows/slsa-release.yml` — pinned Cosign signing and SLSA provenance release workflow
-- `src/arkhon/verification/runners/tsar_runner.py` — TSAR CLI runner; real CLI scan is exercised by `.github/workflows/tsar-e2e.yml`
+- `src/gencode_gov/verification/runners/tsar_runner.py` — TSAR CLI runner; real CLI scan is exercised by `.github/workflows/tsar-e2e.yml`
 - `SECURITY_AGENTS.md` §4 — evidence tampering defenses
 - `docs/SUPPLY_CHAIN.md` §5 — artifact signing
 

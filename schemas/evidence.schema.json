@@ -22,7 +22,7 @@
     "source": {
       "type": "string",
       "enum": [
-        "arkhon",
+        "gencode-gov",
         "tsar",
         "external-tool"
       ]

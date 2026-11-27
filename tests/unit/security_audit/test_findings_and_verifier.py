@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.security_audit.findings import (
+from gencode_gov.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
     LocationRef,
@@ -18,11 +18,11 @@ from arkhon.security_audit.findings import (
     compute_finding_fingerprint,
     finding_id_from_fingerprint,
 )
-from arkhon.security_audit.sandbox import (
+from gencode_gov.security_audit.sandbox import (
     SandboxCapabilities,
     SandboxExecutor,
 )
-from arkhon.security_audit.verifier import (
+from gencode_gov.security_audit.verifier import (
     IndependentFindingVerifier,
     verify_findings_collection,
 )
@@ -302,9 +302,7 @@ def test_independent_verifier_confirms_rejects_needs_validation_and_blocks(
         tmp_path / "aud_mock_fail",
         capabilities=SandboxCapabilities(True, True, True, True, "/bin/false", False),
     )
-    v_mock_fail = IndependentFindingVerifier(
-        proj, verifier_id="verifier-05", sandbox=mock_fail_sb
-    )
+    v_mock_fail = IndependentFindingVerifier(proj, verifier_id="verifier-05", sandbox=mock_fail_sb)
     assert (
         v_mock_fail.verify_candidate(
             _make_candidate("src/app/vuln.py", 2),
@@ -318,9 +316,7 @@ def test_independent_verifier_confirms_rejects_needs_validation_and_blocks(
     live_sb = SandboxExecutor(tmp_path / "aud_live")
     if (
         live_sb.capabilities.can_enforce_full_sandbox
-        and live_sb.run_bounded(
-            agent_id="probe-live", argv=["/bin/true"], source_root=proj
-        ).status
+        and live_sb.run_bounded(agent_id="probe-live", argv=["/bin/true"], source_root=proj).status
         == "PASS"
     ):
         v_live = IndependentFindingVerifier(proj, verifier_id="verifier-03", sandbox=live_sb)

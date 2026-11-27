@@ -55,8 +55,8 @@ Evidence bundles are JSON records intended to conform to `schemas/evidence.schem
 
 ```json
 {
-  "evidence_id": "EVID-ARKHON-A3F2B1C4",
-  "source": "arkhon",
+  "evidence_id": "EVID-GENCODE-GOV-A3F2B1C4",
+  "source": "gencode-gov",
   "source_version": "0.1.0.dev1",
   "commit_sha": "a1b2c3d4e5f6789012345678901234567890abcd",
   "executed_at": "2026-11-01T14:30:00Z",
@@ -75,7 +75,7 @@ The example is illustrative. The path is interpreted relative to the evidence ro
 | Field | Meaning |
 | :--- | :--- |
 | `evidence_id` | Unique identifier for this evidence record |
-| `source` | `arkhon`, `tsar`, or `external-tool` |
+| `source` | `gencode-gov`, `tsar`, or `external-tool` |
 | `source_version` | Version of the tool or producer |
 | `commit_sha` | Exact commit to which the result applies |
 | `executed_at` | Timestamp in ISO 8601 format with timezone |
@@ -118,7 +118,7 @@ The exact canonicalization and signing format must be specified by the implement
 The intended location is:
 
 ```
-.arkhon/evidence/<domain>/<evidence_id>.json
+.gencode-gov/evidence/<domain>/<evidence_id>.json
 ```
 
 Required storage properties:
@@ -151,7 +151,7 @@ Only successfully verified evidence may support an assessment. A gate must not c
 
 The proposed retention policy is:
 
-- Evidence older than 30 days may be moved to `.arkhon/evidence/_archive/` when retention requirements permit.
+- Evidence older than 30 days may be moved to `.gencode-gov/evidence/_archive/` when retention requirements permit.
 - Evidence older than 90 days may be pruned only when it is not attached to a release and no legal, contractual, incident-response, or audit retention requirement applies.
 
 Archival and deletion must be implemented as explicit, auditable operations. They are not implied by this document.
@@ -232,9 +232,9 @@ GENCODE-GOV should invoke independent verification tools and preserve their actu
 
 - `schemas/evidence.schema.json` — evidence record format
 - `docs/EVIDENCE_INTEGRITY.md` — integrity policy
-- `src/arkhon/evidence/collector.py` — collection
-- `src/arkhon/evidence/integrity.py` — integrity and freshness verification
-- `src/arkhon/evidence/store.py` — storage
+- `src/gencode_gov/evidence/collector.py` — collection
+- `src/gencode_gov/evidence/integrity.py` — integrity and freshness verification
+- `src/gencode_gov/evidence/store.py` — storage
 - `tools/signing/sign-artifacts.py` — intended signing tool; verify its presence and behavior before relying on it
 
 ---

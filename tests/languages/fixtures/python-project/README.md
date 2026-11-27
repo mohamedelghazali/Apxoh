@@ -6,7 +6,7 @@
 
 - `src/calc.py` — calculator module (add, subtract, multiply, divide)
 - `tests/test_calc.py` — unit tests for calc
-- `.arkhon/project.yaml` — GENCODE-GOV project declaration
+- `.gencode-gov/project.yaml` — GENCODE-GOV project declaration
 
 ## Expected GENCODE-GOV behavior
 

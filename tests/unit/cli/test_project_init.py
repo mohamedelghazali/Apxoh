@@ -9,7 +9,7 @@ import jsonschema
 import pytest
 import yaml
 
-from arkhon.cli import main
+from gencode_gov.cli import main
 
 
 def test_project_init_creates_schema_valid_declaration(
@@ -18,7 +18,7 @@ def test_project_init_creates_schema_valid_declaration(
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "app.py").write_text("value = 1\n", encoding="utf-8")
     assert main(["project", "init", str(tmp_path), "--name", "Example App"]) == 0
-    target = tmp_path / ".arkhon" / "project.yaml"
+    target = tmp_path / ".gencode-gov" / "project.yaml"
     data = yaml.safe_load(target.read_text(encoding="utf-8"))
     schema = json.loads(
         (Path(__file__).resolve().parents[3] / "schemas" / "project.schema.json").read_text(
@@ -35,9 +35,7 @@ def test_project_init_without_detected_language_uses_unknown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert main(["project", "init", str(tmp_path)]) == 0
-    data = yaml.safe_load(
-        (tmp_path / ".arkhon" / "project.yaml").read_text(encoding="utf-8")
-    )
+    data = yaml.safe_load((tmp_path / ".gencode-gov" / "project.yaml").read_text(encoding="utf-8"))
     assert data["languages"]["primary"] == "unknown"
     assert "Languages: unknown" in capsys.readouterr().out
 
@@ -45,7 +43,7 @@ def test_project_init_without_detected_language_uses_unknown(
 def test_project_init_refuses_existing_declaration_unless_forced(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    target = tmp_path / ".arkhon" / "project.yaml"
+    target = tmp_path / ".gencode-gov" / "project.yaml"
     target.parent.mkdir()
     target.write_text("existing: true\n", encoding="utf-8")
     assert main(["project", "init", str(tmp_path)]) == 1
@@ -84,7 +82,7 @@ def test_project_init_rejects_invalid_name_and_identifier(
 def test_project_init_fails_if_metadata_path_is_not_a_directory(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    (tmp_path / ".arkhon").write_text("not a directory", encoding="utf-8")
+    (tmp_path / ".gencode-gov").write_text("not a directory", encoding="utf-8")
     assert main(["project", "init", str(tmp_path)]) == 1
     assert "project initialization failed" in capsys.readouterr().err
 
@@ -97,7 +95,7 @@ def test_project_init_fails_when_schema_is_unavailable(
     profile = tmp_path / "projects" / "universal" / "profile.yaml"
     profile.parent.mkdir(parents=True)
     profile.write_text("name: universal\n", encoding="utf-8")
-    monkeypatch.setattr("arkhon.cli._project_template_root", lambda: tmp_path)
+    monkeypatch.setattr("gencode_gov.cli._project_template_root", lambda: tmp_path)
     assert main(["project", "init", str(tmp_path / "project")]) == 1
     assert "not a directory" in capsys.readouterr().err
     project = tmp_path / "project"
@@ -109,10 +107,10 @@ def test_project_init_fails_when_schema_is_unavailable(
 def test_project_templates_fall_back_to_packaged_resources(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from arkhon.cli import _project_template_root
-    from arkhon.projects.loader import list_profiles
+    from gencode_gov.cli import _project_template_root
+    from gencode_gov.projects.loader import list_profiles
 
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: tmp_path)
     templates = _project_template_root()
     assert (templates / "schemas" / "project.schema.json").is_file()
     assert set(list_profiles(templates)) == {
@@ -148,11 +146,11 @@ def test_project_init_refuses_symlinked_metadata_directory(
     outside = tmp_path / "outside"
     outside.mkdir()
     try:
-        (project / ".arkhon").symlink_to(outside, target_is_directory=True)
+        (project / ".gencode-gov").symlink_to(outside, target_is_directory=True)
     except OSError:
         pytest.skip("symlink creation is unavailable on this runner")
     assert main(["project", "init", str(project)]) == 1
-    assert "symlinked .arkhon directory" in capsys.readouterr().err
+    assert "symlinked .gencode-gov directory" in capsys.readouterr().err
     assert not (outside / "project.yaml").exists()
 
 
@@ -161,7 +159,7 @@ def test_project_init_refuses_symlinked_declaration(
 ) -> None:
     project = tmp_path / "project"
     project.mkdir()
-    metadata = project / ".arkhon"
+    metadata = project / ".gencode-gov"
     metadata.mkdir()
     outside = tmp_path / "outside.yaml"
     outside.write_text("preserve: true\n", encoding="utf-8")
@@ -180,7 +178,5 @@ def test_project_init_normalizes_single_character_identifier(
     project = tmp_path / "A"
     project.mkdir()
     assert main(["project", "init", str(project), "--name", "A"]) == 0
-    data = yaml.safe_load(
-        (project / ".arkhon" / "project.yaml").read_text(encoding="utf-8")
-    )
+    data = yaml.safe_load((project / ".gencode-gov" / "project.yaml").read_text(encoding="utf-8"))
     assert data["project"]["identifier"] == "a-project"

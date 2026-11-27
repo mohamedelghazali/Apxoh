@@ -1,4 +1,4 @@
-"""Tests for the `arkhon inspect` command."""
+"""Tests for the `gencode-gov inspect` command."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.cli import main
+from gencode_gov.cli import main
 
 
 def test_inspect_not_a_directory(
@@ -80,9 +80,9 @@ def test_inspect_declared_profile(
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
 ) -> None:
-    (tmp_path / ".arkhon").mkdir()
+    (tmp_path / ".gencode-gov").mkdir()
 
-    (tmp_path / ".arkhon" / "project.yaml").write_text(
+    (tmp_path / ".gencode-gov" / "project.yaml").write_text(
         "project:\n  name: test\n  profile: enterprise\n",
         encoding="utf-8",
     )

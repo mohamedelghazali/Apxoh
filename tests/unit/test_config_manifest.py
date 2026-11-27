@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.config import Manifest, _load_yaml, find_repo_root, get_manifest, load_manifest
-from arkhon.core.errors import ManifestError
+from gencode_gov.config import Manifest, _load_yaml, find_repo_root, get_manifest, load_manifest
+from gencode_gov.core.errors import ManifestError
 
 
 def _manifest_tree(root: Path) -> None:
@@ -115,12 +115,12 @@ def test_find_repo_root_environment_and_fallback(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _manifest_tree(tmp_path)
-    monkeypatch.setenv("APXOH_ROOT", str(tmp_path))
+    monkeypatch.setenv("GENCODE_GOV_ROOT", str(tmp_path))
     assert find_repo_root() == tmp_path.resolve()
-    monkeypatch.setenv("APXOH_ROOT", str(tmp_path / "invalid"))
-    with pytest.raises(ManifestError, match="APXOH_ROOT"):
+    monkeypatch.setenv("GENCODE_GOV_ROOT", str(tmp_path / "invalid"))
+    with pytest.raises(ManifestError, match="GENCODE_GOV_ROOT"):
         find_repo_root()
-    monkeypatch.delenv("APXOH_ROOT")
+    monkeypatch.delenv("GENCODE_GOV_ROOT")
     assert (find_repo_root() / "manifest" / "index.yaml").is_file()
 
 

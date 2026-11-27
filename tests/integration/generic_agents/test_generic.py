@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from arkhon.integrations.generic_agents.adapter import GenericAgentAdapter
+from gencode_gov.integrations.generic_agents.adapter import GenericAgentAdapter
 
 
 def test_info() -> None:

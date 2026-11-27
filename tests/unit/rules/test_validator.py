@@ -1,18 +1,18 @@
-"""Tests for arkhon.rules.validator."""
+"""Tests for gencode_gov.rules.validator."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from arkhon.core.constants import (
+from gencode_gov.core.constants import (
     ALL_ENFORCEMENT,
     ALL_RULE_DOMAINS,
     ALL_RULE_STATUSES,
     ALL_SEVERITIES,
     DOMAIN_RULE_PREFIX,
 )
-from arkhon.rules.loader import Rule
-from arkhon.rules.validator import validate_against_schema, validate_rule, validate_semantics
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.validator import validate_against_schema, validate_rule, validate_semantics
 
 
 def _make_rule(raw: dict) -> Rule:
@@ -119,8 +119,8 @@ def test_schema_validation_import_invalid_json_and_schema_errors(
 ) -> None:
     import sys
 
-    from arkhon.core.errors import RuleValidationError
-    from arkhon.rules.validator import validate_against_schema
+    from gencode_gov.core.errors import RuleValidationError
+    from gencode_gov.rules.validator import validate_against_schema
 
     rule = _make_rule(_valid_raw())
     missing_dependency = tmp_path / "missing-dependency.json"

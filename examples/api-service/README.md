@@ -12,7 +12,7 @@ Demonstrates:
 
 ```
 api-service/
-├── .arkhon/project.yaml
+├── .gencode-gov/project.yaml
 ├── go.mod
 ├── main.go
 ├── handlers/

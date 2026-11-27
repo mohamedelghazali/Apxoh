@@ -1,4 +1,4 @@
-"""Tests for arkhon.evidence.integrity."""
+"""Tests for gencode_gov.evidence.integrity."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import EvidenceError, EvidenceStaleError, EvidenceTamperedError
-from arkhon.evidence.integrity import (
+from gencode_gov.core.errors import EvidenceError, EvidenceStaleError, EvidenceTamperedError
+from gencode_gov.evidence.integrity import (
     sha256_of,
     verify_artifact,
     verify_bundle,
@@ -26,7 +26,7 @@ def _bundle(tmp_path: Path) -> tuple[Path, str]:
     artifact = _write(tmp_path, "art.txt", "content")
     data = {
         "evidence_id": "EVID-TEST-0001",
-        "source": "arkhon",
+        "source": "gencode-gov",
         "source_version": "0.1.0.dev1",
         "commit_sha": "a" * 40,
         "executed_at": "2026-11-01T00:00:00Z",

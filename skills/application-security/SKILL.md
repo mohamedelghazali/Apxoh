@@ -5,7 +5,7 @@ description: >
   AI-generated software using GENCODE-GOV's security rules and evidence requirements.
 version: 1.1.0
 applicable_to: [web-application, api-service, mobile-application, distributed-system, enterprise]
-requires: [arkhon-governance, secure-software-engineering]
+requires: [gencode-gov, secure-software-engineering]
 ---
 # Application Security Skill
 
@@ -18,7 +18,7 @@ handles users, credentials, sensitive data, network traffic, or privileged opera
    skill, and all applicable security/database/observability/testing/privacy rules before coding.
 2. Build a threat model: assets, actors, trust boundaries, entry points, abuse cases,
    data classification, tenant boundaries, and deployment assumptions.
-3. Create a traceability matrix (and `.arkhon/security-test-matrix.yaml`) mapping each
+3. Create a traceability matrix (and `.gencode-gov/security-test-matrix.yaml`) mapping each
    applicable rule and negative-security scenario to code/configuration, real test file
    and test ID, runner execution evidence, owner, and result.
 4. Apply controls appropriate to the architecture. Browser-only controls may be

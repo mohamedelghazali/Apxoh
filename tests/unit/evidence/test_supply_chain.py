@@ -9,8 +9,8 @@ import subprocess
 
 import pytest
 
-from arkhon.core.errors import EvidenceError, EvidenceTamperedError
-from arkhon.evidence.supply_chain import (
+from gencode_gov.core.errors import EvidenceError, EvidenceTamperedError
+from gencode_gov.evidence.supply_chain import (
     OIDC_ISSUER,
     SOURCE_URI,
     identity_regexp_for_tag,
@@ -30,7 +30,7 @@ def _bom(commit: str = SHA) -> dict:
             "component": {
                 "type": "application",
                 "name": "fixture",
-                "properties": [{"name": "arkhon:commit-sha", "value": commit}],
+                "properties": [{"name": "gencode-gov:commit-sha", "value": commit}],
             }
         },
     }
@@ -51,7 +51,7 @@ def _attestation_fixture(root: Path) -> tuple[Path, list[dict]]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(value, encoding="utf-8")
         files[key] = path
-    report_path = root / ".arkhon" / "reports" / "attestation.attestation.json"
+    report_path = root / ".gencode-gov" / "reports" / "attestation.attestation.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report = {
         "schema_version": 1,
@@ -105,7 +105,9 @@ def test_verify_cyclonedx_sbom_accepts_only_commit_bound_bom(tmp_path: Path) -> 
                 "bomFormat": "CycloneDX",
                 "specVersion": "1.6",
                 "metadata": {
-                    "component": {"properties": [{"name": "arkhon:commit-sha", "value": "bad"}]}
+                    "component": {
+                        "properties": [{"name": "gencode-gov:commit-sha", "value": "bad"}]
+                    }
                 },
                 "components": [],
             },
@@ -116,7 +118,7 @@ def test_verify_cyclonedx_sbom_accepts_only_commit_bound_bom(tmp_path: Path) -> 
                 "bomFormat": "CycloneDX",
                 "specVersion": "1.6",
                 "metadata": {
-                    "component": {"properties": [{"name": "arkhon:commit-sha", "value": SHA}]}
+                    "component": {"properties": [{"name": "gencode-gov:commit-sha", "value": SHA}]}
                 },
                 "components": {},
             },
@@ -138,7 +140,7 @@ def test_attestation_reverification_accepts_and_runs_both_tools(
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+        "gencode_gov.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
     )
     calls = []
 
@@ -147,7 +149,7 @@ def test_attestation_reverification_accepts_and_runs_both_tools(
         output = SHA if command[1] == "rev-parse" else "verified"
         return subprocess.CompletedProcess(command, 0, output, "")
 
-    monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
+    monkeypatch.setattr("gencode_gov.evidence.supply_chain.subprocess.run", run)
     verify_supply_chain_attestation_report(
         report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
     )
@@ -246,7 +248,7 @@ def test_attestation_report_must_be_an_evidence_artifact(
     report, artifacts = _attestation_fixture(tmp_path)
     artifacts.pop()
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+        "gencode_gov.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
     )
     with pytest.raises(EvidenceTamperedError, match="not itself bound"):
         verify_supply_chain_attestation_report(
@@ -259,11 +261,11 @@ def test_attestation_verification_blocks_without_verifiers(
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.shutil.which",
+        "gencode_gov.evidence.supply_chain.shutil.which",
         lambda name: "/usr/bin/git" if name == "git" else None,
     )
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.subprocess.run",
+        "gencode_gov.evidence.supply_chain.subprocess.run",
         lambda command, **kwargs: subprocess.CompletedProcess(command, 0, SHA, ""),
     )
     with pytest.raises(EvidenceError, match="slsa-verifier and cosign"):
@@ -278,7 +280,7 @@ def test_attestation_verification_rejects_invalid_crypto(
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
+        "gencode_gov.evidence.supply_chain.shutil.which", lambda name: f"/usr/bin/{name}"
     )
 
     def fail(command, **kwargs):
@@ -288,13 +290,12 @@ def test_attestation_verification_rejects_invalid_crypto(
             raise OSError("missing executable")
         return subprocess.CompletedProcess(command, 1, "", "signature invalid")
 
-    monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", fail)
+    monkeypatch.setattr("gencode_gov.evidence.supply_chain.subprocess.run", fail)
     error = EvidenceError if mode == "spawn" else EvidenceTamperedError
     with pytest.raises(error):
         verify_supply_chain_attestation_report(
             report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
         )
-
 
 
 @pytest.mark.parametrize(
@@ -317,7 +318,7 @@ def test_attestation_rejects_unbound_release_tag(
 ) -> None:
     report, artifacts = _attestation_fixture(tmp_path)
     monkeypatch.setattr(
-        "arkhon.evidence.supply_chain.shutil.which",
+        "gencode_gov.evidence.supply_chain.shutil.which",
         lambda name: git_path if name == "git" else f"/usr/bin/{name}",
     )
 
@@ -326,7 +327,7 @@ def test_attestation_rejects_unbound_release_tag(
             raise OSError("git lookup failed")
         return subprocess.CompletedProcess(command, 0, stdout, "")
 
-    monkeypatch.setattr("arkhon.evidence.supply_chain.subprocess.run", run)
+    monkeypatch.setattr("gencode_gov.evidence.supply_chain.subprocess.run", run)
     with pytest.raises(error, match=message):
         verify_supply_chain_attestation_report(
             report, evidence_root=tmp_path, expected_commit_sha=SHA, evidence_artifacts=artifacts
@@ -334,7 +335,7 @@ def test_attestation_rejects_unbound_release_tag(
 
 
 def test_in_root_rejects_invalid_symlink_escape_and_missing_paths(tmp_path: Path) -> None:
-    from arkhon.evidence.supply_chain import _in_root
+    from gencode_gov.evidence.supply_chain import _in_root
 
     with pytest.raises(EvidenceTamperedError, match="invalid relative path"):
         _in_root(tmp_path, None)

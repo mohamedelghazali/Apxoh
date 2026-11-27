@@ -42,14 +42,14 @@
 | Component | Path | Trust Level |
 | :--- | :--- | :--- |
 | Charter & Policy | `system/` | **High** |
-| Rule Engine | `src/arkhon/rules/` | **High** |
-| Verification Engine | `src/arkhon/verification/` | **High** |
-| Evidence Store | `src/arkhon/evidence/` | **High** |
-| Assessment Engine | `src/arkhon/assessment/` | **High** |
-| Orchestrator | `src/arkhon/orchestrator/` | **Medium** |
-| Model Integrations | `src/arkhon/integrations/models/` | **Low** |
-| Platform Integrations | `src/arkhon/integrations/platforms/` | **Low** |
-| TSAR Integration | `src/arkhon/integrations/tsar/` | **Medium** |
+| Rule Engine | `src/gencode_gov/rules/` | **High** |
+| Verification Engine | `src/gencode_gov/verification/` | **High** |
+| Evidence Store | `src/gencode_gov/evidence/` | **High** |
+| Assessment Engine | `src/gencode_gov/assessment/` | **High** |
+| Orchestrator | `src/gencode_gov/orchestrator/` | **Medium** |
+| Model Integrations | `src/gencode_gov/integrations/models/` | **Low** |
+| Platform Integrations | `src/gencode_gov/integrations/platforms/` | **Low** |
+| TSAR Integration | `src/gencode_gov/integrations/tsar/` | **Medium** |
 
 ### 1.4 Data Flows
 
@@ -95,13 +95,13 @@ Developer / AI Agent
 - **Impact if compromised:** Complete governance bypass.
 - **Format:** YAML, validated against `schemas/rule.schema.json`.
 
-### 2.2 Evidence (`evidence/`, `.arkhon/evidence/`)
+### 2.2 Evidence (`evidence/`, `.gencode-gov/evidence/`)
 
 - **Why critical:** Evidence is the basis for every release decision.
 - **Impact if compromised:** False release, production incident, loss of trust.
 - **Format:** JSON, signed with sigstore, bound to commit SHA.
 
-### 2.3 Gates (`policies/blocking/`, `src/arkhon/assessment/gates.py`)
+### 2.3 Gates (`policies/blocking/`, `src/gencode_gov/assessment/gates.py`)
 
 - **Why critical:** Last line of defense before release.
 - **Impact if compromised:** Unsafe release.

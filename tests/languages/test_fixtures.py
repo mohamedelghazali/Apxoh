@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.cli import main
-from arkhon.language_support.detector import detect_languages
-from arkhon.projects.matcher import match_profile
+from gencode_gov.cli import main
+from gencode_gov.language_support.detector import detect_languages
+from gencode_gov.projects.matcher import match_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURES_DIR = REPO_ROOT / "tests" / "languages" / "fixtures"
@@ -39,7 +39,7 @@ def _fixture_path(name: str) -> Path:
 def test_fixture_exists(fixture_name: str, lang: str) -> None:
     path = _fixture_path(fixture_name)
     assert path.is_dir(), f"missing fixture: {path}"
-    assert (path / ".arkhon" / "project.yaml").is_file()
+    assert (path / ".gencode-gov" / "project.yaml").is_file()
     assert (path / "README.md").is_file()
 
 
@@ -68,7 +68,7 @@ def test_fixture_has_no_committed_evidence(fixture_name: str, lang: str) -> None
     path = _fixture_path(fixture_name)
     if not path.is_dir():
         pytest.skip(f"fixture not present: {fixture_name}")
-    evidence = path / ".arkhon" / "evidence"
+    evidence = path / ".gencode-gov" / "evidence"
     assert not evidence.exists() or not any(evidence.iterdir())
 
 

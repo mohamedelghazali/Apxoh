@@ -1,4 +1,4 @@
-"""Tests for arkhon.language_support.registry."""
+"""Tests for gencode_gov.language_support.registry."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import ConfigError
-from arkhon.language_support.registry import (
+from gencode_gov.core.errors import ConfigError
+from gencode_gov.language_support.registry import (
     LanguageDefinition,
     load_registry,
 )
@@ -101,8 +101,8 @@ def test_every_language_has_milestone() -> None:
 def test_registry_rejects_duplicate_extension_and_invalid_entries(tmp_path: Path) -> None:
     import yaml
 
-    from arkhon.core.errors import ConfigError
-    from arkhon.language_support.registry import _parse_language, load_registry
+    from gencode_gov.core.errors import ConfigError
+    from gencode_gov.language_support.registry import _parse_language, load_registry
 
     folder = tmp_path / "languages"
     folder.mkdir()

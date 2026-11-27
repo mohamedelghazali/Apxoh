@@ -16,16 +16,16 @@ from unittest.mock import patch
 
 import pytest
 
-from arkhon.cli import main as cli_main
-from arkhon.security_audit.coverage import (
+from gencode_gov.cli import main as cli_main
+from gencode_gov.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
     LockedCoverageLedgerStore,
     build_canonical_coverage_id,
 )
-from arkhon.security_audit.dispatcher import AuditRole, SecurityAuditTaskDispatcher
-from arkhon.security_audit.findings import (
+from gencode_gov.security_audit.dispatcher import AuditRole, SecurityAuditTaskDispatcher
+from gencode_gov.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
     LocationRef,
@@ -35,11 +35,11 @@ from arkhon.security_audit.findings import (
     compute_finding_fingerprint,
     finding_id_from_fingerprint,
 )
-from arkhon.security_audit.orchestrator import (
+from gencode_gov.security_audit.orchestrator import (
     MultiAgentAuditOrchestrator,
     OrchestrationConfig,
 )
-from arkhon.security_audit.runtime import (
+from gencode_gov.security_audit.runtime import (
     AgentRuntimeAdapter,
     AgentSessionResult,
     AgentTaskSpec,
@@ -48,13 +48,13 @@ from arkhon.security_audit.runtime import (
     RuntimeDescriptor,
     resolve_runtime_adapter,
 )
-from arkhon.security_audit.validators import (
+from gencode_gov.security_audit.validators import (
     validate_audit_directory,
     validate_coverage_ledger_data,
     validate_findings_data,
 )
-from arkhon.security_audit.worker_entry import execute_worker_envelope
-from arkhon.security_audit.worker_entry import main as worker_main
+from gencode_gov.security_audit.worker_entry import execute_worker_envelope
+from gencode_gov.security_audit.worker_entry import main as worker_main
 
 _GIT = shutil.which("git") or "/usr/bin/git"
 SHA = "e" * 40
@@ -180,7 +180,7 @@ def test_external_command_runtime_adapter_and_fail_closed_unavailable_runtimes(
         f"#!{sys.executable}\n"
         "import sys\n"
         f"sys.path.insert(0, {src_root!r})\n"
-        "from arkhon.security_audit.worker_entry import main\n"
+        "from gencode_gov.security_audit.worker_entry import main\n"
         "raise SystemExit(main(sys.argv[1:]))\n",
         encoding="utf-8",
     )
@@ -273,6 +273,7 @@ def test_external_command_runtime_adapter_and_fail_closed_unavailable_runtimes(
     ).run()
     assert bad_py_out.status == "blocked"
     assert bad_py_out.execution_mode == "single_process_deterministic"
+
 
 def test_concurrent_locked_coverage_ledger_store_and_lock_contention(
     tmp_path: Path,
@@ -534,7 +535,7 @@ def test_timeouts_retries_tamper_interruption_and_checkpoint_resumption(
         "if env['task']['action'] == 'hunt_unit' and not flag.exists():\n"
         "    flag.write_text('1')\n"
         "    raise SystemExit(2)\n"
-        "from arkhon.security_audit.worker_entry import main\n"
+        "from gencode_gov.security_audit.worker_entry import main\n"
         "raise SystemExit(main(sys.argv[1:]))\n",
     )
 
@@ -557,9 +558,7 @@ def test_timeouts_retries_tamper_interruption_and_checkpoint_resumption(
         ) -> AgentSessionResult:
             if task.action == "verify_candidate" and cancel_event is not None:
                 cancel_event.set()
-            return flaky_rt.execute_session(
-                task, audit_dir=audit_dir, cancel_event=cancel_event
-            )
+            return flaky_rt.execute_session(task, audit_dir=audit_dir, cancel_event=cancel_event)
 
     orch_int = MultiAgentAuditOrchestrator(
         project_root=proj,
@@ -890,9 +889,9 @@ def test_in_process_worker_entry_validator_session_guards_and_edge_branches(
 
     # Validator rejects findings payload with same session_id on discovery & verification
     bad_rec_raw = json.loads(json.dumps(ver_finding))
-    bad_rec_raw["verification_provenance"]["session_id"] = (
-        bad_rec_raw["discovery_provenance"]["session_id"]
-    )
+    bad_rec_raw["verification_provenance"]["session_id"] = bad_rec_raw["discovery_provenance"][
+        "session_id"
+    ]
     assert not validate_findings_data(
         {
             "schema_version": "1.0.0",
@@ -1306,7 +1305,6 @@ def test_orchestrator_exhaustive_failure_cancel_critic_and_reverify_branches(
     assert out_full.status == "blocked"
     assert out_full.governance_gate_status == "FAIL"
 
-
     # 4d. Cancel after critic & cancel during record verification + post-validation failure
     ev_c2 = threading.Event()
 
@@ -1368,8 +1366,8 @@ def test_orchestrator_exhaustive_failure_cancel_critic_and_reverify_branches(
     )
 
     # Post-orchestration validation failure branch + non-isolated PID fallback
-    from arkhon.security_audit import orchestrator as orch_mod
-    from arkhon.security_audit.validators import ArtifactValidationResult
+    from gencode_gov.security_audit import orchestrator as orch_mod
+    from gencode_gov.security_audit.validators import ArtifactValidationResult
 
     with patch.object(
         orch_mod,
@@ -1561,4 +1559,3 @@ def test_orchestrator_exhaustive_failure_cancel_critic_and_reverify_branches(
         runtime=_InProcessFakeAdapter(),
         config=OrchestrationConfig(max_workers=1, max_retries=0),
     ).run(resume=True)
-

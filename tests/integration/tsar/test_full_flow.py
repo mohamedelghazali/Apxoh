@@ -7,8 +7,8 @@ import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
-from arkhon.integrations.tsar.adapter import TsarAdapter
-from arkhon.integrations.tsar.verifier import TsarFindingsError, verify_tsar_evidence
+from gencode_gov.integrations.tsar.adapter import TsarAdapter
+from gencode_gov.integrations.tsar.verifier import TsarFindingsError, verify_tsar_evidence
 
 COMMIT = "a" * 40
 
@@ -42,7 +42,7 @@ def _sarif(*, level: str | None = None) -> dict:
 
 def _install_fake_cli(monkeypatch, payload: dict, code: int = 0) -> None:
     monkeypatch.setattr(
-        "arkhon.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
+        "gencode_gov.integrations.tsar.adapter.shutil.which", lambda _name: "/usr/bin/tsar"
     )
 
     def fake_run(command, **kwargs):
@@ -50,7 +50,7 @@ def _install_fake_cli(monkeypatch, payload: dict, code: int = 0) -> None:
         output.write_text(json.dumps(payload), encoding="utf-8")
         return subprocess.CompletedProcess(command, code, "", "")
 
-    monkeypatch.setattr("arkhon.integrations.tsar.adapter.subprocess.run", fake_run)
+    monkeypatch.setattr("gencode_gov.integrations.tsar.adapter.subprocess.run", fake_run)
 
 
 def test_full_flow_real_cli_contract_passes_and_binds_commit(tmp_path: Path, monkeypatch) -> None:
@@ -78,7 +78,7 @@ def test_full_flow_high_finding_fails(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_full_flow_tsar_unavailable(tmp_path: Path) -> None:
-    with patch("arkhon.integrations.tsar.adapter.shutil.which", return_value=None):
+    with patch("gencode_gov.integrations.tsar.adapter.shutil.which", return_value=None):
         response = TsarAdapter().audit(tmp_path, COMMIT)
     assert not response.ok
     assert "not found" in response.reason.lower()

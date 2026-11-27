@@ -83,7 +83,7 @@ runner, signer, verifier, CLI command, or storage control is implemented.
 7. Apply signing only when a configured signer is available
         │
         ▼
-8. Store evidence under .arkhon/evidence/<domain>/
+8. Store evidence under .gencode-gov/evidence/<domain>/
         │
         ▼
 9. Return verification result

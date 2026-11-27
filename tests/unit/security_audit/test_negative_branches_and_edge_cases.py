@@ -12,17 +12,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from arkhon.security_audit import cli_dispatch as cd_mod
-from arkhon.security_audit import sandbox as sandbox_mod
-from arkhon.security_audit import validators as validators_mod
-from arkhon.security_audit.cli_dispatch import dispatch_security_audit
-from arkhon.security_audit.coverage import (
+from gencode_gov.security_audit import cli_dispatch as cd_mod
+from gencode_gov.security_audit import sandbox as sandbox_mod
+from gencode_gov.security_audit import validators as validators_mod
+from gencode_gov.security_audit.cli_dispatch import dispatch_security_audit
+from gencode_gov.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
     build_canonical_coverage_id,
 )
-from arkhon.security_audit.findings import (
+from gencode_gov.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
     LocationRef,
@@ -31,35 +31,35 @@ from arkhon.security_audit.findings import (
     compute_finding_fingerprint,
     finding_id_from_fingerprint,
 )
-from arkhon.security_audit.governance_bridge import (
+from gencode_gov.security_audit.governance_bridge import (
     SecurityAuditRunner,
     derive_rule_outcomes_from_audit,
     evaluate_security_audit_method,
     record_security_audit_evidence,
     summarize_audit_status,
 )
-from arkhon.security_audit.hunting import (
+from gencode_gov.security_audit.hunting import (
     discover_architecture,
     execute_hunting_waves,
     seed_coverage_ledger,
 )
-from arkhon.security_audit.reassessment import (
+from gencode_gov.security_audit.reassessment import (
     compute_changed_files,
     reassess_repository,
 )
-from arkhon.security_audit.reporting import (
+from gencode_gov.security_audit.reporting import (
     build_security_audit_report,
     compute_governance_gate_status,
     render_markdown_audit_report,
 )
-from arkhon.security_audit.sandbox import (
+from gencode_gov.security_audit.sandbox import (
     SandboxCapabilities,
     SandboxExecutor,
     SandboxLimits,
     probe_sandbox_capabilities,
     promote_agent_artifacts,
 )
-from arkhon.security_audit.validators import (
+from gencode_gov.security_audit.validators import (
     is_safe_relative_path,
     validate_audit_directory,
     validate_audit_report_data,
@@ -69,8 +69,8 @@ from arkhon.security_audit.validators import (
     validate_findings_data,
     validate_findings_file,
 )
-from arkhon.security_audit.verifier import IndependentFindingVerifier
-from arkhon.verification.runners.base import RunnerOutcome, RunnerResult
+from gencode_gov.security_audit.verifier import IndependentFindingVerifier
+from gencode_gov.verification.runners.base import RunnerOutcome, RunnerResult
 
 _GIT = shutil.which("git") or "/usr/bin/git"
 SHA = "d" * 40
@@ -154,9 +154,12 @@ def test_findings_roundtrip_all_nullable_fields_and_verifier_edges(tmp_path: Pat
     (proj / "src").mkdir(parents=True)
     (proj / "src" / "cfg.py").write_text("x = 1\n", encoding="utf-8")
     v = IndependentFindingVerifier(proj, verifier_id="verifier-09")
-    assert v.verify_record_integrity(
-        r_reloaded, record_verifier_id="record-09", run_id="AUDIT-0100", commit_sha=SHA
-    ).verification_status == "rejected"
+    assert (
+        v.verify_record_integrity(
+            r_reloaded, record_verifier_id="record-09", run_id="AUDIT-0100", commit_sha=SHA
+        ).verification_status
+        == "rejected"
+    )
 
     no_claim = _make_base_finding("not_verified", "candidate")
     no_claim.claimed_root_cause = None
@@ -477,7 +480,7 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
     assert any(u.status == "not_examined" for u in s_ledger.units)
 
     # Max-units cap -> partially_completed
-    from arkhon.security_audit.dispatcher import SecurityAuditTaskDispatcher
+    from gencode_gov.security_audit.dispatcher import SecurityAuditTaskDispatcher
 
     disp = SecurityAuditTaskDispatcher(tmp_path / "aud_s1")
     execute_hunting_waves(project_root=proj, ledger=s_ledger, dispatcher=disp, max_units=1)
@@ -492,9 +495,10 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
         ledger=na_ledger,
         dispatcher=SecurityAuditTaskDispatcher(tmp_path / "aud_na"),
     )
-    assert compute_governance_gate_status(
-        na_ledger, FindingsCollection("AUDIT-NA", SHA, [])
-    ) == "NOT_APPLICABLE"
+    assert (
+        compute_governance_gate_status(na_ledger, FindingsCollection("AUDIT-NA", SHA, []))
+        == "NOT_APPLICABLE"
+    )
 
     na_ledger.units[0].status = "blocked"
     na_ledger.units[0].investigator_id = "hunter-01"
@@ -575,17 +579,21 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
     )
     assert out_pass["SE-SEC-003"][0] == "PASS"
 
-    assert evaluate_security_audit_method(
-        RunnerResult(runner="security-audit", outcome=RunnerOutcome.BLOCKED, reason="no git")
-    )[0] == "BLOCKED"
+    assert (
+        evaluate_security_audit_method(
+            RunnerResult(runner="security-audit", outcome=RunnerOutcome.BLOCKED, reason="no git")
+        )[0]
+        == "BLOCKED"
+    )
     bad_rep = tmp_path / "bad_aud" / "security-audit-report.json"
     bad_rep.parent.mkdir()
     bad_rep.write_text("{}", encoding="utf-8")
-    assert evaluate_security_audit_method(
-        RunnerResult(
-            runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=[bad_rep]
-        )
-    )[0] == "BLOCKED"
+    assert (
+        evaluate_security_audit_method(
+            RunnerResult(runner="security-audit", outcome=RunnerOutcome.PASS, artifacts=[bad_rep])
+        )[0]
+        == "BLOCKED"
+    )
     assert summarize_audit_status(bad_rep.parent)["valid"] is False
 
     # Sandbox extra branches: probe OSError, preexec limiter, bwrap argv, promotion errors
@@ -604,9 +612,7 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
         tmp_path / "bwrap_aud",
         capabilities=SandboxCapabilities(True, True, True, True, "/bin/echo", False),
     )
-    bw_res = bwrap_exec.run_bounded(
-        agent_id="hunter-bw", argv=["hello"], source_root=proj
-    )
+    bw_res = bwrap_exec.run_bounded(agent_id="hunter-bw", argv=["hello"], source_root=proj)
     assert bw_res.status == "PASS"
 
     # Promotion: existing nested destination dir, non-directory parent segment, mutation mid-read
@@ -638,27 +644,20 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
         )
         == 1
     )
-    assert (
-        dispatch_security_audit(
-            "run",
-            argparse.Namespace(
-                audit_target=str(proj),
-                output_dir=str(tmp_path / "req_sb"),
-                sandbox_mode="required",
-                json=False,
-            ),
-            commit_resolver=lambda _: SHA,
-        )
-        in {0, 1}
-    )
+    assert dispatch_security_audit(
+        "run",
+        argparse.Namespace(
+            audit_target=str(proj),
+            output_dir=str(tmp_path / "req_sb"),
+            sandbox_mode="required",
+            json=False,
+        ),
+        commit_resolver=lambda _: SHA,
+    ) in {0, 1}
     disabled_caps = cd_mod._resolve_sandbox_caps("disabled")
     with (
-        patch.object(
-            sandbox_mod, "probe_sandbox_capabilities", return_value=disabled_caps
-        ),
-        patch.object(
-            cd_mod, "probe_sandbox_capabilities", return_value=disabled_caps
-        ),
+        patch.object(sandbox_mod, "probe_sandbox_capabilities", return_value=disabled_caps),
+        patch.object(cd_mod, "probe_sandbox_capabilities", return_value=disabled_caps),
     ):
         assert (
             dispatch_security_audit(
@@ -761,7 +760,7 @@ def test_hunting_reporting_reassessment_sandbox_and_cli_remaining_branches(
     # SecurityAuditRunner.run() end-to-end (with real git project and non-git project)
     fake_cli = MagicMock()
     fake_cli._commit_sha = lambda p: g_sha if p == git_proj.resolve() else None
-    with patch.dict("sys.modules", {"arkhon.cli": fake_cli}):
+    with patch.dict("sys.modules", {"gencode_gov.cli": fake_cli}):
         runner = SecurityAuditRunner()
         res_blocked = runner.run(tmp_path)
         assert res_blocked.outcome == RunnerOutcome.BLOCKED

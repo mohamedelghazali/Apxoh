@@ -9,18 +9,18 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from arkhon.security_audit import cli_dispatch as cd_mod
-from arkhon.security_audit import governance_bridge as gb_mod
-from arkhon.security_audit import sandbox as sandbox_mod
-from arkhon.security_audit import validators as validators_mod
-from arkhon.security_audit.cli_dispatch import dispatch_security_audit
-from arkhon.security_audit.coverage import (
+from gencode_gov.security_audit import cli_dispatch as cd_mod
+from gencode_gov.security_audit import governance_bridge as gb_mod
+from gencode_gov.security_audit import sandbox as sandbox_mod
+from gencode_gov.security_audit import validators as validators_mod
+from gencode_gov.security_audit.cli_dispatch import dispatch_security_audit
+from gencode_gov.security_audit.coverage import (
     CoverageCheck,
     CoverageLedger,
     CoverageUnit,
     build_canonical_coverage_id,
 )
-from arkhon.security_audit.findings import (
+from gencode_gov.security_audit.findings import (
     DiscoveryProvenance,
     FindingsCollection,
     LocationRef,
@@ -29,20 +29,20 @@ from arkhon.security_audit.findings import (
     compute_finding_fingerprint,
     finding_id_from_fingerprint,
 )
-from arkhon.security_audit.governance_bridge import (
+from gencode_gov.security_audit.governance_bridge import (
     SecurityAuditRunner,
     derive_rule_outcomes_from_audit,
     summarize_audit_status,
 )
-from arkhon.security_audit.reassessment import reassess_repository
-from arkhon.security_audit.reporting import build_security_audit_report
-from arkhon.security_audit.sandbox import (
+from gencode_gov.security_audit.reassessment import reassess_repository
+from gencode_gov.security_audit.reporting import build_security_audit_report
+from gencode_gov.security_audit.sandbox import (
     SandboxCapabilities,
     SandboxExecutor,
     probe_sandbox_capabilities,
     promote_agent_artifacts,
 )
-from arkhon.security_audit.validators import (
+from gencode_gov.security_audit.validators import (
     ArtifactValidationResult,
     is_safe_relative_path,
     validate_audit_directory,
@@ -50,7 +50,7 @@ from arkhon.security_audit.validators import (
     validate_coverage_ledger_data,
     validate_findings_file,
 )
-from arkhon.verification.runners.base import RunnerOutcome
+from gencode_gov.verification.runners.base import RunnerOutcome
 
 _GIT = shutil.which("git") or "/usr/bin/git"
 SHA = "d" * 40
@@ -166,9 +166,7 @@ def test_final_branches_for_100pct_coverage(tmp_path: Path) -> None:
     led.units[0].status = "examined"
     led.units[0].investigator_id = "hunter-01"
     led.units[0].reviewed_paths = ["a.py"]
-    led.units[0].checks = [
-        CoverageCheck("hunter-01", "source", ("a.py",), "i", "r", (), None, "t")
-    ]
+    led.units[0].checks = [CoverageCheck("hunter-01", "source", ("a.py",), "i", "r", (), None, "t")]
     led.units[0].finding_ids = ["SEC-FIND-AAAAAAAA"]
     led.units[0].candidate_fingerprints = ["missing:fp:1"]
     led.audit_status = "completed"
@@ -353,7 +351,7 @@ def test_final_branches_for_100pct_coverage(tmp_path: Path) -> None:
 
     fake_cli = MagicMock()
     fake_cli._commit_sha = lambda _: sha_c2
-    with patch.dict("sys.modules", {"arkhon.cli": fake_cli}):
+    with patch.dict("sys.modules", {"gencode_gov.cli": fake_cli}):
         runner = SecurityAuditRunner()
         r_def = runner.run(gp, artifact_dir=None)
         assert r_def.outcome == RunnerOutcome.FAIL

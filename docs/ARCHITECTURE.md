@@ -26,9 +26,9 @@ The agent produces. GENCODE-GOV decides.
 
 | Product | What it does | Where |
 | :--- | :--- | :--- |
-| **Core** | Runs rules, evaluates policies, verifies evidence | `src/arkhon/` |
+| **Core** | Runs rules, evaluates policies, verifies evidence | `src/gencode_gov/` |
 | **Agent Governance** | Tells AI agents how to behave under GENCODE-GOV | `AGENTS.md`, `skills/`, `agents/`, `integrations/` |
-| **Assurance** | Independent verification and release gating | `src/arkhon/verification/`, `src/arkhon/assessment/` |
+| **Assurance** | Independent verification and release gating | `src/gencode_gov/verification/`, `src/gencode_gov/assessment/` |
 
 ---
 
@@ -157,7 +157,7 @@ Only `Verified` proves the agent obeys GENCODE-GOV. Copilot's max is `Configured
 
 | Directory | Purpose |
 | :--- | :--- |
-| `src/arkhon/` | Engine code |
+| `src/gencode_gov/` | Engine code |
 | `system/` | Charter, policies, governance model |
 | `rules/` | Engineering rules (global) |
 | `languages/` | Per-language rules and profiles |
@@ -170,7 +170,7 @@ Only `Verified` proves the agent obeys GENCODE-GOV. Copilot's max is `Configured
 | `tools/` | External tool bindings + signing |
 | `tests/` | Test suite |
 | `docs/` | Documentation |
-| `.arkhon/` | GENCODE-GOV's own governance state |
+| `.gencode-gov/` | GENCODE-GOV's own governance state |
 | `.github/` | CI workflows, CODEOWNERS, dependabot |
 
 ---
@@ -187,7 +187,7 @@ Only `Verified` proves the agent obeys GENCODE-GOV. Copilot's max is `Configured
 | How evidence is stored and verified | `docs/EVIDENCE_INTEGRITY.md` |
 | The release decision model | `reports/templates/engineering-quality/` |
 | How to contribute | `CONTRIBUTING.md` |
-| How GENCODE-GOV governs itself | `.arkhon/project.yaml` |
+| How GENCODE-GOV governs itself | `.gencode-gov/project.yaml` |
 
 ---
 

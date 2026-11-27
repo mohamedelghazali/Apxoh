@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.security_audit.dispatcher import (
+from gencode_gov.security_audit.dispatcher import (
     AuditRole,
     SecurityAuditTaskDispatcher,
 )
@@ -84,4 +84,3 @@ def test_task_dispatcher_assigns_roles_and_enforces_separation_of_duties(
     assert summary["execution_mode"] == "single_process_deterministic"
     assert summary["multi_agent_independent_sessions"] is False
     assert summary["assignment_count"] == 3
-

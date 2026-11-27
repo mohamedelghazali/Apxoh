@@ -1,4 +1,4 @@
-from arkhon.cli import main
+from gencode_gov.cli import main
 
 
 def test_version(capsys):

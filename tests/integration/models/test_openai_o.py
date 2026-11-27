@@ -16,7 +16,7 @@ import json
 
 import pytest
 
-from arkhon.integrations.models.openai_o.adapter import OpenAIOAdapter
+from gencode_gov.integrations.models.openai_o.adapter import OpenAIOAdapter
 from tests.fixtures.mock_http import (
     make_json_response,
     patch_urlopen,

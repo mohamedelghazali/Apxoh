@@ -1,4 +1,4 @@
-"""Tests for arkhon.policies.exceptions."""
+"""Tests for gencode_gov.policies.exceptions."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.core.errors import GovernanceError
-from arkhon.policies.exceptions import (
+from gencode_gov.core.errors import GovernanceError
+from gencode_gov.policies.exceptions import (
     Exception,
     ExceptionRegistry,
     add_exception,
@@ -261,7 +261,6 @@ def test_revoke_exception_rejects_invalid_audit_metadata(
         )
 
 
-
 def test_revoke_exception_rejects_empty_id(tmp_path: Path) -> None:
     with pytest.raises(GovernanceError, match="exception_id"):
         revoke_exception(tmp_path / "registry.yaml", " ", revoked_by="admin", reason="closed")
@@ -284,15 +283,11 @@ def test_revoke_exception_rejects_symlinked_registry(
 
 def test_revoke_exception_rejects_missing_registry(tmp_path: Path) -> None:
     with pytest.raises(GovernanceError, match="not found"):
-        revoke_exception(
-            tmp_path / "missing.yaml", "EXC-1", revoked_by="admin", reason="closed"
-        )
+        revoke_exception(tmp_path / "missing.yaml", "EXC-1", revoked_by="admin", reason="closed")
 
 
 @pytest.mark.parametrize("contents", ["exceptions: {}\n", "- invalid-root\n", "exceptions: [\n"])
-def test_revoke_exception_rejects_invalid_registry_yaml(
-    tmp_path: Path, contents: str
-) -> None:
+def test_revoke_exception_rejects_invalid_registry_yaml(tmp_path: Path, contents: str) -> None:
     path = tmp_path / "registry.yaml"
     path.write_text(contents, encoding="utf-8")
     with pytest.raises(GovernanceError):
@@ -352,6 +347,7 @@ def test_revoke_exception_cleans_temporary_file_after_replace_failure(
         revoke_exception(path, "EXC-ATOMIC", revoked_by="admin", reason="closed")
     assert not list(tmp_path.glob(".registry.yaml.*.tmp"))
     assert load_exceptions(path).all_active()
+
 
 def test_add_exception_rejects_non_file_registry_path(tmp_path: Path) -> None:
     registry = tmp_path / "registry.yaml"
@@ -441,7 +437,7 @@ def test_add_exception_wraps_replace_failure_and_cleans_temp(
     def fail_replace(source: Path, destination: Path) -> None:
         raise OSError("simulated atomic replace failure")
 
-    monkeypatch.setattr("arkhon.policies.exceptions.os.replace", fail_replace)
+    monkeypatch.setattr("gencode_gov.policies.exceptions.os.replace", fail_replace)
     with pytest.raises(GovernanceError, match="cannot atomically persist"):
         add_exception(registry, _exc("EXC-REPLACE-FAILURE"))
     assert not registry.exists()

@@ -82,14 +82,14 @@ def manifest_compatibility(repo_root: Path) -> dict:
 @pytest.fixture
 def tmp_project(tmp_path: Path) -> Iterator[Path]:
     """Create a minimal governed project skeleton in a temp directory."""
-    (tmp_path / ".arkhon" / "evidence").mkdir(parents=True)
-    (tmp_path / ".arkhon" / "state").mkdir(parents=True)
+    (tmp_path / ".gencode-gov" / "evidence").mkdir(parents=True)
+    (tmp_path / ".gencode-gov" / "state").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "main.py").write_text(
         "def hello() -> str:\n    return 'world'\n",
         encoding="utf-8",
     )
-    (tmp_path / ".arkhon" / "project.yaml").write_text(
+    (tmp_path / ".gencode-gov" / "project.yaml").write_text(
         "project:\n  name: tmp\n  type: library\n  profile: universal\n",
         encoding="utf-8",
     )

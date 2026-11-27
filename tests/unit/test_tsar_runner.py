@@ -8,11 +8,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from arkhon.evidence.integrity import sha256_of
-from arkhon.integrations.tsar.adapter import TsarAdapter
-from arkhon.integrations.tsar.verifier import REQUIRED_RULE_IDS
-from arkhon.verification.runners.base import RunnerOutcome
-from arkhon.verification.runners.tsar_runner import TsarRunner
+from gencode_gov.evidence.integrity import sha256_of
+from gencode_gov.integrations.tsar.adapter import TsarAdapter
+from gencode_gov.integrations.tsar.verifier import REQUIRED_RULE_IDS
+from gencode_gov.verification.runners.base import RunnerOutcome
+from gencode_gov.verification.runners.tsar_runner import TsarRunner
 
 
 SHA = "a" * 40
@@ -20,10 +20,10 @@ SHA = "a" * 40
 
 def _git(monkeypatch: pytest.MonkeyPatch, output: str = SHA) -> None:
     monkeypatch.setattr(
-        "arkhon.verification.runners.tsar_runner.shutil.which", lambda _name: "/usr/bin/git"
+        "gencode_gov.verification.runners.tsar_runner.shutil.which", lambda _name: "/usr/bin/git"
     )
     monkeypatch.setattr(
-        "arkhon.verification.runners.tsar_runner.subprocess.run",
+        "gencode_gov.verification.runners.tsar_runner.subprocess.run",
         lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, output, ""),
     )
 
@@ -49,7 +49,9 @@ def test_tsar_runner_requires_positive_timeout_and_git(
 ) -> None:
     with pytest.raises(ValueError):
         TsarRunner(0)
-    monkeypatch.setattr("arkhon.verification.runners.tsar_runner.shutil.which", lambda _name: None)
+    monkeypatch.setattr(
+        "gencode_gov.verification.runners.tsar_runner.shutil.which", lambda _name: None
+    )
     result = TsarRunner().run(tmp_path)
     assert result.outcome == RunnerOutcome.BLOCKED
     assert "git executable" in result.reason
@@ -67,13 +69,13 @@ def test_tsar_runner_git_resolution_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
 ) -> None:
     monkeypatch.setattr(
-        "arkhon.verification.runners.tsar_runner.shutil.which", lambda _name: "/usr/bin/git"
+        "gencode_gov.verification.runners.tsar_runner.shutil.which", lambda _name: "/usr/bin/git"
     )
 
     def fail(*args: object, **kwargs: object) -> None:
         raise error
 
-    monkeypatch.setattr("arkhon.verification.runners.tsar_runner.subprocess.run", fail)
+    monkeypatch.setattr("gencode_gov.verification.runners.tsar_runner.subprocess.run", fail)
     assert "cannot resolve commit SHA" in TsarRunner().run(tmp_path).reason
 
 

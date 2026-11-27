@@ -15,7 +15,7 @@ A **Verification Profile** is a named bundle of:
 - Gates that must close
 - Evidence required
 
-Profiles are intended to live in `projects/<profile>/`. Each governed project declares its profile in `.arkhon/project.yaml` using `project.profile`.
+Profiles are intended to live in `projects/<profile>/`. Each governed project declares its profile in `.gencode-gov/project.yaml` using `project.profile`.
 
 A profile is **not a certification**. It defines what must be checked; it does not establish that a project has passed those checks.
 
@@ -155,7 +155,7 @@ If uncertain, start with `universal` and reassess as the project matures. Risk c
 
 ## 13. Overriding a Profile
 
-A project may request stricter settings in its own `.arkhon/project.yaml`:
+A project may request stricter settings in its own `.gencode-gov/project.yaml`:
 
 ```yaml
 project:
@@ -172,9 +172,9 @@ Overrides must tighten controls, never loosen them. Attempts to weaken freshness
 ## 14. Reference
 
 - `projects/` — intended profile definitions
-- `.arkhon/project.yaml` — project declaration
+- `.gencode-gov/project.yaml` — project declaration
 - `schemas/project.schema.json` — project configuration schema
-- `src/arkhon/projects/loader.py` — intended loader location; confirm implementation before relying on it
+- `src/gencode_gov/projects/loader.py` — intended loader location; confirm implementation before relying on it
 
 ---
 

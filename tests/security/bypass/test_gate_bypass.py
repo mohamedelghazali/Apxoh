@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.assessment.gates import RuleOutcome, evaluate_gate
-from arkhon.core.errors import GovernanceError
-from arkhon.governance.policy_loader import Policy, PolicyRegistry
-from arkhon.policies.blocking import BlockingPolicyEvaluator, ensure_no_bypass
+from gencode_gov.assessment.gates import RuleOutcome, evaluate_gate
+from gencode_gov.core.errors import GovernanceError
+from gencode_gov.governance.policy_loader import Policy, PolicyRegistry
+from gencode_gov.policies.blocking import BlockingPolicyEvaluator, ensure_no_bypass
 
 
 def _outcome(status: str, enforcement: str = "critical") -> RuleOutcome:

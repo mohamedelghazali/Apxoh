@@ -5,15 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import (
+from gencode_gov.core.errors import (
     EvidenceError,
     EvidenceStaleError,
     EvidenceTamperedError,
     SecurityError,
 )
-from arkhon.evidence.collector import Artifact, EvidenceCollector
-from arkhon.evidence.integrity import sha256_of
-from arkhon.integrations.tsar.verifier import (
+from gencode_gov.evidence.collector import Artifact, EvidenceCollector
+from gencode_gov.evidence.integrity import sha256_of
+from gencode_gov.integrations.tsar.verifier import (
     REQUIRED_RULE_IDS,
     _check_artifacts,
     _check_freshness,
@@ -32,11 +32,11 @@ def test_collector_validation_and_optional_evidence_fields(tmp_path: Path) -> No
         )  # type: ignore[arg-type]
     with pytest.raises(EvidenceError, match="invalid commit SHA"):
         collector.new_evidence(
-            source="arkhon", source_version="1", commit_sha="A" * 40, status="PASS"
+            source="gencode-gov", source_version="1", commit_sha="A" * 40, status="PASS"
         )
     with pytest.raises(EvidenceError, match="source_version"):
         collector.new_evidence(
-            source="arkhon", source_version=" ", commit_sha="a" * 40, status="PASS"
+            source="gencode-gov", source_version=" ", commit_sha="a" * 40, status="PASS"
         )
     artifact = tmp_path / "artifact.bin"
     artifact.write_bytes(b"payload")

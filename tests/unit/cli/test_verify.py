@@ -1,4 +1,4 @@
-"""Tests for the arkhon verify command."""
+"""Tests for the gencode-gov verify command."""
 
 from __future__ import annotations
 
@@ -9,15 +9,15 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.cli import main
+from gencode_gov.cli import main
 
 
 def _init_project(tmp_path: Path, *, with_tests: bool = False) -> None:
     git = shutil.which("git")
     if git is None:
         raise RuntimeError("git executable not found")
-    (tmp_path / ".arkhon").mkdir()
-    (tmp_path / ".arkhon" / "project.yaml").write_text(
+    (tmp_path / ".gencode-gov").mkdir()
+    (tmp_path / ".gencode-gov" / "project.yaml").write_text(
         "project:\n  name: test\n  profile: universal\n", encoding="utf-8"
     )
     (tmp_path / "src").mkdir()
@@ -71,12 +71,12 @@ def test_verify_blocked_run_persists_diagnostic_evidence(
     assert main(["verify", str(tmp_path), "--domain", "testing"]) == 1
     output = capsys.readouterr().out
     assert "Status:   BLOCKED" in output
-    records = list((tmp_path / ".arkhon" / "evidence" / "testing").glob("*.json"))
+    records = list((tmp_path / ".gencode-gov" / "evidence" / "testing").glob("*.json"))
     assert len(records) == 1
     data = json.loads(records[0].read_text(encoding="utf-8"))
-    assert data["source"] == "arkhon" and data["commit_sha"]
+    assert data["source"] == "gencode-gov" and data["commit_sha"]
     assert data["status"] == "BLOCKED" and data["summary"]["blocked"] == 1
-    diagnostic = tmp_path / ".arkhon" / "reports" / "verification"
+    diagnostic = tmp_path / ".gencode-gov" / "reports" / "verification"
     assert len(list(diagnostic.glob("*.json"))) == 1
 
 
@@ -86,7 +86,7 @@ def test_verify_passes_and_persists_junit_evidence(
     _init_project(tmp_path, with_tests=True)
     assert main(["verify", str(tmp_path), "--domain", "testing"]) == 0
     assert "Status:   PASS" in capsys.readouterr().out
-    records = list((tmp_path / ".arkhon" / "evidence" / "testing").glob("*.json"))
+    records = list((tmp_path / ".gencode-gov" / "evidence" / "testing").glob("*.json"))
     assert len(records) == 1
     data = json.loads(records[0].read_text(encoding="utf-8"))
     assert data["status"] == "PASS" and data["summary"]["pass"] == 1

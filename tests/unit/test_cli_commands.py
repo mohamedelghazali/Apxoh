@@ -10,9 +10,9 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from arkhon.cli import _commit_sha, main
-from arkhon.core.errors import EvidenceError
-from arkhon.evidence.store import EvidenceStore
+from gencode_gov.cli import _commit_sha, main
+from gencode_gov.core.errors import EvidenceError
+from gencode_gov.evidence.store import EvidenceStore
 
 
 def _git_project(root: Path, *, with_tests: bool = False) -> None:
@@ -53,15 +53,15 @@ def test_version_text_json_and_help(capsys: pytest.CaptureFixture[str]) -> None:
 def test_commit_sha_missing_git_and_git_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: None)
+    monkeypatch.setattr("gencode_gov.cli.shutil.which", lambda _name: None)
     assert _commit_sha(tmp_path) is None
     assert "not found" in capsys.readouterr().err
-    monkeypatch.setattr("arkhon.cli.shutil.which", lambda _name: "/usr/bin/git")
+    monkeypatch.setattr("gencode_gov.cli.shutil.which", lambda _name: "/usr/bin/git")
 
     def fail(*args: object, **kwargs: object) -> None:
         raise OSError("git unavailable")
 
-    monkeypatch.setattr("arkhon.cli.subprocess.run", fail)
+    monkeypatch.setattr("gencode_gov.cli.subprocess.run", fail)
     assert _commit_sha(tmp_path) is None
     assert "cannot resolve commit SHA" in capsys.readouterr().err
 
@@ -76,7 +76,7 @@ def test_assess_fails_closed_without_rule_outcomes(
         "testing",
         {
             "evidence_id": "EVID-ASSESS",
-            "source": "arkhon",
+            "source": "gencode-gov",
             "source_version": "0.1.0",
             "commit_sha": "a" * 40,
             "executed_at": "2026-11-05T00:00:00Z",
@@ -104,7 +104,7 @@ def test_report_writes_json_and_markdown(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     store = EvidenceStore(tmp_path)
     artifact = tmp_path / "report-evidence.txt"
     artifact.write_text("verified report evidence", encoding="utf-8")
@@ -112,7 +112,7 @@ def test_report_writes_json_and_markdown(
         "testing",
         {
             "evidence_id": "EVID-REPORT",
-            "source": "arkhon",
+            "source": "gencode-gov",
             "source_version": "0.1.0.dev1",
             "commit_sha": "a" * 40,
             "executed_at": "2026-11-03T00:00:00Z",
@@ -127,7 +127,7 @@ def test_report_writes_json_and_markdown(
     )
     assert main(["report", str(tmp_path)]) == 0
     assert "report.json" in capsys.readouterr().out
-    assert (tmp_path / ".arkhon" / "reports" / "report.json").is_file()
+    assert (tmp_path / ".gencode-gov" / "reports" / "report.json").is_file()
     output = tmp_path / "custom-reports"
     assert main(["report", str(tmp_path), "--format", "markdown", "--output", str(output)]) == 0
     assert "report.md" in capsys.readouterr().out
@@ -139,7 +139,7 @@ def test_report_rejects_missing_project_and_missing_evidence(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     assert main(["report", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err
     with pytest.raises(EvidenceError, match="no evidence"):
@@ -168,7 +168,7 @@ def test_audit_rejects_invalid_project_and_git_failure(
     def fail_git(*args: object, **kwargs: object) -> None:
         raise OSError("git unavailable")
 
-    monkeypatch.setattr("arkhon.cli.subprocess.run", fail_git)
+    monkeypatch.setattr("gencode_gov.cli.subprocess.run", fail_git)
     assert main(["audit", str(tmp_path)]) == 1
     assert "cannot resolve commit SHA" in capsys.readouterr().err
 
@@ -176,7 +176,7 @@ def test_audit_rejects_invalid_project_and_git_failure(
 def test_doctor_reports_success_and_missing_files(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("arkhon.cli._repo_root", lambda: tmp_path)
+    monkeypatch.setattr("gencode_gov.cli._repo_root", lambda: tmp_path)
     (tmp_path / "VERSION").write_text("1.0.0", encoding="utf-8")
     (tmp_path / "README.md").write_text("# GENCODE-GOV", encoding="utf-8")
     (tmp_path / "AGENTS.md").write_text("# Agents", encoding="utf-8")
@@ -189,7 +189,7 @@ def test_doctor_reports_success_and_missing_files(
         value = {"system": {"name": "GENCODE-GOV", "identifier": "gencode-gov", "version": "1.0.0"}}
         (manifest / f"{name}.yaml").write_text(yaml.safe_dump(value), encoding="utf-8")
     monkeypatch.setattr(
-        "arkhon.integrations.tsar.adapter.TsarAdapter.health_check", lambda _self: False
+        "gencode_gov.integrations.tsar.adapter.TsarAdapter.health_check", lambda _self: False
     )
     assert main(["doctor"]) == 0
     output = capsys.readouterr().out
@@ -202,10 +202,10 @@ def test_doctor_reports_success_and_missing_files(
 def test_audit_security_domain_uses_tsar_runner(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from arkhon.verification.runners.tsar_runner import TsarRunner
+    from gencode_gov.verification.runners.tsar_runner import TsarRunner
 
     _git_project(tmp_path)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     captured: list[type] = []
 
     def fake_run(_self, *, runners, **_kwargs):
@@ -219,7 +219,7 @@ def test_audit_security_domain_uses_tsar_runner(
             results=[],
         )
 
-    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    monkeypatch.setattr("gencode_gov.verification.engine.VerificationEngine.run", fake_run)
     assert main(["audit", str(tmp_path), "--domain", "software-security"]) == 1
     assert captured == [TsarRunner]
 
@@ -229,17 +229,17 @@ def test_report_returns_failure_when_commit_cannot_be_resolved(
 ) -> None:
     project = tmp_path / "project"
     project.mkdir()
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: None)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: None)
     assert main(["report", str(project)]) == 1
 
 
 def test_verify_supply_chain_domain_uses_real_assurance_runners(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from arkhon.verification.runners.supply_chain_runner import SyftRunner
+    from gencode_gov.verification.runners.supply_chain_runner import SyftRunner
 
     _git_project(tmp_path)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     captured: list[type] = []
 
     def fake_run(_self, *, runners, **_kwargs):
@@ -253,19 +253,18 @@ def test_verify_supply_chain_domain_uses_real_assurance_runners(
             results=[],
         )
 
-    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    monkeypatch.setattr("gencode_gov.verification.engine.VerificationEngine.run", fake_run)
     assert main(["verify", str(tmp_path), "--domain", "supply-chain"]) == 1
     assert captured == [SyftRunner]
-
 
 
 def test_verify_release_attestations_uses_release_verifier(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from arkhon.verification.runners.supply_chain_runner import SupplyChainAttestationRunner
+    from gencode_gov.verification.runners.supply_chain_runner import SupplyChainAttestationRunner
 
     _git_project(tmp_path)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     captured: list[type] = []
 
     def fake_run(_self, *, runners, **_kwargs):
@@ -279,7 +278,7 @@ def test_verify_release_attestations_uses_release_verifier(
             results=[],
         )
 
-    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    monkeypatch.setattr("gencode_gov.verification.engine.VerificationEngine.run", fake_run)
     assert main(["verify", str(tmp_path), "--domain", "release-attestations"]) == 1
     assert captured == [SupplyChainAttestationRunner]
 
@@ -287,14 +286,14 @@ def test_verify_release_attestations_uses_release_verifier(
 def test_verify_all_includes_local_sbom_but_not_release_only_attestations(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from arkhon.verification.runners.mypy_runner import MypyRunner
-    from arkhon.verification.runners.pytest_runner import PytestRunner
-    from arkhon.verification.runners.ruff_runner import RuffRunner
-    from arkhon.verification.runners.supply_chain_runner import SyftRunner
-    from arkhon.verification.runners.tsar_runner import TsarRunner
+    from gencode_gov.verification.runners.mypy_runner import MypyRunner
+    from gencode_gov.verification.runners.pytest_runner import PytestRunner
+    from gencode_gov.verification.runners.ruff_runner import RuffRunner
+    from gencode_gov.verification.runners.supply_chain_runner import SyftRunner
+    from gencode_gov.verification.runners.tsar_runner import TsarRunner
 
     _git_project(tmp_path)
-    monkeypatch.setattr("arkhon.cli._commit_sha", lambda _project: "a" * 40)
+    monkeypatch.setattr("gencode_gov.cli._commit_sha", lambda _project: "a" * 40)
     captured: list[tuple[str, list[type]]] = []
 
     def fake_run(_self, *, domain, runners, **_kwargs):
@@ -308,7 +307,7 @@ def test_verify_all_includes_local_sbom_but_not_release_only_attestations(
             results=[],
         )
 
-    monkeypatch.setattr("arkhon.verification.engine.VerificationEngine.run", fake_run)
+    monkeypatch.setattr("gencode_gov.verification.engine.VerificationEngine.run", fake_run)
     assert main(["verify", str(tmp_path), "--domain", "all"]) == 0
     assert [domain for domain, _ in captured] == [
         "testing",

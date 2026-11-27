@@ -40,7 +40,7 @@ A required security gate must remain `BLOCKED` when its required security author
 ## Adding an Example
 
 1. Create `examples/<name>/`.
-2. Add `.arkhon/project.yaml` with a profile that exists in the repository.
+2. Add `.gencode-gov/project.yaml` with a profile that exists in the repository.
 3. Add the smallest useful source and test files.
 4. Add a README describing scope, prerequisites, and limitations.
 5. Run inspection and the relevant verification checks.

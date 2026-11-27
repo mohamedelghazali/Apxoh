@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from arkhon.core.errors import (
+from gencode_gov.core.errors import (
     EvidenceStaleError,
     EvidenceTamperedError,
     SecurityError,
 )
-from arkhon.evidence.integrity import sha256_of
-from arkhon.integrations.tsar.verifier import (
+from gencode_gov.evidence.integrity import sha256_of
+from gencode_gov.integrations.tsar.verifier import (
     FRESHNESS_HOURS,
     REQUIRED_RULE_IDS,
     _check_freshness,
@@ -182,8 +182,8 @@ def test_verify_invalid_status(tmp_path: Path) -> None:
 
 
 def test_parse_payload_rejects_invalid_shapes_and_summary() -> None:
-    from arkhon.core.errors import SecurityError
-    from arkhon.integrations.tsar.verifier import _parse_tsar_payload
+    from gencode_gov.core.errors import SecurityError
+    from gencode_gov.integrations.tsar.verifier import _parse_tsar_payload
 
     with pytest.raises(SecurityError, match="object"):
         _parse_tsar_payload([])  # type: ignore[arg-type]

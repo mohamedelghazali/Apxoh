@@ -12,7 +12,7 @@ Demonstrates:
 
 ```
 enterprise-system/
-├── .arkhon/project.yaml
+├── .gencode-gov/project.yaml
 ├── pom.xml
 └── src/
     ├── main/java/com/example/

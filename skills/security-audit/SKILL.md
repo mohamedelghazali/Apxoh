@@ -13,7 +13,7 @@ applicable_to:
   - distributed-system
   - enterprise
 requires:
-  - arkhon-governance
+  - gencode-gov
   - secure-software-engineering
   - application-security
 ---
@@ -23,7 +23,7 @@ requires:
 ## Operating Modes
 
 1. **Guidance Mode (Default)**: Answer focused security design, triage, or remediation
-   questions using `arkhon.security_audit.taxonomy` and `SE-SEC-*` rules without creating
+   questions using `gencode_gov.security_audit.taxonomy` and `SE-SEC-*` rules without creating
    full multi-artifact audit directories unless requested.
 2. **Full Audit Mode**: Triggered when asked for a full repository security audit,
    structured coverage ledger, verified findings bundle, or audit reassessment. Execute all

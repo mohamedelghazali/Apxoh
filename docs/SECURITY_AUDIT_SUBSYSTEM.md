@@ -1,8 +1,8 @@
 # GENCODE-GOV Security Audit Subsystem
 
 **Version:** 1.1.0
-**Package:** `src/arkhon/security_audit/`
-**Orchestrator:** `src/arkhon/security_audit/orchestrator.py` & `dispatcher.py`
+**Package:** `src/gencode_gov/security_audit/`
+**Orchestrator:** `src/gencode_gov/security_audit/orchestrator.py` & `dispatcher.py`
 
 ## Overview
 
@@ -46,7 +46,7 @@ complements (and never replaces) external TSAR authority (`SE-SEC-GOV-001`).
    and `NEEDS-VALIDATION.md`, and tracks remediations and reopened regressions across Git
    commits via `gencode-gov audit reassess`.
 9. **Governance & CLI Bridge (`governance_bridge.py`, `cli_dispatch.py`)**: Connects audit
-   runs to `.arkhon/evidence/software-security/` (`PASS`, `FAIL`, `BLOCKED`,
+   runs to `.gencode-gov/evidence/software-security/` (`PASS`, `FAIL`, `BLOCKED`,
    `NOT_APPLICABLE`) and exposes `gencode-gov audit plan|run|status|coverage|verify-findings|validate|report|compare|reassess`
    backward-compatibly alongside legacy `gencode-gov audit [project] --domain <domain>`.
 10. **Provider-Neutral Multi-Agent Runtime & Orchestrator (`runtime.py`, `worker_entry.py`, `orchestrator.py`)**: Detects external CLI runtimes (`claude-cli`, `codex-cli`, `gemini-cli`, `command`) and isolated Python worker processes (`python-isolated-worker`), executes dependency-aware waves across bounded parallel OS processes with per-agent `0700` scratch workspaces and `O_NOFOLLOW` promotion, coordinates atomic updates via `LockedCoverageLedgerStore`, enforces distinct discovery vs. verification `session_id`s, and supports timeouts, cancellation, bounded retries, and checkpoint resumption (`gencode-gov audit resume`).

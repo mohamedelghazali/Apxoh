@@ -8,27 +8,27 @@ from pathlib import Path
 import pytest
 import yaml
 
-from arkhon.assessment.gates import GateVerdict
-from arkhon.assessment.scorer import Score
-from arkhon.cli import main
-from arkhon.core.errors import (
+from gencode_gov.assessment.gates import GateVerdict
+from gencode_gov.assessment.scorer import Score
+from gencode_gov.cli import main
+from gencode_gov.core.errors import (
     EvidenceError,
     EvidenceTamperedError,
     SecurityError,
     GateError,
 )
-from arkhon.core.logging import TextFormatter
-from arkhon.evidence.collector import Artifact, EvidenceDraft
-from arkhon.evidence.store import EvidenceStore
-from arkhon.governance.enforcement import EnforcementEngine
-from arkhon.orchestrator.lifecycle import LifecycleState, Stage
-from arkhon.orchestrator.stage_manager import StageManager
-from arkhon.policies.exceptions import load_exceptions
-from arkhon.rules.loader import Rule
-from arkhon.rules.registry import RuleRegistry
-from arkhon.verification.engine import VerificationRun
-from arkhon.language_support.detector import DetectionResult
-from arkhon.integrations.tsar.verifier import _maximum_version_tuple
+from gencode_gov.core.logging import TextFormatter
+from gencode_gov.evidence.collector import Artifact, EvidenceDraft
+from gencode_gov.evidence.store import EvidenceStore
+from gencode_gov.governance.enforcement import EnforcementEngine
+from gencode_gov.orchestrator.lifecycle import LifecycleState, Stage
+from gencode_gov.orchestrator.stage_manager import StageManager
+from gencode_gov.policies.exceptions import load_exceptions
+from gencode_gov.rules.loader import Rule
+from gencode_gov.rules.registry import RuleRegistry
+from gencode_gov.verification.engine import VerificationRun
+from gencode_gov.language_support.detector import DetectionResult
+from gencode_gov.integrations.tsar.verifier import _maximum_version_tuple
 
 
 def _evidence_record(root: Path, evidence_id: str, status: str) -> dict[str, object]:
@@ -36,7 +36,7 @@ def _evidence_record(root: Path, evidence_id: str, status: str) -> dict[str, obj
     artifact.write_text(f"evidence for {evidence_id}", encoding="utf-8")
     return {
         "evidence_id": evidence_id,
-        "source": "arkhon",
+        "source": "gencode-gov",
         "source_version": "0.1.0",
         "commit_sha": "a" * 40,
         "executed_at": "2026-11-01T00:00:00Z",
@@ -58,7 +58,9 @@ def test_gate_invalid_status_and_closes_property() -> None:
 
 
 def test_scorer_guard_and_lowest_level() -> None:
-    module = Path(__file__).resolve().parents[2] / "src" / "arkhon" / "assessment" / "scorer.py"
+    module = (
+        Path(__file__).resolve().parents[2] / "src" / "gencode_gov" / "assessment" / "scorer.py"
+    )
     with pytest.raises(RuntimeError, match="weights must sum to 100"):
         runpy.run_path(str(module), init_globals={"sum": lambda _values: 99})
     assert Score(-1.0, 100.0).level == "development"
@@ -88,7 +90,7 @@ def test_text_formatter_and_collector_source_version_validation(tmp_path: Path) 
     artifact_path.write_text("evidence", encoding="utf-8")
     draft = EvidenceDraft(
         evidence_id="EVID-EMPTY-VERSION",
-        source="arkhon",
+        source="gencode-gov",
         source_version=" ",
         commit_sha="a" * 40,
         status="PASS",
@@ -103,6 +105,7 @@ def test_evidence_store_detects_concurrent_collision(
 ) -> None:
     store = EvidenceStore(tmp_path)
     target = store.root / "testing" / "EVID-RACE.json"
+
     def racing_link(source: Path, destination: Path) -> None:
         if destination == target:
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -110,7 +113,7 @@ def test_evidence_store_detects_concurrent_collision(
             raise FileExistsError(target)
         raise AssertionError("unexpected hard-link destination")
 
-    monkeypatch.setattr("arkhon.evidence.store.os.link", racing_link)
+    monkeypatch.setattr("gencode_gov.evidence.store.os.link", racing_link)
     with pytest.raises(EvidenceTamperedError, match="concurrent evidence collision"):
         store.write("testing", {"evidence_id": "EVID-RACE", "status": "PASS"})
 

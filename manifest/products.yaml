@@ -1,7 +1,7 @@
 # GENCODE-GOV Product Registry
 
 products:
-  - id: arkhon-core
+  - id: gencode-gov-core
     name: "GENCODE-GOV Core"
     role: "Local governance and verification engine"
     runtime: "local-cli"
@@ -9,15 +9,15 @@ products:
     status: "in-development"
     milestone: 2
     components:
-      - "src/arkhon/rules/"
-      - "src/arkhon/governance/"
-      - "src/arkhon/verification/"
-      - "src/arkhon/evidence/"
-      - "src/arkhon/assessment/"
-      - "src/arkhon/orchestrator/"
-      - "src/arkhon/reporting/"
+      - "src/gencode_gov/rules/"
+      - "src/gencode_gov/governance/"
+      - "src/gencode_gov/verification/"
+      - "src/gencode_gov/evidence/"
+      - "src/gencode_gov/assessment/"
+      - "src/gencode_gov/orchestrator/"
+      - "src/gencode_gov/reporting/"
 
-  - id: arkhon-agent-governance
+  - id: gencode-gov-agent-governance
     name: "GENCODE-GOV Agent Governance"
     role: "Instructions, skills, and reference files for AI coding agents"
     runtime: "agent-consumed"
@@ -31,7 +31,7 @@ products:
       - "agents/"
       - "integrations/"
 
-  - id: arkhon-assurance
+  - id: gencode-gov-assurance
     name: "GENCODE-GOV Assurance"
     role: "Independent verification, evidence, and release gating"
     runtime: "local-and-ci"
@@ -39,8 +39,8 @@ products:
     status: "in-development"
     milestone: 3
     components:
-      - "src/arkhon/verification/"
-      - "src/arkhon/evidence/"
-      - "src/arkhon/assessment/"
+      - "src/gencode_gov/verification/"
+      - "src/gencode_gov/evidence/"
+      - "src/gencode_gov/assessment/"
       - "tools/signing/"
       - "reports/"

@@ -5,7 +5,7 @@ description: >
   prove operational recovery for AI-generated software.
 version: 1.1.0
 applicable_to: [all-projects]
-requires: [arkhon-governance]
+requires: [gencode-gov]
 ---
 
 # Reliability Engineering Skill
