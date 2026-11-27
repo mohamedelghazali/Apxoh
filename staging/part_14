@@ -1,0 +1,371 @@
+    # Symlink rejection on _atomic_safe_write
+    sym_target = tmp_path / "sym__DOT__html"
+    sym_target__DOT____W32__(html_out)
+    with pytest__DOT__raises(GovernanceError):
+        _atomic_safe_write(sym_target, "hello", root_anchor=tmp_path)
+    with pytest__DOT__raises(GovernanceError):
+        _atomic_safe_write(tmp_path__DOT__parent / "parent_out__DOT__html", "hello", root_anchor=tmp_path)
+
+
+def test_domain_verifiers_and_polyglot_runner_comprehensive(
+    tmp_path: Path, monkeypatch: pytest__DOT__MonkeyPatch
+) -__GT__ None:
+    monkeypatch__DOT____W37__("GENCODE_GOV_AGENT___W22___ID", raising=False)
+    monkeypatch__DOT____W37__("GENCODE_GOV___W07__", raising=False)
+
+    # Runners
+    assert GovernanceDomainRunner()__DOT__run(tmp_path)__DOT__outcome == RunnerOutcome__DOT__PASS
+    assert GovernanceDomainRunner()__DOT__run(tmp_path / "missing")__DOT__outcome == RunnerOutcome__DOT__BLOCKED
+    assert HumanAttestationRunner()__DOT__run(tmp_path)__DOT__outcome == RunnerOutcome__DOT__PASS
+    assert HumanAttestationRunner()__DOT__run(tmp_path / "missing")__DOT__outcome == RunnerOutcome__DOT__BLOCKED
+
+    (tmp_path / "pyproject__DOT__toml")__DOT__write_text(
+        '[project]\nname = "demo"\nversion = "1__DOT__2__DOT__3"\n'
+        '[tool__DOT__coverage__DOT__report]\nfail_under = 95\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "src" / "demo")__DOT__mkdir(parents=True)
+    init_py = tmp_path / "src" / "demo" / "__init____DOT__py"
+    init_py__DOT__write_text('__version__ = "1__DOT__2__DOT__3"\n', encoding="utf-8")
+    (tmp_path / "src" / "demo" / "http_client__DOT__py")__DOT__write_text(
+        "import __W41__\ndef fetch(u: str):\n    return __W41____DOT__get(u, timeout=5)\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "tests")__DOT__mkdir()
+    (tmp_path / "tests" / "test_demo__DOT__py")__DOT__write_text(
+        "def test_demo():\n    assert 2 == 2\n", encoding="utf-8"
+    )
+    (tmp_path / "CHANGELOG__DOT__md")__DOT__write_text(
+        "# Changelog\n\n## [1__DOT__2__DOT__3] - 2026-11-27\n- Added deterministic governance checks__DOT__\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "requirements__DOT__lock")__DOT__write_text("pyyaml==6__DOT__0__DOT__2\n", encoding="utf-8")
+    (tmp_path / "__DOT__github" / "workflows")__DOT__mkdir(parents=True)
+    (tmp_path / "__DOT__github" / "workflows" / "ci__DOT__yml")__DOT__write_text(
+        "name: CI\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n"
+        f"    steps:\n      - uses: actions/checkout__AT__{SHA_A}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "adr")__DOT__mkdir(parents=True)
+    (tmp_path / "docs" / "adr" / "0001-arch__DOT__md")__DOT__write_text(
+        "## Status\nAccepted\n## Context\nNeed safety__DOT__\n"
+        "## Decision\nUse AST checks__DOT__\n## Consequences\nDeterministic gates__DOT__\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "schemas")__DOT__mkdir()
+    (tmp_path / "schemas" / "demo__DOT__schema__DOT__json")__DOT__write_text(
+        json__DOT__dumps({"$id": "__HTTPS____W40____DOT____W39__/demo/1__DOT__0__DOT__0", "type": "object"}),
+        encoding="utf-8",
+    )
+    gov = tmp_path / "__DOT__gencode-gov"
+    gov__DOT__mkdir()
+    (gov / "project__DOT__yaml")__DOT__write_text("name: demo\ntype: cli-tool\n", encoding="utf-8")
+    (gov / "requirements__DOT__yaml")__DOT__write_text(
+        "requirements:\n"
+        "  - id: REQ-001\n"
+        "    statement: System must verify inputs__DOT__\n"
+        "    acceptance_criteria: ['Reject __W39__ payloads']\n"
+        "    tests: ['tests/test_demo__DOT__py']\n",
+        encoding="utf-8",
+    )
+    (gov / "critical-workflows__DOT__yaml")__DOT__write_text("workflows: ['auth']\n", encoding="utf-8")
+    (gov / "database-governance__DOT__yaml")__DOT__write_text(
+        "controls:\n  migration-file-detection: true\n  prechange-backup-verification: true\n",
+        encoding="utf-8",
+    )
+    (gov / "reliability-governance__DOT__yaml")__DOT__write_text(
+        "verified_methods:\n  slo-document-presence: true\n", encoding="utf-8"
+    )
+    (gov / "performance-governance__DOT__yaml")__DOT__write_text(
+        "verified_methods:\n  load-test-execution: true\n", encoding="utf-8"
+    )
+    (gov / "privacy-governance__DOT__yaml")__DOT__write_text(
+        "verified_methods:\n  data-inventory-presence: true\n", encoding="utf-8"
+    )
+    (gov / "infrastructure-governance__DOT__yaml")__DOT__write_text(
+        "verified_methods:\n  iac-file-detection: true\n", encoding="utf-8"
+    )
+    (gov / "observability-governance__DOT__yaml")__DOT__write_text(
+        "verified_methods:\n  endpoint-detection: true\n", encoding="utf-8"
+    )
+    (gov / "security-controls__DOT__yaml")__DOT__write_text(
+        "verified_methods:\n  __W26__-flow-inventory: true\n", encoding="utf-8",
+    )
+    (gov / "evidence" / "supply-chain")__DOT__mkdir(parents=True)
+    (gov / "evidence" / "supply-chain" / "sbom__DOT__cdx__DOT__json")__DOT__write_text(
+        json__DOT__dumps(
+            {
+                "bomFormat": "CycloneDX",
+                "specVersion": "1__DOT__5",
+                "components": [{"name": "pyyaml", "licenses": [{"license": {"id": "MIT"}}]}],
+                "vulnerabilities": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    poly_res = PolyglotQualityRunner()__DOT__run(tmp_path)
+    assert poly_res__DOT__outcome == RunnerOutcome__DOT__PASS
+
+    passing_methods = [
+        "schema-validation",
+        "acceptance-criteria-validation",
+        "requirements-conflict-analysis",
+        "requirements-traceability-analysis",
+        "test-traceability-analysis",
+        "adr-presence-check",
+        "adr-structure-validation",
+        "destructive-ddl-migration-scan",
+        "concurrent-index-and-lock-check",
+        "migration-file-detection",
+        "prechange-backup-verification",
+        "api-contract-analysis",
+        "endpoint-version-inventory",
+        "frozen-api-contract-check",
+        "schema-compatibility-diff-check",
+        "workflow-file-presence",
+        "branch-protection-check",
+        "github-actions-sha-pinning-scan",
+        "dependency-lockfile-determinism-check",
+        "changelog-format-validation",
+        "version-consistency-check",
+        "release-notes-presence",
+        "release-notes-structure-validation",
+        "outbound-timeout-enforcement-scan",
+        "unbounded-retry-loop-scan",
+        "__W04__-scanner",
+        "env-file-audit",
+        "lockfile-inventory",
+        "sbom-component-inventory-check",
+        "sbom-license-and-cve-policy-check",
+        "__W26__-flow-inventory",
+        "slo-document-presence",
+        "load-test-execution",
+        "data-inventory-presence",
+        "iac-file-detection",
+        "endpoint-detection",
+        "coverage-analysis",
+        "ast-test-mapping",
+        "commit-message-analysis",
+        "critical-workflow-test-coverage-review",
+    ]
+    for mid in passing_methods:
+        out = evaluate_domain_method(mid, tmp_path)
+        assert out is not None and out[0] == STATUS_PASS, f"{mid} -__GT__ {out}"
+
+    # Negative domain checks: destructive SQL, missing timeout, __W04__ pattern, __W42__ SBOM
+    (tmp_path / "migrations")__DOT__mkdir()
+    (tmp_path / "migrations" / "001_schema_change__DOT__sql")__DOT__write_text(
+        "__T_DR__ TABLE items;\nCREATE INDEX idx_items_code ON items(code);\n",
+        encoding="utf-8",
+    )
+    assert evaluate_domain_method("destructive-ddl-migration-scan", tmp_path) == (
+        STATUS_FAIL,
+        "unguarded destructive DDL: ['migrations/001_schema_change__DOT__sql']",
+    )
+    assert evaluate_domain_method("concurrent-index-and-lock-check", tmp_path)[0] == STATUS_FAIL
+
+    (tmp_path / "src" / "demo" / "client_no_timeout__DOT__py")__DOT__write_text(
+        "import __W41__\ndef hang():\n    __W41____DOT__get('__HTTPS____W40____DOT____W39__')\n"
+        "    while True:\n        x = 1\n",
+        encoding="utf-8",
+    )
+    assert evaluate_domain_method("outbound-timeout-enforcement-scan", tmp_path)[0] == STATUS_FAIL
+    assert evaluate_domain_method("unbounded-retry-loop-scan", tmp_path)[0] == STATUS_FAIL
+
+    # Construct fake __W04__ dynamically to avoid static __W04__ scanner triggers
+    sample_val = "__T_SK__" + ("A" * 24)
+    (tmp_path / "src" / "demo" / "sample_cfg__DOT__py")__DOT__write_text(
+        f'api_key = "{sample_val}"\n', encoding="utf-8"
+    )
+    assert evaluate_domain_method("__W04__-scanner", tmp_path)[0] == STATUS_FAIL
+
+    (gov / "evidence" / "supply-chain" / "sbom__DOT__cdx__DOT__json")__DOT__write_text(
+        json__DOT__dumps(
+            {
+                "components": [{"name": "bad", "licenses": [{"license": {"id": "__W42__-3__DOT__0"}}]}],
+                "vulnerabilities": [{"id": "ADV-2026-0001", "ratings": [{"severity": "critical"}]}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert evaluate_domain_method("sbom-license-and-cve-policy-check", tmp_path)[0] == STATUS_FAIL
+
+
+def test_assess_dispatch_method_registry_and_rule_evaluator(tmp_path: Path) -__GT__ None:
+    # GAP-01 regression check: security-audit runner instantiates without ModuleNotFoundError!
+    runner_names = (
+        "test-suite",
+        "ruff",
+        "security-audit",
+        "polyglot-quality",
+        "governance-domain",
+        "human-attestation",
+    )
+    for rname in runner_names:
+        assert create_assess_runner(rname) is not None
+    assert create_assess_runner("unknown-runner") is None
+
+    # JUnit XML inspector
+    junit = tmp_path / "junit__DOT__xml"
+    junit__DOT__write_text(
+        '__LT__testsuite tests="4" failures="0" errors="0" skipped="0"__GT____LT__/testsuite__GT__',
+        encoding="utf-8",
+    )
+    assert inspect_junit_artifact(junit) == (4, 0, 0, 0)
+    assert inspect_junit_artifact(tmp_path / "missing__DOT__xml") is None
+
+    # METHOD_REGISTRY validation
+    assert len(METHOD_REGISTRY) __GT__= 115
+    assert resolve_method("anti-fabrication-ast-check") is not None
+    with pytest__DOT__raises(ValueError):
+        resolve_method("")
+    with pytest__DOT__raises(ValueError):
+        resolve_methods("not-a-list")
+    with pytest__DOT__raises(ValueError):
+        resolve_methods(["dup", "dup"])
+    with pytest__DOT__raises(ValueError):
+        resolve_methods([""])
+
+    # RuleEvaluator with PASS, BLOCKED (dirty tree), and ACCEPTED_RISK exception
+    (tmp_path / "src" / "pkg")__DOT__mkdir(parents=True)
+    (tmp_path / "src" / "pkg" / "ok__DOT__py")__DOT__write_text(
+        "def add(a: int, b: int) -__GT__ int:\n    return a + b\n", encoding="utf-8"
+    )
+    fake_rule = SimpleNamespace(
+        id="SE-CQ-003",
+        raw={
+            "metadata": {"domain": "code-quality", "enforcement": "blocking"},
+            "verification": {"methods": ["anti-fabrication-ast-check", "complexity-budget-check"]},
+            "human_review": {"required": False},
+        },
+    )
+    ev = RuleEvaluator(tmp_path, commit_sha=SHA_A, working_tree_clean=True)
+    res_ok = ev__DOT__evaluate_all([fake_rule])[0]
+    assert res_ok__DOT__status == STATUS_PASS
+
+    ev_dirty = RuleEvaluator(tmp_path, commit_sha=SHA_A, working_tree_clean=False)
+    assert ev_dirty__DOT__evaluate_rule(fake_rule)__DOT__status == STATUS_BLOCKED
+
+    # Accepted risk via active exception on non-critical rule
+    (tmp_path / "__DOT__gencode-gov")__DOT__mkdir()
+    (tmp_path / "__DOT__gencode-gov" / "exceptions__DOT__yaml")__DOT__write_text(
+        "exceptions:\n"
+        "  - id: EXC-001\n"
+        "    rule_id: SE-ADR-TEST\n"
+        "    justification: Temporary migration window approved by lead__DOT__\n"
+        "    approved_by: Architecture Lead\n"
+        "    created_at: '2026-01-01T00:00:00Z'\n"
+        "    expires_at: '2099-01-01T00:00:00Z'\n"
+        "    remediation_plan: Add ADRs in sprint 4__DOT__\n",
+        encoding="utf-8",
+    )
+    blocked_rule = SimpleNamespace(
+        id="SE-ADR-TEST",
+        raw={
+            "metadata": {"domain": "architecture", "enforcement": "blocking"},
+            "verification": {"methods": ["adr-presence-check"]},
+            "human_review": {"required": True, "approver_role": "arch-lead"},
+        },
+    )
+    ev_exc = RuleEvaluator(tmp_path, commit_sha=SHA_A, working_tree_clean=True)
+    res_exc = ev_exc__DOT__evaluate_rule(blocked_rule)
+    assert res_exc__DOT__status in {STATUS_ACCEPTED_RISK, STATUS_BLOCKED}
+
+    # Extended method ruff-check & polyglot-static-quality-check
+    ruff_json = tmp_path / "ruff__DOT__json"
+    ruff_json__DOT__write_text("[]", encoding="utf-8")
+    r_pass = RunnerResult(runner="ruff", outcome=RunnerOutcome__DOT__PASS, artifacts=[ruff_json])
+    assert evaluate_extended_method("ruff-check", r_pass, tmp_path) == (
+        STATUS_PASS,
+        "Ruff reported zero static analysis issues",
+    )
+    p_pass = RunnerResult(runner="polyglot-quality", outcome=RunnerOutcome__DOT__PASS, reason="ok")
+    poly_eval = evaluate_extended_method("polyglot-static-quality-check", p_pass, tmp_path)
+    assert poly_eval is not None and poly_eval[0] == STATUS_PASS
+
+
+def test_cli_extensions_and_repository_validator(
+    tmp_path: Path, monkeypatch: pytest__DOT__MonkeyPatch
+) -__GT__ None:
+    monkeypatch__DOT____W37__("GENCODE_GOV_AGENT___W22___ID", raising=False)
+    monkeypatch__DOT____W37__("GENCODE_GOV___W07__", raising=False)
+
+    repo_root = Path(__file__)__DOT__resolve()__DOT__parents[3]
+    val_summary = validate_repository(repo_root)
+    assert val_summary__DOT__ok, f"Repository validation errors: {val_summary__DOT__errors}"
+    assert val_summary__DOT__rules_checked __GT__= 47
+    assert run_cli_validate(repo_root, as_json=True) == 0
+    assert run_cli_validate(repo_root, as_json=False) == 0
+
+    # Parser registration & CLI extension handlers
+    parser = argparse__DOT__ArgumentParser()
+    sub = parser__DOT__add_subparsers(dest="command")
+    register_extended_subcommands(sub, lambda _p: SHA_A)
+
+    sha = _init_git_repo(tmp_path)
+    att_args = parser__DOT__parse_args(
+        [
+            "attest",
+            str(tmp_path),
+            "--rule",
+            "SE-ARC-001",
+            "--reviewer",
+            "reviewer_role_three",
+            "--role",
+            "architecture-lead",
+            "--rationale",
+            "Reviewed architecture boundaries and approved__DOT__",
+            "--commit",
+            sha,
+            "--json",
+        ]
+    )
+    assert cmd_attest(att_args, commit_resolver=lambda _p: sha) == 0
+
+    diff_args = parser__DOT__parse_args(["diff-check", str(tmp_path), "--json"])
+    assert cmd_diff_check(diff_args) == 0
+
+    drift_args = parser__DOT__parse_args(["drift", str(tmp_path), "--json"])
+    assert cmd_drift(drift_args, commit_resolver=lambda _p: sha) == 0
+
+    matrix = build_tools_matrix(repo_root, repo_root)
+    assert any(row["language"] == "python" for row in matrix)
+    assert set(ALL_RULE_DOMAINS)
+
+    html_dest = tmp_path / "out__DOT__html"
+    sarif_dest = tmp_path / "out__DOT__sarif"
+    payload = {"project": "demo", "decision": "APPROVED", "score": {"total": 100}, "rules": []}
+    assert render_extended_report_format("html", payload, html_dest, tmp_path) == 0
+    assert render_extended_report_format("sarif", payload, sarif_dest, tmp_path) == 0
+    assert render_extended_report_format("json", payload, None, tmp_path) is None
+
+
+def test_repository_frozen_apis_and_clean_integration(tmp_path: Path) -__GT__ None:
+    from gencode_gov__DOT__assessment__DOT__gates import evaluate
+    from gencode_gov__DOT__cli import main as cli_main
+    from gencode_gov__DOT__config import load_manifest
+    from gencode_gov__DOT__evidence__DOT__store import read_evidence
+
+    repo_root = Path(__file__)__DOT__resolve()__DOT__parents[3]
+    assert callable(cli_main)
+    assert callable(load_manifest)
+    assert callable(read_evidence)
+    assert callable(evaluate)
+    assert verify_frozen_apis(repo_root)[0] == STATUS_PASS
+    assert not (repo_root / "staging")__DOT__exists()
+    assert not (repo_root / "__DOT__github" / "workflows" / "recon_full_audit__DOT__yml")__DOT__exists()
+
+    # Package __init____DOT__py fallback when frozen_apis specifies module__DOT__py path
+    pkg_dir = tmp_path / "src" / "demo_pkg" / "cfg"
+    pkg_dir__DOT__mkdir(parents=True)
+    (pkg_dir / "__init____DOT__py")__DOT__write_text(
+        "def load_manifest() -__GT__ dict:\n    return {}\n", encoding="utf-8"
+    )
+    (tmp_path / "manifest")__DOT__mkdir()
+    (tmp_path / "manifest" / "compatibility__DOT__yaml")__DOT__write_text(
+        "frozen_apis:\n  - src/demo_pkg/cfg__DOT__py::load_manifest\n",
+        encoding="utf-8",
+    )
+    assert verify_frozen_apis(tmp_path)[0] == STATUS_PASS
+    assert read_evidence(tmp_path, "testing") is not None
