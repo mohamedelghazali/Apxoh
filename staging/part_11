@@ -1,0 +1,511 @@
+===FILE:tests/integration/test_end_to_end_governance_excellence__DOT__py===
+"""End-to-end CLI integration tests for GENCODE-GOV governance upgrades__DOT__"""
+
+from __future__ import annotations
+
+import json
+import __W36__
+from pathlib import Path
+
+import pytest
+
+from gencode_gov__DOT__cli import main
+
+
+def _init_governed_python_project(root: Path) -__GT__ str:
+    __W36____DOT__run(["git", "init", "-q"], cwd=root, check=True, timeout=10)  # noqa: S603,S607
+    __W36____DOT__run(  # noqa: S603,S607
+        ["git", "config", "__W28____DOT____W20__", "lead__AT____W40____DOT____W39__"], cwd=root, check=True, timeout=10
+    )
+    __W36____DOT__run(  # noqa: S603,S607
+        ["git", "config", "__W28____DOT__name", "eng_reviewer_role"], cwd=root, check=True, timeout=10
+    )
+    (root / "pyproject__DOT__toml")__DOT__write_text(
+        '[project]\nname = "tiny-svc"\nversion = "0__DOT__1__DOT__0"\n'
+        '[tool__DOT__coverage__DOT__report]\nfail_under = 90\n',
+        encoding="utf-8",
+    )
+    (root / "requirements__DOT__lock")__DOT__write_text("pyyaml==6__DOT__0__DOT__2\n", encoding="utf-8")
+    (root / "CHANGELOG__DOT__md")__DOT__write_text(
+        "# Changelog\n\n## [0__DOT__1__DOT__0] - 2026-11-27\n- Initial governed release__DOT__\n",
+        encoding="utf-8",
+    )
+    (root / "src" / "tiny_svc")__DOT__mkdir(parents=True)
+    (root / "src" / "tiny_svc" / "__init____DOT__py")__DOT__write_text(
+        '__version__ = "0__DOT__1__DOT__0"\n\ndef greet(name: str) -__GT__ str:\n    return f"hi {name}"\n',
+        encoding="utf-8",
+    )
+    (root / "tests")__DOT__mkdir()
+    (root / "tests" / "test_greet__DOT__py")__DOT__write_text(
+        "from tiny_svc import greet\n\n"
+        "def test_greet() -__GT__ None:\n    assert greet('a') == 'hi a'\n",
+        encoding="utf-8",
+    )
+    gov = root / "__DOT__gencode-gov"
+    gov__DOT__mkdir()
+    (gov / "project__DOT__yaml")__DOT__write_text(
+        "name: tiny-svc\ntype: library\nlanguages:\n  - python\n",
+        encoding="utf-8",
+    )
+    (gov / "config__DOT__yaml")__DOT__write_text(
+        "formats:\n  report:\n    - json\n    - markdown\n    - html\n",
+        encoding="utf-8",
+    )
+    __W36____DOT__run(["git", "add", "-A"], cwd=root, check=True, timeout=10)  # noqa: S603,S607
+    __W36____DOT__run(  # noqa: S603,S607
+        ["git", "commit", "-q", "-m", "feat: initial governed project"],
+        cwd=root,
+        check=True,
+        timeout=10,
+    )
+    res = __W36____DOT__run(  # noqa: S603,S607
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=10,
+    )
+    return res__DOT__stdout__DOT__strip()
+
+
+def test_cli_validate_inspect_tools_attest_diff_drift_and_reports(
+    tmp_path: Path,
+    capsys: pytest__DOT__CaptureFixture[str],
+    monkeypatch: pytest__DOT__MonkeyPatch,
+) -__GT__ None:
+    monkeypatch__DOT____W37__("GENCODE_GOV_AGENT___W22___ID", raising=False)
+    monkeypatch__DOT____W37__("GENCODE_GOV___W07__", raising=False)
+
+    sha = _init_governed_python_project(tmp_path)
+
+    # 1__DOT__ inspect --tools --json
+    rc_ins = main(["inspect", str(tmp_path), "--tools", "--json"])
+    assert rc_ins == 0
+    ins_data = json__DOT__loads(capsys__DOT__readouterr()__DOT__out)
+    assert "tools" in ins_data
+
+    # 2__DOT__ attest via main CLI
+    rc_att = main(
+        [
+            "attest",
+            str(tmp_path),
+            "--rule",
+            "SE-ARC-001",
+            "--reviewer",
+            "reviewer_role_one",
+            "--role",
+            "Architecture Lead",
+            "--rationale",
+            "Reviewed library boundaries and approved for release__DOT__",
+            "--commit",
+            sha,
+            "--json",
+        ]
+    )
+    assert rc_att == 0
+    att_out = json__DOT__loads(capsys__DOT__readouterr()__DOT__out)
+    assert att_out["commit_sha"] == sha
+
+    # 3__DOT__ diff-check via main CLI
+    rc_diff = main(["diff-check", str(tmp_path), "--json"])
+    assert rc_diff == 0
+    diff_out = json__DOT__loads(capsys__DOT__readouterr()__DOT__out)
+    assert diff_out["status"] == "PASS"
+
+    # 4__DOT__ drift via main CLI (Notice: __DOT__gencode-gov/evidence & state exist untracked, testing GAP-03!)
+    rc_drift = main(["drift", str(tmp_path), "--json"])
+    assert rc_drift == 0
+    drift_out = json__DOT__loads(capsys__DOT__readouterr()__DOT__out)
+    assert drift_out["current"]["python_files"] __GT__= 1
+
+    # 5__DOT__ assess --json ignores untracked __DOT__gencode-gov/ runtime outputs (GAP-03)
+    rc_assess = main(["assess", str(tmp_path), "--json"])
+    assert rc_assess in {0, 1}
+    assess_raw = capsys__DOT__readouterr()__DOT__out
+    assess_json = json__DOT__loads(assess_raw)
+    assert "decision" in assess_json or "verdict" in assess_json or "score" in assess_json
+
+    # 6__DOT__ report --format html and --format sarif
+    html_file = tmp_path / "__DOT__gencode-gov" / "reports" / "latest__DOT__html"
+    sarif_file = tmp_path / "__DOT__gencode-gov" / "reports" / "latest__DOT__sarif"
+    assert main(["report", str(tmp_path), "--format", "html", "--output", str(html_file)]) == 0
+    capsys__DOT__readouterr()
+    assert html_file__DOT__is_file()
+    assert "GENCODE-GOV Governance Assessment" in html_file__DOT__read_text(encoding="utf-8")
+
+    assert main(["report", str(tmp_path), "--format", "sarif", "--output", str(sarif_file)]) == 0
+    capsys__DOT__readouterr()
+    sarif_doc = json__DOT__loads(sarif_file__DOT__read_text(encoding="utf-8"))
+    assert sarif_doc["version"] == "2__DOT__1__DOT__0"
+===FILE:tests/unit/verification/test_engineering_governance_edge_branches__DOT__py===
+"""Edge-branch and negative-path unit tests for 100% governance statement coverage__DOT__"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import __W36__
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from gencode_gov__DOT__assessment__DOT__drift import record_and_evaluate_drift
+from gencode_gov__DOT__cli_extensions import (
+    build_tools_matrix,
+    cmd_attest,
+    cmd_diff_check,
+    cmd_drift,
+    register_extended_subcommands,
+    render_extended_report_format,
+)
+from gencode_gov__DOT__core__DOT__constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
+from gencode_gov__DOT__core__DOT__errors import EvidenceError, GovernanceError
+from gencode_gov__DOT__evidence__DOT__attestation import (
+    _parse_utc,
+    create_human_attestation,
+    verify_human_attestation,
+)
+from gencode_gov__DOT__reporting__DOT__html_reporter import HtmlReporter, _atomic_safe_write
+from gencode_gov__DOT__reporting__DOT__sarif_reporter import SarifReporter
+from gencode_gov__DOT__rules__DOT__evaluator import RuleEvaluator
+from gencode_gov__DOT__validation import run_cli_validate, validate_repository
+from gencode_gov__DOT__verification__DOT__architecture_verifier import _extract_submodules
+from gencode_gov__DOT__verification__DOT__code_and_test_integrity import (
+    analyze_production_code,
+    verify_test_adequacy_method,
+)
+from gencode_gov__DOT__verification__DOT__diff_governance import (
+    evaluate_diff_governance,
+    verify_frozen_apis,
+)
+from gencode_gov__DOT__verification__DOT__domain_verifiers import evaluate_domain_method
+from gencode_gov__DOT__verification__DOT__runners__DOT__base import Runner, RunnerOutcome, RunnerResult
+from gencode_gov__DOT__verification__DOT__runners__DOT__polyglot_quality_runner import PolyglotQualityRunner
+
+SHA_1 = "1" * 40
+SHA_2 = "2" * 40
+
+
+def test_attestation_and_drift___W34___and_timestamp_edges(
+    tmp_path: Path, monkeypatch: pytest__DOT__MonkeyPatch
+) -__GT__ None:
+    monkeypatch__DOT____W37__("GENCODE_GOV_AGENT___W22___ID", raising=False)
+    monkeypatch__DOT____W37__("GENCODE_GOV___W07__", raising=False)
+
+    with pytest__DOT__raises(EvidenceError):
+        _parse_utc("not-a-date", "attested_at")
+    with pytest__DOT__raises(EvidenceError):
+        _parse_utc("2026-01-01T00:00:00", "attested_at")
+
+    # Symlinked __DOT__gencode-gov rejected in create_human_attestation
+    real_dir = tmp_path / "real"
+    real_dir__DOT__mkdir()
+    p1 = tmp_path / "p1"
+    p1__DOT__mkdir()
+    (p1 / "__DOT__gencode-gov")__DOT____W32__(real_dir)
+    with pytest__DOT__raises(EvidenceError):
+        create_human_attestation(
+            p1,
+            rule_ids=["SE-ARC-001"],
+            reviewer="lead_reviewer_role",
+            approver_role="lead",
+            commit_sha=SHA_1,
+            rationale="Valid rationale text here__DOT__",
+        )
+
+    p2 = tmp_path / "p2"
+    (p2 / "__DOT__gencode-gov")__DOT__mkdir(parents=True)
+    (p2 / "__DOT__gencode-gov" / "evidence")__DOT____W32__(real_dir)
+    with pytest__DOT__raises(EvidenceError):
+        create_human_attestation(
+            p2,
+            rule_ids=["SE-ARC-001"],
+            reviewer="lead_reviewer_role",
+            approver_role="lead",
+            commit_sha=SHA_1,
+            rationale="Valid rationale text here__DOT__",
+        )
+
+    p3 = tmp_path / "p3"
+    (p3 / "__DOT__gencode-gov" / "evidence")__DOT__mkdir(parents=True)
+    (p3 / "__DOT__gencode-gov" / "evidence" / "attestations")__DOT____W32__(real_dir)
+    with pytest__DOT__raises(EvidenceError):
+        create_human_attestation(
+            p3,
+            rule_ids=["SE-ARC-001"],
+            reviewer="lead_reviewer_role",
+            approver_role="lead",
+            commit_sha=SHA_1,
+            rationale="Valid rationale text here__DOT__",
+        )
+
+    # Bot reviewer & bad timestamp inside stored attestation JSON
+    p4 = tmp_path / "p4"
+    att_dir = p4 / "__DOT__gencode-gov" / "evidence" / "attestations"
+    att_dir__DOT__mkdir(parents=True)
+    (att_dir / "ATTEST-AUTO0001__DOT__json")__DOT__write_text(
+        json__DOT__dumps(
+            {
+                "attestation_id": "ATTEST-AUTO0001",
+                "rule_ids": ["SE-ARC-001"],
+                "reviewer": "__W43__service",
+                "approver_role": "lead",
+                "commit_sha": SHA_1,
+                "attested_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-02-01T00:00:00Z",
+                "rationale": "Automated service check__DOT__",
+                "reviewed_artifacts": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (att_dir / "ATTEST-BADTIME1__DOT__json")__DOT__write_text(
+        json__DOT__dumps(
+            {
+                "attestation_id": "ATTEST-BADTIME1",
+                "rule_ids": ["SE-ARC-001"],
+                "reviewer": "lead_reviewer_role",
+                "approver_role": "lead",
+                "commit_sha": SHA_1,
+                "attested_at": "bad-date",
+                "expires_at": "2026-02-01T00:00:00Z",
+                "rationale": "Malformed timestamp test__DOT__",
+                "reviewed_artifacts": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    st, rsn = verify_human_attestation(p4, rule_id="SE-ARC-001", expected_commit_sha=SHA_1)
+    assert st == STATUS_BLOCKED
+    assert "bot/agent" in rsn and "__W39__ attested_at" in rsn
+
+    # Drift __W34__ guards & active_exceptions increase warning
+    p_drift = tmp_path / "p_drift"
+    (p_drift / "__DOT__gencode-gov")__DOT__mkdir(parents=True)
+    (p_drift / "__DOT__gencode-gov" / "state")__DOT____W32__(real_dir)
+    with pytest__DOT__raises(GovernanceError):
+        record_and_evaluate_drift(p_drift, SHA_1)
+
+    p_drift2 = tmp_path / "p_drift2"
+    (p_drift2 / "__DOT__gencode-gov" / "state")__DOT__mkdir(parents=True)
+    dummy_file = tmp_path / "dummy__DOT__jsonl"
+    dummy_file__DOT__write_text("", encoding="utf-8")
+    (p_drift2 / "__DOT__gencode-gov" / "state" / "drift-ledger__DOT__jsonl")__DOT____W32__(dummy_file)
+    with pytest__DOT__raises(GovernanceError):
+        record_and_evaluate_drift(p_drift2, SHA_1)
+
+    p_drift3 = tmp_path / "p_drift3"
+    p_drift3__DOT__mkdir()
+    record_and_evaluate_drift(p_drift3, SHA_1, persist=True)
+    exc_dir = p_drift3 / "system" / "policies" / "exceptions"
+    exc_dir__DOT__mkdir(parents=True)
+    (exc_dir / "registry__DOT__yaml")__DOT__write_text(
+        "exceptions:\n"
+        "  - id: EXC-99\n"
+        "    rule_id: SE-ARC-001\n"
+        "    justification: Approved temporary exception__DOT__\n"
+        "    approved_by: Lead\n"
+        "    created_at: '2026-01-01T00:00:00Z'\n"
+        "    expires_at: '2099-01-01T00:00:00Z'\n"
+        "    remediation_plan: Complete ADR__DOT__\n",
+        encoding="utf-8",
+    )
+    _, _, warnings = record_and_evaluate_drift(p_drift3, SHA_2, persist=False)
+    assert any("exceptions" in w for w in warnings)
+
+
+def test_cli_extensions_text_modes_and_errors(
+    tmp_path: Path, capsys: pytest__DOT__CaptureFixture[str], monkeypatch: pytest__DOT__MonkeyPatch
+) -__GT__ None:
+    monkeypatch__DOT____W37__("GENCODE_GOV_AGENT___W22___ID", raising=False)
+    monkeypatch__DOT____W37__("GENCODE_GOV___W07__", raising=False)
+
+    parser = argparse__DOT__ArgumentParser()
+    sub = parser__DOT__add_subparsers(dest="command")
+    register_extended_subcommands(sub, lambda _p: None)
+
+    # cmd_attest missing commit & error path & text output
+    args_no_sha = parser__DOT__parse_args(
+        [
+            "attest",
+            str(tmp_path),
+            "--rule",
+            "SE-ARC-001",
+            "--reviewer",
+            "lead_reviewer_role",
+            "--role",
+            "lead",
+            "--rationale",
+            "Valid rationale text__DOT__",
+        ]
+    )
+    assert cmd_attest(args_no_sha, commit_resolver=lambda _p: None) == 1
+
+    args_bad = parser__DOT__parse_args(
+        [
+            "attest",
+            str(tmp_path),
+            "--rule",
+            "SE-ARC-001",
+            "--reviewer",
+            "ci-worker",
+            "--role",
+            "lead",
+            "--rationale",
+            "Valid rationale text__DOT__",
+            "--commit",
+            SHA_1,
+        ]
+    )
+    assert cmd_attest(args_bad, commit_resolver=lambda _p: SHA_1) == 1
+
+    args_txt = parser__DOT__parse_args(
+        [
+            "attest",
+            str(tmp_path),
+            "--rule",
+            "SE-ARC-001",
+            "--reviewer",
+            "lead_reviewer_role",
+            "--role",
+            "lead",
+            "--rationale",
+            "Valid rationale text__DOT__",
+            "--commit",
+            SHA_1,
+        ]
+    )
+    assert cmd_attest(args_txt, commit_resolver=lambda _p: SHA_1) == 0
+
+    # cmd_diff_check text mode with failure
+    (tmp_path / "manifest")__DOT__mkdir()
+    (tmp_path / "manifest" / "compatibility__DOT__yaml")__DOT__write_text(
+        "frozen_apis:\n  - bad_entry_without_colons\n", encoding="utf-8"
+    )
+    diff_txt = parser__DOT__parse_args(["diff-check", str(tmp_path)])
+    assert cmd_diff_check(diff_txt) == 1
+
+    # cmd_drift text mode + __W34__ error
+    drift_txt = parser__DOT__parse_args(["drift", str(tmp_path)])
+    assert cmd_drift(drift_txt, commit_resolver=lambda _p: SHA_1) == 0
+
+    bad_drift = tmp_path / "bad_drift"
+    (bad_drift / "__DOT__gencode-gov")__DOT__mkdir(parents=True)
+    (bad_drift / "__DOT__gencode-gov" / "state")__DOT____W32__(tmp_path / "manifest")
+    d_args = parser__DOT__parse_args(["drift", str(bad_drift)])
+    assert cmd_drift(d_args, commit_resolver=lambda _p: SHA_1) == 1
+
+    # render_extended_report_format to stdout + non-dict rule entries + parent __W34__ error
+    payload = {"project": "p", "rules": ["skip-me"]}
+    assert render_extended_report_format("html", payload, None, tmp_path) == 0
+    assert render_extended_report_format("sarif", payload, None, tmp_path) == 0
+    capsys__DOT__readouterr()
+
+    sym_parent = tmp_path / "sym_parent"
+    sym_parent__DOT____W32__(tmp_path / "manifest")
+    with pytest__DOT__raises(GovernanceError):
+        _atomic_safe_write(sym_parent / "r__DOT__html", "x")
+    assert HtmlReporter()__DOT__render(payload)
+    assert SarifReporter()__DOT__to_sarif(payload)
+
+    # build_tools_matrix with custom languages dir
+    fake_langs = tmp_path / "langs_root"
+    (fake_langs / "languages")__DOT__mkdir(parents=True)
+    assert build_tools_matrix(tmp_path, fake_langs)
+
+
+def test_evaluator_validator_and_diff_edge_branches(tmp_path: Path) -__GT__ None:
+    # RuleEvaluator: unregistered method, disallowed domain, custom runner PASS/FAIL/BLOCKED
+    class CustomRunner(Runner):
+        def __init__(self, outcome: RunnerOutcome) -__GT__ None:
+            self__DOT___outcome = outcome
+
+        def run(self, project_root: Path, artifact_dir: Path | None = None) -__GT__ RunnerResult:
+            _ = project_root, artifact_dir
+            return RunnerResult(runner="mypy", outcome=self__DOT___outcome, reason="done")
+
+    r_unreg = SimpleNamespace(
+        id="SE-CQ-999",
+        raw={
+            "metadata": {"domain": "code-quality", "enforcement": "blocking"},
+            "verification": {"methods": ["nonexistent-method", "slo-document-presence"]},
+        },
+    )
+    ev = RuleEvaluator(tmp_path, commit_sha=SHA_1)
+    assert ev__DOT__evaluate_rule(r_unreg)__DOT__status == STATUS_BLOCKED
+
+    r_mypy = SimpleNamespace(
+        id="SE-CQ-002",
+        raw={
+            "metadata": {"domain": "code-quality", "enforcement": "critical"},
+            "verification": {"methods": ["type-checker-execution"]},
+        },
+    )
+    assert (
+        RuleEvaluator(
+            tmp_path,
+            commit_sha=SHA_1,
+            runner_overrides={"mypy": CustomRunner(RunnerOutcome__DOT__PASS)},
+        )
+        __DOT__evaluate_rule(r_mypy)
+        __DOT__status
+        == STATUS_PASS
+    )
+    assert (
+        RuleEvaluator(
+            tmp_path,
+            commit_sha=SHA_1,
+            runner_overrides={"mypy": CustomRunner(RunnerOutcome__DOT__FAIL)},
+        )
+        __DOT__evaluate_rule(r_mypy)
+        __DOT__status
+        == STATUS_FAIL
+    )
+    assert (
+        RuleEvaluator(
+            tmp_path,
+            commit_sha=SHA_1,
+            runner_overrides={"mypy": CustomRunner(RunnerOutcome__DOT__BLOCKED)},
+        )
+        __DOT__evaluate_rule(r_mypy)
+        __DOT__status
+        == STATUS_BLOCKED
+    )
+    # Missing runner override
+    r_tsar = SimpleNamespace(
+        id="SE-SEC-GOV-001",
+        raw={
+            "metadata": {"domain": "software-security", "enforcement": "critical"},
+            "verification": {"methods": ["tsar-audit-invocation"]},
+        },
+    )
+    assert RuleEvaluator(tmp_path, commit_sha=SHA_1)__DOT__evaluate_rule(r_tsar)__DOT__status == STATUS_BLOCKED
+
+    # validation__DOT__py negative branches (schemas, duplicate rules, links, wheel)
+    wheel_sim = tmp_path / "wheel_only"
+    wheel_sim__DOT__mkdir()
+    assert validate_repository(wheel_sim)__DOT__rules_checked == 0
+
+    bad_repo = tmp_path / "bad_repo"
+    (bad_repo / "rules" / "testing")__DOT__mkdir(parents=True)
+    (bad_repo / "languages" / "python" / "rules")__DOT__mkdir(parents=True)
+    (bad_repo / "schemas")__DOT__mkdir(parents=True)
+    (bad_repo / "schemas" / "bad__DOT__json")__DOT__write_text("{__W39__", encoding="utf-8")
+    dup_yaml = (
+        "id: SE-TST-901\n"
+        "metadata:\n  domain: architecture\n"
+        "verification:\n  methods: [missing-m, ruff-check]\n"
+    )
+    (bad_repo / "rules" / "testing" / "SE-TST-901__DOT__yaml")__DOT__write_text(dup_yaml, encoding="utf-8")
+    (bad_repo / "languages" / "python" / "rules" / "SE-TST-901__DOT__yaml")__DOT__write_text(
+        dup_yaml, encoding="utf-8"
+    )
+    (bad_repo / "skills" / "demo")__DOT__mkdir(parents=True)
+    (bad_repo / "skills" / "demo" / "SKILL__DOT__md")__DOT__write_text(
+        "No frontmatter [bad](missing__DOT__md) [rel](__DOT____DOT__/missing_ref__DOT__md) [anchor](#ok)\n",
+        encoding="utf-8",
+    )
+    (bad_repo / "agents")__DOT__mkdir()
+    (bad_repo / "agents" / "_roles__DOT__yaml")__DOT__write_text(
