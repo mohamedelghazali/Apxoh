@@ -20,11 +20,11 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - run: pip install -e ".[dev]"
 
-      - name: Verify .arkhon/project.yaml exists
-        run: test -f .arkhon/project.yaml
+      - name: Verify .gencode-gov/project.yaml exists
+        run: test -f .gencode-gov/project.yaml
 
-      - name: Verify .arkhon/config.yaml exists
-        run: test -f .arkhon/config.yaml
+      - name: Verify .gencode-gov/config.yaml exists
+        run: test -f .gencode-gov/config.yaml
 
       - name: Run GENCODE-GOV doctor
         run: gencode-gov doctor || true
@@ -54,6 +54,6 @@ jobs:
         if: always()
         with:
           name: self-evidence
-          path: .arkhon/evidence/
+          path: .gencode-gov/evidence/
           if-no-files-found: ignore
           retention-days: 7
