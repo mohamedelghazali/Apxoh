@@ -46,7 +46,7 @@ jobs:
       - name: Inspect each example
         run: |
           for d in examples/*/; do
-            if [ -f "$d/.arkhon/project.yaml" ]; then
+            if [ -f "$d/.gencode-gov/project.yaml" ]; then
               echo "=== $d ==="
               gencode-gov inspect "$d" --json
             fi
