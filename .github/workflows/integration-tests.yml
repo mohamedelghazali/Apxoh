@@ -25,11 +25,11 @@ jobs:
 
       - name: Detect fixture language
         run: |
-          arkhon inspect tests/languages/fixtures/${{ matrix.lang }}-project --json
+          gencode-gov inspect tests/languages/fixtures/${{ matrix.lang }}-project --json
 
       - name: Fixture has correct structure
         run: |
-          test -f tests/languages/fixtures/${{ matrix.lang }}-project/.arkhon/project.yaml
+          test -f tests/languages/fixtures/${{ matrix.lang }}-project/.gencode-gov/project.yaml
           test -f tests/languages/fixtures/${{ matrix.lang }}-project/README.md
 
       - name: Run fixture pytest
@@ -48,7 +48,7 @@ jobs:
           for d in examples/*/; do
             if [ -f "$d/.arkhon/project.yaml" ]; then
               echo "=== $d ==="
-              arkhon inspect "$d" --json
+              gencode-gov inspect "$d" --json
             fi
           done
 
