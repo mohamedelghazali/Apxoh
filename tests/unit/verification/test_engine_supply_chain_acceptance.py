@@ -31,9 +31,9 @@ def _digest(path: Path) -> str:
 def _fixture(root: Path) -> list[Path]:
     files: dict[str, Path] = {}
     for key, relative, value in (
-        ("artifact", "dist/apxoh.whl", "wheel"),
+        ("artifact", "dist/gencode_gov.whl", "wheel"),
         ("provenance", "dist/provenance.intoto.jsonl", "signed provenance"),
-        ("signature_bundle", "dist/apxoh.whl.sigstore.json", "sigstore bundle"),
+        ("signature_bundle", "dist/gencode_gov.whl.sigstore.json", "sigstore bundle"),
     ):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -51,7 +51,7 @@ def _fixture(root: Path) -> list[Path]:
                 "metadata": {
                     "component": {
                         "type": "application",
-                        "name": "Apxoh",
+                        "name": "GENCODE-GOV",
                         "properties": [{"name": "arkhon:commit-sha", "value": COMMIT}],
                     }
                 },

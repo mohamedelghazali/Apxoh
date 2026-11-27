@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Apxoh manifest, JSON Schemas, and rule documents.
+"""Validate the GENCODE-GOV manifest, JSON Schemas, and rule documents.
 
 Exit codes: 0 success, 1 validation errors, 2 repository/dependency failure.
 """
@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[FAIL] {exc}", file=sys.stderr)
         return 2
 
-    print(f"[INFO] Validating Apxoh at {root}")
+    print(f"[INFO] Validating GENCODE-GOV at {root}")
     errors: list[str] = []
     print("[INFO] Manifest...")
     errors.extend(validate_manifest(root))

@@ -18,7 +18,7 @@ def test_cli_inspect_text_json_and_invalid_project(tmp_path: Path, capsys, monke
     project.mkdir()
     (project / "main.py").write_text("value = 1\n", encoding="utf-8")
     (project / "data.unknownext").write_text("?", encoding="utf-8")
-    manifest = SimpleNamespace(name="Apxoh", version="1.0.0")
+    manifest = SimpleNamespace(name="GENCODE-GOV", version="1.0.0")
     monkeypatch.setattr("arkhon.config.get_manifest", lambda: manifest)
     assert main(["inspect", str(project)]) == 0
     output = capsys.readouterr().out
@@ -26,7 +26,7 @@ def test_cli_inspect_text_json_and_invalid_project(tmp_path: Path, capsys, monke
     assert "Unknown language files:" in output
     assert main(["inspect", str(project), "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
-    assert data["system"] == {"name": "Apxoh", "version": "1.0.0"}
+    assert data["system"] == {"name": "GENCODE-GOV", "version": "1.0.0"}
     assert data["profile"]["name"]
     assert main(["inspect", str(tmp_path / "missing")]) == 1
     assert "not a directory" in capsys.readouterr().err

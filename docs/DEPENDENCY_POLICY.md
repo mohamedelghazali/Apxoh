@@ -1,4 +1,4 @@
-# Apxoh Dependency Policy
+# GENCODE-GOV Dependency Policy
 
 **Version:** 1.0
 **Status:** Policy baseline — CI enforcement must be verified
@@ -10,7 +10,7 @@
 
 ## 1. Scope
 
-This policy governs all software dependencies of Apxoh:
+This policy governs all software dependencies of GENCODE-GOV:
 
 - **Direct dependencies:** declared in `pyproject.toml` under `[project.dependencies]` or `[project.optional-dependencies]`
 - **Transitive dependencies:** pulled in by direct dependencies
@@ -67,9 +67,9 @@ The supported Python interpreter range is declared separately in `requires-pytho
 
 ## 3. License Compatibility
 
-### 3.1 Apxoh's License
+### 3.1 GENCODE-GOV's License
 
-Apxoh is licensed under **MIT**.
+GENCODE-GOV is licensed under **MIT**.
 
 ### 3.2 Generally Acceptable Licenses
 
@@ -94,8 +94,8 @@ Apxoh is licensed under **MIT**.
 
 | License | Default treatment |
 | :--- | :--- |
-| GPL-2.0 | Do not include in distributed Apxoh artifacts without explicit legal approval |
-| GPL-3.0 | Do not include in distributed Apxoh artifacts without explicit legal approval |
+| GPL-2.0 | Do not include in distributed GENCODE-GOV artifacts without explicit legal approval |
+| GPL-3.0 | Do not include in distributed GENCODE-GOV artifacts without explicit legal approval |
 | AGPL-3.0 | Do not include without explicit legal approval |
 | SSPL | Do not include without explicit legal approval |
 | Proprietary / source-available | Requires documented license rights and approval |
@@ -193,7 +193,7 @@ Every update must be reviewed through a PR. Automatic merging is prohibited unle
 
 ## 7. SBOM
 
-Apxoh's target release process is to publish a CycloneDX SBOM with each release. The SBOM must be generated from the release artifact or an equivalent locked build environment, validated, and retained with that release.
+GENCODE-GOV's target release process is to publish a CycloneDX SBOM with each release. The SBOM must be generated from the release artifact or an equivalent locked build environment, validated, and retained with that release.
 
 See `docs/SUPPLY_CHAIN.md` §6. Do not describe SBOM publication as active until a release asset has been generated and verified.
 

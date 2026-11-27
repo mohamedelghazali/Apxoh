@@ -1,1 +1,1 @@
-Read repository AGENTS.md and follow ARKHON governance. Report evidence and uncertainty accurately.
+Read repository AGENTS.md and follow GENCODE-GOV governance. Report evidence and uncertainty accurately.

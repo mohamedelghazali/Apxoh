@@ -1,4 +1,4 @@
-# Apxoh — Makefile
+# GENCODE-GOV — Makefile
 # Local development and CI helpers. Targets invoke existing project tools only.
 
 .DEFAULT_GOAL := help
@@ -15,10 +15,11 @@ MYPY := $(BIN)/mypy
 PIP := $(BIN)/pip
 BANDIT := $(BIN)/bandit
 PIP_AUDIT := $(BIN)/pip-audit
-ARKHON := $(BIN)/arkhon
+GENCODE_GOV := $(BIN)/gencode-gov
+ARKHON ?= $(GENCODE_GOV)
 
 help:
-	@echo "Apxoh — available targets:"
+	@echo "GENCODE-GOV — available targets:"
 	@echo "  install             Install the package"
 	@echo "  install-dev         Install development dependencies"
 	@echo "  install-models      List registered model directories"
@@ -37,7 +38,7 @@ help:
 	@echo "  audit-all-rules     Run repository validation including all rules"
 	@echo "  verify-all          Validate and inspect the current project"
 	@echo "  verify-fixtures     Inspect and verify language fixtures"
-	@echo "  self-audit          Run Apxoh self-verification"
+	@echo "  self-audit          Run GENCODE-GOV self-verification"
 	@echo "  ci                  Run lint, typecheck, tests, and validation"
 	@echo "  release-check       Validate release metadata and CI"
 	@echo "  docs                Show documentation build status"
@@ -99,16 +100,16 @@ validate:
 	$(PYTHON) scripts/validation/validate_all.py
 
 verify-all:
-	$(ARKHON) validate
-	$(ARKHON) inspect . --json
-	$(ARKHON) verify . --domain testing
+	$(GENCODE_GOV) validate
+	$(GENCODE_GOV) inspect . --json
+	$(GENCODE_GOV) verify . --domain testing
 
 verify-fixtures:
 	@set -e; for fixture in tests/languages/fixtures/*-project; do \
 		if [ -d "$$fixture" ]; then \
 			echo "=== Inspecting $$fixture ==="; \
-			$(ARKHON) inspect "$$fixture" --json; \
-			$(ARKHON) verify "$$fixture" --domain testing; \
+			$(GENCODE_GOV) inspect "$$fixture" --json; \
+			$(GENCODE_GOV) verify "$$fixture" --domain testing; \
 		fi; \
 	done
 

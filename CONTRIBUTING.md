@@ -1,6 +1,6 @@
-# Contributing to Apxoh
+# Contributing to GENCODE-GOV
 
-Thank you for considering a contribution to Apxoh. Contributions are
+Thank you for considering a contribution to GENCODE-GOV. Contributions are
 reviewed for correctness, security, maintainability, and consistency
 with the project's governance requirements.
 
@@ -34,8 +34,8 @@ that gap rather than assuming its requirements.
 ## Development Setup
 
 ```bash
-git clone https://github.com/mohamedelghazali/Apxoh.git
-cd Apxoh
+git clone https://github.com/mohamedelghazali/GENCODE-GOV.git
+cd GENCODE-GOV
 python -m venv .venv
 ```
 
@@ -66,7 +66,7 @@ pre-commit install
 Verify setup using the commands supported by the current checkout:
 
 ```bash
-arkhon doctor
+gencode-gov doctor
 pytest
 ```
 
@@ -103,7 +103,7 @@ The repository may configure checks such as:
 - Ruff linting and formatting.
 - Mypy type checking.
 - Pytest on supported Python versions.
-- `arkhon validate`.
+- `gencode-gov validate`.
 - Dependency vulnerability auditing.
 - Secret scanning.
 - Container and workflow security scanning.

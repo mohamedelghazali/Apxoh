@@ -44,6 +44,6 @@ rule_domains_supported:
   - release
 
 notes: |
-  Ruby projects must use a Gemfile.lock. Apxoh checks that the lock file is
+  Ruby projects must use a Gemfile.lock. GENCODE-GOV checks that the lock file is
   committed, and that bundle install --deployment succeeds (i.e., the
   lock file matches the Gemfile).

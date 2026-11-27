@@ -1,6 +1,6 @@
 # Go Fixture Project
 
-Minimal Go module for Apxoh's language detection tests.
+Minimal Go module for GENCODE-GOV's language detection tests.
 
 - `calc.go` — calculator
 - `calc_test.go` — go test

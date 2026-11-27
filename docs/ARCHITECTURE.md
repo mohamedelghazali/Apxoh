@@ -1,24 +1,24 @@
-# Apxoh Architecture
+# GENCODE-GOV Architecture
 
 **Version:** 1.0
 **Status:** Active
 **Last updated:** 2026-11-01
 
-This document is the quick entry point for understanding Apxoh's architecture. Deep details live in `docs/architecture/`.
+This document is the quick entry point for understanding GENCODE-GOV's architecture. Deep details live in `docs/architecture/`.
 
 ---
 
 ## The 30-Second Overview
 
-Apxoh is a **software engineering governance and assurance system**.
+GENCODE-GOV is a **software engineering governance and assurance system**.
 
 It sits between AI-generated code and production release.
 
 ```
-AI Agent  →  writes code  →  Apxoh verifies  →  Release decision
+AI Agent  →  writes code  →  GENCODE-GOV verifies  →  Release decision
 ```
 
-The agent produces. Apxoh decides.
+The agent produces. GENCODE-GOV decides.
 
 ---
 
@@ -27,7 +27,7 @@ The agent produces. Apxoh decides.
 | Product | What it does | Where |
 | :--- | :--- | :--- |
 | **Core** | Runs rules, evaluates policies, verifies evidence | `src/arkhon/` |
-| **Agent Governance** | Tells AI agents how to behave under Apxoh | `AGENTS.md`, `skills/`, `agents/`, `integrations/` |
+| **Agent Governance** | Tells AI agents how to behave under GENCODE-GOV | `AGENTS.md`, `skills/`, `agents/`, `integrations/` |
 | **Assurance** | Independent verification and release gating | `src/arkhon/verification/`, `src/arkhon/assessment/` |
 
 ---
@@ -70,9 +70,9 @@ No layer trusts the layer above. Each verifies independently.
 
 ## The Security Authority: TSAR
 
-Apxoh delegates all **security, vulnerability, encryption, and hardening** decisions to **TSAR**:
+GENCODE-GOV delegates all **security, vulnerability, encryption, and hardening** decisions to **TSAR**:
 
-| Apxoh decides | TSAR decides |
+| GENCODE-GOV decides | TSAR decides |
 | :--- | :--- |
 | *When* security must be verified | *How* security is verified |
 | *Whether* evidence closes a gate | *What* the evidence says |
@@ -81,13 +81,13 @@ Apxoh delegates all **security, vulnerability, encryption, and hardening** decis
 If TSAR is unavailable → security gate is `BLOCKED`, never `PASS`.
 
 Contract: `integrations/tsar/contract.yaml`
-Threat model: `docs/threat-model/ARKHON_THREAT_MODEL.md` §4.2
+Threat model: `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` §4.2
 
 ---
 
 ## The 8 Model Integrations
 
-Apxoh supports these AI models:
+GENCODE-GOV supports these AI models:
 
 | Model | Provider | Governance injection |
 | :--- | :--- | :--- |
@@ -108,11 +108,11 @@ Registry: `manifest/integrations.yaml`
 
 ## The 9 Languages
 
-Apxoh analyzes and verifies projects written in:
+GENCODE-GOV analyzes and verifies projects written in:
 
 Python, JavaScript, TypeScript, Java, C#, C++, Go, Rust, Ruby.
 
-Apxoh's engine is Python; the target languages are verified, not executed.
+GENCODE-GOV's engine is Python; the target languages are verified, not executed.
 
 Registry: `languages/registry.yaml`, `manifest/languages.yaml`
 
@@ -139,17 +139,17 @@ Each stage has entry criteria, exit criteria, and a gate. No stage can be skippe
 
 ## The 5 Verification Levels
 
-Used to describe how deeply Apxoh has verified an integration:
+Used to describe how deeply GENCODE-GOV has verified an integration:
 
 | Level | Meaning |
 | :--- | :--- |
 | Installed | Files present |
 | Discoverable | Agent can locate skills |
 | Activated | Instructions loaded |
-| Configured | Agent bound to Apxoh |
+| Configured | Agent bound to GENCODE-GOV |
 | Verified | Behavioral verification passed |
 
-Only `Verified` proves the agent obeys Apxoh. Copilot's max is `Configured`.
+Only `Verified` proves the agent obeys GENCODE-GOV. Copilot's max is `Configured`.
 
 ---
 
@@ -170,7 +170,7 @@ Only `Verified` proves the agent obeys Apxoh. Copilot's max is `Configured`.
 | `tools/` | External tool bindings + signing |
 | `tests/` | Test suite |
 | `docs/` | Documentation |
-| `.arkhon/` | Apxoh's own governance state |
+| `.arkhon/` | GENCODE-GOV's own governance state |
 | `.github/` | CI workflows, CODEOWNERS, dependabot |
 
 ---
@@ -179,18 +179,18 @@ Only `Verified` proves the agent obeys Apxoh. Copilot's max is `Configured`.
 
 | If you want to know… | Read… |
 | :--- | :--- |
-| The threats Apxoh defends against | `docs/threat-model/ARKHON_THREAT_MODEL.md` |
-| How Apxoh treats AI agents | `SECURITY_AGENTS.md` |
+| The threats GENCODE-GOV defends against | `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` |
+| How GENCODE-GOV treats AI agents | `SECURITY_AGENTS.md` |
 | Supply chain policy | `docs/SUPPLY_CHAIN.md` |
 | How to write a rule | `docs/rule-authoring/HOW_TO_WRITE_A_RULE.md` |
 | How to add an integration | `docs/integrations/` |
 | How evidence is stored and verified | `docs/EVIDENCE_INTEGRITY.md` |
 | The release decision model | `reports/templates/engineering-quality/` |
 | How to contribute | `CONTRIBUTING.md` |
-| How Apxoh governs itself | `.arkhon/project.yaml` |
+| How GENCODE-GOV governs itself | `.arkhon/project.yaml` |
 
 ---
 
 ## The One-Sentence Summary
 
-Apxoh ensures that **no software is released without evidence, no evidence is accepted without verification, and no verification happens without independence.**
+GENCODE-GOV ensures that **no software is released without evidence, no evidence is accepted without verification, and no verification happens without independence.**

@@ -1,4 +1,4 @@
-# Apxoh Supply Chain Security Policy
+# GENCODE-GOV Supply Chain Security Policy
 
 **Version:** 1.0
 **Status:** Operational controls implemented; release-specific SLSA/Sigstore evidence is verified per tagged release
@@ -10,7 +10,7 @@
 
 ## 1. Scope
 
-This policy covers every artifact, dependency, and process that contributes to an Apxoh release:
+This policy covers every artifact, dependency, and process that contributes to a GENCODE-GOV release:
 
 - **Source:** repository code, rules, schemas, documentation
 - **Build:** Python build chain (`setuptools`, `wheel`, `build`)
@@ -25,7 +25,7 @@ The security of AI model providers is managed through the model integration cont
 
 ## 2. Threat Model
 
-Apxoh's supply chain is exposed to:
+GENCODE-GOV's supply chain is exposed to:
 
 | Threat | Potential impact | Likelihood |
 | :--- | :--- | :--- |
@@ -39,7 +39,7 @@ Apxoh's supply chain is exposed to:
 
 Likelihood values are qualitative planning estimates and must be revisited using repository and deployment evidence.
 
-Full threat details: `docs/threat-model/ARKHON_THREAT_MODEL.md`.
+Full threat details: `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md`.
 
 ---
 
@@ -47,7 +47,7 @@ Full threat details: `docs/threat-model/ARKHON_THREAT_MODEL.md`.
 
 ### 3.1 Target: SLSA Build Level 3
 
-Apxoh targets **SLSA Build Level 3** for release artifacts. A target is not a conformance claim. The release process must be assessed against the applicable SLSA requirements before claiming a level.
+GENCODE-GOV targets **SLSA Build Level 3** for release artifacts. A target is not a conformance claim. The release process must be assessed against the applicable SLSA requirements before claiming a level.
 
 | Requirement area | Intended implementation | Verification required |
 | :--- | :--- | :--- |
@@ -58,11 +58,11 @@ Apxoh targets **SLSA Build Level 3** for release artifacts. A target is not a co
 | Signing | Sigstore-backed provenance | Verify issuer, identity, and signature |
 | Publication | Release-attached provenance | Inspect an actual published release |
 
-The release workflow now stages signed build outputs in a draft GitHub release before generating provenance. The release remains a draft; it must not be published until the workflow's signature, provenance, and Apxoh evidence-verification job succeeds. The presence of a workflow file alone does not establish that provenance was generated, signed, published, or successfully verified.
+The release workflow now stages signed build outputs in a draft GitHub release before generating provenance. The release remains a draft; it must not be published until the workflow's signature, provenance, and GENCODE-GOV evidence-verification job succeeds. The presence of a workflow file alone does not establish that provenance was generated, signed, published, or successfully verified.
 
 ### 3.2 Reproducible Builds
 
-Apxoh does not currently claim bit-for-bit reproducible builds. Reproducibility remains a separate engineering objective. Provenance can bind an artifact to declared source and build inputs, but it does not by itself prove reproducibility or that the build is benign.
+GENCODE-GOV does not currently claim bit-for-bit reproducible builds. Reproducibility remains a separate engineering objective. Provenance can bind an artifact to declared source and build inputs, but it does not by itself prove reproducibility or that the build is benign.
 
 ### 3.3 Build Environment
 
@@ -120,14 +120,14 @@ Do not use hash-enforcement flags unless the dependency input file actually cont
 
 ### 4.4 License Compatibility
 
-Apxoh is licensed under MIT. Dependency license decisions require package-specific legal and distribution review. The following is a screening policy, not legal advice:
+GENCODE-GOV is licensed under MIT. Dependency license decisions require package-specific legal and distribution review. The following is a screening policy, not legal advice:
 
 | License family | Default treatment |
 | :--- | :--- |
 | MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, PSF/Python-2.0 | Generally acceptable; preserve required notices |
 | MPL-2.0 | Review file-level copyleft obligations and distribution model |
 | LGPL-2.1 / LGPL-3.0 | Legal review required; comply with relinking and notice obligations |
-| GPL-2.0 / GPL-3.0 | Do not include in distributed Apxoh artifacts without explicit legal approval |
+| GPL-2.0 / GPL-3.0 | Do not include in distributed GENCODE-GOV artifacts without explicit legal approval |
 | AGPL-3.0 | Do not include without explicit legal approval |
 | SSPL and other non-OSI or source-available terms | Do not include without explicit legal approval |
 | Proprietary | Requires explicit license rights and approval |
@@ -167,13 +167,13 @@ Consumers should follow the verification instructions published for the specific
 
 ```bash
 # Download the assets for a specific release.
-gh release download v0.1.0 --repo mohamedelghazali/Apxoh
+gh release download v0.1.0 --repo mohamedelghazali/GENCODE-GOV
 
 # Verify the artifact using the matching SLSA verifier and provenance.
 slsa-verifier verify-artifact \
-  arkhon-0.1.0-py3-none-any.whl \
+  gencode_gov-0.1.0-py3-none-any.whl \
   --provenance-path multiple.intoto.jsonl \
-  --source-uri github.com/mohamedelghazali/Apxoh
+  --source-uri github.com/mohamedelghazali/GENCODE-GOV
 ```
 
 Evidence-bundle verification must use the identity and OIDC issuer documented for the actual signer. Do not reuse a release-workflow identity for evidence unless that is the real signing identity.

@@ -1,4 +1,4 @@
-# Apxoh agent role bindings.
+# GENCODE-GOV agent role bindings.
 # Roles reference skills and rule domains; this file is declarative and
 # does not itself enforce runtime permissions.
 

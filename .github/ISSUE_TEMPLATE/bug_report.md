@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a defect in Apxoh
+about: Report a defect in GENCODE-GOV
 title: "[BUG] "
 labels: bug
 ---
@@ -21,7 +21,7 @@ labels: bug
 
 ## Environment
 
-- Apxoh version (`arkhon version`):
+- GENCODE-GOV version (`gencode-gov version`):
 - Python version:
 - OS:
 - TSAR version (if relevant):

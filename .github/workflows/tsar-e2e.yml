@@ -12,10 +12,10 @@ permissions:
 
 jobs:
   tsar-e2e:
-    name: Real TSAR CLI scan and Apxoh evidence verification
+    name: Real TSAR CLI scan and GENCODE-GOV evidence verification
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Apxoh
+      - name: Checkout GENCODE-GOV
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
@@ -30,17 +30,17 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install Apxoh and pinned TSAR CLI
+      - name: Install GENCODE-GOV and pinned TSAR CLI
         run: |
           python -m pip install -e ".[dev]"
           python -m pip install -e ./tsar/tools/tsar-cli
-      - name: Execute real TSAR scan through Apxoh
+      - name: Execute real TSAR scan through GENCODE-GOV
         shell: bash
         run: |
           set -euo pipefail
           fixture="$(mktemp -d)"
           git -C "$fixture" init -q
-          git -C "$fixture" config user.name "Apxoh CI"
+          git -C "$fixture" config user.name "GENCODE-GOV CI"
           git -C "$fixture" config user.email "ci@example.invalid"
           printf 'print("clean fixture")\n' > "$fixture/app.py"
           git -C "$fixture" add app.py

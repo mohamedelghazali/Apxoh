@@ -1,7 +1,7 @@
 # rules/software-security
 
 This domain contains versioned, scoped security requirements for software governed by
-Apxoh. Agents MUST load applicable SE-SEC-* rules before implementation, security
+GENCODE-GOV. Agents MUST load applicable SE-SEC-* rules before implementation, security
 review, deployment, or release. Rules describe target-project controls; their presence
 does not prove that a scanner or runtime enforcement mechanism executed.
 

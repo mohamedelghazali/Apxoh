@@ -1,4 +1,4 @@
-# Apxoh <-> TSAR integration contract, aligned with the released TSAR CLI.
+# GENCODE-GOV <-> TSAR integration contract, aligned with the released TSAR CLI.
 version: "1.1.0"
 status: implemented-contract
 relation: consumer-provider
@@ -13,7 +13,7 @@ provider:
     - secret_scanning
     - static_security_review
 consumer:
-  name: Apxoh
+  name: GENCODE-GOV
   identifier: arkhon
   role: "Governance and release decision authority"
   owns: [security_policy, gate_placement, evidence_acceptance, release_decision]

@@ -1,11 +1,11 @@
 # Enterprise System Example
 
-A minimal Java enterprise-style service governed by Apxoh.
+A minimal Java enterprise-style service governed by GENCODE-GOV.
 
 Demonstrates:
 - Maven project structure
 - JUnit 5 tests
-- Apxoh profile: `enterprise`
+- GENCODE-GOV profile: `enterprise`
 - Full gate coverage (requirements, testing, security, release)
 
 ## Structure
@@ -28,10 +28,10 @@ mvn -B test
 mvn -B package
 ```
 
-## Apxoh
+## GENCODE-GOV
 
 ```bash
-arkhon verify examples/enterprise-system --domain testing
+gencode-gov verify examples/enterprise-system --domain testing
 ```
 
 Security remains `BLOCKED` until required TSAR evidence is available; release remains blocked until the required PRR evidence exists.

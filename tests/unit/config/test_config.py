@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_find_repo_root_from_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("APXOH_ROOT", str(tmp_path))
+    monkeypatch.setenv("GENCODE_GOV_ROOT", str(tmp_path))
     (tmp_path / "manifest").mkdir()
     (tmp_path / "manifest" / "index.yaml").write_text("x: 1\\n", encoding="utf-8")
     assert find_repo_root() == tmp_path
@@ -27,8 +27,8 @@ def test_find_repo_root_from_file() -> None:
 def test_load_manifest_returns_all_sections() -> None:
     manifest = load_manifest()
     assert isinstance(manifest, Manifest)
-    assert manifest.name == "Apxoh"
-    assert manifest.identifier == "arkhon"
+    assert manifest.name == "GENCODE-GOV"
+    assert manifest.identifier == "gencode-gov"
     assert manifest.version == "0.1.0"
 
 

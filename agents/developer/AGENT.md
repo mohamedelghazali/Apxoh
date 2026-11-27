@@ -1,6 +1,6 @@
 # developer
 
-Mission: perform the developer role under ARKHON governance.
+Mission: perform the developer role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

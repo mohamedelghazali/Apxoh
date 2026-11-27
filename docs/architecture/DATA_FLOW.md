@@ -1,4 +1,4 @@
-# Apxoh Data Flow
+# GENCODE-GOV Data Flow
 
 **Version:** 1.0
 **Status:** Active — architectural specification; implementation status must be verified.
@@ -17,7 +17,7 @@ Developer / AI Agent
    │ Project │
    └────┬────┘
         │
-        │  `arkhon verify`
+        │  `gencode-gov verify`
         ▼
    ┌──────────────┐
    │ Verification │
@@ -31,14 +31,14 @@ Developer / AI Agent
    │    Store     │
    └──────┬───────┘
           │
-          │  `arkhon assess`
+          │  `gencode-gov assess`
           ▼
    ┌──────────────┐
    │  Assessment  │
    │   Engine     │
    └──────┬───────┘
           │
-          │  `arkhon report`
+          │  `gencode-gov report`
           ▼
    ┌──────────────┐
    │    Report    │
@@ -53,7 +53,7 @@ runner, signer, verifier, CLI command, or storage control is implemented.
 ## 2. Verification Flow (Detailed)
 
 ```
-1. CLI invoked: arkhon verify --domain testing
+1. CLI invoked: gencode-gov verify --domain testing
         │
         ▼
 2. Load manifest + rules + profile
@@ -161,7 +161,7 @@ required evidence or a required verification tool must remain BLOCKED.
 ## 5. TSAR Integration Flow
 
 ```
-Apxoh                           TSAR
+GENCODE-GOV                           TSAR
   │                              │
   │  invoke configured contract  │
   ├─────────────────────────────▶│
@@ -251,7 +251,7 @@ schema and templates.
 ## 8. Agent Interaction Flow
 
 ```
-AI Agent                      Apxoh
+AI Agent                      GENCODE-GOV
    │                            │
    │  reads governance guidance │
    │                            │
@@ -269,7 +269,7 @@ AI Agent                      Apxoh
    ▼                            ▼
 ```
 
-An agent's statement is not a verification result. Apxoh must rely on
+An agent's statement is not a verification result. GENCODE-GOV must rely on
 independently executed tools and validated evidence artifacts.
 
 ---
@@ -279,12 +279,12 @@ independently executed tools and validated evidence artifacts.
 | Boundary | Crossing | Intended control |
 | :--- | :--- | :--- |
 | Agent → Code | Agent writes files | Governance-file protection and review |
-| Code → Verification | Apxoh reads code | Independent configured runners |
+| Code → Verification | GENCODE-GOV reads code | Independent configured runners |
 | Verification → Evidence | Runner produces artifact | Hashing and schema validation |
 | Evidence → Gate | Assessment reads evidence | Contract, commit, and freshness verification |
 | Gate → Release | Human reviews | Recorded approval and configured authorization |
-| Apxoh → TSAR | Apxoh calls TSAR | Versioned integration contract |
-| TSAR → Apxoh | TSAR returns evidence | Independent evidence verification |
+| GENCODE-GOV → TSAR | GENCODE-GOV calls TSAR | Versioned integration contract |
+| TSAR → GENCODE-GOV | TSAR returns evidence | Independent evidence verification |
 
 A listed control is an architectural requirement, not proof that the
 control is deployed or effective.

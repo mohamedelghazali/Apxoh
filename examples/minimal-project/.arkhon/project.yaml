@@ -1,11 +1,11 @@
-# Apxoh project declaration.
+# GENCODE-GOV project declaration.
 project:
   name: "minimal-project"
   identifier: minimal-project
   type: library
   profile: universal
   risk_level: low
-  description: "Small Python project used to demonstrate Apxoh workflows."
+  description: "Small Python project used to demonstrate GENCODE-GOV workflows."
 
 languages:
   primary: python

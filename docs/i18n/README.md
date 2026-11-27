@@ -8,7 +8,7 @@
 
 ## 1. Policy
 
-Apxoh's authoritative repository language is English, as declared in `manifest/system.yaml`. Arabic companion documents may be maintained under `docs/i18n/ar/`; they do not replace or silently override the English source.
+GENCODE-GOV's authoritative repository language is English, as declared in `manifest/system.yaml`. Arabic companion documents may be maintained under `docs/i18n/ar/`; they do not replace or silently override the English source.
 
 The policy supports consistent rule interpretation, standards references, and collaboration across contributors. Translations improve accessibility for readers while preserving one authoritative wording for governance requirements.
 

@@ -1,4 +1,4 @@
-# Apxoh System Overview
+# GENCODE-GOV System Overview
 
 **Version:** 1.1  
 **Status:** Active  
@@ -6,9 +6,9 @@
 
 ---
 
-## 1. What Apxoh Is
+## 1. What GENCODE-GOV Is
 
-Apxoh is a **Software Engineering Governance & Assurance System**.
+GENCODE-GOV is a **Software Engineering Governance & Assurance System**.
 
 It exists to answer one question with verifiable evidence:
 
@@ -30,9 +30,9 @@ Not with opinion. Not with a claim. With evidence.
 
 | Product | Role |
 | :--- | :--- |
-| **Apxoh Core** | Local governance and verification engine (Python, CLI) |
-| **Apxoh Agent Governance** | Instructions, skills, and integration guidance for AI coding agents |
-| **Apxoh Assurance** | Independent verification, evidence evaluation, and release gating |
+| **GENCODE-GOV Core** | Local governance and verification engine (Python, CLI) |
+| **GENCODE-GOV Agent Governance** | Instructions, skills, and integration guidance for AI coding agents |
+| **GENCODE-GOV Assurance** | Independent verification, evidence evaluation, and release gating |
 
 All three are defined in the same repository and share the engineering charter and manifest. Their implementation status must be assessed from code and execution evidence, not from this product description alone.
 
@@ -42,9 +42,9 @@ All three are defined in the same repository and share the engineering charter a
 
 These are working product-planning personas derived from the current product scope. They are not claims of completed user research or validated market segmentation.
 
-| Persona | Primary need | Apxoh touchpoint |
+| Persona | Primary need | GENCODE-GOV touchpoint |
 | :--- | :--- | :--- |
-| **Software developer / maintainer** | Understand requirements, run local checks, resolve findings, and prepare changes | Apxoh Core, rules, CLI, reports |
+| **Software developer / maintainer** | Understand requirements, run local checks, resolve findings, and prepare changes | GENCODE-GOV Core, rules, CLI, reports |
 | **AI coding agent** | Discover project rules, follow role/skill guidance, and provide work that can be independently checked | Agent Governance, skills, agent integrations |
 | **Reviewer / software architect** | Evaluate requirements, design decisions, code changes, and supporting evidence | ADRs, rule catalog, review workflows |
 | **Assurance / release decision-maker** | Determine whether required checks and evidence support a release decision | Verification, evidence, assessment, gates |
@@ -126,7 +126,7 @@ If TSAR or required evidence is unavailable, the applicable required security ga
 
 Python, JavaScript, TypeScript, Java, C#, C++, Go, Rust, and Ruby.
 
-Apxoh's engine is Python. The language registry declares supported targets, but registry presence alone does not prove that every profile, external toolchain, or fixture has been fully implemented and executed.
+GENCODE-GOV's engine is Python. The language registry declares supported targets, but registry presence alone does not prove that every profile, external toolchain, or fixture has been fully implemented and executed.
 
 ---
 
@@ -138,7 +138,7 @@ The scoring model and thresholds are defined by the active configuration and pol
 
 ## 10. The Security Authority: TSAR
 
-Security checks delegated by the Apxoh integration contract are handled by TSAR. The documented scope includes vulnerability scanning, cryptographic audit, secret scanning, ASVS-related evidence, and dependency vulnerability checks, subject to the current contract.
+Security checks delegated by the GENCODE-GOV integration contract are handled by TSAR. The documented scope includes vulnerability scanning, cryptographic audit, secret scanning, ASVS-related evidence, and dependency vulnerability checks, subject to the current contract.
 
 The repository contains an adapter, verifier, and proposed contract. Their presence does not prove that an external TSAR installation is available in a deployment. If the required authority or its evidence is unavailable, the relevant security gate is BLOCKED.
 
@@ -159,20 +159,20 @@ A digest detects a mismatch against recorded bytes; it does not establish who pr
 
 ---
 
-## 12. What Apxoh Is Not
+## 12. What GENCODE-GOV Is Not
 
 - Not a prompt library.
 - Not a linter alone.
 - Not a replacement for human engineering judgment.
 - Not a certificate from any standards body.
 
-Apxoh is intended to provide a governance and assurance layer between software development—including AI-assisted development—and production release.
+GENCODE-GOV is intended to provide a governance and assurance layer between software development—including AI-assisted development—and production release.
 
 ---
 
 ## 13. The One-Sentence Summary
 
-Apxoh aims to ensure that **software release decisions are supported by evidence, that evidence is independently checked, and that missing verification is not mistaken for success.**
+GENCODE-GOV aims to ensure that **software release decisions are supported by evidence, that evidence is independently checked, and that missing verification is not mistaken for success.**
 
 ---
 

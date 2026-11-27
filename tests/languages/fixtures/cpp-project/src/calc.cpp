@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace apxoh {
+namespace gencode_gov {
 
 int add(int a, int b) { return a + b; }
 
@@ -13,4 +13,4 @@ int divide(int a, int b) {
     return a / b;
 }
 
-}  // namespace apxoh
+}  // namespace gencode_gov

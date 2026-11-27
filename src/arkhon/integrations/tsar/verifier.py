@@ -1,4 +1,4 @@
-"""Validate TSAR evidence against Apxoh's trust contract.
+"""Validate TSAR evidence against GENCODE-GOV's trust contract.
 
 No TSAR status is trusted until commit, version, timestamp, required rules,
 artifact paths, and SHA-256 digests have been checked.

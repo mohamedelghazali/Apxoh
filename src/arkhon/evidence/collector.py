@@ -1,4 +1,4 @@
-"""Evidence collection for Apxoh.
+"""Evidence collection for GENCODE-GOV.
 
 The collector records outputs produced by independent tools, computes integrity
 hashes, and writes evidence bundles in the shape defined by the evidence schema.

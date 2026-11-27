@@ -1,4 +1,4 @@
-"""Apxoh lifecycle.
+"""GENCODE-GOV lifecycle.
 
 The lifecycle is the ordered set of stages a governed project passes
 through. Each stage has entry criteria, exit criteria, and a gate.

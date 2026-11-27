@@ -27,7 +27,7 @@ def _is_valid_agent_id(agent_id: str) -> bool:
 
 
 class AuditRole(StrEnum):
-    """Canonical specialist roles for Apxoh security audit workflows."""
+    """Canonical specialist roles for GENCODE-GOV security audit workflows."""
 
     RECONNAISSANCE = "security-reconnaissance-agent"
     HUNTER = "security-hunter"

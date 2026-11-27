@@ -2,13 +2,13 @@
 
 ## Purpose
 
-This guide documents the current ARKHON foundation and its verified limits.
+This guide documents the current GENCODE-GOV foundation and its verified limits.
 
 ## Procedure
 
 1. Use Python 3.11 or newer in an isolated environment.
 2. Install the project and development dependencies using the documented package metadata.
-3. Run `arkhon version`, `arkhon doctor`, and `pytest`.
+3. Run `gencode-gov version`, `gencode-gov doctor`, and `pytest`.
 4. Inspect the output and preserve logs as evidence where appropriate.
 5. Treat missing dependencies, unavailable agent features, and incomplete integrations as BLOCKED.
 

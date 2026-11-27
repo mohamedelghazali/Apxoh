@@ -1,12 +1,12 @@
 # Minimal Project
 
-**A compact example project for demonstrating Apxoh governance workflows.**
+**A compact example project for demonstrating GENCODE-GOV governance workflows.**
 
 This example demonstrates:
-- How to declare a project to Apxoh
+- How to declare a project to GENCODE-GOV
 - How to write a small, typed Python module
 - How to add focused unit tests
-- How to inspect and verify a project, subject to the commands supported by the installed Apxoh version
+- How to inspect and verify a project, subject to the commands supported by the installed GENCODE-GOV version
 
 ## What's Inside
 
@@ -22,13 +22,13 @@ minimal-project/
 └── README.md
 ```
 
-## Running Apxoh on It
+## Running GENCODE-GOV on It
 
-From the Apxoh repository root, use the commands supported by the current CLI:
+From the GENCODE-GOV repository root, use the commands supported by the current CLI:
 
 ```bash
-arkhon inspect examples/minimal-project
-arkhon verify examples/minimal-project --domain testing
+gencode-gov inspect examples/minimal-project
+gencode-gov verify examples/minimal-project --domain testing
 ```
 
 Assessment and report commands should be used only when present in the installed CLI; their availability is not asserted by this example.

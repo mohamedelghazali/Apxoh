@@ -1,4 +1,4 @@
-"""CLI subcommand dispatcher for Apxoh Security Audit operations."""
+"""CLI subcommand dispatcher for GENCODE-GOV Security Audit operations."""
 
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ SECURITY_AUDIT_ACTIONS = frozenset(
 
 
 def _default_output_dir(project: Path, run_id: str) -> Path:
-    return (Path.home() / ".arkhon-security-audits" / project.name / run_id).resolve()
+    return (Path.home() / ".gencode-gov-security-audits" / project.name / run_id).resolve()
 
 
 def _resolve_output_dir(args: argparse.Namespace, project: Path, run_id: str) -> Path:
@@ -162,7 +162,10 @@ def dispatch_security_audit(
         if action == "resume":
             raw_audit_dir = getattr(args, "audit_dir", None)
             if not raw_audit_dir:
-                print("[FAIL] --audit-dir is required for 'arkhon audit resume'", file=sys.stderr)
+                print(
+            "[FAIL] --audit-dir is required for 'gencode-gov audit resume'",
+            file=sys.stderr,
+        )
                 return 1
             out_dir = Path(raw_audit_dir).resolve()
             if not (out_dir / CHECKPOINT_FILENAME).is_file():
@@ -311,7 +314,10 @@ def dispatch_security_audit(
     if action in {"status", "coverage", "validate", "verify-findings", "report"}:
         raw_audit_dir = getattr(args, "audit_dir", None)
         if not raw_audit_dir:
-            print(f"[FAIL] --audit-dir is required for 'arkhon audit {action}'", file=sys.stderr)
+            print(
+            f"[FAIL] --audit-dir is required for 'gencode-gov audit {action}'",
+            file=sys.stderr,
+        )
             return 1
         audit_dir = Path(raw_audit_dir).resolve()
 
@@ -412,7 +418,7 @@ def dispatch_security_audit(
     # action == "reassess"
     prior_raw = getattr(args, "prior_dir", None)
     if not prior_raw:
-        print("[FAIL] --prior-dir is required for 'arkhon audit reassess'", file=sys.stderr)
+        print("[FAIL] --prior-dir is required for 'gencode-gov audit reassess'", file=sys.stderr)
         return 1
     out_dir = _resolve_output_dir(args, project, run_id)
     head_sha = getattr(args, "head_commit", None) or commit_sha

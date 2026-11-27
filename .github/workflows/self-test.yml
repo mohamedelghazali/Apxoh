@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   self-governance:
-    name: Apxoh governs itself
+    name: GENCODE-GOV governs itself
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -26,20 +26,20 @@ jobs:
       - name: Verify .arkhon/config.yaml exists
         run: test -f .arkhon/config.yaml
 
-      - name: Run Apxoh doctor
-        run: arkhon doctor || true
+      - name: Run GENCODE-GOV doctor
+        run: gencode-gov doctor || true
 
       - name: Verify validation module import
         run: python -c "from scripts.validation.validate_all import main; print('validation import OK')"
 
-      - name: Run Apxoh validate
-        run: arkhon validate
+      - name: Run GENCODE-GOV validate
+        run: gencode-gov validate
 
-      - name: Run Apxoh inspect on itself
-        run: arkhon inspect . --json > /tmp/inspect.json && cat /tmp/inspect.json
+      - name: Run GENCODE-GOV inspect on itself
+        run: gencode-gov inspect . --json > /tmp/inspect.json && cat /tmp/inspect.json
 
-      - name: Run Apxoh verify --domain testing
-        run: arkhon verify . --domain testing || true
+      - name: Run GENCODE-GOV verify --domain testing
+        run: gencode-gov verify . --domain testing || true
 
       - name: Upload inspection artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

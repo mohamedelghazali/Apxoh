@@ -1,4 +1,4 @@
-"""Load and validate the Apxoh engineering charter."""
+"""Load and validate the GENCODE-GOV engineering charter."""
 
 from __future__ import annotations
 

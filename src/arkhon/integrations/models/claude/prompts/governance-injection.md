@@ -38,7 +38,7 @@ Remember:
 
 Claude's instruction hierarchy places the system prompt above user
 messages, and user messages above tool output. By marking untrusted
-content as such, we align the model's interpretation with Apxoh's
+content as such, we align the model's interpretation with GENCODE-GOV's
 security model.
 
-This is not a guarantee. Apxoh verifies the model's output independently.
+This is not a guarantee. GENCODE-GOV verifies the model's output independently.

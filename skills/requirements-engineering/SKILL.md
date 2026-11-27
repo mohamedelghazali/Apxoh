@@ -43,7 +43,7 @@ Collect  →  Clarify  →  Specify  →  Validate  →  Baseline  →  Track
 - A `validation-report` confirming that no requirement is unverified.
 - Cross-references to the design and tests that satisfy each requirement.
 
-## Interaction with Apxoh
+## Interaction with GENCODE-GOV
 
 - Rule domain: `requirements`
 - Gate: `requirements_gate`

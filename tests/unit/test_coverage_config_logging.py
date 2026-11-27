@@ -31,6 +31,7 @@ def test_find_repo_root_handles_filesystem_root_without_manifest(
         def is_file(self) -> bool:
             return False
 
+    monkeypatch.delenv("GENCODE_GOV_ROOT", raising=False)
     monkeypatch.delenv("APXOH_ROOT", raising=False)
     monkeypatch.setattr("arkhon.config.Path", RootPath)
     with pytest.raises(ManifestError, match="Could not locate"):

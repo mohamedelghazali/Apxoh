@@ -2,7 +2,7 @@
 name: application-security
 description: >
   Threat-model, implement, test, and verify application security controls for
-  AI-generated software using Apxoh's security rules and evidence requirements.
+  AI-generated software using GENCODE-GOV's security rules and evidence requirements.
 version: 1.1.0
 applicable_to: [web-application, api-service, mobile-application, distributed-system, enterprise]
 requires: [arkhon-governance, secure-software-engineering]
@@ -69,6 +69,6 @@ manufacture PASS.
 ## Coverage-Led Security Audit Integration
 
 For comprehensive source audits, load the `security-audit` skill and run
-`arkhon audit plan`, `arkhon audit run`, `arkhon audit validate`, and
-`arkhon audit reassess` so coverage units, independent verification provenance,
+`gencode-gov audit plan`, `gencode-gov audit run`, `gencode-gov audit validate`, and
+`gencode-gov audit reassess` so coverage units, independent verification provenance,
 and `needs_validation` blockers are tracked deterministically.

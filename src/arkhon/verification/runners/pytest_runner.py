@@ -35,7 +35,7 @@ class PytestRunner(Runner):
                 outcome=RunnerOutcome.BLOCKED,
                 reason="project has no tests/ directory",
             )
-        with tempfile.TemporaryDirectory(prefix="apxoh-pytest-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="gencode-gov-pytest-") as tmp:
             junit = Path(tmp) / "pytest.xml"
             command = [
                 sys.executable,

@@ -1,3 +1,3 @@
-module github.com/mohamedelghazali/apxoh-example-api
+module github.com/mohamedelghazali/gencode-gov-example-api
 
 go 1.22

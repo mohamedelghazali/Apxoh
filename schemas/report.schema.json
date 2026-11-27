@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apxoh.dev/schemas/report/1.0.0",
-  "title": "Apxoh Report",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/report/1.0.0",
+  "title": "GENCODE-GOV Report",
   "description": "A complete engineering-quality report for a specific commit.",
   "type": "object",
   "required": [
@@ -28,6 +28,9 @@
     "generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "gencode_gov_version": {
+      "type": "string"
     },
     "apxoh_version": {
       "type": "string"

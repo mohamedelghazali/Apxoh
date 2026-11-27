@@ -1,4 +1,4 @@
-# Apxoh Agent Compatibility Matrix
+# GENCODE-GOV Agent Compatibility Matrix
 
 **Version:** 1.2  
 **Status:** Evidence-conscious inventory; no provider-wide behavioral verification is claimed  
@@ -25,7 +25,7 @@ The repository's structural contract tests are under `tests/integration/models/`
 
 | Platform | Provider | Declared in manifest | Runtime adapter | Evidence-backed adoption level | Notes |
 | :--- | :--- | :---: | :--- | :--- | :--- |
-| GitHub Copilot | GitHub / Microsoft | Yes | `src/arkhon/integrations/platforms/github_copilot/` | Installed/configuration file only; external activation unverified | Apxoh cannot pin or observe the model selected internally by the platform |
+| GitHub Copilot | GitHub / Microsoft | Yes | `src/arkhon/integrations/platforms/github_copilot/` | Installed/configuration file only; external activation unverified | GENCODE-GOV cannot pin or observe the model selected internally by the platform |
 
 The Copilot adapter installs a project instruction file and verifies its exact content. It does not connect to Copilot or prove that Copilot loaded or followed the instructions.
 

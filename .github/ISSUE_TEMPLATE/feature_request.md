@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new capability for Apxoh
+about: Suggest a new capability for GENCODE-GOV
 title: "[FEAT] "
 labels: enhancement
 ---

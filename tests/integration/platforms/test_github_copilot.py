@@ -1,6 +1,6 @@
 """Tests for the GitHub Copilot platform copilot_adapter.
 
-Copilot cannot be tested end-to-end (Apxoh cannot call it). Tests
+Copilot cannot be tested end-to-end (GENCODE-GOV cannot call it). Tests
 
 verify:
 

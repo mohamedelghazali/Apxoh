@@ -1,4 +1,4 @@
-# Apxoh Agent Adoption Guide
+# GENCODE-GOV Agent Adoption Guide
 
 **Version:** 1.1  
 **Status:** Adoption specification; external behavioral adoption remains unverified  
@@ -8,7 +8,7 @@
 
 ## 1. What Adoption Means
 
-Adopting Apxoh does **not** mean an agent obeys automatically.
+Adopting GENCODE-GOV does **not** mean an agent obeys automatically.
 
 Adoption is a five-level progression. Each level requires evidence:
 
@@ -17,14 +17,14 @@ Adoption is a five-level progression. Each level requires evidence:
 | 1. Installed | Files present on disk | Filesystem check |
 | 2. Discoverable | Agent can locate skill files | Discovery check |
 | 3. Activated | Instructions loaded into agent context | Platform-specific activation evidence |
-| 4. Configured | Agent settings bind to Apxoh | Configuration inspection |
+| 4. Configured | Agent settings bind to GENCODE-GOV | Configuration inspection |
 | 5. Verified | Behavioral verification passed | Repeatable test run and independently validated evidence |
 
-Apxoh must not claim an integration is verified merely because configuration files exist. Level 5 requires an implemented verification procedure, reproducible results, and authenticated evidence. Until those mechanisms are implemented and exercised, the level is **not established**.
+GENCODE-GOV must not claim an integration is verified merely because configuration files exist. Level 5 requires an implemented verification procedure, reproducible results, and authenticated evidence. Until those mechanisms are implemented and exercised, the level is **not established**.
 
 ## 2. Prerequisites
 
-- Apxoh CLI installed from the repository root.
+- GENCODE-GOV CLI installed from the repository root.
 - A valid `.arkhon/project.yaml` in the governed project.
 - TSAR available for security verification where the security gate requires it.
 
@@ -41,14 +41,14 @@ Adoption procedure, where the integration exists:
 1. Configure endpoint and credentials using the provider's secret-management mechanism.
 2. Load the system instructions according to platform capabilities.
 3. Apply the governance context template to tasks.
-4. Run the supported Apxoh verification procedure and retain its evidence.
+4. Run the supported GENCODE-GOV verification procedure and retain its evidence.
 5. Record the exact model identifier, provider/API version, configuration fingerprint (never credentials), commit SHA, and test result.
 
 Never store API keys or tokens in repository configuration, prompts, logs, or evidence artifacts.
 
 ### 3.2 Platforms (GitHub Copilot)
 
-The Copilot adapter installs `.github/copilot-instructions.md` and verifies its content hash. Installation preserves existing non-Apxoh instructions rather than overwriting them. Its successful local health check means only that adapter resources are present; it does not establish that Copilot loaded, activated, or obeyed the file.
+The Copilot adapter installs `.github/copilot-instructions.md` and verifies its content hash. Installation preserves existing non-GENCODE-GOV instructions rather than overwriting them. Its successful local health check means only that adapter resources are present; it does not establish that Copilot loaded, activated, or obeyed the file.
 
 Platform-level configuration does not by itself prove model behavior. Do not claim level 4 or level 5 until the corresponding verifier and evidence are present.
 
@@ -58,7 +58,7 @@ Generic instructions can support manual setup. Each generic-agent adapter direct
 
 ## 4. What the Agent Must Do
 
-When operating under Apxoh, an agent is instructed to:
+When operating under GENCODE-GOV, an agent is instructed to:
 
 1. Read the applicable governance files.
 2. Never claim verification without evidence.
@@ -69,9 +69,9 @@ When operating under Apxoh, an agent is instructed to:
 
 These are governance requirements. Their presence in a prompt does not prove that a model follows them.
 
-## 5. What Apxoh Is Intended to Do
+## 5. What GENCODE-GOV Is Intended to Do
 
-Apxoh is designed to provide independent verification, structured remediation feedback, evidence records, and human escalation. Each capability must be assessed against the implemented code and operational controls; this guide is not proof that every capability is deployed.
+GENCODE-GOV is designed to provide independent verification, structured remediation feedback, evidence records, and human escalation. Each capability must be assessed against the implemented code and operational controls; this guide is not proof that every capability is deployed.
 
 ## 6. Adoption Checklist
 
@@ -82,8 +82,8 @@ Apxoh is designed to provide independent verification, structured remediation fe
 - [ ] The relevant integration files exist.
 - [ ] Platform instructions are demonstrably loaded.
 - [ ] TSAR is available when required.
-- [ ] `arkhon doctor` has been run and its result retained.
-- [ ] `arkhon inspect` reports expected languages and profile.
+- [ ] `gencode-gov doctor` has been run and its result retained.
+- [ ] `gencode-gov inspect` reports expected languages and profile.
 - [ ] A supported verification run produced evidence.
 - [ ] Evidence authenticity and signatures are verified when required by policy.
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Minimal calculator for Apxoh fixture testing.
+# Minimal calculator for GENCODE-GOV fixture testing.
 module Calc
   module_function
 

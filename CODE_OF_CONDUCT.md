@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We pledge to make participation in the Apxoh project a welcoming,
+We pledge to make participation in the GENCODE-GOV project a welcoming,
 respectful, and harassment-free experience for everyone, regardless of
 age, body size, disability, ethnicity, sex characteristics, gender
 identity and expression, level of experience, education,

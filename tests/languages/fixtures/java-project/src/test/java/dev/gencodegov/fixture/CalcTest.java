@@ -1,4 +1,4 @@
-package dev.apxoh.fixture;
+package dev.gencodegov.fixture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

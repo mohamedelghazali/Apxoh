@@ -29,10 +29,10 @@ jobs:
         run: |
           go install github.com/anchore/syft/cmd/syft@v1.56.0
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
-      - name: Install Apxoh
+      - name: Install GENCODE-GOV
         run: python -m pip install -e ".[dev]"
-      - name: Generate SBOM and persist fail-closed Apxoh evidence
-        run: arkhon verify . --domain supply-chain
+      - name: Generate SBOM and persist fail-closed GENCODE-GOV evidence
+        run: gencode-gov verify . --domain supply-chain
       - name: Verify persisted SBOM evidence
         run: |
           python - <<'PY'
@@ -51,7 +51,7 @@ jobs:
               if record.commit_sha == commit
           ]
           if not records or records[-1].status != "PASS":
-              raise SystemExit("Apxoh did not persist PASS SBOM evidence for this commit")
+              raise SystemExit("GENCODE-GOV did not persist PASS SBOM evidence for this commit")
           entries = records[-1].data.get("artifacts", [])
           sboms = [
               root / item["path"]

@@ -1,4 +1,4 @@
-"""Structured logging for Apxoh.
+"""Structured logging for GENCODE-GOV.
 
 Never log secrets. Never use print for library diagnostics.
 """
@@ -56,5 +56,5 @@ def configure_logging(level: str = "info", fmt: str = "text") -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Return an Apxoh-scoped logger."""
+    """Return an GENCODE-GOV-scoped logger."""
     return logging.getLogger(f"arkhon.{name}")

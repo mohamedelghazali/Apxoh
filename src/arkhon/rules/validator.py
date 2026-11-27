@@ -1,4 +1,4 @@
-"""Structural and semantic validation for Apxoh rules."""
+"""Structural and semantic validation for GENCODE-GOV rules."""
 
 from __future__ import annotations
 

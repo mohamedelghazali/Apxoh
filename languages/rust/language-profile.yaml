@@ -43,6 +43,6 @@ rule_domains_supported:
   - release
 
 notes: |
-  Rust's safety guarantees come from the compiler. Apxoh enforces that
+  Rust's safety guarantees come from the compiler. GENCODE-GOV enforces that
   unsafe blocks are minimized and documented. Clippy warnings are
   treated as errors for the release profile.

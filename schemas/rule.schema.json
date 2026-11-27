@@ -1,10 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apxoh.dev/schemas/rule/1.0.0",
-  "title": "Apxoh Rule",
-  "description": "A single engineering rule in the Apxoh governance system.",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/rule/1.0.0",
+  "title": "GENCODE-GOV Rule",
+  "description": "A single engineering rule in the GENCODE-GOV governance system.",
   "type": "object",
-  "required": ["id", "metadata", "scope", "requirement", "verification", "acceptance"],
+  "required": [
+    "id",
+    "metadata",
+    "scope",
+    "requirement",
+    "verification",
+    "acceptance"
+  ],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -14,44 +21,154 @@
     },
     "metadata": {
       "type": "object",
-      "required": ["title", "domain", "version", "status", "severity", "enforcement"],
+      "required": [
+        "title",
+        "domain",
+        "version",
+        "status",
+        "severity",
+        "enforcement"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": {"type": "string", "minLength": 3, "maxLength": 120},
-        "domain": {"type": "string", "enum": ["requirements", "architecture", "code-quality", "software-security", "testing", "performance", "reliability", "database", "api-integration", "devops", "observability", "privacy-compliance", "scalability", "infrastructure", "maintenance", "release"]},
-        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-        "status": {"type": "string", "enum": ["proposed", "active", "deprecated", "archived"]},
-        "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]},
-        "enforcement": {"type": "string", "enum": ["advisory", "required", "blocking", "critical"]},
-        "description": {"type": "string", "maxLength": 2000}
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "domain": {
+          "type": "string",
+          "enum": [
+            "requirements",
+            "architecture",
+            "code-quality",
+            "software-security",
+            "testing",
+            "performance",
+            "reliability",
+            "database",
+            "api-integration",
+            "devops",
+            "observability",
+            "privacy-compliance",
+            "scalability",
+            "infrastructure",
+            "maintenance",
+            "release"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "proposed",
+            "active",
+            "deprecated",
+            "archived"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "enforcement": {
+          "type": "string",
+          "enum": [
+            "advisory",
+            "required",
+            "blocking",
+            "critical"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000
+        }
       }
     },
     "scope": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "project_types": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "lifecycle_stages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "languages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        "project_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "lifecycle_stages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
       }
     },
     "requirement": {
       "type": "object",
-      "required": ["statement"],
+      "required": [
+        "statement"
+      ],
       "additionalProperties": false,
-      "properties": {"statement": {"type": "string", "minLength": 10}}
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
     },
     "verification": {
       "type": "object",
-      "required": ["mode", "methods"],
+      "required": [
+        "mode",
+        "methods"
+      ],
       "additionalProperties": false,
       "properties": {
-        "mode": {"type": "string", "enum": ["deterministic", "assisted", "human", "delegated", "hybrid"]},
-        "methods": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
-        "delegate_to": {"type": "string"}
+        "mode": {
+          "type": "string",
+          "enum": [
+            "deterministic",
+            "assisted",
+            "human",
+            "delegated",
+            "hybrid"
+          ]
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "delegate_to": {
+          "type": "string"
+        }
       }
     },
-    "acceptance": {"type": "object", "minProperties": 1},
+    "acceptance": {
+      "type": "object",
+      "minProperties": 1
+    },
     "evidence": {
       "type": "object",
       "additionalProperties": false,
@@ -60,25 +177,71 @@
           "type": "array",
           "items": {
             "oneOf": [
-              {"type": "string"},
-              {"type": "object", "required": ["type"], "additionalProperties": false,
-               "properties": {"type": {"type": "string"}, "schema": {"type": "string"}, "source": {"type": "string"}}}
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "schema": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  }
+                }
+              }
             ]
           }
         }
       }
     },
     "failure": {
-      "type": "object", "additionalProperties": false,
-      "properties": {"actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
     },
     "human_review": {
-      "type": "object", "additionalProperties": false,
-      "properties": {"required": {"type": "boolean"}, "approver_role": {"type": "string"}}
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "approver_role": {
+          "type": "string"
+        }
+      }
     },
     "tests": {
-      "type": "object", "additionalProperties": false,
-      "properties": {"positive": {"type": "string"}, "negative": {"type": "string"}, "regression": {"type": "string"}}
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "positive": {
+          "type": "string"
+        },
+        "negative": {
+          "type": "string"
+        },
+        "regression": {
+          "type": "string"
+        }
+      }
     }
   }
 }

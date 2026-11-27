@@ -1,7 +1,7 @@
 """Repository-level contracts for AI-agent adoption metadata.
 
 These tests validate repository structure and truthful status declarations only.
-They do not claim external agents loaded or obeyed Apxoh instructions.
+They do not claim external agents loaded or obeyed GENCODE-GOV instructions.
 """
 
 from __future__ import annotations

@@ -785,7 +785,9 @@ class MultiAgentAuditOrchestrator:
             distinct_session_ids=int(orch_meta["distinct_session_ids"]),
             distinct_pids=int(orch_meta["distinct_pids"]),
             resumed=bool(state["resumed"]),
-            blocker_reason="audit interrupted before completion; resumable via arkhon audit resume",
+            blocker_reason=(
+                "audit interrupted before completion; resumable via gencode-gov audit resume"
+            ),
         )
 
     def _finalize_completed(

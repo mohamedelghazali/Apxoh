@@ -1,29 +1,29 @@
-# Apxoh Architecture and Governance Glossary
+# GENCODE-GOV Architecture and Governance Glossary
 
 **Version:** 1.0  
 **Last updated:** 2026-11-02
 
-This glossary defines terminology used in the Apxoh repository. Terms describing target controls or architecture do not, by themselves, prove that those controls are deployed.
+This glossary defines terminology used in the GENCODE-GOV repository. Terms describing target controls or architecture do not, by themselves, prove that those controls are deployed.
 
 ## Core Concepts
 
-**Apxoh** — Software Engineering Governance & Assurance System. The system this repository defines.
+**GENCODE-GOV** — Software Engineering Governance & Assurance System. The system this repository defines.
 
-**ARKHON** — Latin identifier of Apxoh, used in package names, CLI, and file paths.
+**GENCODE-GOV** — Latin identifier of GENCODE-GOV, used in package names, CLI, and file paths.
 
-**АРХОН** — Cyrillic reference used in visual identity only.
+**GENCODE-GOV** — Cyrillic reference used in visual identity only.
 
-**Apxoh Core** — The Python engine designed to run locally.
+**GENCODE-GOV Core** — The Python engine designed to run locally.
 
-**Apxoh Agent Governance** — Instructions and skills intended for AI coding agents adopting Apxoh.
+**GENCODE-GOV Agent Governance** — Instructions and skills intended for AI coding agents adopting GENCODE-GOV.
 
-**Apxoh Assurance** — Independent verification, evidence collection, and release gating.
+**GENCODE-GOV Assurance** — Independent verification, evidence collection, and release gating.
 
 ---
 
 ## Governance
 
-**Charter** — The twelve founding principles of Apxoh's engineering policy, documented in `system/charter/ENGINEERING_CHARTER.md`.
+**Charter** — The twelve founding principles of GENCODE-GOV's engineering policy, documented in `system/charter/ENGINEERING_CHARTER.md`.
 
 **Rule** — A YAML document encoding an engineering requirement. Global rules live under `rules/`; language-specific rules may live under `languages/*/rules/`.
 
@@ -83,17 +83,17 @@ This glossary defines terminology used in the Apxoh repository. Terms describing
 
 ## Integrations
 
-**Integration** — An external system Apxoh communicates with, such as a model provider, coding platform, or security authority.
+**Integration** — An external system GENCODE-GOV communicates with, such as a model provider, coding platform, or security authority.
 
 **Adapter** — Code that communicates with an integration and translates its inputs and outputs. An adapter should not make governance or release decisions.
 
-**TSAR** — The delegated security authority named by the Apxoh integration contract. The contract assigns SAST, DAST, SCA, secrets, and cryptography-related verification responsibilities; actual coverage depends on the deployed TSAR version and configuration.
+**TSAR** — The delegated security authority named by the GENCODE-GOV integration contract. The contract assigns SAST, DAST, SCA, secrets, and cryptography-related verification responsibilities; actual coverage depends on the deployed TSAR version and configuration.
 
-**Contract** — The declared interface between Apxoh and TSAR, located at `integrations/tsar/contract.yaml`. The current contract file labels its status as proposed.
+**Contract** — The declared interface between GENCODE-GOV and TSAR, located at `integrations/tsar/contract.yaml`. The current contract file labels its status as proposed.
 
 **Model integration** — One of the eight model entries declared in the registry: Claude, OpenAI o, DeepSeek-Coder, GPT, Gemini, Code Llama, Qwen-Coder, and Kimi.
 
-**Platform integration** — A coding platform integration such as GitHub Copilot. Apxoh cannot necessarily pin or observe the model selected internally by the platform.
+**Platform integration** — A coding platform integration such as GitHub Copilot. GENCODE-GOV cannot necessarily pin or observe the model selected internally by the platform.
 
 **Generic agent** — A fallback integration path for an unlisted platform. Instructions may need to be applied manually; this does not establish activation or verification.
 
@@ -107,7 +107,7 @@ This glossary defines terminology used in the Apxoh repository. Terms describing
 
 **Activated (3)** — Evidence shows that the instructions were loaded into the active agent context.
 
-**Configured (4)** — Platform settings are inspected and bound to the intended Apxoh integration.
+**Configured (4)** — Platform settings are inspected and bound to the intended GENCODE-GOV integration.
 
 **Verified (5)** — Repeatable behavioral verification passed for the exact model/platform version and the evidence was independently reviewed. This level may be unavailable for integrations without a suitable test interface.
 
@@ -138,7 +138,7 @@ A level must be supported by evidence. It must not be inferred from a manifest e
 
 ## Languages
 
-**Language profile** — A YAML description of how Apxoh is intended to detect and verify a language. The repository's profile structure includes `language-profile.yaml`, `tools.yaml`, `testing.yaml`, and `security.yaml`.
+**Language profile** — A YAML description of how GENCODE-GOV is intended to detect and verify a language. The repository's profile structure includes `language-profile.yaml`, `tools.yaml`, `testing.yaml`, and `security.yaml`.
 
 **Language fixture** — A minimal project used to exercise language detection and verification. Fixtures belong under `tests/languages/fixtures/`.
 
@@ -188,7 +188,7 @@ A level must be supported by evidence. It must not be inferred from a manifest e
 
 **`tests/`** — Unit, integration, security, language, and fixture tests.
 
-**`.arkhon/`** — Apxoh's project-local governance state and evidence area. Runtime-generated evidence should not be treated as immutable merely because it is stored here.
+**`.arkhon/`** — GENCODE-GOV's project-local governance state and evidence area. Runtime-generated evidence should not be treated as immutable merely because it is stored here.
 
 ---
 

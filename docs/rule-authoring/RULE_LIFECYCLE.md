@@ -1,4 +1,4 @@
-# Apxoh Rule Lifecycle
+# GENCODE-GOV Rule Lifecycle
 
 **Audience:** Contributors and maintainers.
 **Last updated:** 2026-11-01
@@ -34,7 +34,7 @@ Each transition requires recorded evidence and an accountable reviewer.
 **Entry:** The proposed rule is available to the validation process.
 
 **Requirements:**
-- `arkhon validate` completes successfully.
+- `gencode-gov validate` completes successfully.
 - Required fields and semantic constraints pass.
 - Positive and negative tests are present; regression coverage is added where relevant.
 - No duplicate ID or domain-prefix mismatch exists.

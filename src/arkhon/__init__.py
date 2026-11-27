@@ -1,3 +1,3 @@
-"""ARKHON governance and assurance package."""
+"""GENCODE-GOV governance and assurance package."""
 
 __version__ = "0.1.0"

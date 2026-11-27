@@ -1,8 +1,8 @@
-# Apxoh Product Registry
+# GENCODE-GOV Product Registry
 
 products:
   - id: arkhon-core
-    name: "Apxoh Core"
+    name: "GENCODE-GOV Core"
     role: "Local governance and verification engine"
     runtime: "local-cli"
     language: "python"
@@ -18,7 +18,7 @@ products:
       - "src/arkhon/reporting/"
 
   - id: arkhon-agent-governance
-    name: "Apxoh Agent Governance"
+    name: "GENCODE-GOV Agent Governance"
     role: "Instructions, skills, and reference files for AI coding agents"
     runtime: "agent-consumed"
     language: "markdown-yaml"
@@ -32,7 +32,7 @@ products:
       - "integrations/"
 
   - id: arkhon-assurance
-    name: "Apxoh Assurance"
+    name: "GENCODE-GOV Assurance"
     role: "Independent verification, evidence, and release gating"
     runtime: "local-and-ci"
     language: "python"

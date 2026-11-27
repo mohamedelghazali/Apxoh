@@ -1,4 +1,4 @@
-# Apxoh runtime configuration for governing itself.
+# GENCODE-GOV runtime configuration for governing itself.
 
 engine:
   version_pin: "0.1.0"

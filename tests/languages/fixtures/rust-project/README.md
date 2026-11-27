@@ -1,6 +1,6 @@
 # Rust Fixture Project
 
-Minimal Rust crate for Apxoh's language detection tests.
+Minimal Rust crate for GENCODE-GOV's language detection tests.
 
 - `src/lib.rs` — calculator + inline tests
 - Run: `cargo test`

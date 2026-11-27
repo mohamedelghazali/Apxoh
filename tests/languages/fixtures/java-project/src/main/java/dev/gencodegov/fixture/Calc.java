@@ -1,4 +1,4 @@
-package dev.apxoh.fixture;
+package dev.gencodegov.fixture;
 
 public final class Calc {
     private Calc() {}

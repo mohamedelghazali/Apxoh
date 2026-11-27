@@ -1,4 +1,4 @@
-# Apxoh Verification Profiles
+# GENCODE-GOV Verification Profiles
 
 **Version:** 1.0  
 **Status:** Active — specification; implementation must be verified  

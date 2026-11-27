@@ -48,5 +48,5 @@ rule_domains_supported:
   - release
 
 notes: |
-  Apxoh checks that packages.lock.json exists and is committed. NuGet
+  GENCODE-GOV checks that packages.lock.json exists and is committed. NuGet
   without a lock file is not reproducible.

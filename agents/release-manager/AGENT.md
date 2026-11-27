@@ -1,6 +1,6 @@
 # release manager
 
-Mission: perform the release manager role under ARKHON governance.
+Mission: perform the release manager role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

@@ -57,7 +57,7 @@ A threat model must include:
 - `threat-model` — with all sections populated
 - `component-diagram` — visual or textual
 
-## Interaction with Apxoh
+## Interaction with GENCODE-GOV
 
 - Rule domain: `architecture`
 - Gate: `architecture_gate`
@@ -66,7 +66,7 @@ A threat model must include:
 
 ## Reference
 
-- `docs/threat-model/ARKHON_THREAT_MODEL.md` — example threat model
+- `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` — example threat model
 - `system/charter/ENGINEERING_CHARTER.md` — principles 2, 9
 
 ## Version History

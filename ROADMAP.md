@@ -1,4 +1,4 @@
-# Apxoh Roadmap
+# GENCODE-GOV Roadmap
 
 **Version:** 1.3  
 **Status:** Active — official release 0.1.0  
@@ -8,7 +8,7 @@
 
 ## Current Status
 
-ARKHON 0.1.0 is the current official package release. Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed. The remaining milestone items describe follow-on capability expansion and independently verifiable operational evidence; they are not alternate package-version labels.
+GENCODE-GOV 0.1.0 is the current official package release. Milestone checkboxes below distinguish implementation present in the repository from execution or external-environment verification. A checked implementation item is not, by itself, proof that CI or a production integration has passed. The remaining milestone items describe follow-on capability expansion and independently verifiable operational evidence; they are not alternate package-version labels.
 
 The current `main` branch includes PR #102 (merged 2026-11-05). PR #100 removed the stale pinned `main` commit reference; its 56 check runs succeeded. PR #101 updated this roadmap after PR #100, and PR #102 fixed exception expiry at the exact deadline with a regression test; all 56 check runs for PR #102 succeeded. PR #99 corrected earlier stale references, and PR #98's assessment fail-closed correction remains in main. This roadmap intentionally avoids pinning a moving branch to a commit SHA; consult GitHub for the live branch head. Remaining gaps include genuine rule-level assessment outcome ingestion, the full exception approval/revocation/audit lifecycle (the exact-expiry boundary is now fixed), real external-agent behavioral validation, branch protection, and release provenance/assets reconciliation. The published GitHub Release is tagged `0.1.0`, but its title and body still call it the first stable release, conflicting with the repository's pre-1.0 development classification. The successful SLSA workflow run was triggered by `v0.1.0`; the published release currently has no assets. The release description, tag identity, provenance, and uploaded assets must be reconciled before claiming a verified public release. The `main` branch API reports `protected: false` and the rulesets endpoint is empty; branch enforcement is not configured.
 
@@ -89,7 +89,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] AGENTS.md and SECURITY_AGENTS.md
 - [x] 8 skills and 9 agent roles
 - [x] Packaged 20-file agent governance resource bundle
-- [x] `arkhon install --scope project|global` implementation, manifest, safe staging, and unit tests
+- [x] `gencode-gov install --scope project|global` implementation, manifest, safe staging, and unit tests
 - [x] Agent/model/platform integration contracts and integration test scaffolding
 - [ ] Behavioral verification with each supported agent product in a real configured environment
 - [ ] Verify instruction discovery, activation, precedence, and enforcement per supported platform
@@ -104,7 +104,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 - [x] JSON and Markdown reporting
 - [x] CLI: version, doctor, validate, inspect, audit, assess, report, verify
 - [x] CLI: install, status, exceptions list
-- [x] `arkhon project init` with schema validation and packaged fallback resources (8 profiles + schema)
+- [x] `gencode-gov project init` with schema validation and packaged fallback resources (8 profiles + schema)
 - [x] Wheel smoke-test workflow for project initialization and agent-pack installation (passed on current main)
 - [x] CLI parser registration and unit tests for the added commands
 - [x] Full CLI test suite, packaging, and clean-install workflows passing on the current main commit
@@ -164,7 +164,7 @@ Product definitions and component boundaries are in manifest/products.yaml. Name
 
 - Replacing human code review.
 - Proving the absence of bugs.
-- Certifying compliance with any standard (Apxoh references standards; it does not certify).
+- Certifying compliance with any standard (GENCODE-GOV references standards; it does not certify).
 - Replacing TSAR's delegated security authority.
 - Replacing any specific AI provider.
 

@@ -1,4 +1,4 @@
-"""Bridge connecting Security Audit runs to Apxoh EvidenceStore, Runner, and Gates."""
+"""Bridge connecting Security Audit runs to GENCODE-GOV EvidenceStore, Runner, and Gates."""
 
 from __future__ import annotations
 
@@ -117,7 +117,7 @@ def derive_rule_outcomes_from_audit(
 
 
 class SecurityAuditRunner(Runner):
-    """Deterministic Apxoh VerificationEngine runner executing a full security audit."""
+    """Deterministic GENCODE-GOV VerificationEngine runner executing a full security audit."""
 
     name = "security-audit"
 

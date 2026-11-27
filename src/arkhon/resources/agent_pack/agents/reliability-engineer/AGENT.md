@@ -1,6 +1,6 @@
 # reliability engineer
 
-Mission: perform the reliability engineer role under ARKHON governance.
+Mission: perform the reliability engineer role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

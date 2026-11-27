@@ -1,6 +1,6 @@
 """End-to-end tests for all language fixtures.
 
-Every fixture is a real project. Apxoh must detect its language, match
+Every fixture is a real project. GENCODE-GOV must detect its language, match
 its declared profile, and (where tools are present) verify it.
 """
 

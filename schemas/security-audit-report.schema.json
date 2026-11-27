@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:apxoh:schemas:security-audit-report:1.0.0",
-  "title": "Apxoh Security Audit Report",
+  "$id": "urn:gencode-gov:schemas:security-audit-report:1.0.0",
+  "title": "GENCODE-GOV Security Audit Report",
   "description": "Target-neutral machine-readable security audit report derived from verified findings and coverage ledger.",
   "type": "object",
   "additionalProperties": false,

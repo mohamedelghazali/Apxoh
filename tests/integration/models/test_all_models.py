@@ -104,12 +104,12 @@ def test_adapter_has_no_forbidden_patterns(model_id: str) -> None:
 
 
 @pytest.mark.parametrize("model_id", MODEL_IDS)
-def test_system_prompt_mentions_apxoh(model_id: str) -> None:
+def test_system_prompt_mentions_gencode_gov(model_id: str) -> None:
     path = _model_dir(model_id) / "prompts" / "system.md"
 
     text = path.read_text(encoding="utf-8")
 
-    assert "Apxoh" in text or "apxoh" in text.lower()
+    assert "GENCODE-GOV" in text or "gencode-gov" in text.lower()
 
 
 @pytest.mark.parametrize("model_id", MODEL_IDS)

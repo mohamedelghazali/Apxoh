@@ -1,6 +1,6 @@
 ---
 name: New Rule
-about: Propose a new engineering rule for Apxoh
+about: Propose a new engineering rule for GENCODE-GOV
 title: "[RULE] "
 labels: rule, enhancement
 ---

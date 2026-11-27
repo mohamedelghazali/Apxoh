@@ -1,4 +1,4 @@
-# Python language profile for Apxoh.
+# Python language profile for GENCODE-GOV.
 id: python
 name: Python
 family: dynamic-typed
@@ -51,6 +51,6 @@ rule_domains_supported:
   - release
 
 notes: |
-  Python is the reference language for Apxoh itself. Its profile is the
+  Python is the reference language for GENCODE-GOV itself. Its profile is the
   most complete. Other languages follow the same structure but with
   language-appropriate tools.

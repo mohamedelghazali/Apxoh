@@ -46,7 +46,7 @@ def test_system_prompt_present() -> None:
 
     assert prompt
 
-    assert "Apxoh" in prompt or "governance" in prompt.lower()
+    assert "GENCODE-GOV" in prompt or "governance" in prompt.lower()
 
 
 def test_governance_injection_present() -> None:

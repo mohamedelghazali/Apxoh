@@ -1,4 +1,4 @@
-"""ARKHON (Apxoh) command-line interface."""
+"""GENCODE-GOV command-line interface."""
 
 from __future__ import annotations
 
@@ -32,10 +32,15 @@ def _project_template_root() -> Path:
 
 def cmd_version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
-        payload = {"name": "Apxoh", "identifier": "arkhon", "version": __version__}
+        payload = {
+            "name": "GENCODE-GOV",
+            "identifier": "gencode-gov",
+            "package": "arkhon",
+            "version": __version__,
+        }
         print(json.dumps(payload, indent=2))
     else:
-        print(f"Apxoh {__version__} (ARKHON)")
+        print(f"GENCODE-GOV {__version__}")
     return 0
 
 
@@ -62,13 +67,13 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     except Exception as exc:
         warnings.append(f"optional TSAR integration check failed: {exc}")
     if failures:
-        print("Apxoh doctor — FAILED")
+        print("GENCODE-GOV doctor — FAILED")
         for failure in failures:
             print(f"  [FAIL] {failure}")
         for warning in warnings:
             print(f"  [WARN] {warning}")
         return 1
-    print("Apxoh doctor — OK")
+    print("GENCODE-GOV doctor — OK")
     print(f"  Python:  {sys.version.split()[0]}")
     print(f"  Version: {__version__}")
     print(f"  Root:    {root}")
@@ -807,6 +812,7 @@ def cmd_install(args: argparse.Namespace) -> int:
         shutil.copytree(source, staging, dirs_exist_ok=True)
         manifest = {
             "format_version": 1,
+            "gencode_gov_version": __version__,
             "arkhon_version": __version__,
             "scope": scope,
             "activation": "manual",
@@ -1048,11 +1054,11 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="arkhon",
-        description="Apxoh (ARKHON) — Software Engineering Governance & Assurance System",
+        prog="gencode-gov",
+        description="GENCODE-GOV - AI-Agent-Generated Software Governance",
     )
     sub = parser.add_subparsers(dest="command")
-    version = sub.add_parser("version", help="Print ARKHON version")
+    version = sub.add_parser("version", help="Print GENCODE-GOV version")
     version.add_argument("--json", action="store_true", help="Output as JSON")
     version.set_defaults(func=cmd_version)
     sub.add_parser("doctor", help="Check installation and environment").set_defaults(

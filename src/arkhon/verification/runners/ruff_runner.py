@@ -33,7 +33,7 @@ class RuffRunner(Runner):
                 reason="ruff not found on PATH",
             )
         root = project_root.resolve()
-        with tempfile.TemporaryDirectory(prefix="apxoh-ruff-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="gencode-gov-ruff-") as tmp:
             output = Path(tmp) / "ruff.json"
             command = [binary, "check", "--output-format=json", "--no-fix", "."]
             try:

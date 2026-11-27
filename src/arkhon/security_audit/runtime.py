@@ -212,6 +212,8 @@ def _execute_isolated_child_session(
     task_file.write_text(json.dumps(envelope, indent=2) + "\n", encoding="utf-8")
 
     env = sandbox.build_allowlisted_env(scratch_dir, extra_env)
+    env["GENCODE_GOV_AGENT_SESSION_ID"] = session_id
+    env["GENCODE_GOV_TASK_FILE"] = str(task_file)
     env["ARKHON_AGENT_SESSION_ID"] = session_id
     env["ARKHON_TASK_FILE"] = str(task_file)
 
@@ -563,7 +565,10 @@ def detect_available_runtimes(
     which_fn: Any = shutil.which,
 ) -> list[RuntimeDescriptor]:
     """Probe all supported external CLI and isolated subprocess agent runtimes truthfully."""
-    cmd_target = agent_cmd or os.environ.get("ARKHON_AGENT_CMD")
+    cmd_target = agent_cmd or (
+        os.environ.get("GENCODE_GOV_AGENT_CMD")
+        or os.environ.get("ARKHON_AGENT_CMD")
+    )
     adapters: list[AgentRuntimeAdapter] = [
         ExternalCliAgentRuntime(
             runtime_id="claude-cli",
@@ -601,7 +606,10 @@ def resolve_runtime_adapter(
     which_fn: Any = shutil.which,
 ) -> AgentRuntimeAdapter:
     """Resolve a requested runtime adapter without silently substituting unavailable ones."""
-    cmd_target = agent_cmd or os.environ.get("ARKHON_AGENT_CMD")
+    cmd_target = agent_cmd or (
+        os.environ.get("GENCODE_GOV_AGENT_CMD")
+        or os.environ.get("ARKHON_AGENT_CMD")
+    )
     if runtime_name == "command" or (runtime_name == "auto" and cmd_target):
         return ExternalCliAgentRuntime(
             runtime_id="command",

@@ -1,4 +1,4 @@
-# Apxoh Integration Registry
+# GENCODE-GOV Integration Registry
 # Categories: models, platforms, security, generic
 
 integrations:
@@ -127,7 +127,7 @@ verification_levels:
   - id: activated
     description: "Instructions loaded into agent context"
   - id: configured
-    description: "Agent settings bind to Apxoh"
+    description: "Agent settings bind to GENCODE-GOV"
   - id: verified
     description: "Behavioral verification passed"
 

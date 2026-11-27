@@ -16,15 +16,15 @@ def _manifest_tree(root: Path) -> None:
     refs = {name: f"{name}.yaml" for name in names}
     (base / "index.yaml").write_text(yaml.safe_dump({"files": refs}), encoding="utf-8")
     for name in names:
-        value = {"system": {"name": "Apxoh", "identifier": "arkhon", "version": "1.0.0"}}
+        value = {"system": {"name": "GENCODE-GOV", "identifier": "gencode-gov", "version": "1.0.0"}}
         (base / f"{name}.yaml").write_text(yaml.safe_dump(value), encoding="utf-8")
 
 
 def test_manifest_load_and_properties(tmp_path: Path) -> None:
     _manifest_tree(tmp_path)
     manifest = load_manifest(tmp_path)
-    assert manifest.name == "Apxoh"
-    assert manifest.identifier == "arkhon"
+    assert manifest.name == "GENCODE-GOV"
+    assert manifest.identifier == "gencode-gov"
     assert manifest.version == "1.0.0"
     assert set(manifest.to_dict()) == {
         "index",

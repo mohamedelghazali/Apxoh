@@ -169,7 +169,7 @@ jobs:
           curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" --data-binary "@dist/$PROVENANCE_NAME" "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$PROVENANCE_NAME" >/dev/null
 
   verify:
-    name: Verify release provenance, signatures, and Apxoh evidence acceptance
+    name: Verify release provenance, signatures, and GENCODE-GOV evidence acceptance
     needs: [build, provenance, attach-provenance]
     runs-on: ubuntu-latest
     permissions:
@@ -208,7 +208,7 @@ jobs:
           for artifact in dist/*.whl dist/*.tar.gz dist/source-sbom.cdx.json; do
             cosign verify-blob \
               --bundle "${artifact}.sigstore.json" \
-              --certificate-identity-regexp '^https://github[.]com/mohamedelghazali/Apxoh/[.]github/workflows/slsa-release[.]yml@refs/tags/v.*$' \
+              --certificate-identity-regexp '^https://github[.]com/mohamedelghazali/GENCODE-GOV/[.]github/workflows/slsa-release[.]yml@refs/tags/v.*$' \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
               "$artifact"
           done
@@ -217,7 +217,7 @@ jobs:
           set -euo pipefail
           slsa-verifier verify-artifact dist/source-sbom.cdx.json \
             --provenance-path "$(find dist -maxdepth 1 -name '*.intoto.jsonl' -print -quit)" \
-            --source-uri github.com/mohamedelghazali/Apxoh \
+            --source-uri github.com/mohamedelghazali/GENCODE-GOV \
             --source-tag "$GITHUB_REF_NAME"
       - name: Configure the release artifact trust inputs
         run: |
@@ -238,7 +238,7 @@ jobs:
           path.parent.mkdir(parents=True, exist_ok=True)
           path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
           PY
-      - name: Verify release artifact through Apxoh and re-accept its evidence
+      - name: Verify release artifact through GENCODE-GOV and re-accept its evidence
         run: |
           python -m pip install -e ".[dev]"
           arkhon verify . --domain supply-chain

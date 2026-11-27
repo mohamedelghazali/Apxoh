@@ -1,4 +1,4 @@
-"""Integration tests for Apxoh CLI commands."""
+"""Integration tests for GENCODE-GOV CLI commands."""
 
 from __future__ import annotations
 
@@ -13,19 +13,19 @@ from arkhon.cli import main
 
 def test_version_default(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["version"]) == 0
-    assert capsys.readouterr().out.startswith("Apxoh ")
+    assert capsys.readouterr().out.startswith("GENCODE-GOV ")
 
 
 def test_version_json(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["version", "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
-    assert data["name"] == "Apxoh"
-    assert data["identifier"] == "arkhon"
+    assert data["name"] == "GENCODE-GOV"
+    assert data["identifier"] == "gencode-gov"
 
 
 def test_doctor(capsys: pytest.CaptureFixture[str]) -> None:
     rc = main(["doctor"])
-    assert "Apxoh doctor" in capsys.readouterr().out
+    assert "GENCODE-GOV doctor" in capsys.readouterr().out
     assert rc in (0, 1)
 
 

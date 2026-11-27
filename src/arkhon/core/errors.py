@@ -1,4 +1,4 @@
-"""Exception hierarchy for Apxoh.
+"""Exception hierarchy for GENCODE-GOV.
 
 Every error carries a stable code so downstream consumers (CI, agents,
 report generators) can branch on it without parsing messages.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 
 class ArkhonError(Exception):
-    """Base exception for all Apxoh errors."""
+    """Base exception for all GENCODE-GOV errors."""
 
     default_code: str = "ARKHON_ERROR"
 

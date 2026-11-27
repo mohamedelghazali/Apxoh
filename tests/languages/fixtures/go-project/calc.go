@@ -1,4 +1,4 @@
-// Package calc is a minimal calculator for Apxoh fixture testing.
+// Package calc is a minimal calculator for GENCODE-GOV fixture testing.
 package calc
 
 import "errors"

@@ -7,7 +7,7 @@
 
 ## Setup
 
-1. Install Apxoh.
+1. Install GENCODE-GOV.
 2. Set `ANTHROPIC_API_KEY` in your environment.
 3. In your agent platform, set the system prompt to the contents of
    `prompts/system.md`.
@@ -17,10 +17,10 @@
 ## Verification
 
 ```bash
-arkhon verify --domain all --project /path/to/project
+gencode-gov verify --domain all --project /path/to/project
 ```
 
-Apxoh will:
+GENCODE-GOV will:
 - Send a known test prompt.
 - Inspect the response for compliance with governance instructions.
 - Record evidence.
@@ -28,14 +28,14 @@ Apxoh will:
 ## What Claude Supports
 
 - **Strong instruction hierarchy:** system prompt > user prompt > tool output.
-- **Structured content markers:** Apxoh wraps untrusted content in `<untrusted-file>` tags.
+- **Structured content markers:** GENCODE-GOV wraps untrusted content in `<untrusted-file>` tags.
 - **Long context:** up to 200K tokens for Sonnet/Opus.
 
 ## What It Does Not Do
 
-- It does not sign evidence. Apxoh signs evidence.
-- It does not decide gate status. Apxoh decides gate status.
-- It does not have access to secrets. Apxoh never sends secrets.
+- It does not sign evidence. GENCODE-GOV signs evidence.
+- It does not decide gate status. GENCODE-GOV decides gate status.
+- It does not have access to secrets. GENCODE-GOV never sends secrets.
 
 ## Reference
 

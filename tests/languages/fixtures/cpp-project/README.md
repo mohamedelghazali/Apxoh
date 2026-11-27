@@ -1,6 +1,6 @@
 # C++ Fixture Project
 
-Minimal C++20 project (CMake + GoogleTest) for Apxoh's language detection tests.
+Minimal C++20 project (CMake + GoogleTest) for GENCODE-GOV's language detection tests.
 
 - `src/calc.cpp` — calculator
 - `tests/calc_test.cpp` — GoogleTest tests

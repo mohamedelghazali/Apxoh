@@ -1,6 +1,6 @@
 # Ruby Fixture Project
 
-Minimal Ruby project (RSpec) for Apxoh's language detection tests.
+Minimal Ruby project (RSpec) for GENCODE-GOV's language detection tests.
 
 - `lib/calc.rb` — calculator
 - `spec/calc_spec.rb` — RSpec tests

@@ -1,4 +1,4 @@
-# Apxoh Operations Runbook
+# GENCODE-GOV Operations Runbook
 
 **Version:** 1.0
 **Status:** Operational guidance — confirm command availability and controls against the installed release.
@@ -13,7 +13,7 @@
 Where supported by the installed CLI:
 
 ```bash
-arkhon doctor
+gencode-gov doctor
 ```
 
 Review the actual command output. Do not assume that a successful
@@ -25,7 +25,7 @@ security verification result must be `BLOCKED`, not `PASS`.
 ### 1.2 Validate Rules
 
 ```bash
-arkhon validate
+gencode-gov validate
 ```
 
 Review all reported validation errors and warnings. A successful
@@ -36,7 +36,7 @@ validation confirms only the checks actually performed by that command.
 Where supported by the installed CLI:
 
 ```bash
-arkhon inspect /path/to/project
+gencode-gov inspect /path/to/project
 ```
 
 Review detected languages, selected profiles, and resolved tools. A
@@ -51,7 +51,7 @@ detected language does not prove that its toolchain is installed.
 Where supported by the installed CLI:
 
 ```bash
-arkhon verify --domain testing --project /path/to/project
+gencode-gov verify --domain testing --project /path/to/project
 ```
 
 ### 2.2 Run All Domains
@@ -59,7 +59,7 @@ arkhon verify --domain testing --project /path/to/project
 Where supported by the installed CLI:
 
 ```bash
-arkhon verify --domain all --project /path/to/project
+gencode-gov verify --domain all --project /path/to/project
 ```
 
 ### 2.3 Interpret Output
@@ -82,7 +82,7 @@ approval. Resolve the missing prerequisite and rerun verification.
 Where supported by the installed CLI:
 
 ```bash
-arkhon assess /path/to/project
+gencode-gov assess /path/to/project
 ```
 
 Review the score, configured level, gate statuses, missing evidence,
@@ -116,13 +116,13 @@ Example invocations, if available:
 ### 4.1 JSON Report
 
 ```bash
-arkhon report /path/to/project --format json
+gencode-gov report /path/to/project --format json
 ```
 
 ### 4.2 Markdown Report
 
 ```bash
-arkhon report /path/to/project --format markdown
+gencode-gov report /path/to/project --format markdown
 ```
 
 Confirm the output path from the command result. Do not assume a report
@@ -152,7 +152,7 @@ gate is reported as `BLOCKED` for an evidence-integrity reason.
 
 **Steps:**
 1. Check whether `tsar --version` is available.
-2. Review the Apxoh doctor output, if that command exists.
+2. Review the GENCODE-GOV doctor output, if that command exists.
 3. Install or repair TSAR using its official project documentation.
 4. Re-run the security verification scope.
 5. If TSAR is installed but integration still fails, inspect the
@@ -235,7 +235,7 @@ following roles are suggested escalation targets:
 - `docs/operations/POSTMORTEM_TEMPLATE.md` — postmortem format
 - `SECURITY.md` — vulnerability reporting
 - `SECURITY_AGENTS.md` — hostile-agent threat model
-- `docs/threat-model/ARKHON_THREAT_MODEL.md` — system threat model
+- `docs/threat-model/GENCODE_GOV_THREAT_MODEL.md` — system threat model
 - `docs/VULNERABILITY_RESPONSE.md` — vulnerability response policy
 
 ---

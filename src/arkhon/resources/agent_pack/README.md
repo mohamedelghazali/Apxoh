@@ -1,4 +1,4 @@
-# Apxoh Agent Governance Pack
+# GENCODE-GOV Agent Governance Pack
 
 This pack contains the repository's general agent instructions, nine role definitions, and
 nine skills, including the application-security skill and updated secure-software,

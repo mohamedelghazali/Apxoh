@@ -1,6 +1,6 @@
 # requirements engineer
 
-Mission: perform the requirements engineer role under ARKHON governance.
+Mission: perform the requirements engineer role under GENCODE-GOV governance.
 
 Inputs: approved requirements, acceptance criteria, applicable rules, repository state, and evidence.
 

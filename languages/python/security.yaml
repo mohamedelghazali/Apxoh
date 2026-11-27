@@ -1,5 +1,5 @@
 # Security requirements for Python projects.
-# Apxoh delegates actual security scanning to TSAR. This file declares
+# GENCODE-GOV delegates actual security scanning to TSAR. This file declares
 # the fast local checks that complement TSAR.
 
 id: python

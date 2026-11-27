@@ -1,5 +1,5 @@
 {
-  "name": "Apxoh Development",
+  "name": "GENCODE-GOV Development",
   "build": {
     "dockerfile": "Dockerfile"
   },
