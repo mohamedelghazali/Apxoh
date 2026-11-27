@@ -1,0 +1,132 @@
+name: GENCODE-GOV Deep Engineering Recon
+
+on:
+  push:
+    branches:
+      - chore/engineering-recon-audit
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-recon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package and inspect full architecture
+        run: |
+          pip install -q -e ".[dev]"
+          rm -rf src/*.egg-info
+          python - << 'PY'
+          import ast, json, os, re, subprocess, yaml
+          from pathlib import Path
+          from gencode_gov.verification.methods import METHOD_REGISTRY
+
+          root = Path.cwd()
+          print("=== 1. ALL RULE FILES & UNREGISTERED VERIFICATION METHODS ===")
+          rule_files = sorted(list((root / "rules").rglob("SE-*.yaml")) + list((root / "languages").rglob("SE-*.yaml")))
+          unregistered = {}
+          by_domain = {}
+          for rf in rule_files:
+              data = yaml.safe_load(rf.read_text(encoding="utf-8"))
+              rid = data.get("id")
+              dom = data.get("domain")
+              enf = data.get("enforcement")
+              vmode = data.get("verification", {}).get("mode")
+              methods = data.get("verification", {}).get("methods", [])
+              by_domain.setdefault(dom, []).append((rid, str(rf.relative_to(root)), enf, vmode, methods))
+              for m in methods:
+                  if m not in METHOD_REGISTRY:
+                      unregistered.setdefault(m, []).append(rid)
+          print(f"Total SE-* rules: {len(rule_files)} across {len(by_domain)} domains")
+          for dom in sorted(by_domain):
+              print(f"  Domain [{dom}] ({len(by_domain[dom])} rules):")
+              for rid, rel, enf, vmode, methods in by_domain[dom]:
+                  missing = [m for m in methods if m not in METHOD_REGISTRY]
+                  print(f"    {rid} ({rel}) enf={enf} mode={vmode} methods={methods} UNREGISTERED={missing}")
+
+          print("=== 2. LIVE CLI BEHAVIOR ON SELF & EXAMPLES ===")
+          for cmd in [
+              ["gencode-gov", "assess", ".", "--json"],
+              ["gencode-gov", "status", ".", "--json"],
+              ["gencode-gov", "inspect", ".", "--json"],
+              ["gencode-gov", "exceptions", "list", "--json"],
+              ["gencode-gov", "assess", "examples/minimal-project", "--json"],
+          ]:
+              res = subprocess.run(cmd, capture_output=True, text=True)
+              print("CMD:", " ".join(cmd), "RC=", res.returncode)
+              print("STDOUT:", res.stdout[:1500])
+              if res.stderr:
+                  print("STDERR:", res.stderr[:600])
+
+          print("=== 3. MODULE IMPORT GRAPH & DISCONNECTED MODULES IN src/gencode_gov ===")
+          py_files = sorted((root / "src/gencode_gov").rglob("*.py"))
+          inbound = {str(p.relative_to(root / "src/gencode_gov")): set() for p in py_files}
+          for p in py_files:
+              rel_src = str(p.relative_to(root / "src/gencode_gov"))
+              txt = p.read_text(encoding="utf-8")
+              for m in re.finditer(r"(?:from|import)\s+(gencode_gov(?:\.[A-Za-z0-9_]+)*)", txt):
+                  mod = m.group(1).replace("gencode_gov.", "").replace(".", "/")
+                  for cand in (f"{mod}.py", f"{mod}/__init__.py"):
+                      if cand in inbound and cand != rel_src:
+                          inbound[cand].add(rel_src)
+              for m in re.finditer(r"from\s+(gencode_gov(?:\.[A-Za-z0-9_]+)*)\s+import\s+([A-Za-z0-9_,\s()]+)", txt):
+                  base_mod = m.group(1).replace("gencode_gov.", "").replace(".", "/")
+                  for sym in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", m.group(2)):
+                      cand = f"{base_mod}/{sym}.py"
+                      if cand in inbound and cand != rel_src:
+                          inbound[cand].add(rel_src)
+          zero_inbound = [k for k, v in sorted(inbound.items()) if not v and not k.endswith("__init__.py")]
+          print("Modules in src/gencode_gov with 0 inbound src imports:", zero_inbound)
+
+          print("=== 4. WORKFLOW SHA PINNING, TRIGGERS & PERMISSIONS AUDIT ===")
+          for wf in sorted((root / ".github/workflows").glob("*.yml")):
+              if wf.name == "recon_full_audit.yml":
+                  continue
+              wtxt = wf.read_text(encoding="utf-8")
+              uses = re.findall(r"uses:\s*([^\s#]+)", wtxt)
+              unpinned = [u for u in uses if "@" in u and not u.startswith("./") and not re.fullmatch(r"[0-9a-f]{40}", u.split("@", 1)[1])]
+              has_perms = "permissions:" in wtxt
+              print(f"  {wf.name}: uses={len(uses)} unpinned={unpinned} has_permissions={has_perms}")
+
+          print("=== 5. BROKEN MARKDOWN LINKS & DUPLICATE DOCS AUDIT ===")
+          broken_links = []
+          for md in sorted(root.rglob("*.md")):
+              if ".git" in md.parts:
+                  continue
+              mtxt = md.read_text(encoding="utf-8", errors="replace")
+              mtxt_nc = re.sub(r"```.*?```", "", mtxt, flags=re.S)
+              for lm in re.finditer(r"\[[^\]]+\]\(([^)#\s]+)(?:#[^)]*)?\)", mtxt_nc):
+                  target = lm.group(1)
+                  if "://" in target or target.startswith("mailto:"):
+                      continue
+                  resolved = (md.parent / target).resolve()
+                  if not resolved.exists():
+                      broken_links.append((str(md.relative_to(root)), target))
+          print(f"Broken relative markdown links ({len(broken_links)}):", broken_links[:50])
+
+          print("=== 6. KEY SOURCE FILES DUMP ===")
+          key_files = [
+              "src/gencode_gov/cli.py",
+              "src/gencode_gov/rules/loader.py",
+              "src/gencode_gov/rules/registry.py",
+              "src/gencode_gov/verification/engine.py",
+              "src/gencode_gov/policies/exceptions.py",
+              "src/gencode_gov/reporting/html_reporter.py",
+              "src/gencode_gov/reporting/json_reporter.py",
+              "scripts/validation/validate_all.py",
+              ".gencode-gov/project.yaml",
+              ".gencode-gov/config.yaml",
+          ]
+          for kf in key_files:
+              kp = root / kf
+              if kp.is_file():
+                  print(f"--- FILE: {kf} ({kp.stat().st_size} bytes) ---")
+                  print(kp.read_text(encoding="utf-8"))
+          PY
