@@ -555,12 +555,32 @@ def cmd_audit(root: Path) -> int:
                     *base_flags,
                 ]
                 subprocess.run(uni_cmd, cwd=root, check=True, timeout=300)  # noqa: S603
-    subprocess.run(  # noqa: S603
-        [sys.executable, "-m", "pip_audit", "--skip-editable", "--strict", "--desc"],
-        cwd=root,
-        check=True,
-        timeout=300,
-    )
+        frozen = subprocess.run(  # noqa: S603
+            [sys.executable, "-m", "pip", "freeze", "--all", "--exclude-editable"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=120,
+        )
+        env_req = tmpdir / "active-env-audit.txt"
+        env_req.write_text(frozen.stdout, encoding="utf-8")
+        subprocess.run(  # noqa: S603
+            [
+                sys.executable,
+                "-m",
+                "pip_audit",
+                "--requirement",
+                str(env_req),
+                "--no-deps",
+                "--disable-pip",
+                "--strict",
+                "--desc",
+            ],
+            cwd=root,
+            check=True,
+            timeout=300,
+        )
     return 0
 
 
