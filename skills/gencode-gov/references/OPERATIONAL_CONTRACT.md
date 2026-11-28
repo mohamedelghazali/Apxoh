@@ -194,3 +194,8 @@ never assign severity to `needs_validation` leads, and never convert `BLOCKED` o
 ---
 
 **End of AGENTS.md**
+
+## Extended Deterministic Governance Controls
+
+- **AI Code & Test Integrity (`SE-CQ-003`, `SE-TST-005`)**: Zero `NotImplementedError` production stubs, zero silent broad `except Exception: pass` handlers, enforced function cyclomatic complexity budgets, zero hollow/tautological `assert True` tests, and zero unapproved regression test deletions.
+- **Architecture, Compatibility & Resilience (`SE-ARC-002`, `SE-API-002`, `SE-DB-003`, `SE-REL-005`, `SE-DEV-002`, `SE-SEC-011`)**: Executable layer boundaries and cycle-free module DAGs, frozen API & JSON Schema compatibility (`gencode-gov diff-check`), expand-contract zero-downtime migrations, mandatory outbound timeouts & bounded retries, 40-character Action SHA & lockfile pinning, CycloneDX SBOM license/CVE gating, and commit-bound human attestations (`gencode-gov attest`, forbidden to AI agents).

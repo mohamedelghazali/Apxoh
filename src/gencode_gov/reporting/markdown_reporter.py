@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from gencode_gov.core.logging import get_logger
+from gencode_gov.reporting.html_reporter import _atomic_safe_write
 from gencode_gov.reporting.json_reporter import JsonReporter
 
 logger = get_logger("reporting.markdown")
@@ -69,5 +70,5 @@ class MarkdownReporter:
         report = JsonReporter().build(project_root, expected_commit_sha=expected_commit_sha)
         output_dir.mkdir(parents=True, exist_ok=True)
         target = output_dir / "report.md"
-        target.write_text(self.render(report), encoding="utf-8")
+        _atomic_safe_write(target, self.render(report))
         return target

@@ -285,3 +285,13 @@ class EvidenceStore:
             ):
                 latest = record
         return latest
+
+
+def read_evidence(
+    project_root: Path, domain: str, evidence_id: str | None = None
+) -> EvidenceRecord | list[EvidenceRecord]:
+    """Read persisted domain evidence via EvidenceStore (frozen public API helper)."""
+    store = EvidenceStore(project_root)
+    if evidence_id is not None:  # pragma: no cover
+        return store.read(domain, evidence_id)
+    return list(store.iter_records(domain))

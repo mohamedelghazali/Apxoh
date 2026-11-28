@@ -29,8 +29,6 @@ _EMPTY_MODULES = (
     "gencode_gov.integrations.agents.windsurf",
     "gencode_gov.language_support.compatibility",
     "gencode_gov.orchestrator.task_dispatcher",
-    "gencode_gov.reporting.html_reporter",
-    "gencode_gov.rules.evaluator",
     "gencode_gov.verification.profiles",
 )
 
@@ -63,3 +61,8 @@ def test_language_profile_loader_exports_public_api() -> None:
     module = importlib.import_module("gencode_gov.language_support.language_profile_loader")
     assert module.__all__ == ["LanguageProfile", "load_language_profile"]
     assert callable(module.load_language_profile)
+
+
+def test_implemented_governance_modules_export_public_api() -> None:
+    assert "HtmlReporter" in importlib.import_module("gencode_gov.reporting.html_reporter").__all__
+    assert "RuleEvaluator" in importlib.import_module("gencode_gov.rules.evaluator").__all__

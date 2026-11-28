@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/drift-ledger/1.0.0",
+  "title": "GENCODE-GOV Longitudinal Drift Ledger Entry",
+  "description": "Append-only structural complexity, coupling, dependency, and exception telemetry per commit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recorded_at",
+    "commit_sha",
+    "python_files",
+    "max_cyclomatic_complexity",
+    "mean_cyclomatic_complexity",
+    "internal_import_edges",
+    "declared_dependencies",
+    "active_exceptions"
+  ],
+  "properties": {
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "python_files": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_cyclomatic_complexity": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mean_cyclomatic_complexity": {
+      "type": "number",
+      "minimum": 0
+    },
+    "internal_import_edges": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "declared_dependencies": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "active_exceptions": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

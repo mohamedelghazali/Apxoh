@@ -1,0 +1,44 @@
+id: SE-TST-005
+metadata:
+  title: Test Assertion Adequacy and Regression Anti-Tampering Governance
+  domain: testing
+  version: 1.0.0
+  status: active
+  severity: critical
+  enforcement: critical
+  description: >
+    Automated tests must contain genuine behavioral assertions rather than hollow
+    bodies or tautological assert True checks, and diffs must not delete existing
+    regression test files to mask failures.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, testing, verification, release]
+requirement:
+  statement: >
+    Every automated test function must execute at least one non-tautological
+    assertion or verification helper rather than an empty pass body or literal
+    assert True metric-gaming placeholder, and change sets must preserve existing
+    regression test suites without deleting test files to force green builds.
+verification:
+  mode: deterministic
+  methods:
+    - assertion-adequacy-check
+    - regression-tamper-diff-check
+acceptance:
+  hollow_test_functions: 0
+  tautological_assert_true_tests: 0
+  deleted_regression_test_files: 0
+evidence:
+  required:
+    - test-assertion-adequacy-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

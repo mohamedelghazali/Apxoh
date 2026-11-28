@@ -1,0 +1,42 @@
+id: SE-API-002
+metadata:
+  title: Frozen Public API Contract and Schema Backward-Compatibility Governance
+  domain: api-integration
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Declared frozen public API entrypoints and published JSON schemas must remain
+    intact and backward-compatible across changes unless governed by a major release.
+scope:
+  project_types: [all]
+  lifecycle_stages: [design, implementation, verification, release]
+requirement:
+  statement: >
+    Every module and symbol listed under frozen_apis in compatibility manifests
+    must resolve to an exported symbol on disk, and modifications to JSON Schema
+    contracts must not silently drop existing properties or enum values.
+verification:
+  mode: deterministic
+  methods:
+    - frozen-api-contract-check
+    - schema-compatibility-diff-check
+acceptance:
+  missing_frozen_api_symbols: 0
+  unapproved_breaking_schema_changes: 0
+evidence:
+  required:
+    - frozen-api-verification-report
+    - schema-compatibility-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

@@ -4,12 +4,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from defusedxml import ElementTree
 from defusedxml.common import DefusedXmlException
 
 from gencode_gov.core.constants import STATUS_BLOCKED, STATUS_FAIL, STATUS_PASS
+from gencode_gov.verification.domain_verifiers import (
+    GovernanceDomainRunner,
+    HumanAttestationRunner,
+    evaluate_domain_method,
+)
 from gencode_gov.verification.runners.base import Runner, RunnerOutcome, RunnerResult
+from gencode_gov.verification.runners.polyglot_quality_runner import PolyglotQualityRunner
 from gencode_gov.verification.scenario_verifier import (
     verify_negative_security_scenarios,
     verify_observability_and_crash_dump_controls,
@@ -30,6 +37,12 @@ def create_assess_runner(runner_name: str) -> Runner | None:
         from gencode_gov.security_audit.governance_bridge import SecurityAuditRunner
 
         return SecurityAuditRunner()
+    if runner_name == "polyglot-quality":
+        return PolyglotQualityRunner()
+    if runner_name == "governance-domain":
+        return GovernanceDomainRunner()
+    if runner_name == "human-attestation":
+        return HumanAttestationRunner()
     return None
 
 
@@ -57,8 +70,11 @@ def evaluate_extended_method(
     method_id: str,
     result: RunnerResult,
     project_root: Path,
+    *,
+    rule: Any | None = None,
+    commit_sha: str | None = None,
 ) -> tuple[str, str] | None:
-    """Evaluate language-neutral test, scenario, security-audit, observability, and lint methods."""
+    """Evaluate deterministic test, lint, polyglot, security-audit, and domain methods."""
     if result.outcome == RunnerOutcome.BLOCKED:
         return STATUS_BLOCKED, result.reason or "verification runner was blocked"
 
@@ -72,6 +88,11 @@ def evaluate_extended_method(
 
     if method_id == "observability-behavior-test-verification":
         return verify_observability_and_crash_dump_controls(project_root)
+
+    if method_id == "polyglot-static-quality-check":
+        if result.outcome == RunnerOutcome.PASS:
+            return STATUS_PASS, result.reason or "polyglot static quality profiles verified"
+        return STATUS_FAIL, result.reason or "polyglot static quality check failed"
 
     if method_id in {
         "automated-test-suite-execution",
@@ -118,7 +139,7 @@ def evaluate_extended_method(
             )
         return STATUS_FAIL, f"{adapter} recorded {skipped} skipped test(s)"
 
-    if method_id in {"static-lint-execution", "zero-lint-errors-check"}:
+    if method_id in {"static-lint-execution", "zero-lint-errors-check", "ruff-check"}:
         json_files = [Path(p) for p in result.artifacts if str(p).endswith(".json")]
         if len(json_files) != 1 or not json_files[0].is_file() or json_files[0].is_symlink():
             return STATUS_BLOCKED, "Ruff runner did not attach a valid JSON evidence artifact"
@@ -134,4 +155,9 @@ def evaluate_extended_method(
             return STATUS_PASS, "Ruff reported zero static analysis issues"
         return STATUS_FAIL, f"Ruff reported {len(issues)} static analysis issue(s)"
 
-    return None
+    return evaluate_domain_method(
+        method_id,
+        project_root,
+        rule=rule,
+        commit_sha=commit_sha,
+    )

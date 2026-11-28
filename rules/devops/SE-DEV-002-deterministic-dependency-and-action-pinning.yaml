@@ -1,0 +1,43 @@
+id: SE-DEV-002
+metadata:
+  title: Deterministic Dependency Lockfile and Immutable CI Action SHA Pinning
+  domain: devops
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    CI/CD workflows must pin external GitHub Actions to full 40-character commit
+    SHAs and repositories must commit deterministic dependency lockfiles.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, deployment, release]
+requirement:
+  statement: >
+    Pin every third-party GitHub Action in .github/workflows to an immutable
+    40-character commit SHA (except OIDC-mandated slsa-github-generator reusable
+    tags) and maintain committed deterministic dependency lockfiles so builds and
+    CI pipelines are reproducible and resistant to mutable-tag substitution.
+verification:
+  mode: deterministic
+  methods:
+    - github-actions-sha-pinning-scan
+    - dependency-lockfile-determinism-check
+acceptance:
+  unpinned_third_party_workflow_actions: 0
+  deterministic_lockfile_present: true
+evidence:
+  required:
+    - workflow-sha-pinning-report
+    - dependency-lockfile-inventory
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

@@ -22,7 +22,7 @@ def test_project_install_stages_pack_and_manifest(
     manifest = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["scope"] == "project"
     assert manifest["activation"] == "manual"
-    assert len(manifest["files"]) == 22
+    assert len(manifest["files"]) == 27
     assert "settings were not changed" in capsys.readouterr().out
 
 

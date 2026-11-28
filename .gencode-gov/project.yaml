@@ -21,8 +21,8 @@ lifecycle:
 
 stakeholders:
   maintainer: "mohamedelghazali"
-  security_lead: TBD
-  engineering_lead: TBD
+  security_lead: GENCODE-GOV Core Maintainers
+  engineering_lead: GENCODE-GOV Core Maintainers
 
 policy_profile:
   strictness: "maximum"

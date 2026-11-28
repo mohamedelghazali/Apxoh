@@ -29,7 +29,8 @@ def test_registry_contains_only_explicit_implementations() -> None:
 
 
 def test_unknown_method_is_not_claimed_as_implemented() -> None:
-    assert resolve_method("load-test-execution") is None
+    assert resolve_method("unregistered-verification-method") is None
+    assert resolve_method("load-test-execution") is not None
 
 
 @pytest.mark.parametrize("value", ["", None])
@@ -39,9 +40,11 @@ def test_resolve_method_rejects_invalid_identifier(value: object) -> None:
 
 
 def test_resolve_methods_preserves_supported_and_unsupported_methods() -> None:
-    result = resolve_methods(["type-checker-execution", "api-contract-analysis"])
-    assert result[0][1] is not None
-    assert result[1] == ("api-contract-analysis", None)
+    result = resolve_methods(
+        ["type-checker-execution", "api-contract-analysis", "unregistered-verification-method"]
+    )
+    assert result[0][1] is not None and result[1][1] is not None
+    assert result[2] == ("unregistered-verification-method", None)
 
 
 @pytest.mark.parametrize(
