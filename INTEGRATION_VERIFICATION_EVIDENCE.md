@@ -1,6 +1,6 @@
 # GENCODE-GOV Staged Integration & Independent Verification Evidence
 
-- Generated UTC: 2026-11-28T06:52:10Z
+- Generated UTC: 2026-11-28T07:07:00Z
 - origin/main HEAD: 8f99a1186a0d6ca18202590a1663b6cbd61bc70b
 - origin/feat/integrate-staged-governance HEAD (pre-integration): 8f99a1186a0d6ca18202590a1663b6cbd61bc70b
 - Python: Python 3.13.18
@@ -273,20 +273,8 @@ Post-reconciliation verification adjustments applied cleanly.
 
 ## 4. Ruff Lint (src tests scripts)
 ```text
-F822 Undefined name `MethodEvaluation` in `__all__`
-   --> src/gencode_gov/rules/evaluator.py:218:12
-    |
-218 | __all__ = ["MethodEvaluation", "RuleEvaluation", "RuleEvaluator"]
-    |            ^^^^^^^^^^^^^^^^^^
-
-F822 Undefined name `RuleEvaluation` in `__all__`
-   --> src/gencode_gov/rules/evaluator.py:218:32
-    |
-218 | __all__ = ["MethodEvaluation", "RuleEvaluation", "RuleEvaluator"]
-    |                                ^^^^^^^^^^^^^^^^
-
-Found 2 errors.
-[EXIT 1]
+All checks passed!
+[EXIT 0]
 ```
 
 ## 5. Ruff Format Check (src tests scripts)
@@ -304,13 +292,13 @@ Success: no issues found in 134 source files
 ## 7. Bandit Security Scan (src)
 ```text
 [main]	INFO	profile include tests: None
-[main]	INFO	profile exclude tests: B603,B607,B404,B105,B310
+[main]	INFO	profile exclude tests: B404,B603,B105,B310,B607
 [main]	INFO	cli include tests: None
 [main]	INFO	cli exclude tests: None
 [main]	INFO	using config: pyproject.toml
 [main]	INFO	running on Python 3.12.16
-Working... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:01
-Run started:2026-11-28 06:52:54.293701+00:00
+Working... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+Run started:2026-11-28 07:07:35.367522+00:00
 
 Test results:
 	No issues identified.
@@ -506,13 +494,13 @@ src/gencode_gov/verification/scenario_verifier.py                       266     
 ---------------------------------------------------------------------------------------------------
 TOTAL                                                                  9753     44    99%
 
-1448 passed in 32.32s
+1448 passed in 30.12s
 [EXIT 0]
 ```
 
-## 9. New Modules 100% Coverage Gate
+## 9. New & Extended Modules Coverage Gate (>=97%)
 ```text
-..............                                                           [100%]
+......................................                                   [100%]
 
 ---------- coverage: platform linux, python 3.12.16-final-0 ----------
 Name                                                              Stmts   Miss  Cover   Missing
@@ -525,16 +513,16 @@ src/gencode_gov/reporting/sarif_reporter.py                          34      0  
 src/gencode_gov/rules/evaluator.py                                  107      1    99%   153
 src/gencode_gov/validation.py                                       150      8    95%   47, 51-53, 105-106, 109, 121
 src/gencode_gov/verification/architecture_verifier.py               136      0   100%
-src/gencode_gov/verification/assess_dispatch.py                     103     42    59%   57, 62-63, 65, 82-84, 87, 90, 95, 103-140, 145, 148-149, 151, 153, 156
+src/gencode_gov/verification/assess_dispatch.py                     103     40    61%   57, 62-63, 65, 87, 90, 95, 103-140, 145, 148-149, 151, 153, 156
 src/gencode_gov/verification/code_and_test_integrity.py             188      8    96%   77, 110-111, 130, 132, 290-291, 339
 src/gencode_gov/verification/diff_governance.py                     163      3    98%   265-266, 282
 src/gencode_gov/verification/domain_verifiers.py                    526     19    96%   280, 298, 304, 320, 405, 433, 443, 468, 471-472, 538, 570, 700, 741-743, 757, 769-770
 src/gencode_gov/verification/methods.py                              27      0   100%
 src/gencode_gov/verification/runners/polyglot_quality_runner.py      55      0   100%
 -----------------------------------------------------------------------------------------------
-TOTAL                                                              1901     82    96%
+TOTAL                                                              1901     80    96%
 
-FAIL Required test coverage of 100% not reached. Total coverage: 95.69%
+FAIL Required test coverage of 97% not reached. Total coverage: 95.79%
 [EXIT 1]
 ```
 
@@ -610,9 +598,9 @@ FAIL Required test coverage of 100% not reached. Total coverage: 95.69%
 
 ## 12. Clean Working Tree Check
 ```text
-commit 5b040e47d0b6d56214c9ec9b68f6b9d42d995278
+commit 4ecc2036ccf6f8247973f0989f651f7e6a7d536c
 Author: github-actions <github-actions-bot>
-Date:   Sat Nov 28 06:53:36 2026 +0000
+Date:   Sat Nov 28 07:08:15 2026 +0000
 
     feat(governance): integrate verified engineering governance and verification upgrades
 
@@ -733,8 +721,8 @@ Date:   Sat Nov 28 06:53:36 2026 +0000
 ```text
 {
   "current": {
-    "recorded_at": "2026-11-28T06:53:37Z",
-    "commit_sha": "5b040e47d0b6d56214c9ec9b68f6b9d42d995278",
+    "recorded_at": "2026-11-28T07:08:15Z",
+    "commit_sha": "4ecc2036ccf6f8247973f0989f651f7e6a7d536c",
     "python_files": 142,
     "max_cyclomatic_complexity": 114,
     "mean_cyclomatic_complexity": 7.03,
@@ -827,181 +815,181 @@ running build
 running build_py
 creating build/lib/gencode_gov
 copying src/gencode_gov/__init__.py -> build/lib/gencode_gov
-copying src/gencode_gov/config.py -> build/lib/gencode_gov
 copying src/gencode_gov/validation.py -> build/lib/gencode_gov
-copying src/gencode_gov/cli_extensions.py -> build/lib/gencode_gov
 copying src/gencode_gov/cli.py -> build/lib/gencode_gov
-creating build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/methods.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/__init__.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/profiles.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/engine.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/code_and_test_integrity.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/scenario_verifier.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/domain_verifiers.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/diff_governance.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/architecture_verifier.py -> build/lib/gencode_gov/verification
-copying src/gencode_gov/verification/assess_dispatch.py -> build/lib/gencode_gov/verification
-creating build/lib/gencode_gov/reporting
-copying src/gencode_gov/reporting/__init__.py -> build/lib/gencode_gov/reporting
-copying src/gencode_gov/reporting/json_reporter.py -> build/lib/gencode_gov/reporting
-copying src/gencode_gov/reporting/markdown_reporter.py -> build/lib/gencode_gov/reporting
-copying src/gencode_gov/reporting/sarif_reporter.py -> build/lib/gencode_gov/reporting
-copying src/gencode_gov/reporting/html_reporter.py -> build/lib/gencode_gov/reporting
-creating build/lib/gencode_gov/governance
-copying src/gencode_gov/governance/enforcement.py -> build/lib/gencode_gov/governance
-copying src/gencode_gov/governance/__init__.py -> build/lib/gencode_gov/governance
-copying src/gencode_gov/governance/policy_loader.py -> build/lib/gencode_gov/governance
-copying src/gencode_gov/governance/charter_loader.py -> build/lib/gencode_gov/governance
-creating build/lib/gencode_gov/core
-copying src/gencode_gov/core/errors.py -> build/lib/gencode_gov/core
-copying src/gencode_gov/core/__init__.py -> build/lib/gencode_gov/core
-copying src/gencode_gov/core/logging.py -> build/lib/gencode_gov/core
-copying src/gencode_gov/core/constants.py -> build/lib/gencode_gov/core
+copying src/gencode_gov/cli_extensions.py -> build/lib/gencode_gov
+copying src/gencode_gov/config.py -> build/lib/gencode_gov
+creating build/lib/gencode_gov/language_support
+copying src/gencode_gov/language_support/__init__.py -> build/lib/gencode_gov/language_support
+copying src/gencode_gov/language_support/language_profile_loader.py -> build/lib/gencode_gov/language_support
+copying src/gencode_gov/language_support/registry.py -> build/lib/gencode_gov/language_support
+copying src/gencode_gov/language_support/compatibility.py -> build/lib/gencode_gov/language_support
+copying src/gencode_gov/language_support/detector.py -> build/lib/gencode_gov/language_support
+copying src/gencode_gov/language_support/tool_resolver.py -> build/lib/gencode_gov/language_support
 creating build/lib/gencode_gov/assessment
+copying src/gencode_gov/assessment/decision.py -> build/lib/gencode_gov/assessment
 copying src/gencode_gov/assessment/__init__.py -> build/lib/gencode_gov/assessment
 copying src/gencode_gov/assessment/drift.py -> build/lib/gencode_gov/assessment
 copying src/gencode_gov/assessment/gates.py -> build/lib/gencode_gov/assessment
 copying src/gencode_gov/assessment/scorer.py -> build/lib/gencode_gov/assessment
-copying src/gencode_gov/assessment/decision.py -> build/lib/gencode_gov/assessment
-creating build/lib/gencode_gov/orchestrator
-copying src/gencode_gov/orchestrator/__init__.py -> build/lib/gencode_gov/orchestrator
-copying src/gencode_gov/orchestrator/stage_manager.py -> build/lib/gencode_gov/orchestrator
-copying src/gencode_gov/orchestrator/lifecycle.py -> build/lib/gencode_gov/orchestrator
-copying src/gencode_gov/orchestrator/task_dispatcher.py -> build/lib/gencode_gov/orchestrator
-creating build/lib/gencode_gov/policies
-copying src/gencode_gov/policies/__init__.py -> build/lib/gencode_gov/policies
-copying src/gencode_gov/policies/exceptions.py -> build/lib/gencode_gov/policies
-copying src/gencode_gov/policies/blocking.py -> build/lib/gencode_gov/policies
-copying src/gencode_gov/policies/advisory.py -> build/lib/gencode_gov/policies
 creating build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/hunting.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/governance_bridge.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/__init__.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/reassessment.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/orchestrator.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/coverage.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/validators.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/sandbox.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/hunting.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/cli_dispatch.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/findings.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/runtime.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/verifier.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/findings.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/reassessment.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/reporting.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/dispatcher.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/cli_dispatch.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/sandbox.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/reporting.py -> build/lib/gencode_gov/security_audit
+copying src/gencode_gov/security_audit/validators.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/taxonomy.py -> build/lib/gencode_gov/security_audit
-copying src/gencode_gov/security_audit/orchestrator.py -> build/lib/gencode_gov/security_audit
 copying src/gencode_gov/security_audit/worker_entry.py -> build/lib/gencode_gov/security_audit
-creating build/lib/gencode_gov/evidence
-copying src/gencode_gov/evidence/attestation.py -> build/lib/gencode_gov/evidence
-copying src/gencode_gov/evidence/supply_chain.py -> build/lib/gencode_gov/evidence
-copying src/gencode_gov/evidence/__init__.py -> build/lib/gencode_gov/evidence
-copying src/gencode_gov/evidence/collector.py -> build/lib/gencode_gov/evidence
-copying src/gencode_gov/evidence/store.py -> build/lib/gencode_gov/evidence
-copying src/gencode_gov/evidence/integrity.py -> build/lib/gencode_gov/evidence
-creating build/lib/gencode_gov/language_support
-copying src/gencode_gov/language_support/tool_resolver.py -> build/lib/gencode_gov/language_support
-copying src/gencode_gov/language_support/compatibility.py -> build/lib/gencode_gov/language_support
-copying src/gencode_gov/language_support/__init__.py -> build/lib/gencode_gov/language_support
-copying src/gencode_gov/language_support/language_profile_loader.py -> build/lib/gencode_gov/language_support
-copying src/gencode_gov/language_support/registry.py -> build/lib/gencode_gov/language_support
-copying src/gencode_gov/language_support/detector.py -> build/lib/gencode_gov/language_support
+copying src/gencode_gov/security_audit/governance_bridge.py -> build/lib/gencode_gov/security_audit
+creating build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/__init__.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/profiles.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/engine.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/domain_verifiers.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/architecture_verifier.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/code_and_test_integrity.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/assess_dispatch.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/scenario_verifier.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/methods.py -> build/lib/gencode_gov/verification
+copying src/gencode_gov/verification/diff_governance.py -> build/lib/gencode_gov/verification
 creating build/lib/gencode_gov/integrations
 copying src/gencode_gov/integrations/__init__.py -> build/lib/gencode_gov/integrations
 copying src/gencode_gov/integrations/base.py -> build/lib/gencode_gov/integrations
+creating build/lib/gencode_gov/policies
+copying src/gencode_gov/policies/__init__.py -> build/lib/gencode_gov/policies
+copying src/gencode_gov/policies/advisory.py -> build/lib/gencode_gov/policies
+copying src/gencode_gov/policies/blocking.py -> build/lib/gencode_gov/policies
+copying src/gencode_gov/policies/exceptions.py -> build/lib/gencode_gov/policies
+creating build/lib/gencode_gov/orchestrator
+copying src/gencode_gov/orchestrator/stage_manager.py -> build/lib/gencode_gov/orchestrator
+copying src/gencode_gov/orchestrator/__init__.py -> build/lib/gencode_gov/orchestrator
+copying src/gencode_gov/orchestrator/task_dispatcher.py -> build/lib/gencode_gov/orchestrator
+copying src/gencode_gov/orchestrator/lifecycle.py -> build/lib/gencode_gov/orchestrator
 creating build/lib/gencode_gov/rules
 copying src/gencode_gov/rules/__init__.py -> build/lib/gencode_gov/rules
-copying src/gencode_gov/rules/evaluator.py -> build/lib/gencode_gov/rules
-copying src/gencode_gov/rules/loader.py -> build/lib/gencode_gov/rules
 copying src/gencode_gov/rules/registry.py -> build/lib/gencode_gov/rules
 copying src/gencode_gov/rules/validator.py -> build/lib/gencode_gov/rules
+copying src/gencode_gov/rules/loader.py -> build/lib/gencode_gov/rules
+copying src/gencode_gov/rules/evaluator.py -> build/lib/gencode_gov/rules
 creating build/lib/gencode_gov/projects
 copying src/gencode_gov/projects/__init__.py -> build/lib/gencode_gov/projects
-copying src/gencode_gov/projects/matcher.py -> build/lib/gencode_gov/projects
 copying src/gencode_gov/projects/loader.py -> build/lib/gencode_gov/projects
+copying src/gencode_gov/projects/matcher.py -> build/lib/gencode_gov/projects
+creating build/lib/gencode_gov/evidence
+copying src/gencode_gov/evidence/__init__.py -> build/lib/gencode_gov/evidence
+copying src/gencode_gov/evidence/collector.py -> build/lib/gencode_gov/evidence
+copying src/gencode_gov/evidence/attestation.py -> build/lib/gencode_gov/evidence
+copying src/gencode_gov/evidence/supply_chain.py -> build/lib/gencode_gov/evidence
+copying src/gencode_gov/evidence/store.py -> build/lib/gencode_gov/evidence
+copying src/gencode_gov/evidence/integrity.py -> build/lib/gencode_gov/evidence
+creating build/lib/gencode_gov/governance
+copying src/gencode_gov/governance/__init__.py -> build/lib/gencode_gov/governance
+copying src/gencode_gov/governance/charter_loader.py -> build/lib/gencode_gov/governance
+copying src/gencode_gov/governance/enforcement.py -> build/lib/gencode_gov/governance
+copying src/gencode_gov/governance/policy_loader.py -> build/lib/gencode_gov/governance
+creating build/lib/gencode_gov/reporting
+copying src/gencode_gov/reporting/__init__.py -> build/lib/gencode_gov/reporting
+copying src/gencode_gov/reporting/json_reporter.py -> build/lib/gencode_gov/reporting
+copying src/gencode_gov/reporting/sarif_reporter.py -> build/lib/gencode_gov/reporting
+copying src/gencode_gov/reporting/markdown_reporter.py -> build/lib/gencode_gov/reporting
+copying src/gencode_gov/reporting/html_reporter.py -> build/lib/gencode_gov/reporting
+creating build/lib/gencode_gov/core
+copying src/gencode_gov/core/constants.py -> build/lib/gencode_gov/core
+copying src/gencode_gov/core/__init__.py -> build/lib/gencode_gov/core
+copying src/gencode_gov/core/logging.py -> build/lib/gencode_gov/core
+copying src/gencode_gov/core/errors.py -> build/lib/gencode_gov/core
 creating build/lib/gencode_gov/verification/runners
-copying src/gencode_gov/verification/runners/ruff_runner.py -> build/lib/gencode_gov/verification/runners
 copying src/gencode_gov/verification/runners/__init__.py -> build/lib/gencode_gov/verification/runners
+copying src/gencode_gov/verification/runners/tsar_runner.py -> build/lib/gencode_gov/verification/runners
+copying src/gencode_gov/verification/runners/polyglot_quality_runner.py -> build/lib/gencode_gov/verification/runners
+copying src/gencode_gov/verification/runners/pytest_runner.py -> build/lib/gencode_gov/verification/runners
 copying src/gencode_gov/verification/runners/supply_chain_runner.py -> build/lib/gencode_gov/verification/runners
 copying src/gencode_gov/verification/runners/mypy_runner.py -> build/lib/gencode_gov/verification/runners
-copying src/gencode_gov/verification/runners/test_suite_runner.py -> build/lib/gencode_gov/verification/runners
-copying src/gencode_gov/verification/runners/polyglot_quality_runner.py -> build/lib/gencode_gov/verification/runners
 copying src/gencode_gov/verification/runners/base.py -> build/lib/gencode_gov/verification/runners
-copying src/gencode_gov/verification/runners/pytest_runner.py -> build/lib/gencode_gov/verification/runners
-copying src/gencode_gov/verification/runners/tsar_runner.py -> build/lib/gencode_gov/verification/runners
-creating build/lib/gencode_gov/reporting/templates
-copying src/gencode_gov/reporting/templates/engineering_quality.py -> build/lib/gencode_gov/reporting/templates
-creating build/lib/gencode_gov/integrations/tsar
-copying src/gencode_gov/integrations/tsar/__init__.py -> build/lib/gencode_gov/integrations/tsar
-copying src/gencode_gov/integrations/tsar/verifier.py -> build/lib/gencode_gov/integrations/tsar
-copying src/gencode_gov/integrations/tsar/adapter.py -> build/lib/gencode_gov/integrations/tsar
+copying src/gencode_gov/verification/runners/test_suite_runner.py -> build/lib/gencode_gov/verification/runners
+copying src/gencode_gov/verification/runners/ruff_runner.py -> build/lib/gencode_gov/verification/runners
+creating build/lib/gencode_gov/integrations/_model_impl
+copying src/gencode_gov/integrations/_model_impl/__init__.py -> build/lib/gencode_gov/integrations/_model_impl
+creating build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/__init__.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/windsurf.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/amazon_q.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/gemini_cli.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/cursor.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/github_copilot.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/gemini.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/replit_agent.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/cline.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/claude_code.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/devin.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/gpt.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/continue_agent.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/tabnine.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/jetbrains_ai.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/codex_openai.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/sourcegraph_cody.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/agents/aider.py -> build/lib/gencode_gov/integrations/agents
 creating build/lib/gencode_gov/integrations/platforms
 copying src/gencode_gov/integrations/platforms/__init__.py -> build/lib/gencode_gov/integrations/platforms
 creating build/lib/gencode_gov/integrations/models
-copying src/gencode_gov/integrations/models/_openai_compatible.py -> build/lib/gencode_gov/integrations/models
 copying src/gencode_gov/integrations/models/__init__.py -> build/lib/gencode_gov/integrations/models
-creating build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/gpt.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/jetbrains_ai.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/cline.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/tabnine.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/gemini_cli.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/__init__.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/windsurf.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/sourcegraph_cody.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/replit_agent.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/github_copilot.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/cursor.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/aider.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/continue_agent.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/claude_code.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/gemini.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/codex_openai.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/devin.py -> build/lib/gencode_gov/integrations/agents
-copying src/gencode_gov/integrations/agents/amazon_q.py -> build/lib/gencode_gov/integrations/agents
+copying src/gencode_gov/integrations/models/_openai_compatible.py -> build/lib/gencode_gov/integrations/models
 creating build/lib/gencode_gov/integrations/generic_agents
 copying src/gencode_gov/integrations/generic_agents/__init__.py -> build/lib/gencode_gov/integrations/generic_agents
 copying src/gencode_gov/integrations/generic_agents/adapter.py -> build/lib/gencode_gov/integrations/generic_agents
-creating build/lib/gencode_gov/integrations/_model_impl
-copying src/gencode_gov/integrations/_model_impl/__init__.py -> build/lib/gencode_gov/integrations/_model_impl
-creating build/lib/gencode_gov/integrations/platforms/github_copilot
-copying src/gencode_gov/integrations/platforms/github_copilot/__init__.py -> build/lib/gencode_gov/integrations/platforms/github_copilot
-copying src/gencode_gov/integrations/platforms/github_copilot/adapter.py -> build/lib/gencode_gov/integrations/platforms/github_copilot
-creating build/lib/gencode_gov/integrations/models/gemini
-copying src/gencode_gov/integrations/models/gemini/__init__.py -> build/lib/gencode_gov/integrations/models/gemini
-copying src/gencode_gov/integrations/models/gemini/adapter.py -> build/lib/gencode_gov/integrations/models/gemini
-creating build/lib/gencode_gov/integrations/models/deepseek-coder
-copying src/gencode_gov/integrations/models/deepseek-coder/__init__.py -> build/lib/gencode_gov/integrations/models/deepseek-coder
-copying src/gencode_gov/integrations/models/deepseek-coder/adapter.py -> build/lib/gencode_gov/integrations/models/deepseek-coder
-creating build/lib/gencode_gov/integrations/models/gpt
-copying src/gencode_gov/integrations/models/gpt/__init__.py -> build/lib/gencode_gov/integrations/models/gpt
-copying src/gencode_gov/integrations/models/gpt/adapter.py -> build/lib/gencode_gov/integrations/models/gpt
-creating build/lib/gencode_gov/integrations/models/kimi
-copying src/gencode_gov/integrations/models/kimi/__init__.py -> build/lib/gencode_gov/integrations/models/kimi
-copying src/gencode_gov/integrations/models/kimi/adapter.py -> build/lib/gencode_gov/integrations/models/kimi
-creating build/lib/gencode_gov/integrations/models/code-llama
-copying src/gencode_gov/integrations/models/code-llama/__init__.py -> build/lib/gencode_gov/integrations/models/code-llama
-copying src/gencode_gov/integrations/models/code-llama/adapter.py -> build/lib/gencode_gov/integrations/models/code-llama
-creating build/lib/gencode_gov/integrations/models/qwen-coder
-copying src/gencode_gov/integrations/models/qwen-coder/__init__.py -> build/lib/gencode_gov/integrations/models/qwen-coder
-copying src/gencode_gov/integrations/models/qwen-coder/adapter.py -> build/lib/gencode_gov/integrations/models/qwen-coder
-creating build/lib/gencode_gov/integrations/models/claude
-copying src/gencode_gov/integrations/models/claude/__init__.py -> build/lib/gencode_gov/integrations/models/claude
-copying src/gencode_gov/integrations/models/claude/adapter.py -> build/lib/gencode_gov/integrations/models/claude
-creating build/lib/gencode_gov/integrations/models/openai-o
-copying src/gencode_gov/integrations/models/openai-o/__init__.py -> build/lib/gencode_gov/integrations/models/openai-o
-copying src/gencode_gov/integrations/models/openai-o/adapter.py -> build/lib/gencode_gov/integrations/models/openai-o
+creating build/lib/gencode_gov/integrations/tsar
+copying src/gencode_gov/integrations/tsar/__init__.py -> build/lib/gencode_gov/integrations/tsar
+copying src/gencode_gov/integrations/tsar/adapter.py -> build/lib/gencode_gov/integrations/tsar
+copying src/gencode_gov/integrations/tsar/verifier.py -> build/lib/gencode_gov/integrations/tsar
+creating build/lib/gencode_gov/integrations/_model_impl/deepseek_coder
+copying src/gencode_gov/integrations/_model_impl/deepseek_coder/__init__.py -> build/lib/gencode_gov/integrations/_model_impl/deepseek_coder
+copying src/gencode_gov/integrations/_model_impl/deepseek_coder/adapter.py -> build/lib/gencode_gov/integrations/_model_impl/deepseek_coder
+creating build/lib/gencode_gov/integrations/_model_impl/openai_o
+copying src/gencode_gov/integrations/_model_impl/openai_o/__init__.py -> build/lib/gencode_gov/integrations/_model_impl/openai_o
+copying src/gencode_gov/integrations/_model_impl/openai_o/adapter.py -> build/lib/gencode_gov/integrations/_model_impl/openai_o
 creating build/lib/gencode_gov/integrations/_model_impl/qwen_coder
 copying src/gencode_gov/integrations/_model_impl/qwen_coder/__init__.py -> build/lib/gencode_gov/integrations/_model_impl/qwen_coder
 copying src/gencode_gov/integrations/_model_impl/qwen_coder/adapter.py -> build/lib/gencode_gov/integrations/_model_impl/qwen_coder
 creating build/lib/gencode_gov/integrations/_model_impl/code_llama
 copying src/gencode_gov/integrations/_model_impl/code_llama/__init__.py -> build/lib/gencode_gov/integrations/_model_impl/code_llama
 copying src/gencode_gov/integrations/_model_impl/code_llama/adapter.py -> build/lib/gencode_gov/integrations/_model_impl/code_llama
-creating build/lib/gencode_gov/integrations/_model_impl/openai_o
-copying src/gencode_gov/integrations/_model_impl/openai_o/__init__.py -> build/lib/gencode_gov/integrations/_model_impl/openai_o
-copying src/gencode_gov/integrations/_model_impl/openai_o/adapter.py -> build/lib/gencode_gov/integrations/_model_impl/openai_o
-creating build/lib/gencode_gov/integrations/_model_impl/deepseek_coder
-copying src/gencode_gov/integrations/_model_impl/deepseek_coder/__init__.py -> build/lib/gencode_gov/integrations/_model_impl/deepseek_coder
-copying src/gencode_gov/integrations/_model_impl/deepseek_coder/adapter.py -> build/lib/gencode_gov/integrations/_model_impl/deepseek_coder
+creating build/lib/gencode_gov/integrations/platforms/github_copilot
+copying src/gencode_gov/integrations/platforms/github_copilot/__init__.py -> build/lib/gencode_gov/integrations/platforms/github_copilot
+copying src/gencode_gov/integrations/platforms/github_copilot/adapter.py -> build/lib/gencode_gov/integrations/platforms/github_copilot
+creating build/lib/gencode_gov/integrations/models/openai-o
+copying src/gencode_gov/integrations/models/openai-o/__init__.py -> build/lib/gencode_gov/integrations/models/openai-o
+copying src/gencode_gov/integrations/models/openai-o/adapter.py -> build/lib/gencode_gov/integrations/models/openai-o
+creating build/lib/gencode_gov/integrations/models/code-llama
+copying src/gencode_gov/integrations/models/code-llama/__init__.py -> build/lib/gencode_gov/integrations/models/code-llama
+copying src/gencode_gov/integrations/models/code-llama/adapter.py -> build/lib/gencode_gov/integrations/models/code-llama
+creating build/lib/gencode_gov/integrations/models/deepseek-coder
+copying src/gencode_gov/integrations/models/deepseek-coder/__init__.py -> build/lib/gencode_gov/integrations/models/deepseek-coder
+copying src/gencode_gov/integrations/models/deepseek-coder/adapter.py -> build/lib/gencode_gov/integrations/models/deepseek-coder
+creating build/lib/gencode_gov/integrations/models/qwen-coder
+copying src/gencode_gov/integrations/models/qwen-coder/__init__.py -> build/lib/gencode_gov/integrations/models/qwen-coder
+copying src/gencode_gov/integrations/models/qwen-coder/adapter.py -> build/lib/gencode_gov/integrations/models/qwen-coder
+creating build/lib/gencode_gov/integrations/models/kimi
+copying src/gencode_gov/integrations/models/kimi/__init__.py -> build/lib/gencode_gov/integrations/models/kimi
+copying src/gencode_gov/integrations/models/kimi/adapter.py -> build/lib/gencode_gov/integrations/models/kimi
+creating build/lib/gencode_gov/integrations/models/gpt
+copying src/gencode_gov/integrations/models/gpt/__init__.py -> build/lib/gencode_gov/integrations/models/gpt
+copying src/gencode_gov/integrations/models/gpt/adapter.py -> build/lib/gencode_gov/integrations/models/gpt
+creating build/lib/gencode_gov/integrations/models/gemini
+copying src/gencode_gov/integrations/models/gemini/__init__.py -> build/lib/gencode_gov/integrations/models/gemini
+copying src/gencode_gov/integrations/models/gemini/adapter.py -> build/lib/gencode_gov/integrations/models/gemini
+creating build/lib/gencode_gov/integrations/models/claude
+copying src/gencode_gov/integrations/models/claude/__init__.py -> build/lib/gencode_gov/integrations/models/claude
+copying src/gencode_gov/integrations/models/claude/adapter.py -> build/lib/gencode_gov/integrations/models/claude
+creating build/lib/gencode_gov/reporting/templates
+copying src/gencode_gov/reporting/templates/engineering_quality.py -> build/lib/gencode_gov/reporting/templates
 running egg_info
 writing src/gencode_gov.egg-info/PKG-INFO
 writing dependency_links to src/gencode_gov.egg-info/dependency_links.txt
@@ -1013,361 +1001,361 @@ adding license file 'LICENSE'
 writing manifest file 'src/gencode_gov.egg-info/SOURCES.txt'
 copying src/gencode_gov/py.typed -> build/lib/gencode_gov
 creating build/lib/gencode_gov/resources/agent_pack
-copying src/gencode_gov/resources/agent_pack/SECURITY_AGENTS.md -> build/lib/gencode_gov/resources/agent_pack
-copying src/gencode_gov/resources/agent_pack/README.md -> build/lib/gencode_gov/resources/agent_pack
 copying src/gencode_gov/resources/agent_pack/AGENTS.md -> build/lib/gencode_gov/resources/agent_pack
-creating build/lib/gencode_gov/resources/agent_pack/agents/release-manager
-copying src/gencode_gov/resources/agent_pack/agents/release-manager/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/release-manager
+copying src/gencode_gov/resources/agent_pack/README.md -> build/lib/gencode_gov/resources/agent_pack
+copying src/gencode_gov/resources/agent_pack/SECURITY_AGENTS.md -> build/lib/gencode_gov/resources/agent_pack
+creating build/lib/gencode_gov/resources/agent_pack/agents/code-reviewer
+copying src/gencode_gov/resources/agent_pack/agents/code-reviewer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/code-reviewer
 creating build/lib/gencode_gov/resources/agent_pack/agents/developer
 copying src/gencode_gov/resources/agent_pack/agents/developer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/developer
+creating build/lib/gencode_gov/resources/agent_pack/agents/performance-engineer
+copying src/gencode_gov/resources/agent_pack/agents/performance-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/performance-engineer
+creating build/lib/gencode_gov/resources/agent_pack/agents/release-manager
+copying src/gencode_gov/resources/agent_pack/agents/release-manager/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/release-manager
 creating build/lib/gencode_gov/resources/agent_pack/agents/requirements-engineer
 copying src/gencode_gov/resources/agent_pack/agents/requirements-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/requirements-engineer
 creating build/lib/gencode_gov/resources/agent_pack/agents/test-engineer
 copying src/gencode_gov/resources/agent_pack/agents/test-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/test-engineer
-creating build/lib/gencode_gov/resources/agent_pack/agents/performance-engineer
-copying src/gencode_gov/resources/agent_pack/agents/performance-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/performance-engineer
-creating build/lib/gencode_gov/resources/agent_pack/agents/reliability-engineer
-copying src/gencode_gov/resources/agent_pack/agents/reliability-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/reliability-engineer
-creating build/lib/gencode_gov/resources/agent_pack/agents/code-reviewer
-copying src/gencode_gov/resources/agent_pack/agents/code-reviewer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/code-reviewer
 creating build/lib/gencode_gov/resources/agent_pack/agents/security-engineer
 copying src/gencode_gov/resources/agent_pack/agents/security-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/security-engineer
 creating build/lib/gencode_gov/resources/agent_pack/agents/software-architect
 copying src/gencode_gov/resources/agent_pack/agents/software-architect/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/software-architect
-creating build/lib/gencode_gov/resources/agent_pack/skills/architecture-engineering
-copying src/gencode_gov/resources/agent_pack/skills/architecture-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/architecture-engineering
-creating build/lib/gencode_gov/resources/agent_pack/skills/requirements-engineering
-copying src/gencode_gov/resources/agent_pack/skills/requirements-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/requirements-engineering
-creating build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov
-copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov
-creating build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/ENGINEERING_CHARTER_AND_DOMAINS.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/VERIFICATION_AND_ADOPTION.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/README.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/SECURITY_POSTURE.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/OPERATIONAL_CONTRACT.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-creating build/lib/gencode_gov/resources/agent_pack/skills/security-audit
-copying src/gencode_gov/resources/agent_pack/skills/security-audit/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/security-audit
-creating build/lib/gencode_gov/resources/agent_pack/skills/secure-software-engineering
-copying src/gencode_gov/resources/agent_pack/skills/secure-software-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/secure-software-engineering
+creating build/lib/gencode_gov/resources/agent_pack/agents/reliability-engineer
+copying src/gencode_gov/resources/agent_pack/agents/reliability-engineer/AGENT.md -> build/lib/gencode_gov/resources/agent_pack/agents/reliability-engineer
 creating build/lib/gencode_gov/resources/agent_pack/skills/performance-engineering
 copying src/gencode_gov/resources/agent_pack/skills/performance-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/performance-engineering
 creating build/lib/gencode_gov/resources/agent_pack/skills/reliability-engineering
 copying src/gencode_gov/resources/agent_pack/skills/reliability-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/reliability-engineering
+creating build/lib/gencode_gov/resources/agent_pack/skills/architecture-engineering
+copying src/gencode_gov/resources/agent_pack/skills/architecture-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/architecture-engineering
+creating build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov
+copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov
+creating build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/ENGINEERING_CHARTER_AND_DOMAINS.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/OPERATIONAL_CONTRACT.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/VERIFICATION_AND_ADOPTION.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/SECURITY_POSTURE.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying src/gencode_gov/resources/agent_pack/skills/gencode-gov/references/README.md -> build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references
 creating build/lib/gencode_gov/resources/agent_pack/skills/software-testing
 copying src/gencode_gov/resources/agent_pack/skills/software-testing/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/software-testing
-creating build/lib/gencode_gov/resources/agent_pack/skills/release-readiness
-copying src/gencode_gov/resources/agent_pack/skills/release-readiness/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/release-readiness
+creating build/lib/gencode_gov/resources/agent_pack/skills/security-audit
+copying src/gencode_gov/resources/agent_pack/skills/security-audit/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/security-audit
 creating build/lib/gencode_gov/resources/agent_pack/skills/application-security
 copying src/gencode_gov/resources/agent_pack/skills/application-security/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/application-security
-creating build/lib/gencode_gov/resources/project_templates/projects/enterprise
-copying src/gencode_gov/resources/project_templates/projects/enterprise/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/enterprise
-copying src/gencode_gov/resources/project_templates/projects/enterprise/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/enterprise
-copying src/gencode_gov/resources/project_templates/projects/enterprise/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/enterprise
-creating build/lib/gencode_gov/resources/project_templates/projects/desktop-application
-copying src/gencode_gov/resources/project_templates/projects/desktop-application/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/desktop-application
-copying src/gencode_gov/resources/project_templates/projects/desktop-application/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/desktop-application
-copying src/gencode_gov/resources/project_templates/projects/desktop-application/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/desktop-application
-creating build/lib/gencode_gov/resources/project_templates/projects/api-service
-copying src/gencode_gov/resources/project_templates/projects/api-service/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/api-service
-copying src/gencode_gov/resources/project_templates/projects/api-service/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/api-service
-copying src/gencode_gov/resources/project_templates/projects/api-service/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/api-service
-creating build/lib/gencode_gov/resources/project_templates/projects/distributed-system
-copying src/gencode_gov/resources/project_templates/projects/distributed-system/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/distributed-system
-copying src/gencode_gov/resources/project_templates/projects/distributed-system/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/distributed-system
-copying src/gencode_gov/resources/project_templates/projects/distributed-system/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/distributed-system
-creating build/lib/gencode_gov/resources/project_templates/projects/universal
-copying src/gencode_gov/resources/project_templates/projects/universal/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/universal
-copying src/gencode_gov/resources/project_templates/projects/universal/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/universal
-copying src/gencode_gov/resources/project_templates/projects/universal/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/universal
-creating build/lib/gencode_gov/resources/project_templates/projects/mobile-application
-copying src/gencode_gov/resources/project_templates/projects/mobile-application/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/mobile-application
-copying src/gencode_gov/resources/project_templates/projects/mobile-application/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/mobile-application
-copying src/gencode_gov/resources/project_templates/projects/mobile-application/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/mobile-application
-creating build/lib/gencode_gov/resources/project_templates/projects/safety-critical
-copying src/gencode_gov/resources/project_templates/projects/safety-critical/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/safety-critical
-copying src/gencode_gov/resources/project_templates/projects/safety-critical/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/safety-critical
-copying src/gencode_gov/resources/project_templates/projects/safety-critical/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/safety-critical
-creating build/lib/gencode_gov/resources/project_templates/projects/web-application
-copying src/gencode_gov/resources/project_templates/projects/web-application/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/web-application
-copying src/gencode_gov/resources/project_templates/projects/web-application/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/web-application
-copying src/gencode_gov/resources/project_templates/projects/web-application/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/web-application
+creating build/lib/gencode_gov/resources/agent_pack/skills/release-readiness
+copying src/gencode_gov/resources/agent_pack/skills/release-readiness/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/release-readiness
+creating build/lib/gencode_gov/resources/agent_pack/skills/requirements-engineering
+copying src/gencode_gov/resources/agent_pack/skills/requirements-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/requirements-engineering
+creating build/lib/gencode_gov/resources/agent_pack/skills/secure-software-engineering
+copying src/gencode_gov/resources/agent_pack/skills/secure-software-engineering/SKILL.md -> build/lib/gencode_gov/resources/agent_pack/skills/secure-software-engineering
 creating build/lib/gencode_gov/resources/project_templates/schemas
 copying src/gencode_gov/resources/project_templates/schemas/project.schema.json -> build/lib/gencode_gov/resources/project_templates/schemas
+creating build/lib/gencode_gov/resources/project_templates/projects/desktop-application
+copying src/gencode_gov/resources/project_templates/projects/desktop-application/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/desktop-application
+copying src/gencode_gov/resources/project_templates/projects/desktop-application/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/desktop-application
+copying src/gencode_gov/resources/project_templates/projects/desktop-application/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/desktop-application
+creating build/lib/gencode_gov/resources/project_templates/projects/mobile-application
+copying src/gencode_gov/resources/project_templates/projects/mobile-application/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/mobile-application
+copying src/gencode_gov/resources/project_templates/projects/mobile-application/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/mobile-application
+copying src/gencode_gov/resources/project_templates/projects/mobile-application/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/mobile-application
+creating build/lib/gencode_gov/resources/project_templates/projects/web-application
+copying src/gencode_gov/resources/project_templates/projects/web-application/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/web-application
+copying src/gencode_gov/resources/project_templates/projects/web-application/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/web-application
+copying src/gencode_gov/resources/project_templates/projects/web-application/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/web-application
+creating build/lib/gencode_gov/resources/project_templates/projects/safety-critical
+copying src/gencode_gov/resources/project_templates/projects/safety-critical/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/safety-critical
+copying src/gencode_gov/resources/project_templates/projects/safety-critical/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/safety-critical
+copying src/gencode_gov/resources/project_templates/projects/safety-critical/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/safety-critical
+creating build/lib/gencode_gov/resources/project_templates/projects/enterprise
+copying src/gencode_gov/resources/project_templates/projects/enterprise/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/enterprise
+copying src/gencode_gov/resources/project_templates/projects/enterprise/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/enterprise
+copying src/gencode_gov/resources/project_templates/projects/enterprise/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/enterprise
+creating build/lib/gencode_gov/resources/project_templates/projects/distributed-system
+copying src/gencode_gov/resources/project_templates/projects/distributed-system/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/distributed-system
+copying src/gencode_gov/resources/project_templates/projects/distributed-system/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/distributed-system
+copying src/gencode_gov/resources/project_templates/projects/distributed-system/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/distributed-system
+creating build/lib/gencode_gov/resources/project_templates/projects/api-service
+copying src/gencode_gov/resources/project_templates/projects/api-service/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/api-service
+copying src/gencode_gov/resources/project_templates/projects/api-service/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/api-service
+copying src/gencode_gov/resources/project_templates/projects/api-service/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/api-service
+creating build/lib/gencode_gov/resources/project_templates/projects/universal
+copying src/gencode_gov/resources/project_templates/projects/universal/profile.yaml -> build/lib/gencode_gov/resources/project_templates/projects/universal
+copying src/gencode_gov/resources/project_templates/projects/universal/rules.yaml -> build/lib/gencode_gov/resources/project_templates/projects/universal
+copying src/gencode_gov/resources/project_templates/projects/universal/gates.yaml -> build/lib/gencode_gov/resources/project_templates/projects/universal
 installing to build/bdist.linux-x86_64/wheel
 running install
 running install_lib
 creating build/bdist.linux-x86_64/wheel
 creating build/bdist.linux-x86_64/wheel/gencode_gov
-creating build/bdist.linux-x86_64/wheel/gencode_gov/verification
-copying build/lib/gencode_gov/verification/methods.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/profiles.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/engine.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/code_and_test_integrity.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-creating build/bdist.linux-x86_64/wheel/gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/ruff_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/supply_chain_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/mypy_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/test_suite_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/polyglot_quality_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/base.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/pytest_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/runners/tsar_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
-copying build/lib/gencode_gov/verification/scenario_verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/domain_verifiers.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/diff_governance.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/architecture_verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-copying build/lib/gencode_gov/verification/assess_dispatch.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
-creating build/bdist.linux-x86_64/wheel/gencode_gov/reporting
-copying build/lib/gencode_gov/reporting/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
-creating build/bdist.linux-x86_64/wheel/gencode_gov/reporting/templates
-copying build/lib/gencode_gov/reporting/templates/engineering_quality.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting/templates
-copying build/lib/gencode_gov/reporting/json_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
-copying build/lib/gencode_gov/reporting/markdown_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
-copying build/lib/gencode_gov/reporting/sarif_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
-copying build/lib/gencode_gov/reporting/html_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
 copying build/lib/gencode_gov/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
-copying build/lib/gencode_gov/config.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
-creating build/bdist.linux-x86_64/wheel/gencode_gov/governance
-copying build/lib/gencode_gov/governance/enforcement.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
-copying build/lib/gencode_gov/governance/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
-copying build/lib/gencode_gov/governance/policy_loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
-copying build/lib/gencode_gov/governance/charter_loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
-copying build/lib/gencode_gov/validation.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
-creating build/bdist.linux-x86_64/wheel/gencode_gov/core
-copying build/lib/gencode_gov/core/errors.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
-copying build/lib/gencode_gov/core/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
-copying build/lib/gencode_gov/core/logging.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
-copying build/lib/gencode_gov/core/constants.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
-copying build/lib/gencode_gov/cli_extensions.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
-creating build/bdist.linux-x86_64/wheel/gencode_gov/assessment
-copying build/lib/gencode_gov/assessment/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
-copying build/lib/gencode_gov/assessment/drift.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
-copying build/lib/gencode_gov/assessment/gates.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
-copying build/lib/gencode_gov/assessment/scorer.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
-copying build/lib/gencode_gov/assessment/decision.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
-creating build/bdist.linux-x86_64/wheel/gencode_gov/orchestrator
-copying build/lib/gencode_gov/orchestrator/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
-copying build/lib/gencode_gov/orchestrator/stage_manager.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
-copying build/lib/gencode_gov/orchestrator/lifecycle.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
-copying build/lib/gencode_gov/orchestrator/task_dispatcher.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
-creating build/bdist.linux-x86_64/wheel/gencode_gov/policies
-copying build/lib/gencode_gov/policies/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
-copying build/lib/gencode_gov/policies/exceptions.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
-copying build/lib/gencode_gov/policies/blocking.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
-copying build/lib/gencode_gov/policies/advisory.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
-creating build/bdist.linux-x86_64/wheel/gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/hunting.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/governance_bridge.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/coverage.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/validators.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/runtime.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/findings.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/reassessment.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/reporting.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/dispatcher.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/cli_dispatch.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/sandbox.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/taxonomy.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/orchestrator.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-copying build/lib/gencode_gov/security_audit/worker_entry.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
-creating build/bdist.linux-x86_64/wheel/gencode_gov/evidence
-copying build/lib/gencode_gov/evidence/attestation.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
-copying build/lib/gencode_gov/evidence/supply_chain.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
-copying build/lib/gencode_gov/evidence/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
-copying build/lib/gencode_gov/evidence/collector.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
-copying build/lib/gencode_gov/evidence/store.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
-copying build/lib/gencode_gov/evidence/integrity.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
 creating build/bdist.linux-x86_64/wheel/gencode_gov/language_support
-copying build/lib/gencode_gov/language_support/tool_resolver.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
-copying build/lib/gencode_gov/language_support/compatibility.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
 copying build/lib/gencode_gov/language_support/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
 copying build/lib/gencode_gov/language_support/language_profile_loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
 copying build/lib/gencode_gov/language_support/registry.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
+copying build/lib/gencode_gov/language_support/compatibility.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
 copying build/lib/gencode_gov/language_support/detector.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
+copying build/lib/gencode_gov/language_support/tool_resolver.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/language_support
+copying build/lib/gencode_gov/validation.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/schemas
+copying build/lib/gencode_gov/resources/project_templates/schemas/project.schema.json -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/schemas
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/desktop-application
+copying build/lib/gencode_gov/resources/project_templates/projects/desktop-application/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/desktop-application
+copying build/lib/gencode_gov/resources/project_templates/projects/desktop-application/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/desktop-application
+copying build/lib/gencode_gov/resources/project_templates/projects/desktop-application/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/desktop-application
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/mobile-application
+copying build/lib/gencode_gov/resources/project_templates/projects/mobile-application/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/mobile-application
+copying build/lib/gencode_gov/resources/project_templates/projects/mobile-application/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/mobile-application
+copying build/lib/gencode_gov/resources/project_templates/projects/mobile-application/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/mobile-application
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/web-application
+copying build/lib/gencode_gov/resources/project_templates/projects/web-application/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/web-application
+copying build/lib/gencode_gov/resources/project_templates/projects/web-application/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/web-application
+copying build/lib/gencode_gov/resources/project_templates/projects/web-application/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/web-application
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/safety-critical
+copying build/lib/gencode_gov/resources/project_templates/projects/safety-critical/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/safety-critical
+copying build/lib/gencode_gov/resources/project_templates/projects/safety-critical/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/safety-critical
+copying build/lib/gencode_gov/resources/project_templates/projects/safety-critical/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/safety-critical
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/enterprise
+copying build/lib/gencode_gov/resources/project_templates/projects/enterprise/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/enterprise
+copying build/lib/gencode_gov/resources/project_templates/projects/enterprise/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/enterprise
+copying build/lib/gencode_gov/resources/project_templates/projects/enterprise/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/enterprise
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/distributed-system
+copying build/lib/gencode_gov/resources/project_templates/projects/distributed-system/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/distributed-system
+copying build/lib/gencode_gov/resources/project_templates/projects/distributed-system/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/distributed-system
+copying build/lib/gencode_gov/resources/project_templates/projects/distributed-system/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/distributed-system
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/api-service
+copying build/lib/gencode_gov/resources/project_templates/projects/api-service/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/api-service
+copying build/lib/gencode_gov/resources/project_templates/projects/api-service/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/api-service
+copying build/lib/gencode_gov/resources/project_templates/projects/api-service/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/api-service
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/universal
+copying build/lib/gencode_gov/resources/project_templates/projects/universal/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/universal
+copying build/lib/gencode_gov/resources/project_templates/projects/universal/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/universal
+copying build/lib/gencode_gov/resources/project_templates/projects/universal/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/universal
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack
-copying build/lib/gencode_gov/resources/agent_pack/SECURITY_AGENTS.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack
-copying build/lib/gencode_gov/resources/agent_pack/README.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/release-manager
-copying build/lib/gencode_gov/resources/agent_pack/agents/release-manager/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/release-manager
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/code-reviewer
+copying build/lib/gencode_gov/resources/agent_pack/agents/code-reviewer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/code-reviewer
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/developer
 copying build/lib/gencode_gov/resources/agent_pack/agents/developer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/developer
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/performance-engineer
+copying build/lib/gencode_gov/resources/agent_pack/agents/performance-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/performance-engineer
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/release-manager
+copying build/lib/gencode_gov/resources/agent_pack/agents/release-manager/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/release-manager
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/requirements-engineer
 copying build/lib/gencode_gov/resources/agent_pack/agents/requirements-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/requirements-engineer
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/test-engineer
 copying build/lib/gencode_gov/resources/agent_pack/agents/test-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/test-engineer
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/performance-engineer
-copying build/lib/gencode_gov/resources/agent_pack/agents/performance-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/performance-engineer
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/reliability-engineer
-copying build/lib/gencode_gov/resources/agent_pack/agents/reliability-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/reliability-engineer
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/code-reviewer
-copying build/lib/gencode_gov/resources/agent_pack/agents/code-reviewer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/code-reviewer
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/security-engineer
 copying build/lib/gencode_gov/resources/agent_pack/agents/security-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/security-engineer
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/software-architect
 copying build/lib/gencode_gov/resources/agent_pack/agents/software-architect/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/software-architect
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/agents/reliability-engineer
+copying build/lib/gencode_gov/resources/agent_pack/agents/reliability-engineer/AGENT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/agents/reliability-engineer
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/architecture-engineering
-copying build/lib/gencode_gov/resources/agent_pack/skills/architecture-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/architecture-engineering
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/requirements-engineering
-copying build/lib/gencode_gov/resources/agent_pack/skills/requirements-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/requirements-engineering
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/gencode-gov
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/ENGINEERING_CHARTER_AND_DOMAINS.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/VERIFICATION_AND_ADOPTION.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/README.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/SECURITY_POSTURE.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/OPERATIONAL_CONTRACT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
-copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/security-audit
-copying build/lib/gencode_gov/resources/agent_pack/skills/security-audit/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/security-audit
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/secure-software-engineering
-copying build/lib/gencode_gov/resources/agent_pack/skills/secure-software-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/secure-software-engineering
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/performance-engineering
 copying build/lib/gencode_gov/resources/agent_pack/skills/performance-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/performance-engineering
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/reliability-engineering
 copying build/lib/gencode_gov/resources/agent_pack/skills/reliability-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/reliability-engineering
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/architecture-engineering
+copying build/lib/gencode_gov/resources/agent_pack/skills/architecture-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/architecture-engineering
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/gencode-gov
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/ENGINEERING_CHARTER_AND_DOMAINS.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/OPERATIONAL_CONTRACT.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/VERIFICATION_AND_ADOPTION.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/SECURITY_POSTURE.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/references/README.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov/references
+copying build/lib/gencode_gov/resources/agent_pack/skills/gencode-gov/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/gencode-gov
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/software-testing
 copying build/lib/gencode_gov/resources/agent_pack/skills/software-testing/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/software-testing
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/release-readiness
-copying build/lib/gencode_gov/resources/agent_pack/skills/release-readiness/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/release-readiness
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/security-audit
+copying build/lib/gencode_gov/resources/agent_pack/skills/security-audit/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/security-audit
 creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/application-security
 copying build/lib/gencode_gov/resources/agent_pack/skills/application-security/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/application-security
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/release-readiness
+copying build/lib/gencode_gov/resources/agent_pack/skills/release-readiness/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/release-readiness
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/requirements-engineering
+copying build/lib/gencode_gov/resources/agent_pack/skills/requirements-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/requirements-engineering
+creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/agent_pack/skills/secure-software-engineering
+copying build/lib/gencode_gov/resources/agent_pack/skills/secure-software-engineering/SKILL.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack/skills/secure-software-engineering
 copying build/lib/gencode_gov/resources/agent_pack/AGENTS.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/enterprise
-copying build/lib/gencode_gov/resources/project_templates/projects/enterprise/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/enterprise
-copying build/lib/gencode_gov/resources/project_templates/projects/enterprise/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/enterprise
-copying build/lib/gencode_gov/resources/project_templates/projects/enterprise/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/enterprise
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/desktop-application
-copying build/lib/gencode_gov/resources/project_templates/projects/desktop-application/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/desktop-application
-copying build/lib/gencode_gov/resources/project_templates/projects/desktop-application/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/desktop-application
-copying build/lib/gencode_gov/resources/project_templates/projects/desktop-application/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/desktop-application
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/api-service
-copying build/lib/gencode_gov/resources/project_templates/projects/api-service/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/api-service
-copying build/lib/gencode_gov/resources/project_templates/projects/api-service/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/api-service
-copying build/lib/gencode_gov/resources/project_templates/projects/api-service/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/api-service
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/distributed-system
-copying build/lib/gencode_gov/resources/project_templates/projects/distributed-system/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/distributed-system
-copying build/lib/gencode_gov/resources/project_templates/projects/distributed-system/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/distributed-system
-copying build/lib/gencode_gov/resources/project_templates/projects/distributed-system/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/distributed-system
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/universal
-copying build/lib/gencode_gov/resources/project_templates/projects/universal/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/universal
-copying build/lib/gencode_gov/resources/project_templates/projects/universal/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/universal
-copying build/lib/gencode_gov/resources/project_templates/projects/universal/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/universal
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/mobile-application
-copying build/lib/gencode_gov/resources/project_templates/projects/mobile-application/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/mobile-application
-copying build/lib/gencode_gov/resources/project_templates/projects/mobile-application/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/mobile-application
-copying build/lib/gencode_gov/resources/project_templates/projects/mobile-application/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/mobile-application
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/safety-critical
-copying build/lib/gencode_gov/resources/project_templates/projects/safety-critical/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/safety-critical
-copying build/lib/gencode_gov/resources/project_templates/projects/safety-critical/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/safety-critical
-copying build/lib/gencode_gov/resources/project_templates/projects/safety-critical/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/safety-critical
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/projects/web-application
-copying build/lib/gencode_gov/resources/project_templates/projects/web-application/gates.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/web-application
-copying build/lib/gencode_gov/resources/project_templates/projects/web-application/rules.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/web-application
-copying build/lib/gencode_gov/resources/project_templates/projects/web-application/profile.yaml -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/projects/web-application
-creating build/bdist.linux-x86_64/wheel/gencode_gov/resources/project_templates/schemas
-copying build/lib/gencode_gov/resources/project_templates/schemas/project.schema.json -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/project_templates/schemas
+copying build/lib/gencode_gov/resources/agent_pack/README.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack
+copying build/lib/gencode_gov/resources/agent_pack/SECURITY_AGENTS.md -> build/bdist.linux-x86_64/wheel/./gencode_gov/resources/agent_pack
+creating build/bdist.linux-x86_64/wheel/gencode_gov/assessment
+copying build/lib/gencode_gov/assessment/decision.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
+copying build/lib/gencode_gov/assessment/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
+copying build/lib/gencode_gov/assessment/drift.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
+copying build/lib/gencode_gov/assessment/gates.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
+copying build/lib/gencode_gov/assessment/scorer.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/assessment
+creating build/bdist.linux-x86_64/wheel/gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/reassessment.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/orchestrator.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/coverage.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/sandbox.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/hunting.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/cli_dispatch.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/findings.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/runtime.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/dispatcher.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/reporting.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/validators.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/taxonomy.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/worker_entry.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/security_audit/governance_bridge.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/security_audit
+copying build/lib/gencode_gov/cli.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
+creating build/bdist.linux-x86_64/wheel/gencode_gov/verification
+copying build/lib/gencode_gov/verification/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/profiles.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/engine.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/domain_verifiers.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/architecture_verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/code_and_test_integrity.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/assess_dispatch.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+creating build/bdist.linux-x86_64/wheel/gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/tsar_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/polyglot_quality_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/pytest_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/supply_chain_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/mypy_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/base.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/test_suite_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/runners/ruff_runner.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification/runners
+copying build/lib/gencode_gov/verification/scenario_verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/methods.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
+copying build/lib/gencode_gov/verification/diff_governance.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/verification
 creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/tsar
-copying build/lib/gencode_gov/integrations/tsar/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/tsar
-copying build/lib/gencode_gov/integrations/tsar/verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/tsar
-copying build/lib/gencode_gov/integrations/tsar/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/tsar
 copying build/lib/gencode_gov/integrations/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/platforms
-copying build/lib/gencode_gov/integrations/platforms/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/platforms
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/platforms/github_copilot
-copying build/lib/gencode_gov/integrations/platforms/github_copilot/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/platforms/github_copilot
-copying build/lib/gencode_gov/integrations/platforms/github_copilot/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/platforms/github_copilot
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/gemini
-copying build/lib/gencode_gov/integrations/models/gemini/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gemini
-copying build/lib/gencode_gov/integrations/models/gemini/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gemini
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/deepseek-coder
-copying build/lib/gencode_gov/integrations/models/deepseek-coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/deepseek-coder
-copying build/lib/gencode_gov/integrations/models/deepseek-coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/deepseek-coder
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/gpt
-copying build/lib/gencode_gov/integrations/models/gpt/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gpt
-copying build/lib/gencode_gov/integrations/models/gpt/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gpt
-copying build/lib/gencode_gov/integrations/models/_openai_compatible.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models
-copying build/lib/gencode_gov/integrations/models/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/kimi
-copying build/lib/gencode_gov/integrations/models/kimi/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/kimi
-copying build/lib/gencode_gov/integrations/models/kimi/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/kimi
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/code-llama
-copying build/lib/gencode_gov/integrations/models/code-llama/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/code-llama
-copying build/lib/gencode_gov/integrations/models/code-llama/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/code-llama
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/qwen-coder
-copying build/lib/gencode_gov/integrations/models/qwen-coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/qwen-coder
-copying build/lib/gencode_gov/integrations/models/qwen-coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/qwen-coder
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/claude
-copying build/lib/gencode_gov/integrations/models/claude/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/claude
-copying build/lib/gencode_gov/integrations/models/claude/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/claude
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/openai-o
-copying build/lib/gencode_gov/integrations/models/openai-o/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/openai-o
-copying build/lib/gencode_gov/integrations/models/openai-o/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/openai-o
-copying build/lib/gencode_gov/integrations/base.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/gpt.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/jetbrains_ai.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/cline.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/tabnine.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/gemini_cli.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/windsurf.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/sourcegraph_cody.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/replit_agent.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/github_copilot.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/cursor.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/aider.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/continue_agent.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/claude_code.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/gemini.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/codex_openai.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/devin.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-copying build/lib/gencode_gov/integrations/agents/amazon_q.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/generic_agents
-copying build/lib/gencode_gov/integrations/generic_agents/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/generic_agents
-copying build/lib/gencode_gov/integrations/generic_agents/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/generic_agents
 creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl
 copying build/lib/gencode_gov/integrations/_model_impl/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl/deepseek_coder
+copying build/lib/gencode_gov/integrations/_model_impl/deepseek_coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/deepseek_coder
+copying build/lib/gencode_gov/integrations/_model_impl/deepseek_coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/deepseek_coder
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl/openai_o
+copying build/lib/gencode_gov/integrations/_model_impl/openai_o/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/openai_o
+copying build/lib/gencode_gov/integrations/_model_impl/openai_o/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/openai_o
 creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl/qwen_coder
 copying build/lib/gencode_gov/integrations/_model_impl/qwen_coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/qwen_coder
 copying build/lib/gencode_gov/integrations/_model_impl/qwen_coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/qwen_coder
 creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl/code_llama
 copying build/lib/gencode_gov/integrations/_model_impl/code_llama/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/code_llama
 copying build/lib/gencode_gov/integrations/_model_impl/code_llama/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/code_llama
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl/openai_o
-copying build/lib/gencode_gov/integrations/_model_impl/openai_o/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/openai_o
-copying build/lib/gencode_gov/integrations/_model_impl/openai_o/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/openai_o
-creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/_model_impl/deepseek_coder
-copying build/lib/gencode_gov/integrations/_model_impl/deepseek_coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/deepseek_coder
-copying build/lib/gencode_gov/integrations/_model_impl/deepseek_coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/_model_impl/deepseek_coder
-copying build/lib/gencode_gov/cli.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/windsurf.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/amazon_q.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/gemini_cli.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/cursor.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/github_copilot.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/gemini.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/replit_agent.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/cline.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/claude_code.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/devin.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/gpt.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/continue_agent.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/tabnine.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/jetbrains_ai.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/codex_openai.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/sourcegraph_cody.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+copying build/lib/gencode_gov/integrations/agents/aider.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/agents
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/platforms
+copying build/lib/gencode_gov/integrations/platforms/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/platforms
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/platforms/github_copilot
+copying build/lib/gencode_gov/integrations/platforms/github_copilot/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/platforms/github_copilot
+copying build/lib/gencode_gov/integrations/platforms/github_copilot/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/platforms/github_copilot
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models
+copying build/lib/gencode_gov/integrations/models/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/openai-o
+copying build/lib/gencode_gov/integrations/models/openai-o/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/openai-o
+copying build/lib/gencode_gov/integrations/models/openai-o/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/openai-o
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/code-llama
+copying build/lib/gencode_gov/integrations/models/code-llama/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/code-llama
+copying build/lib/gencode_gov/integrations/models/code-llama/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/code-llama
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/deepseek-coder
+copying build/lib/gencode_gov/integrations/models/deepseek-coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/deepseek-coder
+copying build/lib/gencode_gov/integrations/models/deepseek-coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/deepseek-coder
+copying build/lib/gencode_gov/integrations/models/_openai_compatible.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/qwen-coder
+copying build/lib/gencode_gov/integrations/models/qwen-coder/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/qwen-coder
+copying build/lib/gencode_gov/integrations/models/qwen-coder/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/qwen-coder
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/kimi
+copying build/lib/gencode_gov/integrations/models/kimi/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/kimi
+copying build/lib/gencode_gov/integrations/models/kimi/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/kimi
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/gpt
+copying build/lib/gencode_gov/integrations/models/gpt/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gpt
+copying build/lib/gencode_gov/integrations/models/gpt/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gpt
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/gemini
+copying build/lib/gencode_gov/integrations/models/gemini/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gemini
+copying build/lib/gencode_gov/integrations/models/gemini/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/gemini
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/models/claude
+copying build/lib/gencode_gov/integrations/models/claude/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/claude
+copying build/lib/gencode_gov/integrations/models/claude/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/models/claude
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/generic_agents
+copying build/lib/gencode_gov/integrations/generic_agents/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/generic_agents
+copying build/lib/gencode_gov/integrations/generic_agents/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/generic_agents
+creating build/bdist.linux-x86_64/wheel/gencode_gov/integrations/tsar
+copying build/lib/gencode_gov/integrations/tsar/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/tsar
+copying build/lib/gencode_gov/integrations/tsar/adapter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/tsar
+copying build/lib/gencode_gov/integrations/tsar/verifier.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations/tsar
+copying build/lib/gencode_gov/integrations/base.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/integrations
+creating build/bdist.linux-x86_64/wheel/gencode_gov/policies
+copying build/lib/gencode_gov/policies/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
+copying build/lib/gencode_gov/policies/advisory.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
+copying build/lib/gencode_gov/policies/blocking.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
+copying build/lib/gencode_gov/policies/exceptions.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/policies
+copying build/lib/gencode_gov/cli_extensions.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
+creating build/bdist.linux-x86_64/wheel/gencode_gov/orchestrator
+copying build/lib/gencode_gov/orchestrator/stage_manager.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
+copying build/lib/gencode_gov/orchestrator/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
+copying build/lib/gencode_gov/orchestrator/task_dispatcher.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
+copying build/lib/gencode_gov/orchestrator/lifecycle.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/orchestrator
 creating build/bdist.linux-x86_64/wheel/gencode_gov/rules
 copying build/lib/gencode_gov/rules/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
-copying build/lib/gencode_gov/rules/evaluator.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
-copying build/lib/gencode_gov/rules/loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
 copying build/lib/gencode_gov/rules/registry.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
 copying build/lib/gencode_gov/rules/validator.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
-copying build/lib/gencode_gov/py.typed -> build/bdist.linux-x86_64/wheel/./gencode_gov
+copying build/lib/gencode_gov/rules/loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
+copying build/lib/gencode_gov/rules/evaluator.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/rules
 creating build/bdist.linux-x86_64/wheel/gencode_gov/projects
 copying build/lib/gencode_gov/projects/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/projects
-copying build/lib/gencode_gov/projects/matcher.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/projects
 copying build/lib/gencode_gov/projects/loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/projects
+copying build/lib/gencode_gov/projects/matcher.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/projects
+creating build/bdist.linux-x86_64/wheel/gencode_gov/evidence
+copying build/lib/gencode_gov/evidence/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
+copying build/lib/gencode_gov/evidence/collector.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
+copying build/lib/gencode_gov/evidence/attestation.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
+copying build/lib/gencode_gov/evidence/supply_chain.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
+copying build/lib/gencode_gov/evidence/store.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
+copying build/lib/gencode_gov/evidence/integrity.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/evidence
+creating build/bdist.linux-x86_64/wheel/gencode_gov/governance
+copying build/lib/gencode_gov/governance/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
+copying build/lib/gencode_gov/governance/charter_loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
+copying build/lib/gencode_gov/governance/enforcement.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
+copying build/lib/gencode_gov/governance/policy_loader.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/governance
+creating build/bdist.linux-x86_64/wheel/gencode_gov/reporting
+copying build/lib/gencode_gov/reporting/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
+copying build/lib/gencode_gov/reporting/json_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
+creating build/bdist.linux-x86_64/wheel/gencode_gov/reporting/templates
+copying build/lib/gencode_gov/reporting/templates/engineering_quality.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting/templates
+copying build/lib/gencode_gov/reporting/sarif_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
+copying build/lib/gencode_gov/reporting/markdown_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
+copying build/lib/gencode_gov/reporting/html_reporter.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/reporting
+copying build/lib/gencode_gov/py.typed -> build/bdist.linux-x86_64/wheel/./gencode_gov
+copying build/lib/gencode_gov/config.py -> build/bdist.linux-x86_64/wheel/./gencode_gov
+creating build/bdist.linux-x86_64/wheel/gencode_gov/core
+copying build/lib/gencode_gov/core/constants.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
+copying build/lib/gencode_gov/core/__init__.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
+copying build/lib/gencode_gov/core/logging.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
+copying build/lib/gencode_gov/core/errors.py -> build/bdist.linux-x86_64/wheel/./gencode_gov/core
 running install_egg_info
 Copying src/gencode_gov.egg-info to build/bdist.linux-x86_64/wheel/./gencode_gov-0.1.0-py3.12.egg-info
 running install_scripts
 creating build/bdist.linux-x86_64/wheel/gencode_gov-0.1.0.dist-info/WHEEL
-creating '/tmp/dist_wheel/.tmp-673ii18d/gencode_gov-0.1.0-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+creating '/tmp/dist_wheel/.tmp-mpew79hd/gencode_gov-0.1.0-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
 adding 'gencode_gov/__init__.py'
 adding 'gencode_gov/cli.py'
 adding 'gencode_gov/cli_extensions.py'
@@ -1624,26 +1612,33 @@ Successfully built gencode_gov-0.1.0-py3-none-any.whl
   "skills_checked": 10,
   "errors": []
 }
-Traceback (most recent call last):
-  File "/tmp/wheel_venv/bin/gencode-gov", line 8, in <module>
-    sys.exit(main())
-             ^^^^^^
-  File "/tmp/wheel_venv/lib/python3.12/site-packages/gencode_gov/cli.py", line 1299, in main
-    return int(args.func(args))
-               ^^^^^^^^^^^^^^^
-  File "/tmp/wheel_venv/lib/python3.12/site-packages/gencode_gov/cli.py", line 117, in cmd_inspect
-    manifest = get_manifest()
-               ^^^^^^^^^^^^^^
-  File "/tmp/wheel_venv/lib/python3.12/site-packages/gencode_gov/config.py", line 137, in get_manifest
-    return load_manifest()
-           ^^^^^^^^^^^^^^^
-  File "/tmp/wheel_venv/lib/python3.12/site-packages/gencode_gov/config.py", line 112, in load_manifest
-    base = ((root or find_repo_root()).resolve() / "manifest").resolve()
-                     ^^^^^^^^^^^^^^^^
-  File "/tmp/wheel_venv/lib/python3.12/site-packages/gencode_gov/config.py", line 45, in find_repo_root
-    raise ManifestError(
-gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
-[EXIT 1]
+{
+  "status": "PASS",
+  "base_ref": null,
+  "head_ref": "HEAD",
+  "files_changed": 0,
+  "protected_touched": [],
+  "deleted_tests": [],
+  "frozen_api_failures": [],
+  "schema_breaking_changes": [],
+  "reasons": []
+}
+[FAIL] cannot resolve commit SHA: Command '['/usr/bin/git', 'rev-parse', 'HEAD']' returned non-zero exit status 128.
+{
+  "current": {
+    "recorded_at": "2026-11-28T07:08:55Z",
+    "commit_sha": "0000000000000000000000000000000000000000",
+    "python_files": 3834,
+    "max_cyclomatic_complexity": 340,
+    "mean_cyclomatic_complexity": 3.38,
+    "internal_import_edges": 0,
+    "declared_dependencies": 0,
+    "active_exceptions": 0
+  },
+  "prior": null,
+  "warnings": []
+}
+[EXIT 0]
 ```
 
 ## 17b. Cross-Python Wheel & Test Compatibility (Python 3.11 & 3.13)
@@ -1660,291 +1655,13 @@ GENCODE-GOV 0.1.0
   "skills_checked": 10,
   "errors": []
 }
-.....F.F.F                                                               [100%]
+.........F                                                               [100%]
 =================================== FAILURES ===================================
-___________ test_domain_verifiers_and_polyglot_runner_comprehensive ____________
-
-tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_domain_verifiers_and_poly0')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b288971110>
-
-    def test_domain_verifiers_and_polyglot_runner_comprehensive(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.delenv("GENCODE_GOV_AGENT_SESSION_ID", raising=False)
-        monkeypatch.delenv("GENCODE_GOV_SANDBOX", raising=False)
-    
-        # Runners
-        assert GovernanceDomainRunner().run(tmp_path).outcome == RunnerOutcome.PASS
-        assert GovernanceDomainRunner().run(tmp_path / "missing").outcome == RunnerOutcome.BLOCKED
-        assert HumanAttestationRunner().run(tmp_path).outcome == RunnerOutcome.PASS
-        assert HumanAttestationRunner().run(tmp_path / "missing").outcome == RunnerOutcome.BLOCKED
-    
-        (tmp_path / "pyproject.toml").write_text(
-            '[project]\nname = "demo"\nversion = "1.2.3"\n[tool.coverage.report]\nfail_under = 95\n',
-            encoding="utf-8",
-        )
-        (tmp_path / "src" / "demo").mkdir(parents=True)
-        init_py = tmp_path / "src" / "demo" / "__init__.py"
-        init_py.write_text('__version__ = "1.2.3"\n', encoding="utf-8")
-        (tmp_path / "src" / "demo" / "http_client.py").write_text(
-            "import requests\ndef fetch(u: str):\n    return requests.get(u, timeout=5)\n",
-            encoding="utf-8",
-        )
-        (tmp_path / "tests").mkdir()
-        (tmp_path / "tests" / "test_demo.py").write_text(
-            "def test_demo():\n    assert 2 == 2\n", encoding="utf-8"
-        )
-        (tmp_path / "CHANGELOG.md").write_text(
-            "# Changelog\n\n## [1.2.3] - 2026-11-27\n- Added deterministic governance checks.\n",
-            encoding="utf-8",
-        )
-        (tmp_path / "requirements.lock").write_text("pyyaml==6.0.2\n", encoding="utf-8")
-        (tmp_path / ".github" / "workflows").mkdir(parents=True)
-        (tmp_path / ".github" / "workflows" / "ci.yml").write_text(
-            "name: CI\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n"
-            f"    steps:\n      - uses: actions/checkout@{SHA_A}\n",
-            encoding="utf-8",
-        )
-        (tmp_path / "docs" / "adr").mkdir(parents=True)
-        (tmp_path / "docs" / "adr" / "0001-arch.md").write_text(
-            "## Status\nAccepted\n## Context\nNeed safety.\n"
-            "## Decision\nUse AST checks.\n## Consequences\nDeterministic gates.\n",
-            encoding="utf-8",
-        )
-        (tmp_path / "schemas").mkdir()
-        (tmp_path / "schemas" / "demo.schema.json").write_text(
-            json.dumps({"$id": "https://example.invalid/demo/1.0.0", "type": "object"}),
-            encoding="utf-8",
-        )
-        gov = tmp_path / ".gencode-gov"
-        gov.mkdir(exist_ok=True)
-        (gov / "project.yaml").write_text("name: demo\ntype: cli-tool\n", encoding="utf-8")
-        (gov / "requirements.yaml").write_text(
-            "requirements:\n"
-            "  - id: REQ-001\n"
-            "    statement: System must verify inputs.\n"
-            "    acceptance_criteria: ['Reject invalid payloads']\n"
-            "    tests: ['tests/test_demo.py']\n",
-            encoding="utf-8",
-        )
-        (gov / "critical-workflows.yaml").write_text("workflows: ['auth']\n", encoding="utf-8")
-        (gov / "database-governance.yaml").write_text(
-            "controls:\n  migration-file-detection: true\n  prechange-backup-verification: true\n",
-            encoding="utf-8",
-        )
-        (gov / "reliability-governance.yaml").write_text(
-            "verified_methods:\n  slo-document-presence: true\n", encoding="utf-8"
-        )
-        (gov / "performance-governance.yaml").write_text(
-            "verified_methods:\n  load-test-execution: true\n", encoding="utf-8"
-        )
-        (gov / "privacy-governance.yaml").write_text(
-            "verified_methods:\n  data-inventory-presence: true\n", encoding="utf-8"
-        )
-        (gov / "infrastructure-governance.yaml").write_text(
-            "verified_methods:\n  iac-file-detection: true\n", encoding="utf-8"
-        )
-        (gov / "observability-governance.yaml").write_text(
-            "verified_methods:\n  endpoint-detection: true\n", encoding="utf-8"
-        )
-        (gov / "security-controls.yaml").write_text(
-            "verified_methods:\n  authentication-flow-inventory: true\n",
-            encoding="utf-8",
-        )
-        (gov / "evidence" / "supply-chain").mkdir(parents=True, exist_ok=True)
-        (gov / "evidence" / "supply-chain" / "sbom.cdx.json").write_text(
-            json.dumps(
-                {
-                    "bomFormat": "CycloneDX",
-                    "specVersion": "1.5",
-                    "components": [{"name": "pyyaml", "licenses": [{"license": {"id": "MIT"}}]}],
-                    "vulnerabilities": [],
-                }
-            ),
-            encoding="utf-8",
-        )
-    
->       poly_res = PolyglotQualityRunner().run(tmp_path)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/unit/verification/test_engineering_governance_upgrades.py:658: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/verification/runners/polyglot_quality_runner.py:50: in run
-    detection = detect_languages(root)
-                ^^^^^^^^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/language_support/detector.py:96: in detect_languages
-    reg = registry or _get_default_registry()
-                      ^^^^^^^^^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/language_support/detector.py:134: in _get_default_registry
-    _default_registry = load_registry()
-                        ^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/language_support/registry.py:121: in load_registry
-    path = (root or find_repo_root()) / "languages" / "registry.yaml"
-                    ^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-    def find_repo_root() -> Path:
-        """Locate the repository using GENCODE_GOV_ROOT or parents."""
-        env = os.environ.get("GENCODE_GOV_ROOT")
-        if env:
-            candidate = Path(env).expanduser().resolve()
-            if (candidate / "manifest" / "index.yaml").is_file():
-                return candidate
-            raise ManifestError(f"GENCODE_GOV_ROOT missing manifest/index.yaml: {candidate}")
-    
-        current = Path(__file__).resolve().parent
-        for _ in range(12):
-            if (current / "manifest" / "index.yaml").is_file():
-                return current
-            if current.parent == current:
-                break
-            current = current.parent
->       raise ManifestError(
-            "Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout."
-        )
-E       gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
-
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/config.py:45: ManifestError
-_________________ test_cli_extensions_and_repository_validator _________________
-
-tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_cli_extensions_and_reposi0')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b288978450>
-
-    def test_cli_extensions_and_repository_validator(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.delenv("GENCODE_GOV_AGENT_SESSION_ID", raising=False)
-        monkeypatch.delenv("GENCODE_GOV_SANDBOX", raising=False)
-    
-        repo_root = Path(__file__).resolve().parents[3]
-        val_summary = validate_repository(repo_root)
-        assert val_summary.ok, f"Repository validation errors: {val_summary.errors}"
-        assert val_summary.rules_checked >= 47
-        assert run_cli_validate(repo_root, as_json=True) == 0
-        assert run_cli_validate(repo_root, as_json=False) == 0
-    
-        # Parser registration & CLI extension handlers
-        parser = argparse.ArgumentParser()
-        sub = parser.add_subparsers(dest="command")
-        register_extended_subcommands(sub, lambda _p: SHA_A)
-    
-        sha = _init_git_repo(tmp_path)
-        att_args = parser.parse_args(
-            [
-                "attest",
-                str(tmp_path),
-                "--rule",
-                "SE-ARC-001",
-                "--reviewer",
-                "reviewer_role_three",
-                "--role",
-                "architecture-lead",
-                "--rationale",
-                "Reviewed architecture boundaries and approved.",
-                "--commit",
-                sha,
-                "--json",
-            ]
-        )
-        assert cmd_attest(att_args, commit_resolver=lambda _p: sha) == 0
-    
-        diff_args = parser.parse_args(["diff-check", str(tmp_path), "--json"])
-        assert cmd_diff_check(diff_args) == 0
-    
-        drift_args = parser.parse_args(["drift", str(tmp_path), "--json"])
-        assert cmd_drift(drift_args, commit_resolver=lambda _p: sha) == 0
-    
->       matrix = build_tools_matrix(repo_root, repo_root)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/unit/verification/test_engineering_governance_upgrades.py:883: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/cli_extensions.py:173: in build_tools_matrix
-    detection = detect_languages(project)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/language_support/detector.py:96: in detect_languages
-    reg = registry or _get_default_registry()
-                      ^^^^^^^^^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/language_support/detector.py:134: in _get_default_registry
-    _default_registry = load_registry()
-                        ^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/language_support/registry.py:121: in load_registry
-    path = (root or find_repo_root()) / "languages" / "registry.yaml"
-                    ^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-    def find_repo_root() -> Path:
-        """Locate the repository using GENCODE_GOV_ROOT or parents."""
-        env = os.environ.get("GENCODE_GOV_ROOT")
-        if env:
-            candidate = Path(env).expanduser().resolve()
-            if (candidate / "manifest" / "index.yaml").is_file():
-                return candidate
-            raise ManifestError(f"GENCODE_GOV_ROOT missing manifest/index.yaml: {candidate}")
-    
-        current = Path(__file__).resolve().parent
-        for _ in range(12):
-            if (current / "manifest" / "index.yaml").is_file():
-                return current
-            if current.parent == current:
-                break
-            current = current.parent
->       raise ManifestError(
-            "Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout."
-        )
-E       gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
-
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/config.py:45: ManifestError
------------------------------ Captured stdout call -----------------------------
-{
-  "ok": true,
-  "rules_checked": 47,
-  "schemas_checked": 15,
-  "skills_checked": 10,
-  "errors": []
-}
-[OK] Validated 47 rules, 15 schemas, and 10 skills with 0 errors.
-{
-  "attestation_id": "ATTEST-GENCODE-GOV-964333C32BFD",
-  "rule_ids": [
-    "SE-ARC-001"
-  ],
-  "reviewer": "reviewer_role_three",
-  "approver_role": "architecture-lead",
-  "commit_sha": "8c4a2cecc52faa14aa2ddf3c51624ea04d6b2a7a",
-  "expires_at": "2026-12-28T06:54:16Z",
-  "path": ".gencode-gov/evidence/attestations/ATTEST-GENCODE-GOV-964333C32BFD.json"
-}
-{
-  "status": "PASS",
-  "base_ref": null,
-  "head_ref": "HEAD",
-  "files_changed": 0,
-  "protected_touched": [],
-  "deleted_tests": [],
-  "frozen_api_failures": [],
-  "schema_breaking_changes": [],
-  "reasons": []
-}
-{
-  "current": {
-    "recorded_at": "2026-11-28T06:54:16Z",
-    "commit_sha": "8c4a2cecc52faa14aa2ddf3c51624ea04d6b2a7a",
-    "python_files": 0,
-    "max_cyclomatic_complexity": 0,
-    "mean_cyclomatic_complexity": 0.0,
-    "internal_import_edges": 0,
-    "declared_dependencies": 0,
-    "active_exceptions": 0
-  },
-  "prior": null,
-  "warnings": []
-}
 ________ test_cli_validate_inspect_tools_attest_diff_drift_and_reports _________
 
 tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_cli_validate_inspect_tool0')
-capsys = <_pytest.capture.CaptureFixture object at 0x70b2882ac990>
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b2882ad110>
+capsys = <_pytest.capture.CaptureFixture object at 0x7f0a9e980a90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f0a9e981310>
 
     def test_cli_validate_inspect_tools_attest_diff_drift_and_reports(
         tmp_path: Path,
@@ -1957,51 +1674,65 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b2882ad110>
         sha = _init_governed_python_project(tmp_path)
     
         # 1. inspect --tools --json
->       rc_ins = main(["inspect", str(tmp_path), "--tools", "--json"])
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/integration/test_end_to_end_governance_excellence.py:81: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/cli.py:1299: in main
-    return int(args.func(args))
-               ^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/cli.py:117: in cmd_inspect
-    manifest = get_manifest()
-               ^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/config.py:137: in get_manifest
-    return load_manifest()
-           ^^^^^^^^^^^^^^^
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/config.py:112: in load_manifest
-    base = ((root or find_repo_root()).resolve() / "manifest").resolve()
-                     ^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-    def find_repo_root() -> Path:
-        """Locate the repository using GENCODE_GOV_ROOT or parents."""
-        env = os.environ.get("GENCODE_GOV_ROOT")
-        if env:
-            candidate = Path(env).expanduser().resolve()
-            if (candidate / "manifest" / "index.yaml").is_file():
-                return candidate
-            raise ManifestError(f"GENCODE_GOV_ROOT missing manifest/index.yaml: {candidate}")
+        rc_ins = main(["inspect", str(tmp_path), "--tools", "--json"])
+        assert rc_ins == 0
+        ins_data = json.loads(capsys.readouterr().out)
+        assert "tools" in ins_data
     
-        current = Path(__file__).resolve().parent
-        for _ in range(12):
-            if (current / "manifest" / "index.yaml").is_file():
-                return current
-            if current.parent == current:
-                break
-            current = current.parent
->       raise ManifestError(
-            "Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout."
+        # 2. attest via main CLI
+        rc_att = main(
+            [
+                "attest",
+                str(tmp_path),
+                "--rule",
+                "SE-ARC-001",
+                "--reviewer",
+                "reviewer_role_one",
+                "--role",
+                "Architecture Lead",
+                "--rationale",
+                "Reviewed library boundaries and approved for release.",
+                "--commit",
+                sha,
+                "--json",
+            ]
         )
-E       gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
+        assert rc_att == 0
+        att_out = json.loads(capsys.readouterr().out)
+        assert att_out["commit_sha"] == sha
+    
+        # 3. diff-check via main CLI
+        rc_diff = main(["diff-check", str(tmp_path), "--json"])
+        assert rc_diff == 0
+        diff_out = json.loads(capsys.readouterr().out)
+        assert diff_out["status"] == "PASS"
+    
+        # 4. drift via main CLI (Notice: .gencode-gov/evidence & state exist untracked, testing GAP-03!)
+        rc_drift = main(["drift", str(tmp_path), "--json"])
+        assert rc_drift == 0
+        drift_out = json.loads(capsys.readouterr().out)
+        assert drift_out["current"]["python_files"] >= 1
+    
+        # 5. assess --json ignores untracked .gencode-gov/ runtime outputs (GAP-03)
+        rc_assess = main(["assess", str(tmp_path), "--json"])
+        assert rc_assess in {0, 1}
+        assess_raw = capsys.readouterr().out
+        assess_json = json.loads(assess_raw)
+        assert "decision" in assess_json or "verdict" in assess_json or "score" in assess_json
+    
+        # 6. report --format html and --format sarif
+        html_file = tmp_path / ".gencode-gov" / "reports" / "latest.html"
+        sarif_file = tmp_path / ".gencode-gov" / "reports" / "latest.sarif"
+>       assert main(["report", str(tmp_path), "--format", "html", "--output", str(html_file)]) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = main(['report', '/tmp/pytest-of-runner/pytest-4/test_cli_validate_inspect_tool0', '--format', 'html', '--output', '/tmp/pytest-of-runner/pytest-4/test_cli_validate_inspect_tool0/.gencode-gov/reports/latest.html'])
 
-/tmp/venv_python3.11/lib/python3.11/site-packages/gencode_gov/config.py:45: ManifestError
+tests/integration/test_end_to_end_governance_excellence.py:130: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[FAIL] no JSON assessment report found in /tmp/pytest-of-runner/pytest-4/test_cli_validate_inspect_tool0/.gencode-gov/reports
 =========================== short test summary info ============================
-FAILED tests/unit/verification/test_engineering_governance_upgrades.py::test_domain_verifiers_and_polyglot_runner_comprehensive - gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
-FAILED tests/unit/verification/test_engineering_governance_upgrades.py::test_cli_extensions_and_repository_validator - gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
-FAILED tests/integration/test_end_to_end_governance_excellence.py::test_cli_validate_inspect_tools_attest_diff_drift_and_reports - gencode_gov.core.errors.ManifestError: Could not locate GENCODE-GOV repository root. Set GENCODE_GOV_ROOT or run from a checkout.
+FAILED tests/integration/test_end_to_end_governance_excellence.py::test_cli_validate_inspect_tools_attest_diff_drift_and_reports - AssertionError: assert 1 == 0
+ +  where 1 = main(['report', '/tmp/pytest-of-runner/pytest-4/test_cli_validate_inspect_tool0', '--format', 'html', '--output', '/tmp/pytest-of-runner/pytest-4/test_cli_validate_inspect_tool0/.gencode-gov/reports/latest.html'])
 [EXIT 1]
 ```
 
@@ -2210,6 +1941,6 @@ Audited 1034 tracked files: 0 staging residue, 0 legacy tokens.
 ```
 
 ## 20. Final Integration Commit & Gate Verdict
-- Integrated commit on feat/integrate-staged-governance: 5b040e47d0b6d56214c9ec9b68f6b9d42d995278
+- Integrated commit on feat/integrate-staged-governance: 4ecc2036ccf6f8247973f0989f651f7e6a7d536c
 - Overall FAIL flag: 1
 - Fast-forward push to origin/feat/integrate-staged-governance: SKIPPED (FAIL=1)

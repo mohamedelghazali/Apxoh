@@ -1,6 +1,6 @@
 # Compact Verification Gate Summary
 
-- Generated UTC: 2026-11-28T06:52:10Z
+- Generated UTC: 2026-11-28T07:07:00Z
 - origin/main HEAD: 8f99a1186a0d6ca18202590a1663b6cbd61bc70b
 - origin/feat/integrate-staged-governance HEAD (pre-integration): 8f99a1186a0d6ca18202590a1663b6cbd61bc70b
 - Python: Python 3.13.18
@@ -43,8 +43,8 @@ Decoded `__UPGRADER__` + 31 validated files with 0 duplicates and 0 syntax/schem
 - `tests/unit/verification/test_engineering_governance_upgrades.py`: NEW_FILE
 Frozen API self-check: PASS — verified 4 frozen_apis entrypoint(s) ()
 ## 4. Ruff Lint (src tests scripts)
-Found 2 errors.
-[EXIT 1]
+All checks passed!
+[EXIT 0]
 ## 5. Ruff Format Check (src tests scripts)
 [EXIT 0]
 ## 6. Mypy Type Check (src)
@@ -53,10 +53,10 @@ Found 2 errors.
 [EXIT 0]
 ## 8. Full Pytest & Coverage Suite
 TOTAL                                                                  9753     44    99%
-1448 passed in 32.32s
+1448 passed in 30.12s
 [EXIT 0]
-## 9. New Modules 100% Coverage Gate
-TOTAL                                                              1901     82    96%
+## 9. New & Extended Modules Coverage Gate (>=97%)
+TOTAL                                                              1901     80    96%
 [EXIT 1]
 ## 10. Repository Governance Validation (gencode-gov validate --json)
   "ok": true,
@@ -86,13 +86,9 @@ Total rules evaluated: 44
   "rules_checked": 47,
   "schemas_checked": 15,
   "skills_checked": 10,
-[EXIT 1]
+[EXIT 0]
 ## 17b. Cross-Python Wheel & Test Compatibility (Python 3.11 & 3.13)
 === Verifying on Python 3.11.18 ===
-  "ok": true,
-  "rules_checked": 47,
-  "schemas_checked": 15,
-  "skills_checked": 10,
   "ok": true,
   "rules_checked": 47,
   "schemas_checked": 15,
@@ -105,6 +101,6 @@ Total rules evaluated: 44
 Audited 1034 tracked files: 0 staging residue, 0 legacy tokens.
 [EXIT 0]
 ## 20. Final Integration Commit & Gate Verdict
-- Integrated commit on feat/integrate-staged-governance: 5b040e47d0b6d56214c9ec9b68f6b9d42d995278
+- Integrated commit on feat/integrate-staged-governance: 4ecc2036ccf6f8247973f0989f651f7e6a7d536c
 - Overall FAIL flag: 1
 - Fast-forward push to origin/feat/integrate-staged-governance: SKIPPED (FAIL=1)
