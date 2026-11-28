@@ -1,0 +1,41 @@
+id: SE-REL-005
+metadata:
+  title: Outbound I/O Timeout Enforcement and Bounded Retry Loop Governance
+  domain: reliability
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Production outbound network calls must specify explicit timeouts and retry or
+    polling loops must enforce deterministic termination bounds.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, operations, release]
+requirement:
+  statement: >
+    Every outbound HTTP or URL request in production code must supply an explicit
+    timeout parameter so hung upstream dependencies cannot exhaust worker pools,
+    and every retry or polling loop must include an explicit exit bound.
+verification:
+  mode: deterministic
+  methods:
+    - outbound-timeout-enforcement-scan
+    - unbounded-retry-loop-scan
+acceptance:
+  outbound_network_calls_without_timeout: 0
+  unbounded_infinite_loops_in_production: 0
+evidence:
+  required:
+    - resilience-ast-audit-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

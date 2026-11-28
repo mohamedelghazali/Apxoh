@@ -68,6 +68,12 @@ def _should_skip(path: Path, root: Path) -> bool:
         relative = path.relative_to(root)
         if any(part in IGNORED_DIRS for part in relative.parts[:-1]):
             return True
+        if relative.parts[:1] == ("examples",) or relative.parts[:3] == (
+            "tests",
+            "languages",
+            "fixtures",
+        ):
+            return True
         if path.is_symlink() or path.stat().st_size > MAX_FILE_SIZE:
             return True
     except (OSError, ValueError):

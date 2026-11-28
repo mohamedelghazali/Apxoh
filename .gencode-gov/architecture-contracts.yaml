@@ -1,0 +1,39 @@
+# Executable architectural fitness contracts for GENCODE-GOV itself (SE-ARC-002)
+version: "1.0.0"
+package_root: "src/gencode_gov"
+package_name: "gencode_gov"
+max_cycles: 0
+
+layers:
+  - name: "core-foundation"
+    modules: ["core"]
+    forbidden_imports:
+      - "cli"
+      - "assessment"
+      - "reporting"
+      - "security_audit"
+      - "verification"
+      - "integrations"
+      - "orchestrator"
+
+  - name: "evidence-substrate"
+    modules: ["evidence"]
+    forbidden_imports:
+      - "cli"
+      - "assessment"
+      - "reporting"
+      - "orchestrator"
+
+  - name: "rules-and-policies"
+    modules: ["governance", "policies"]
+    forbidden_imports:
+      - "cli"
+      - "reporting"
+      - "security_audit"
+
+  - name: "assessment-and-scoring"
+    modules: ["assessment"]
+    forbidden_imports:
+      - "cli"
+      - "reporting"
+      - "security_audit"

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mohamedelghazali/GENCODE-GOV/schemas/architecture-contracts/1.0.0",
+  "title": "GENCODE-GOV Executable Architecture Contracts",
+  "description": "Machine-verifiable module layering, import boundary, and cycle-freedom rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "package_root",
+    "max_cycles",
+    "layers"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "package_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "max_cycles": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "modules",
+          "forbidden_imports"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "modules": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "forbidden_imports": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -61,6 +61,18 @@ schemas:
     version: "1.0.0"
     path: "schemas/security-finding.schema.json"
 
+  - id: architecture-contracts
+    version: "1.0.0"
+    path: "schemas/architecture-contracts.schema.json"
+
+  - id: drift-ledger
+    version: "1.0.0"
+    path: "schemas/drift-ledger.schema.json"
+
+  - id: review-attestation
+    version: "1.0.0"
+    path: "schemas/review-attestation.schema.json"
+
 integrations:
     
   - id: tsar
@@ -72,7 +84,7 @@ integrations:
 formats:
   rule: yaml
   evidence: json
-  report: [json, markdown, html]
+  report: [json, markdown, html, sarif]
   sbom: [cyclonedx-json, cyclonedx-xml]
 
 frozen_apis:

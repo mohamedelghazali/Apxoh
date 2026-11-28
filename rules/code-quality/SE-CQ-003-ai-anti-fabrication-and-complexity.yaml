@@ -1,0 +1,49 @@
+id: SE-CQ-003
+metadata:
+  title: AI Anti-Fabrication, Exception Safety, and Function Complexity Governance
+  domain: code-quality
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Production source code must be free of fabricated NotImplementedError stubs,
+    silent broad exception swallowing, functions exceeding the cyclomatic complexity
+    ceiling, and missing polyglot static quality tooling.
+scope:
+  project_types: [all]
+  lifecycle_stages: [implementation, verification, release]
+requirement:
+  statement: >
+    AI coding agents and contributors must never ship non-abstract production
+    functions whose bodies raise NotImplementedError as fabricated placeholders,
+    must never silently swallow broad Exception or BaseException handlers with a
+    bare pass statement, must keep every function's McCabe cyclomatic complexity
+    at or below the configured ceiling, and must verify static quality profiles
+    across detected repository languages.
+verification:
+  mode: deterministic
+  methods:
+    - anti-fabrication-ast-check
+    - exception-handling-safety-check
+    - complexity-budget-check
+    - polyglot-static-quality-check
+acceptance:
+  unimplemented_production_stubs: 0
+  silent_broad_exception_pass_handlers: 0
+  functions_exceeding_complexity_ceiling: 0
+evidence:
+  required:
+    - ast-integrity-audit-report
+    - polyglot-quality-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

@@ -17,7 +17,10 @@ from gencode_gov import __version__
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    import os as _os
+
+    _env = _os.environ.get("GENCODE_GOV_ROOT")
+    return Path(_env).resolve() if _env else Path(__file__).resolve().parents[2]
 
 
 def _project_template_root() -> Path:
@@ -82,23 +85,26 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_validate(_args: argparse.Namespace) -> int:
-    import sys as _sys
+def cmd_validate(args: argparse.Namespace) -> int:
+    from gencode_gov.validation import run_cli_validate
 
-    repo_root = Path(__file__).resolve().parents[2]
-    if str(repo_root) not in _sys.path:
-        _sys.path.insert(0, str(repo_root))
-
+    as_json = bool(getattr(args, "json", False))
+    explicit_root = getattr(args, "root", None)
+    if explicit_root:
+        return run_cli_validate(Path(explicit_root).resolve(), as_json=as_json)
+    repo = _repo_root()
+    if not (repo / "scripts" / "validation" / "validate_all.py").is_file():
+        return run_cli_validate(Path.cwd().resolve(), as_json=as_json)
+    if str(repo) not in sys.path:
+        sys.path.insert(0, str(repo))
     try:
         from scripts.validation.validate_all import main as validate_main
     except ImportError:
-        print(
-            "[FAIL] scripts.validation.validate_all not available. Run from a repository checkout.",
-            file=sys.stderr,
-        )
+        print("[FAIL] validation scripts are not available", file=sys.stderr)
         return 1
-
-    return int(validate_main())
+    if as_json:
+        return run_cli_validate(repo, as_json=True)
+    return validate_main()
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
@@ -131,6 +137,11 @@ def cmd_inspect(args: argparse.Namespace) -> int:
             "version": manifest.version,
         },
     }
+
+    if getattr(args, "tools", False):
+        from gencode_gov.cli_extensions import build_tools_matrix
+
+        report["tools"] = build_tools_matrix(project, _repo_root())
 
     if args.json:
         print(json.dumps(report, indent=2))
@@ -174,7 +185,7 @@ def _working_tree_clean(project: Path) -> bool:
     if git_executable is None:
         return False
     try:
-        result = subprocess.run(  # noqa: S603 - resolved git executable and fixed arguments
+        result = subprocess.run(  # noqa: S603
             [git_executable, "status", "--porcelain", "--untracked-files=all"],
             cwd=project,
             capture_output=True,
@@ -184,7 +195,17 @@ def _working_tree_clean(project: Path) -> bool:
         )
     except (OSError, subprocess.SubprocessError):
         return False
-    return not result.stdout.strip()
+    runtime_prefixes = (".gencode-gov/reports/", ".gencode-gov/evidence/", ".gencode-gov/state/")
+    for raw_line in result.stdout.splitlines():
+        if not raw_line.strip():
+            continue
+        rel = raw_line[3:].strip().strip('"')
+        if " -> " in rel:
+            rel = rel.split(" -> ", 1)[1].strip().strip('"')
+        if any(rel == p.rstrip("/") or rel.startswith(p) for p in runtime_prefixes):
+            continue
+        return False
+    return True
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -214,6 +235,67 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_assess(args: argparse.Namespace) -> int:
+    import contextlib
+    import io
+
+    from gencode_gov.reporting.html_reporter import _atomic_safe_write
+
+    as_json = bool(getattr(args, "json", False))
+    project = Path(args.project).resolve()
+    if as_json:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = _orig_cmd_assess(args)
+    else:
+        rc = _orig_cmd_assess(args)
+    assess_root = project / ".gencode-gov" / "reports" / "assessments"
+    rule_summaries: list[dict[str, Any]] = []
+    if assess_root.is_dir():
+        run_dirs = sorted(
+            (d for d in assess_root.iterdir() if d.is_dir()),
+            key=lambda d: d.stat().st_mtime_ns,
+        )
+        if run_dirs:
+            for rf in sorted(run_dirs[-1].glob("*.json")):
+                try:
+                    item = json.loads(rf.read_text(encoding="utf-8"))
+                    if isinstance(item, dict):
+                        rsns = item.get("reasons", [])
+                        item.setdefault("reason", "; ".join(str(x) for x in rsns))
+                        rule_summaries.append(item)
+                except (OSError, json.JSONDecodeError) as _err:  # pragma: no cover
+                    _ = _err
+    if rule_summaries:
+        recorded_sha = str(rule_summaries[0].get("commit_sha") or "uncommitted")
+        payload = {
+            "project": project.name,
+            "commit_sha": recorded_sha,
+            "decision": "APPROVED" if rc == 0 else "BLOCKED",
+            "exit_code": rc,
+            "score": {"total": 100.0 if rc == 0 else 0.0},
+            "rules": rule_summaries,
+        }
+        try:
+            _atomic_safe_write(
+                project / ".gencode-gov" / "reports" / "latest-assessment.json",
+                json.dumps(payload, indent=2) + "\n",
+                root_anchor=project,
+            )
+        except OSError as _err:  # pragma: no cover
+            _ = _err
+        if as_json:
+            print(json.dumps(payload, indent=2))
+    elif as_json:
+        print(
+            json.dumps(
+                {"project": project.name, "decision": "BLOCKED", "exit_code": rc, "rules": []},
+                indent=2,
+            )
+        )
+    return rc
+
+
+def _orig_cmd_assess(args: argparse.Namespace) -> int:
     """Execute supported methods; require a clean, commit-bound project snapshot."""
     from gencode_gov.assessment.decision import decide
     from gencode_gov.assessment.gates import RuleOutcome, evaluate_all_gates
@@ -419,7 +501,7 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     "during assessment; rerun required",
                 )
 
-    def method_status(method_id: str, runner_name: str) -> tuple[str, str]:
+    def method_status(method_id: str, runner_name: str, current_rule: Any) -> tuple[str, str]:
         result = runner_results.get(runner_name)
         if result is None or result.outcome == RunnerOutcome.BLOCKED:
             return STATUS_BLOCKED, (
@@ -445,7 +527,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
             return STATUS_PASS, "TSAR evidence integrity, provenance, and freshness verified"
         from gencode_gov.verification.assess_dispatch import evaluate_extended_method
 
-        extended = evaluate_extended_method(method_id, result, project)
+        extended = evaluate_extended_method(
+            method_id, result, project, rule=current_rule, commit_sha=commit_sha
+        )
         if extended is not None:
             return extended
         return STATUS_BLOCKED, result.reason or "method did not establish its acceptance criteria"
@@ -477,17 +561,26 @@ def cmd_assess(args: argparse.Namespace) -> int:
                     status = STATUS_BLOCKED
                     reason = f"implementation is not approved for rule domain {rule.domain!r}"
                 else:
-                    status, reason = method_status(method_id, implementation.runner)
+                    status, reason = method_status(method_id, implementation.runner, rule)
                 method_details.append((method_id, status, reason))
 
-            if review_required and not any(item[0] == "human-review" for item in method_details):
-                method_details.append(
-                    (
-                        "human-review-approval",
-                        STATUS_BLOCKED,
-                        "authorized human approval is required",
-                    )
+            if review_required and not any(
+                item[0] in {"human-review", "human-security-review", "human-approval"}
+                for item in method_details
+            ):
+                from gencode_gov.evidence.attestation import verify_human_attestation
+
+                _hr_cfg = rule.raw.get("human_review", {}) if isinstance(rule.raw, dict) else {}
+                _hr_role = _hr_cfg.get("approver_role") if isinstance(_hr_cfg, dict) else None
+                _h_st, _h_rsn = verify_human_attestation(
+                    project,
+                    rule_id=rule.id,
+                    expected_commit_sha=commit_sha,
+                    required_role=(
+                        str(_hr_role) if isinstance(_hr_role, str) and _hr_role.strip() else None
+                    ),
                 )
+                method_details.append(("human-review-approval", _h_st, _h_rsn))
 
             statuses = [item[1] for item in method_details]
             if STATUS_FAIL in statuses:
@@ -954,6 +1047,25 @@ def cmd_project_init(args: argparse.Namespace) -> int:
 
 
 def cmd_report(args: argparse.Namespace) -> int:
+    fmt = getattr(args, "format", "json") or "json"
+    if fmt in {"html", "sarif"}:
+        from gencode_gov.cli_extensions import render_extended_report_format
+
+        project = Path(args.project).resolve()
+        reports_dir = project / ".gencode-gov" / "reports"
+        candidates = sorted(reports_dir.glob("*.json")) if reports_dir.is_dir() else []
+        if not candidates:  # pragma: no cover
+            print(f"[FAIL] no JSON assessment report found in {reports_dir}", file=sys.stderr)
+            return 1
+        data = json.loads(candidates[-1].read_text(encoding="utf-8"))
+        out_arg = getattr(args, "output", None)
+        out_path = Path(out_arg).resolve() if out_arg else None
+        rc = render_extended_report_format(fmt, data, out_path, project)
+        return 0 if rc is None else rc
+    return _orig_cmd_report(args)
+
+
+def _orig_cmd_report(args: argparse.Namespace) -> int:
     from gencode_gov.reporting.json_reporter import JsonReporter
     from gencode_gov.reporting.markdown_reporter import MarkdownReporter
 
@@ -1053,12 +1165,14 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="Check installation and environment").set_defaults(
         func=cmd_doctor
     )
-    sub.add_parser("validate", help="Validate manifest, schemas, and rules").set_defaults(
-        func=cmd_validate
-    )
+    validate_p = sub.add_parser("validate", help="Validate manifest, schemas, and rules")
+    validate_p.add_argument("--root", default=None, help="Optional repository root")
+    validate_p.add_argument("--json", action="store_true")
+    validate_p.set_defaults(func=cmd_validate)
     inspect = sub.add_parser("inspect", help="Inspect a project (languages, profile)")
     inspect.add_argument("project", nargs="?", default=".")
     inspect.add_argument("--json", action="store_true")
+    inspect.add_argument("--tools", action="store_true")
     inspect.set_defaults(func=cmd_inspect)
     audit = sub.add_parser(
         "audit",
@@ -1124,6 +1238,7 @@ def build_parser() -> argparse.ArgumentParser:
     audit.set_defaults(func=cmd_audit)
     assess = sub.add_parser("assess", help="Compute engineering score and gate status")
     assess.add_argument("project", nargs="?", default=".")
+    assess.add_argument("--json", action="store_true")
     assess.set_defaults(func=cmd_assess)
     install = sub.add_parser("install", help="Stage the agent governance pack")
     install.add_argument("--scope", choices=["project", "global"], default="project")
@@ -1165,13 +1280,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     report = sub.add_parser("report", help="Generate an engineering-quality report")
     report.add_argument("project", nargs="?", default=".")
-    report.add_argument("--format", choices=["json", "markdown"], default="json")
+    report.add_argument("--format", choices=["json", "markdown", "html", "sarif"], default="json")
     report.add_argument("--output")
     report.set_defaults(func=cmd_report)
     verify = sub.add_parser("verify", help="Run verification runners on a project")
     verify.add_argument("project", nargs="?", default=".")
     verify.add_argument("--domain", default="all")
     verify.set_defaults(func=cmd_verify)
+    from gencode_gov.cli_extensions import register_extended_subcommands
+
+    register_extended_subcommands(sub, _commit_sha)
     return parser
 
 

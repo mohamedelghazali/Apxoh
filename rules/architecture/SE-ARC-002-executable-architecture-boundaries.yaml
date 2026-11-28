@@ -1,0 +1,42 @@
+id: SE-ARC-002
+metadata:
+  title: Executable Architectural Layering and Cycle-Free Module Dependency Governance
+  domain: architecture
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Package subsystems must respect declared architectural layer import boundaries
+    and maintain a cycle-free top-level module dependency graph.
+scope:
+  project_types: [all]
+  lifecycle_stages: [architecture, implementation, verification, release]
+requirement:
+  statement: >
+    Enforce machine-verifiable module layering contracts and import-time cycle
+    detection across internal packages so foundational layers never import CLI,
+    reporting, or orchestration layers, and top-level package imports remain
+    strictly acyclic.
+verification:
+  mode: deterministic
+  methods:
+    - architecture-layer-boundary-check
+    - module-cycle-detection
+acceptance:
+  forbidden_cross_layer_imports: 0
+  top_level_package_import_cycles: 0
+evidence:
+  required:
+    - architecture-boundary-verification-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required

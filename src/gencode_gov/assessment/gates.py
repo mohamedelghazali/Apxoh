@@ -124,3 +124,6 @@ def evaluate_all_gates(
         )
         for gate, domains in GATE_DOMAINS.items()
     }
+
+
+evaluate = evaluate_gate

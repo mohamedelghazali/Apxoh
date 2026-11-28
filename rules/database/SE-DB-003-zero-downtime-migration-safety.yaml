@@ -1,0 +1,42 @@
+id: SE-DB-003
+metadata:
+  title: Expand-Contract Zero-Downtime Database Schema Migration Safety
+  domain: database
+  version: 1.0.0
+  status: active
+  severity: high
+  enforcement: blocking
+  description: >
+    Database schema migrations must follow expand-contract discipline without
+    unguarded destructive DDL or table-locking non-concurrent index builds.
+scope:
+  project_types: [web-application, api-service, distributed-system, enterprise]
+  lifecycle_stages: [implementation, deployment, release]
+requirement:
+  statement: >
+    Database migration scripts must avoid unguarded DROP TABLE, DROP COLUMN,
+    TRUNCATE TABLE, incompatible in-place column type rewrites, and non-concurrent
+    index creation on live production tables unless explicitly governed by an
+    approved expand-contract migration waiver.
+verification:
+  mode: deterministic
+  methods:
+    - destructive-ddl-migration-scan
+    - concurrent-index-and-lock-check
+acceptance:
+  unguarded_destructive_ddl_statements: 0
+  non_concurrent_blocking_index_creations: 0
+evidence:
+  required:
+    - migration-ddl-safety-report
+failure:
+  actions:
+    - create-finding
+    - block-release-gate
+    - require-remediation
+human_review:
+  required: false
+tests:
+  positive: required
+  negative: required
+  regression: required
