@@ -135,3 +135,27 @@ def load_manifest(root: Path | None = None) -> Manifest:
 def get_manifest() -> Manifest:
     """Return the process-cached manifest."""
     return load_manifest()
+
+
+def model_ids(manifest: Manifest | None = None) -> list[str]:
+    """Return declared AI model integration identifiers from the manifest."""
+    active = manifest if manifest is not None else get_manifest()
+return [item["id"] for item in active.integrations["integrations"]["models"]]
+
+
+def platform_ids(manifest: Manifest | None = None) -> list[str]:
+    """Return declared platform integration identifiers from the manifest."""
+active = manifest if manifest is not None else get_manifest()
+return [item["id"] for item in active.integrations["integrations"]["platforms"]]
+
+
+def language_ids(manifest: Manifest | None = None) -> list[str]:
+    """Return declared supported language identifiers from the manifest."""
+active = manifest if manifest is not None else get_manifest()
+return [item["id"] for item in active.languages["supported"]]
+
+
+def product_ids(manifest: Manifest | None = None) -> list[str]:
+    """Return declared product archetype identifiers from the manifest."""
+active = manifest if manifest is not None else get_manifest()
+return [item["id"] for item in active.products["products"]]
