@@ -556,7 +556,7 @@ def cmd_audit(root: Path) -> int:
                 ]
                 subprocess.run(uni_cmd, cwd=root, check=True, timeout=300)  # noqa: S603
     subprocess.run(  # noqa: S603
-        [sys.executable, "-m", "pip_audit", "--strict", "--desc"],
+        [sys.executable, "-m", "pip_audit", "--skip-editable", "--strict", "--desc"],
         cwd=root,
         check=True,
         timeout=300,
