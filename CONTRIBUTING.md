@@ -53,8 +53,11 @@ Install the development dependencies using the project's declared
 extras and package configuration:
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install --require-hashes --no-deps -r requirements-dev.lock
+python -m pip install --no-build-isolation --no-deps -e .
 ```
+
+Whenever `pyproject.toml` dependencies change, regenerate both root lockfiles (`make lock`) and verify zero drift (`make lock-check`).
 
 Install pre-commit hooks only if the repository includes a valid
 `.pre-commit-config.yaml`:

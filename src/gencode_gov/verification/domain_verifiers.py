@@ -21,6 +21,7 @@ from gencode_gov.verification.code_and_test_integrity import (
     verify_test_adequacy_method,
 )
 from gencode_gov.verification.diff_governance import evaluate_diff_governance
+from gencode_gov.verification.lockfile_verifier import verify_dependency_lockfiles
 from gencode_gov.verification.runners.base import Runner, RunnerOutcome, RunnerResult
 
 _SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -384,23 +385,7 @@ def _verify_devops_methods(method_id: str, root: Path) -> tuple[str, str]:
         return STATUS_PASS, f"all external Actions across {len(workflows)} workflows SHA-pinned"
 
     if method_id == "dependency-lockfile-determinism-check":
-        lockfiles = [
-            name
-            for name in (
-                "requirements.lock",
-                "requirements-dev.lock",
-                "uv.lock",
-                "poetry.lock",
-                "Cargo.lock",
-                "package-lock.json",
-                "pnpm-lock.yaml",
-                "go.sum",
-            )
-            if _safe_file(root, name) is not None
-        ]
-        if not lockfiles:
-            return STATUS_FAIL, "no deterministic dependency lockfile found in repository root"
-        return STATUS_PASS, f"verified deterministic dependency lockfile(s): {lockfiles}"
+        return verify_dependency_lockfiles(root)
 
     return STATUS_BLOCKED, f"unsupported devops method: {method_id}"
 

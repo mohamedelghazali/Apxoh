@@ -27,7 +27,10 @@ def _init_governed_python_project(root: Path) -> str:
         "[tool.coverage.report]\nfail_under = 90\n",
         encoding="utf-8",
     )
-    (root / "requirements.lock").write_text("pyyaml==6.0.2\n", encoding="utf-8")
+    (root / "requirements.lock").write_text(
+        f"pyyaml==6.0.2 --hash=sha256:{'a' * 64}\n",
+        encoding="utf-8",
+    )
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [0.1.0] - 2026-11-27\n- Initial governed release.\n",
         encoding="utf-8",

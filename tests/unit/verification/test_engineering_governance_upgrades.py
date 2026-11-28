@@ -589,7 +589,10 @@ def test_domain_verifiers_and_polyglot_runner_comprehensive(
         "# Changelog\n\n## [1.2.3] - 2026-11-27\n- Added deterministic governance checks.\n",
         encoding="utf-8",
     )
-    (tmp_path / "requirements.lock").write_text("pyyaml==6.0.2\n", encoding="utf-8")
+    (tmp_path / "requirements.lock").write_text(
+        f"pyyaml==6.0.2 --hash=sha256:{'a' * 64}\n",
+        encoding="utf-8",
+    )
     (tmp_path / ".github" / "workflows").mkdir(parents=True)
     (tmp_path / ".github" / "workflows" / "ci.yml").write_text(
         "name: CI\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n"
