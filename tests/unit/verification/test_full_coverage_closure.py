@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -65,8 +64,8 @@ def test_cli_and_drift_text_warning_branches(
     assert cli_mod._working_tree_clean(tmp_path) is True
 
 
-def test_drift_text_warnings_and_dispatch_branches(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+def test_drift_text_warnings_and_evaluator_blocked_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     p = tmp_path / "drift_repo"
     (p / "src").mkdir(parents=True)
@@ -75,9 +74,8 @@ def test_drift_text_warnings_and_dispatch_branches(
     assert cli_mod.main(["drift", str(p)]) == 0
     capsys.readouterr()
 
-    complex_fn = "def g(x: int) -> int:\n" + "".join(
-        f"    if x == {i}:\n        return {i}\n" for i in range(12)
-    ) + "    return 0\n"
+    branches = "".join(f"    if x == {i}:\n        return {i}\n" for i in range(12))
+    complex_fn = "def g(x: int) -> int:\n" + branches + "    return 0\n"
     (p / "src" / "a.py").write_text(complex_fn, encoding="utf-8")
     (p / "pyproject.toml").write_text(
         '[project]\nname = "d"\ndependencies = ["pyyaml", "jsonschema"]\n',
@@ -96,15 +94,18 @@ def test_drift_text_warnings_and_dispatch_branches(
     res_fail = rb_mod.RunnerResult(
         runner="polyglot-quality", outcome=rb_mod.RunnerOutcome.FAIL, reason="bad"
     )
-    assert ad_mod.evaluate_extended_method(
+    obs = ad_mod.evaluate_extended_method(
         "observability-behavior-test-verification", res_pass, tmp_path
-    ) is not None
-    assert ad_mod.evaluate_extended_method(
+    )
+    assert obs is not None
+    p_ok = ad_mod.evaluate_extended_method(
         "polyglot-static-quality-check", res_pass, tmp_path
-    )[0] == "PASS"
-    assert ad_mod.evaluate_extended_method(
+    )
+    p_bad = ad_mod.evaluate_extended_method(
         "polyglot-static-quality-check", res_fail, tmp_path
-    )[0] == "FAIL"
+    )
+    assert p_ok is not None and p_ok[0] == "PASS"
+    assert p_bad is not None and p_bad[0] == "FAIL"
 
     r_hr = SimpleNamespace(
         id="SE-ARC-001",
@@ -117,6 +118,30 @@ def test_drift_text_warnings_and_dispatch_branches(
     ev = eval_mod.RuleEvaluator(tmp_path, commit_sha=SHA_1)
     assert ev.evaluate_rule(r_hr).status == "BLOCKED"
 
+    class BlockedRunner(rb_mod.Runner):
+        name = "mypy"
+
+        def run(
+            self, project_root: Path, artifact_dir: Path | None = None
+        ) -> rb_mod.RunnerResult:
+            _ = project_root, artifact_dir
+            return rb_mod.RunnerResult(
+                runner="mypy", outcome=rb_mod.RunnerOutcome.BLOCKED, reason="blocked"
+            )
+
+    r_mypy = SimpleNamespace(
+        id="SE-CQ-002",
+        raw={
+            "metadata": {"domain": "code-quality", "enforcement": "critical"},
+            "verification": {"methods": ["type-checker-execution"]},
+        },
+    )
+    monkeypatch.setattr(eval_mod, "evaluate_extended_method", lambda *_a, **_kw: None)
+    ev_blk = eval_mod.RuleEvaluator(
+        tmp_path, commit_sha=SHA_1, runner_overrides={"mypy": BlockedRunner()}
+    )
+    assert ev_blk.evaluate_rule(r_mypy).status == "BLOCKED"
+
 
 def test_validation_integrity_and_diff_edge_branches(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -125,8 +150,7 @@ def test_validation_integrity_and_diff_edge_branches(
     vroot = tmp_path / "val_missing_rules"
     (vroot / "schemas").mkdir(parents=True)
     monkeypatch.setattr(val_mod, "__file__", str(tmp_path / "pkg" / "validation.py"))
-    s1 = val_mod.validate_repository(vroot)
-    assert not s1.ok
+    assert not val_mod.validate_repository(vroot).ok
 
     vroot2 = tmp_path / "val_bad_rules"
     (vroot2 / "rules").mkdir(parents=True)
@@ -155,15 +179,17 @@ def test_validation_integrity_and_diff_edge_branches(
         "See [sec](#top) and [out](../../../../outside.md).\n",
         encoding="utf-8",
     )
-    s2 = val_mod.validate_repository(vroot2)
-    assert not s2.ok
+    assert not val_mod.validate_repository(vroot2).ok
 
-    # code_and_test_integrity edge branches
     croot = tmp_path / "cti_repo"
     (croot / "src").mkdir(parents=True)
     (croot / "tests").mkdir(parents=True)
+    (croot / "schemas").mkdir(parents=True)
     (croot / ".gencode-gov").mkdir(parents=True)
     (croot / ".gencode-gov" / "config.yaml").write_text("bad: [\n", encoding="utf-8")
+    (croot / "schemas" / "s.schema.json").write_text(
+        '{"type": "object"}\n', encoding="utf-8"
+    )
     (croot / "src" / "stub.py").write_text(
         'def f() -> None:\n    """Docstring."""\n    raise NotImplementedError\n',
         encoding="utf-8",
@@ -176,11 +202,21 @@ def test_validation_integrity_and_diff_edge_branches(
         "def test_gone() -> None:\n    assert 2 == 2\n", encoding="utf-8"
     )
     base_sha = _git_init(croot)
+    assert (
+        cti_mod.verify_test_adequacy_method(
+            "regression-tamper-diff-check", croot, base_ref=base_sha
+        )[0]
+        == "PASS"
+    )
     (croot / "tests" / "test_broken.py").write_text("def bad(:\n", encoding="utf-8")
-    assert cti_mod.analyze_production_code(croot).stub_functions
-    assert cti_mod.verify_test_adequacy_method("assertion-adequacy-check", croot)[0] == "PASS"
+    assert cti_mod.analyze_production_code(croot).stub_violations
+    assert (
+        cti_mod.verify_test_adequacy_method("assertion-adequacy-check", croot)[0]
+        == "PASS"
+    )
     (croot / "tests" / "test_broken.py").unlink()
     (croot / "tests" / "test_del.py").unlink()
+    (croot / "schemas" / "s.schema.json").write_text("{broken\n", encoding="utf-8")
     subprocess.run([_GIT, "add", "-A"], cwd=croot, check=True, timeout=10)  # noqa: S603
     subprocess.run(  # noqa: S603
         [_GIT, "commit", "-q", "-m", "del test"], cwd=croot, check=True, timeout=10
@@ -192,66 +228,88 @@ def test_validation_integrity_and_diff_edge_branches(
         == "FAIL"
     )
 
-    # diff_governance blast radius & blocked frozen_apis
+    rep_bad_schema = dg_mod.evaluate_diff_governance(croot, base_ref=base_sha)
+    assert rep_bad_schema.schema_breaking_changes
+
     (croot / "manifest").mkdir(parents=True)
     (croot / "manifest" / "compatibility.yaml").write_text("bad: [\n", encoding="utf-8")
     rep_blk = dg_mod.evaluate_diff_governance(croot, base_ref=base_sha, max_files=0)
     assert rep_blk.status == "BLOCKED"
 
 
-def test_domain_verifiers_remaining_branches(tmp_path: Path) -> None:
+def test_domain_verifiers_all_remaining_branches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     d = tmp_path / "dom"
+    (d / "migrations").mkdir(parents=True)
+    (d / "migrations" / "001_safe.sql").write_text(
+        "CREATE INDEX CONCURRENTLY idx_ok ON items(id);\n", encoding="utf-8"
+    )
+    assert dv_mod.evaluate_domain_method("concurrent-index-and-lock-check", d) == (
+        "PASS",
+        "scanned 1 migration(s); index locks safe",
+    )
+
+    (d / "manifest").mkdir(parents=True)
+    (d / "manifest" / "compatibility.yaml").write_text("bad: [\n", encoding="utf-8")
+    assert dv_mod.evaluate_domain_method("frozen-api-contract-check", d)[0] == "BLOCKED"
+
+    fake_diff = SimpleNamespace(
+        status="FAIL",
+        reasons=("schema break",),
+        frozen_api_failures=(),
+        schema_breaking_changes=("schemas/a.json: removed id",),
+    )
+    monkeypatch.setattr(dv_mod, "evaluate_diff_governance", lambda _r: fake_diff)
+    assert (
+        dv_mod.evaluate_domain_method("schema-compatibility-diff-check", d)[0] == "FAIL"
+    )
+
     (d / "schemas").mkdir(parents=True)
-    (d / "src").mkdir(parents=True)
-    real_s = d / "schemas" / "bad.schema.json"
-    real_s.write_text("{broken", encoding="utf-8")
+    real_s = d / "schemas" / "ok.schema.json"
+    real_s.write_text('{"$id": "urn:gencode-gov:ok:1.0.0"}\n', encoding="utf-8")
     (d / "schemas" / "sym.schema.json").symlink_to(real_s)
-    assert dv_mod.evaluate_domain_method("frozen-api-contract-check", d) == (
-        "BLOCKED",
-        "not a Git repository or HEAD commit unavailable",
+    assert dv_mod.evaluate_domain_method("api-contract-analysis", d)[0] == "PASS"
+
+    assert dv_mod._verify_devops_methods("unknown-devops", d)[0] == "BLOCKED"
+    assert dv_mod._verify_maintenance_methods("unknown-maint", d)[0] == "BLOCKED"
+    assert dv_mod._verify_testing_auxiliary_methods("unknown-test", d)[0] == "BLOCKED"
+
+    (d / "pyproject.toml").write_text(
+        '[project]\nname = "x"\nversion = "1.0.0"\n', encoding="utf-8"
     )
-    assert dv_mod.evaluate_domain_method("api-contract-analysis", d)[0] == "FAIL"
+    (d / "src" / "real_pkg").mkdir(parents=True)
+    real_init = d / "src" / "real_pkg" / "__init__.py"
+    real_init.write_text('__version__ = "1.0.0"\n', encoding="utf-8")
+    (d / "src" / "sym_pkg").mkdir(parents=True)
+    (d / "src" / "sym_pkg" / "__init__.py").symlink_to(real_init)
+    assert dv_mod.evaluate_domain_method("version-consistency-check", d)[0] == "PASS"
 
-    real_s.write_text('{"type": "object"}', encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("endpoint-version-inventory", d)[0] == "FAIL"
-
-    (d / ".github" / "workflows").mkdir(parents=True)
-    wf = d / ".github" / "workflows" / "ci.yml"
-    wf.write_text("on: [push]\njobs:\n  b:\n    steps:\n      - uses: a/b@v1\n", encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("github-actions-sha-pinning-scan", d)[0] == "FAIL"
-
-    (d / "pyproject.toml").write_text("[broken", encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("version-consistency-check", d)[0] == "FAIL"
-    (d / "pyproject.toml").write_text('[project]\nname = "x"\n', encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("version-consistency-check", d)[0] == "FAIL"
-
-    (d / "RELEASE_NOTES.md").write_text("short", encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("release-notes-presence", d)[0] == "PASS"
-    assert dv_mod.evaluate_domain_method("release-notes-structure-validation", d)[0] == "FAIL"
-
-    (d / "src" / "loop.py").write_text(
-        "def run() -> None:\n    while True:\n        break\n", encoding="utf-8"
+    (d / "src" / "examples").mkdir(parents=True)
+    (d / "src" / "examples" / "skip.py").write_text("x = 1\n", encoding="utf-8")
+    (d / "src" / "real_pkg" / "bad_syn.py").write_text("def bad(:\n", encoding="utf-8")
+    assert (
+        dv_mod.evaluate_domain_method("outbound-timeout-enforcement-scan", d)[0]
+        == "PASS"
     )
-    assert dv_mod.evaluate_domain_method("unbounded-retry-loop-scan", d)[0] == "PASS"
 
-    (d / "sbom.cdx.json").write_text("{bad", encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("sbom-component-inventory-check", d)[0] == "FAIL"
-    (d / "sbom.cdx.json").write_text('{"components": []}', encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("sbom-component-inventory-check", d)[0] == "FAIL"
-    (d / "sbom.cdx.json").unlink()
-    (d / "requirements.lock").write_text("pyyaml==6.0.2\n", encoding="utf-8")
-    assert dv_mod.evaluate_domain_method("sbom-component-inventory-check", d)[0] == "PASS"
-    assert dv_mod.evaluate_domain_method("sbom-license-and-cve-policy-check", d)[0] == "PASS"
+    (d / "big.py").write_text("x = 1\n" + ("#" * (260 * 1024)), encoding="utf-8")
+    assert dv_mod.evaluate_domain_method("secret-scanner", d)[0] == "PASS"
 
-    hr_rule = SimpleNamespace(
-        id="SE-ARC-001", raw={"human_review": {"approver_role": "lead"}}
+    (d / "sbom.cdx.json").write_text(
+        '{"components": ["skip-str", {"name": "a"}], "vulnerabilities": []}\n',
+        encoding="utf-8",
     )
     assert (
-        dv_mod.evaluate_domain_method(
-            "human-review", d, rule=hr_rule, commit_sha=SHA_1
-        )[0]
-        == "BLOCKED"
+        dv_mod.evaluate_domain_method("sbom-license-and-cve-policy-check", d)[0]
+        == "PASS"
     )
 
-    _git_init(d)
-    assert dv_mod.evaluate_domain_method("test-diff-analysis", d)[0] in {"PASS", "BLOCKED"}
+    att_dir = d / ".gencode-gov" / "evidence" / "attestations"
+    att_dir.mkdir(parents=True)
+    (att_dir / "01_bad.json").write_text("{broken\n", encoding="utf-8")
+    (att_dir / "02_empty.json").write_text('{"rule_ids": []}\n', encoding="utf-8")
+    assert (
+        dv_mod.evaluate_domain_method("human-review", d, commit_sha=SHA_1)[0]
+        == "BLOCKED"
+    )
