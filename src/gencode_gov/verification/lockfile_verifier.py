@@ -106,13 +106,13 @@ def compute_lock_body_digest(lock_text: str) -> str:
 def _version_key(version: str) -> tuple[tuple[int, int | str], ...]:
     parts = re.split(r"([0-9]+)", version.strip())
     key: list[tuple[int, int | str]] = []
-    for token in parts:
-        if not token or token == ".":
+    for segment in parts:
+        if not segment or segment == ".":
             continue
-        if token.isdigit():
-            key.append((1, int(token)))
+        if segment.isdigit():
+            key.append((1, int(segment)))
         else:
-            key.append((0, token.lower()))
+            key.append((0, segment.lower()))
     return tuple(key)
 
 
