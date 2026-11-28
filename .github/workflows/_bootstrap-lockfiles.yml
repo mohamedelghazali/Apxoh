@@ -64,7 +64,6 @@ jobs:
           dv_path.write_text(dv, encoding="utf-8")
 
           # 2. Update 3 synthetic test fixtures with SHA-256 hash digests
-          hex64 = "a" * 64
           for rel_p, var_name in (
               ("tests/unit/verification/test_engineering_governance_upgrades.py", "tmp_path"),
               ("tests/unit/verification/test_engineering_governance_edge_branches.py", "sec_p"),
@@ -75,9 +74,9 @@ jobs:
               old_line = f'    ({var_name} / "requirements.lock").write_text("pyyaml==6.0.2\\n", encoding="utf-8")'
               new_lines = (
                   f'    ({var_name} / "requirements.lock").write_text(\n'
-                  f'        "pyyaml==6.0.2 --hash=sha256:{hex64}\\n",\n'
-                  f'        encoding="utf-8",\n'
-                  f'    )'
+                  '        f"pyyaml==6.0.2 --hash=sha256:{\'a\' * 64}\\n",\n'
+                  '        encoding="utf-8",\n'
+                  '    )'
               )
               if old_line in txt:
                   txt = txt.replace(old_line, new_lines, 1)
