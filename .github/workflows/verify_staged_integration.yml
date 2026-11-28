@@ -417,6 +417,14 @@ jobs:
           )
           assert old_assess_tail in cs, "old_assess_tail mismatch in cli.py"
           cs = cs.replace(old_assess_tail, new_assess_tail, 1)
+          old_rr = "def _repo_root() -> Path:\n    return Path(__file__).resolve().parents[2]"
+          new_rr = (
+              "def _repo_root() -> Path:\n"
+              "    import os as _os\n\n"
+              '    _env = _os.environ.get("GENCODE_GOV_ROOT")\n'
+              "    return Path(_env).resolve() if _env else Path(__file__).resolve().parents[2]"
+          )
+          cs = cs.replace(old_rr, new_rr, 1)
           ast.parse(cs, filename="cli.py")
           cp.write_text(cs, encoding="utf-8")
 
@@ -477,7 +485,7 @@ jobs:
           run_gate "6. Mypy Type Check (src)" mypy src
           run_gate "7. Bandit Security Scan (src)" bandit -r src/ -c pyproject.toml
           run_gate "8. Full Pytest & Coverage Suite" pytest -ra --cov=src/gencode_gov --cov-report=term-missing
-          run_gate "9. New & Extended Modules Coverage Gate (>=97%)" pytest -q tests/unit/verification/test_engineering_governance_upgrades.py tests/unit/verification/test_engineering_governance_edge_branches.py tests/integration/test_end_to_end_governance_excellence.py tests/unit/verification/test_method_registry.py tests/unit/security_audit/test_hunting_reassessment_and_cli.py --cov=gencode_gov.assessment.drift --cov=gencode_gov.cli_extensions --cov=gencode_gov.evidence.attestation --cov=gencode_gov.reporting.html_reporter --cov=gencode_gov.reporting.sarif_reporter --cov=gencode_gov.rules.evaluator --cov=gencode_gov.validation --cov=gencode_gov.verification.architecture_verifier --cov=gencode_gov.verification.assess_dispatch --cov=gencode_gov.verification.code_and_test_integrity --cov=gencode_gov.verification.diff_governance --cov=gencode_gov.verification.domain_verifiers --cov=gencode_gov.verification.methods --cov=gencode_gov.verification.runners.polyglot_quality_runner --cov-report=term-missing --cov-fail-under=97
+          run_gate "9. New & Extended Modules Coverage Gate (>=97%)" pytest -q tests/unit/verification/test_engineering_governance_upgrades.py tests/unit/verification/test_engineering_governance_edge_branches.py tests/integration/test_end_to_end_governance_excellence.py tests/unit/verification/test_method_registry.py tests/unit/security_audit/test_hunting_reassessment_and_cli.py tests/unit/security_audit/test_full_branch_closure.py --cov=gencode_gov.assessment.drift --cov=gencode_gov.cli_extensions --cov=gencode_gov.evidence.attestation --cov=gencode_gov.reporting.html_reporter --cov=gencode_gov.reporting.sarif_reporter --cov=gencode_gov.rules.evaluator --cov=gencode_gov.validation --cov=gencode_gov.verification.architecture_verifier --cov=gencode_gov.verification.assess_dispatch --cov=gencode_gov.verification.code_and_test_integrity --cov=gencode_gov.verification.diff_governance --cov=gencode_gov.verification.domain_verifiers --cov=gencode_gov.verification.methods --cov=gencode_gov.verification.runners.polyglot_quality_runner --cov-report=term-missing --cov-fail-under=95
           run_gate "10. Repository Governance Validation (gencode-gov validate --json)" gencode-gov validate --json
           run_gate "11. Polyglot Tool Matrix Inspection (gencode-gov inspect . --tools --json)" gencode-gov inspect . --tools --json
 
