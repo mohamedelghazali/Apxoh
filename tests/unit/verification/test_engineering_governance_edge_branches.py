@@ -608,7 +608,10 @@ def test_domain_verifiers_all_remaining_error_and_fallback_branches(tmp_path: Pa
     sec_p.mkdir()
     (sec_p / ".env").write_text("FOO=bar\n", encoding="utf-8")
     assert evaluate_domain_method("env-file-audit", sec_p)[0] == STATUS_FAIL
-    (sec_p / "requirements.lock").write_text("pyyaml==6.0.2\n", encoding="utf-8")
+    (sec_p / "requirements.lock").write_text(
+        f"pyyaml==6.0.2 --hash=sha256:{'a' * 64}\n",
+        encoding="utf-8",
+    )
     (sec_p / "pyproject.toml").write_text("license = 'AGPL-3.0'\n", encoding="utf-8")
     assert evaluate_domain_method("sbom-component-inventory-check", sec_p)[0] == STATUS_PASS
     assert evaluate_domain_method("sbom-license-and-cve-policy-check", sec_p)[0] == STATUS_FAIL

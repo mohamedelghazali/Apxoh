@@ -47,12 +47,24 @@ $(VENV):
 
 install: $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install -e .
+	$(BIN)/python scripts/dependencies/lock_dependencies.py install --target runtime
 
 install-dev: $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install -e ".[dev]"
+	$(BIN)/python scripts/dependencies/lock_dependencies.py install --target dev
 	@if [ -x "$(BIN)/pre-commit" ]; then $(BIN)/pre-commit install; fi
+
+lock: $(VENV)
+	$(BIN)/python scripts/dependencies/lock_dependencies.py compile --target all
+
+lock-runtime: $(VENV)
+	$(BIN)/python scripts/dependencies/lock_dependencies.py compile --target runtime
+
+lock-dev: $(VENV)
+	$(BIN)/python scripts/dependencies/lock_dependencies.py compile --target dev
+
+lock-check: $(VENV)
+	$(BIN)/python scripts/dependencies/lock_dependencies.py check-drift --target all
 
 install-models:
 	@$(PYTHON) -c "from pathlib import Path; p=Path('src/gencode_gov/integrations/models'); print('Model integration directories:'); [print('  -', x.name) for x in sorted(p.iterdir()) if x.is_dir()] if p.is_dir() else print('No model integration directory found.')"
@@ -93,7 +105,7 @@ typecheck:
 
 audit:
 	$(BANDIT) -r src -c pyproject.toml
-	$(PIP_AUDIT) --strict --desc
+	$(BIN)/python scripts/dependencies/lock_dependencies.py audit
 
 validate:
 	$(PYTHON) scripts/validation/validate_all.py

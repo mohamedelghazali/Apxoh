@@ -37,6 +37,7 @@ dev = [
     "cryptography==50.0.2",
     "setuptools==84.2.1",
     "tuf==7.0.1",
+    "pip-tools==7.7.0",
 ]
 
 [project.scripts]

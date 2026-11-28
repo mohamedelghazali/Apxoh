@@ -30,9 +30,11 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: requirements-dev.lock
       - name: Install GENCODE-GOV and pinned TSAR CLI
         run: |
-          python -m pip install -e ".[dev]"
+          python -m pip install --require-hashes --no-deps -r requirements-dev.lock
+          python -m pip install --no-build-isolation --no-deps -e .
           python -m pip install -e ./tsar/tools/tsar-cli
       - name: Execute real TSAR scan through GENCODE-GOV
         shell: bash
