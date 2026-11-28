@@ -106,7 +106,7 @@ def test_se_arc_002_domain_methods_and_rule_evaluator_pass_on_repository() -> No
     assert all(m.status == STATUS_PASS for m in evaluation.methods)
 
 
-def test_preserved_public_apis_across_config_core_and_policy_loaders() -> None:
+def test_preserved_public_apis_across_config_core_and_policy_loaders(tmp_path: Path) -> None:
     core_constants: Any = importlib.import_module("gencode_gov.core.constants")
     gov_policy_loader: Any = importlib.import_module("gencode_gov.governance.policy_loader")
 
@@ -126,7 +126,12 @@ def test_preserved_public_apis_across_config_core_and_policy_loaders() -> None:
     assert gov_policy_loader.PolicyRegistry is PolicyRegistry
     assert gov_policy_loader._load_policy_file is _load_policy_file
     assert gov_policy_loader.load_policies is load_policies
+    
+    blocking_dir = tmp_path / "system" / "policies" / "blocking"
+    blocking_dir.mkdir(parents=True)
+(blocking_dir / "sample.yaml").write_text("id: POL-001\nenabled: true\n", encoding="utf-8")
 
-    gov_registry = gov_policy_loader.load_policies(REPO_ROOT)
-    pol_registry = load_policies(REPO_ROOT)
-    assert [p.id for p in gov_registry.all()] == [p.id for p in pol_registry.all()]
+gov_registry = gov_policy_loader.load_policies(tmp_path)
+pol_registry = load_policies(tmp_path)
+assert [p.id for p in gov_registry.all()] == ["POL-001"]
+assert [p.id for p in pol_registry.all()] == ["POL-001"]
