@@ -228,11 +228,12 @@ def _discover_metadata_graph(
         for dep in pyproject_data.get("build-system", {}).get("requires", []):
             eval_req(str(dep), set(ALL_ENV_KEYS), bs_label)
 
+    skip_pkgs = {"distribute"} if is_dev else {"pip", "distribute"}
     changed = True
     while changed:
         changed = False
         for (pkg, ext), envs in list(active_by_extra.items()):
-            if pkg in {"pip", "distribute"}:
+            if pkg in skip_pkgs:
                 continue
             for req_line in dist_requires.get(pkg, ()):
                 if eval_req(req_line, envs, pkg, parent_extra=ext):
@@ -240,7 +241,7 @@ def _discover_metadata_graph(
 
     active_envs: dict[str, set[tuple[str, str]]] = {}
     for (pkg, _ext), envs in active_by_extra.items():
-        if pkg not in {"pip", "distribute"}:
+        if pkg not in skip_pkgs:
             active_envs.setdefault(pkg, set()).update(envs)
     return active_envs, via_map, fallback_specs
 
@@ -290,7 +291,7 @@ def build_lockfile_content(
     compiler_ver = _verify_compiler_version(pyproject_data)
     target_name = "requirements-dev.lock" if is_dev else "requirements.lock"
     existing_lock = root / target_name
-    unsafe_flags = ["--no-allow-unsafe", "--unsafe-package=pip", "--unsafe-package=distribute"]
+    unsafe_flags = ["--allow-unsafe"] if is_dev else ["--no-allow-unsafe"]
 
     with tempfile.TemporaryDirectory(prefix="gencode-gov-lock-") as tmp_str:
         tmpdir = Path(tmp_str)
@@ -305,6 +306,8 @@ def build_lockfile_content(
                 tmp_c = tmpdir / "runtime-constraint.txt"
                 _seed_without_markers(runtime_constraint, tmp_c)
                 compile_args.extend(["-c", str(tmp_c)])
+        else:
+            compile_args.extend(unsafe_flags)
         compile_args.extend(["--output-file", str(tmp_out), str(root / "pyproject.toml")])
         _run_pip_compile(compile_args, cwd=root)
 
