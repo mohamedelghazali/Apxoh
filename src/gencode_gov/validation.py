@@ -43,8 +43,6 @@ def _check_markdown_links(repo_root: Path, md_file: Path) -> list[str]:
         ):
             continue
         path_part = raw_target.split("#", 1)[0]
-        if not path_part:
-            continue
         resolved = (md_file.parent / path_part).resolve()
         try:
             resolved.relative_to(repo_root)
