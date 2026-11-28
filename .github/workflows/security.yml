@@ -40,7 +40,11 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.11"
-      - run: python -m pip install -e ".[dev]"
+          cache: "pip"
+          cache-dependency-path: "requirements-dev.lock"
+      - run: |
+          python -m pip install --require-hashes --no-deps -r requirements-dev.lock
+          python -m pip install --no-build-isolation --no-deps -e .
       - name: Bandit
         run: bandit -r src/ -c pyproject.toml -f json -o bandit.json
       - name: Semgrep
@@ -78,13 +82,19 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.11"
-      - run: python -m pip install -e ".[dev]" pip-licenses
-      - name: Dependency audit
+          cache: "pip"
+          cache-dependency-path: "requirements-dev.lock"
+      - name: Install hash-verified locked environment
         run: |
-          python -m pip freeze --exclude-editable > requirements-audit.txt
-          pip-audit --requirement requirements-audit.txt --strict --desc
+          python -m venv .venv-audit
+          .venv-audit/bin/python scripts/dependencies/lock_dependencies.py install --target dev
+      - name: Dependency audit
+        run: .venv-audit/bin/python scripts/dependencies/lock_dependencies.py audit
       - name: License inventory
-        run: pip-licenses --format=csv --with-urls > licenses.csv
+        run: |
+          python -m venv .venv-lic
+          .venv-lic/bin/python -m pip install pip-licenses
+          .venv-lic/bin/pip-licenses --python=.venv-audit/bin/python --format=csv --with-urls > licenses.csv
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: dependency-license-inventory
@@ -127,6 +137,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "requirements-dev.lock"
       - run: python -m pip install zizmor
       - run: zizmor --format sarif .github/workflows/ > zizmor.sarif
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -146,7 +158,11 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.11"
-      - run: python -m pip install -e ".[dev]"
+          cache: "pip"
+          cache-dependency-path: "requirements-dev.lock"
+      - run: |
+          python -m pip install --require-hashes --no-deps -r requirements-dev.lock
+          python -m pip install --no-build-isolation --no-deps -e .
       - run: pytest tests/security/ -v --tb=short
 
   adapter-safety:
@@ -159,7 +175,11 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.11"
-      - run: python -m pip install -e ".[dev]"
+          cache: "pip"
+          cache-dependency-path: "requirements-dev.lock"
+      - run: |
+          python -m pip install --require-hashes --no-deps -r requirements-dev.lock
+          python -m pip install --no-build-isolation --no-deps -e .
       - run: pytest tests/security/adapter-safety/ -v
 
   aggregate:
