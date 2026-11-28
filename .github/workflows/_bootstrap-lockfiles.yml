@@ -1,0 +1,210 @@
+name: Bootstrap Lockfiles
+
+on:
+  push:
+    branches: [feat/reproducible-dependency-locks]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compile-and-verify:
+    if: "!contains(github.event.head_commit.message, '[lock-sync]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: feat/reproducible-dependency-locks
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Wire governance verifier, synthetic fixtures, Makefile, and docs
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+
+          # 1. Wire verify_dependency_lockfiles into domain_verifiers.py
+          dv_path = Path("src/gencode_gov/verification/domain_verifiers.py")
+          dv = dv_path.read_text(encoding="utf-8")
+          imp_anchor = "from gencode_gov.verification.diff_governance import evaluate_diff_governance\n"
+          imp_add = "from gencode_gov.verification.lockfile_verifier import verify_dependency_lockfiles\n"
+          if imp_add not in dv:
+              assert dv.count(imp_anchor) == 1
+              dv = dv.replace(imp_anchor, imp_anchor + imp_add, 1)
+          old_block = '''    if method_id == "dependency-lockfile-determinism-check":
+                  lockfiles = [
+                      name
+                      for name in (
+                          "requirements.lock",
+                          "requirements-dev.lock",
+                          "uv.lock",
+                          "poetry.lock",
+                          "Cargo.lock",
+                          "package-lock.json",
+                          "pnpm-lock.yaml",
+                          "go.sum",
+                      )
+                      if _safe_file(root, name) is not None
+                  ]
+                  if not lockfiles:
+                      return STATUS_FAIL, "no deterministic dependency lockfile found in repository root"
+                  return STATUS_PASS, f"verified deterministic dependency lockfile(s): {lockfiles}"'''
+          new_block = (
+              '    if method_id == "dependency-lockfile-determinism-check":\n'
+              '        return verify_dependency_lockfiles(root)'
+          )
+          if "return verify_dependency_lockfiles(root)" not in dv:
+              assert dv.count(old_block) == 1
+              dv = dv.replace(old_block, new_block, 1)
+          ast.parse(dv)
+          dv_path.write_text(dv, encoding="utf-8")
+
+          # 2. Update 3 synthetic test fixtures with SHA-256 hash digests
+          for rel_p, var_name in (
+              ("tests/unit/verification/test_engineering_governance_upgrades.py", "tmp_path"),
+              ("tests/unit/verification/test_engineering_governance_edge_branches.py", "sec_p"),
+              ("tests/integration/test_end_to_end_governance_excellence.py", "root"),
+          ):
+              tp = Path(rel_p)
+              txt = tp.read_text(encoding="utf-8")
+              old_line = f'    ({var_name} / "requirements.lock").write_text("pyyaml==6.0.2\\n", encoding="utf-8")'
+              new_lines = (
+                  f'    ({var_name} / "requirements.lock").write_text(\n'
+                  f'        f"pyyaml==6.0.2 --hash=sha256:{{\\"a\\" * 64}}\\n", encoding="utf-8"\n'
+                  f'    )'
+              )
+              if old_line in txt:
+                  txt = txt.replace(old_line, new_lines, 1)
+                  ast.parse(txt)
+                  tp.write_text(txt, encoding="utf-8")
+
+          # 3. Update Makefile with lock, lock-runtime, lock-dev, lock-check, hash-verified install & audit
+          mf_path = Path("Makefile")
+          mf = mf_path.read_text(encoding="utf-8")
+          if "lock-check" not in mf:
+              mf = mf.replace(
+                  "\tself-audit ci release-check docs examples verify-all verify-fixtures audit-all-rules",
+                  "\tself-audit ci release-check docs examples verify-all verify-fixtures audit-all-rules \\\n\tlock lock-runtime lock-dev lock-check",
+                  1,
+              )
+              mf = mf.replace(
+                  '	@echo "  install-dev      Install development dependencies"\n',
+                  '	@echo "  install-dev      Install development dependencies"\n'
+                  '	@echo "  lock             Compile both runtime and dev lockfiles"\n'
+                  '	@echo "  lock-runtime     Compile runtime requirements.lock"\n'
+                  '	@echo "  lock-dev         Compile development requirements-dev.lock"\n'
+                  '	@echo "  lock-check       Verify lockfiles match pyproject.toml without writing"\n',
+                  1,
+              )
+              old_inst = (
+                  "install: $(VENV)\n"
+                  "\t$(PIP) install --upgrade pip\n"
+                  "\t$(PIP) install -e .\n\n"
+                  "install-dev: $(VENV)\n"
+                  "\t$(PIP) install --upgrade pip\n"
+                  '\t$(PIP) install -e ".[dev]"\n'
+                  '\t@if [ -x "$(BIN)/pre-commit" ]; then $(BIN)/pre-commit install; fi'
+              )
+              new_inst = (
+                  "install: $(VENV)\n"
+                  "\t$(PIP) install --upgrade pip\n"
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py install --target runtime\n\n"
+                  "install-dev: $(VENV)\n"
+                  "\t$(PIP) install --upgrade pip\n"
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py install --target dev\n"
+                  '\t@if [ -x "$(BIN)/pre-commit" ]; then $(BIN)/pre-commit install; fi\n\n'
+                  "lock: $(VENV)\n"
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py compile --target all\n\n"
+                  "lock-runtime: $(VENV)\n"
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py compile --target runtime\n\n"
+                  "lock-dev: $(VENV)\n"
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py compile --target dev\n\n"
+                  "lock-check: $(VENV)\n"
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py check-drift --target all"
+              )
+              assert old_inst in mf
+              mf = mf.replace(old_inst, new_inst, 1)
+              mf = mf.replace(
+                  "\t$(PIP_AUDIT) --strict --desc",
+                  "\t$(BIN)/python scripts/dependencies/lock_dependencies.py audit",
+                  1,
+              )
+              mf_path.write_text(mf, encoding="utf-8")
+
+          # 4. Update INSTALL.md and CONTRIBUTING.md
+          Path("INSTALL.md").write_text(
+              "# INSTALL\n\n"
+              "## Purpose\n\n"
+              "This guide documents deterministic, hash-verified installation and lockfile management for GENCODE-GOV.\n\n"
+              "## Clean Hash-Verified Installation\n\n"
+              "1. Create and activate an isolated Python 3.11-3.13 virtual environment (`python -m venv .venv`).\n"
+              "2. **Runtime installation** (`requirements.lock`):\n"
+              "   ```bash\n"
+              "   python scripts/dependencies/lock_dependencies.py install --target runtime\n"
+              "   ```\n"
+              "3. **Development & testing installation** (`requirements-dev.lock`):\n"
+              "   ```bash\n"
+              "   python -m pip install --require-hashes --no-deps -r requirements-dev.lock\n"
+              "   python -m pip install --no-build-isolation --no-deps -e .\n"
+              "   python -m pip check\n"
+              "   ```\n"
+              "4. Verify installation and repository governance:\n"
+              "   ```bash\n"
+              "   gencode-gov version\n"
+              "   gencode-gov doctor\n"
+              "   gencode-gov validate\n"
+              "   pytest\n"
+              "   ```\n\n"
+              "## Deterministic Lockfile Maintenance & Auditing\n\n"
+              "`pyproject.toml` is the single source of truth for declared dependencies. Committed root lockfiles (`requirements.lock` and `requirements-dev.lock`) are compiled via `pip-tools==7.7.0`:\n\n"
+              "- Compile runtime lockfile: `python scripts/dependencies/lock_dependencies.py compile --target runtime` (`make lock-runtime`)\n"
+              "- Compile development lockfile: `python scripts/dependencies/lock_dependencies.py compile --target dev` (`make lock-dev`)\n"
+              "- Compile both lockfiles: `python scripts/dependencies/lock_dependencies.py compile --target all` (`make lock`)\n"
+              "- Verify lockfile integrity and drift without writing: `python scripts/dependencies/lock_dependencies.py check-drift` (`make lock-check`)\n"
+              "- Audit locked dependencies via `pip-audit`: `python scripts/dependencies/lock_dependencies.py audit` (`make audit`)\n\n"
+              "Treat missing dependencies, unavailable agent features, and incomplete integrations as BLOCKED.\n",
+              encoding="utf-8",
+          )
+
+          contrib_p = Path("CONTRIBUTING.md")
+          contrib = contrib_p.read_text(encoding="utf-8")
+          old_dev_cmd = "```bash\npython -m pip install -e \".[dev]\"\n```"
+          new_dev_cmd = (
+              "```bash\n"
+              "python -m pip install --require-hashes --no-deps -r requirements-dev.lock\n"
+              "python -m pip install --no-build-isolation --no-deps -e .\n"
+              "```\n\n"
+              "Whenever `pyproject.toml` dependencies change, regenerate both root lockfiles (`make lock`) and verify zero drift (`make lock-check`)."
+          )
+          if old_dev_cmd in contrib:
+              contrib = contrib.replace(old_dev_cmd, new_dev_cmd, 1)
+              contrib_p.write_text(contrib, encoding="utf-8")
+          PY
+      - name: Compile root lockfiles and verify determinism, clean installs, audit, lint, types, and 100% coverage
+        run: |
+          python scripts/dependencies/lock_dependencies.py compile --target all
+          python scripts/dependencies/lock_dependencies.py check-drift --target all
+          python -m venv .venv-rt-check
+          .venv-rt-check/bin/python scripts/dependencies/lock_dependencies.py install --target runtime
+          .venv-rt-check/bin/gencode-gov version
+          .venv-rt-check/bin/gencode-gov validate
+          rm -rf .venv-rt-check
+          python -m venv .venv-dev-check
+          .venv-dev-check/bin/python scripts/dependencies/lock_dependencies.py install --target dev
+          rm -rf .venv-dev-check
+          python scripts/dependencies/lock_dependencies.py audit
+          ruff check src tests scripts
+          mypy src
+          python scripts/validation/validate_all.py
+          pytest -ra --cov=src/gencode_gov --cov-report=term-missing --cov-fail-under=100
+      - name: Commit verified lockfiles and governance integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add requirements.lock requirements-dev.lock src/gencode_gov/verification/domain_verifiers.py tests/ Makefile INSTALL.md CONTRIBUTING.md
+          git commit -m "feat(deps): compile hash-pinned root lockfiles and wire governance checks [lock-sync]"
+          git push origin HEAD:feat/reproducible-dependency-locks
