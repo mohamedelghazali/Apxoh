@@ -11,7 +11,7 @@ from pathlib import Path
 
 from gencode_gov.core.errors import GovernanceError
 from gencode_gov.core.logging import get_logger
-from gencode_gov.governance.policy_loader import Policy, PolicyRegistry
+from gencode_gov.policies.loader import Policy, PolicyRegistry
 
 logger = get_logger("policies.blocking")
 

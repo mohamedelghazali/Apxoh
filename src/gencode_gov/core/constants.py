@@ -1,8 +1,8 @@
-"""Protocol constants and manifest-derived identifiers."""
+"""Protocol constants and backward-compatible manifest identifier helpers."""
 
 from __future__ import annotations
 
-from gencode_gov.config import get_manifest
+from typing import Any
 
 STATUS_PASS = "PASS"  # noqa: S105 - protocol status, not a credential
 STATUS_FAIL = "FAIL"
@@ -85,6 +85,13 @@ DOMAIN_RULE_PREFIX = {
     "maintenance": "SE-MNT",
     "release": "SE-REL",
 }
+
+
+def get_manifest() -> Any:
+    """Delegate manifest access lazily to gencode_gov.config to keep core import-acyclic."""
+    from gencode_gov.config import get_manifest as _get_manifest
+
+    return _get_manifest()
 
 
 def model_ids() -> list[str]:
