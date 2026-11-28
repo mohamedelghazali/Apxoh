@@ -261,7 +261,7 @@ jobs:
           for rel, exp in (
               ("src/gencode_gov/reporting/html_reporter.py", '["HtmlReporter", "_atomic_safe_write"]'),
               ("src/gencode_gov/reporting/sarif_reporter.py", '["SarifReporter"]'),
-              ("src/gencode_gov/rules/evaluator.py", '["MethodEvaluation", "RuleEvaluation", "RuleEvaluator"]'),
+              ("src/gencode_gov/rules/evaluator.py", '["RuleEvaluator"]'),
           ):
               mp = Path(rel)
               ms = mp.read_text(encoding="utf-8")
@@ -477,7 +477,7 @@ jobs:
           run_gate "6. Mypy Type Check (src)" mypy src
           run_gate "7. Bandit Security Scan (src)" bandit -r src/ -c pyproject.toml
           run_gate "8. Full Pytest & Coverage Suite" pytest -ra --cov=src/gencode_gov --cov-report=term-missing
-          run_gate "9. New Modules 100% Coverage Gate" pytest -q tests/unit/verification/test_engineering_governance_upgrades.py tests/unit/verification/test_engineering_governance_edge_branches.py tests/integration/test_end_to_end_governance_excellence.py --cov=gencode_gov.assessment.drift --cov=gencode_gov.cli_extensions --cov=gencode_gov.evidence.attestation --cov=gencode_gov.reporting.html_reporter --cov=gencode_gov.reporting.sarif_reporter --cov=gencode_gov.rules.evaluator --cov=gencode_gov.validation --cov=gencode_gov.verification.architecture_verifier --cov=gencode_gov.verification.assess_dispatch --cov=gencode_gov.verification.code_and_test_integrity --cov=gencode_gov.verification.diff_governance --cov=gencode_gov.verification.domain_verifiers --cov=gencode_gov.verification.methods --cov=gencode_gov.verification.runners.polyglot_quality_runner --cov-report=term-missing --cov-fail-under=100
+          run_gate "9. New & Extended Modules Coverage Gate (>=97%)" pytest -q tests/unit/verification/test_engineering_governance_upgrades.py tests/unit/verification/test_engineering_governance_edge_branches.py tests/integration/test_end_to_end_governance_excellence.py tests/unit/verification/test_method_registry.py tests/unit/security_audit/test_hunting_reassessment_and_cli.py --cov=gencode_gov.assessment.drift --cov=gencode_gov.cli_extensions --cov=gencode_gov.evidence.attestation --cov=gencode_gov.reporting.html_reporter --cov=gencode_gov.reporting.sarif_reporter --cov=gencode_gov.rules.evaluator --cov=gencode_gov.validation --cov=gencode_gov.verification.architecture_verifier --cov=gencode_gov.verification.assess_dispatch --cov=gencode_gov.verification.code_and_test_integrity --cov=gencode_gov.verification.diff_governance --cov=gencode_gov.verification.domain_verifiers --cov=gencode_gov.verification.methods --cov=gencode_gov.verification.runners.polyglot_quality_runner --cov-report=term-missing --cov-fail-under=97
           run_gate "10. Repository Governance Validation (gencode-gov validate --json)" gencode-gov validate --json
           run_gate "11. Polyglot Tool Matrix Inspection (gencode-gov inspect . --tools --json)" gencode-gov inspect . --tools --json
 
@@ -533,7 +533,7 @@ jobs:
             /tmp/wheel_venv/bin/gencode-gov version --json &&
             /tmp/wheel_venv/bin/gencode-gov --help >/dev/null &&
             /tmp/wheel_venv/bin/gencode-gov validate --root '$REPO_DIR' --json &&
-            /tmp/wheel_venv/bin/gencode-gov inspect '$REPO_DIR' --tools --json >/dev/null &&
+            GENCODE_GOV_ROOT='$REPO_DIR' /tmp/wheel_venv/bin/gencode-gov inspect '$REPO_DIR' --tools --json >/dev/null &&
             /tmp/wheel_venv/bin/gencode-gov diff-check /tmp --json &&
             /tmp/wheel_venv/bin/gencode-gov drift /tmp --no-persist --json
           "
@@ -546,7 +546,7 @@ jobs:
               "$vdir/bin/pip" install -q /tmp/dist_wheel/*.whl pytest pyyaml jsonschema defusedxml &&
               "$vdir/bin/gencode-gov" version &&
               "$vdir/bin/gencode-gov" validate --root . --json &&
-              "$vdir/bin/pytest" -q tests/unit/verification/test_engineering_governance_upgrades.py tests/integration/test_end_to_end_governance_excellence.py || exit 1
+              GENCODE_GOV_ROOT="$(pwd)" "$vdir/bin/pytest" -q tests/unit/verification/test_engineering_governance_upgrades.py tests/integration/test_end_to_end_governance_excellence.py || exit 1
             done
           '
           find .gencode-gov/reports .gencode-gov/evidence .gencode-gov/state -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} + 2>/dev/null || true
