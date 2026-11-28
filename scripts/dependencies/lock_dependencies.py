@@ -467,6 +467,8 @@ def cmd_install_build_deps(root: Path) -> int:
         for i in pyproject_data.get("build-system", {}).get("requires", [])
     }
     stanzas = _parse_pip_compile_stanzas(dev_lock.read_text(encoding="utf-8"))
+    if "wheel" in build_pkgs and "packaging" in stanzas:
+        build_pkgs.add("packaging")
     missing = sorted(build_pkgs - set(stanzas))
     if missing:
         print(f"[FAIL] Missing build package(s): {missing}", file=sys.stderr)
